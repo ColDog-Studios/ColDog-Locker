@@ -1,0 +1,32 @@
+# Ignore PowerShell module files
+*.psm1
+*.psd1
+
+# Ignore Test folders
+.test/
+*.test/
+.Private/
+.*Private/
+.Locker/
+.*Locker/
+
+# Ignore Test files
+*test.*
+
+# Ignore PowerShell script output files
+*.txt
+*.log
+
+# Ignore built executables and binaries
+*.exe
+*.dll
+*.pdb
+
+# Ignore Visual Studio Code specific files
+.vscode/
+*.vscode/
+*.vscodeignore
+
+# Ignore Misc.
+*.json
+*.zip
