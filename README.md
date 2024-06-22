@@ -12,7 +12,7 @@
 <br>
 <div align="center">
     <a href="https://github.com/ColDogStudios/ColDog-Locker">
-      <img src="assets/images/cdlIcon.png" alt="Logo" width="500">
+      <img src="images/cdlIcon.png" alt="Logo" width="500">
     </a>
     
   <p align="center">
