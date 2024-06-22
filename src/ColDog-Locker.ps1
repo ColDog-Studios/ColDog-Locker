@@ -117,20 +117,21 @@ $Host.UI.RawUI.WindowTitle = "ColDog Locker $version"
 #MARK: ----------[ Initialization ]----------#
 
 # Create CDL directories if they do not already exist
-if (-not(Test-Path "$roamingConfig" -PathType Container)) { New-Item -ItemType Directory "$roamingConfig" }
+#if (-not(Test-Path "$roamingConfig" -PathType Container)) { New-Item -ItemType Directory "$roamingConfig" }
 if (-not(Test-Path "$localConfig" -PathType Container)) { New-Item -ItemType Directory "$localConfig" }
+if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
 
 #MARK: ----------[ Main Functions ]----------#
 
 function Show-cdlMenu {
     while ($true) {
-        # Call Functions
+
         Show-MenuTitle -subMenu "Main Menu"
 
-        $menuChoices = " 1) New Folder`n" +
-        " 2) Remove Folder`n" +
-        " 3) Lock Folder`n" +
-        " 4) Unlock Folder`n" +
+        $menuChoices = " 1) New Locker`n" +
+        " 2) Remove Locker`n" +
+        " 3) Lock Locker`n" +
+        " 4) Unlock Locker`n" +
         " 5) About ColDog Locker`n" +
         " 6) ColDog Locker Help`n" +
         " 7) Check for Updates`n"
@@ -140,14 +141,13 @@ function Show-cdlMenu {
         $menuChoice = Read-Host -Prompt ">"
 
         switch ($menuChoice) {
-            1 { New-cdlFolder }
-            2 { Remove-cdlFolder }
+            1 { New-cdlLocker }
+            2 { Remove-cdlLocker }
             3 { Lock-CDL }
             4 { Unlock-CDL }
             5 { Get-cdlAbout }
             6 { Get-cdlHelp }
             7 { Get-cdlUpdates }
-            #"log" { Edit-cdlLog }
             "dev" { Get-cdlDeveloperInfo }
             #"sysinfo" { Get-SystemInformation }
             default {
@@ -157,14 +157,13 @@ function Show-cdlMenu {
     }
 }
 
-#MARK: ----------[ New-cdlFolder ]----------#
-function New-cdlFolder {
-    # Call Functions
-    Get-FolderPasswordPairs
+#MARK: ----------[ New-cdlLocker ]----------#
+function New-cdlLocker {
+
     Show-MenuTitle -subMenu "Main Menu > New File"
 
     # User Input
-    $script:inputFolderName = Read-Host -Prompt "Locker Name"
+    $script:inputLockerName = Read-Host -Prompt "Locker Name"
     Write-Host "`n    Minimum Password Length: 8 characters"
     Write-Host "Recommended Password Length: 15 characters`n"
     $inputPassword = Read-Host -Prompt " Locker Password" -AsSecureString
@@ -178,17 +177,8 @@ function New-cdlFolder {
     $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmPassword)
     $confirmPassClear = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
 
-    # Check if folder name already exists
-    $folderExists = $script:folderPasswordPairs | Where-Object { $_.FolderName -eq $script:inputFolderName }
-
-    if ($folderExists) {
-        Invoke-Log -message "A folder with the name '$script:inputFolderName' already exists." -level "Warning"
-        Show-Message -type "Warning" -message "A folder with the name '$script:inputFolderName' already exists. Please choose a different name." -title "ColDog Locker"
-        return
-    }
-
     # Check User Input, if all checks pass, configuration is created
-    if ($script:inputFolderName -eq "" -or $script:inputPassClear -eq "" -or $confirmPassClear -eq "") {
+    if ($script:inputLockerName -eq "" -or $script:inputPassClear -eq "" -or $confirmPassClear -eq "") {
         Show-Message -type "Warning" -message "Input cannot be empty, blank, or null. Please try again." -title "ColDog Locker"
     }
     elseif ($inputPassClear.Length -lt 8) {
@@ -203,12 +193,12 @@ function New-cdlFolder {
             Invoke-PassHash
 
             # Create config
-            Add-FolderPasswordPair
+            Add-LockerPasswordPair
         }
         catch {
             # Handle any errors that occurred during the script execution
-            Invoke-Log -message "An error occurred while creating your folder: $($_.Exception.Message)" -level "Error"
-            Show-Message -type "Error" -message "An error occurred while creating your folder: $($_.Exception.Message)" -title "Error - ColDog Locker"
+            Invoke-Log -message "An error occurred while creating your locker: $($_.Exception.Message)" -level "Error"
+            Show-Message -type "Error" -message "An error occurred while creating your locker: $($_.Exception.Message)" -title "Error - ColDog Locker"
             exit
         }
     }
@@ -217,140 +207,36 @@ function New-cdlFolder {
     }
 }
 
-#MARK: ----------[ Remove-cdlFolder ]----------#
-function Remove-cdlFolder {
-    # If the JSON file exists, read its content
-    if (Test-Path "$roamingConfig\folders.json") {
+#MARK: ----------[ Remove-cdlLocker ]----------#
+function Remove-cdlLocker {
 
-        # Get and Convert the JSON content to an array of folder-password pairs
-        $jsonContent = Get-Content "$roamingConfig\folders.json"
-        $folderPasswordPairs = $jsonContent | ConvertFrom-Json
+    $result = Show-Lockers -action "Remove"
 
-        # Ensure the content is an array
-        if ($folderPasswordPairs -isnot [System.Collections.IEnumerable]) {
-            $folderPasswordPairs = @($folderPasswordPairs)
-        }
-
-        # Check if there are any folder-password pairs
-        if ($null -eq $folderPasswordPairs -or $folderPasswordPairs.Count -eq 0) {
-            Show-Message -type "Warning" -message "There are no folders to remove." -title "ColDog Locker"
-            return
-        }
-
-        # call functions
-        Show-MenuTitle -subMenu "Main Menu > Remove Folder"
-
-        # Display each folder name to the console
-        Write-Host "Folders:"
-        Write-Host ""
-        for ($i = 0; $i -lt $folderPasswordPairs.Count; $i++) {
-            Write-Host "$($i + 1). $($folderPasswordPairs[$i].folderName)"
-        }
-
-        # Prompt the user to choose a folder
-        Write-Host ""
-        $selectedPairIndex = Read-Host "Enter the number corresponding to the folder you want to remove"
-        Write-Host ""
-
-        # Validate user input
-        if (-not [int]::TryParse($selectedPairIndex, [ref]$null)) {
-            Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-            return
-        }
-
-        $selectedPairIndex = [int]$selectedPairIndex - 1
-
-        # Check if the selected index is within the valid range
-        if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $folderPasswordPairs.Count) {
-            Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-            return
-        }
-
-        # Show confirmation prompt
-        $script:selectedPair = $folderPasswordPairs[$selectedPairIndex]
-
-        Write-Host "You selected $($script:selectedPair.folderName)"
-        Write-Host ""
-        $confirmation = Read-Host "Are you sure you want to remove this folder? (y/N)"
-
-        if ($confirmation -ieq 'y') {
-            try {
-                Remove-FolderPasswordPair
-            }
-            catch {
-                # Handle any errors that occurred during the script execution
-                Invoke-Log -message "An error occurred while removing $($script:selectedPair.folderName): $($_.Exception.Message)" -level "Error"
-                Show-Message -type "Error" -message "An error occurred while removing $($script:selectedPair.folderName): $($_.Exception.Message)" -title "Error - ColDog Locker"
-                exit
-            }
-        }
+    if (-not $result.success) {
+        return
     }
-    else {
-        Show-Message -type "Warning" -message "There are no folders to remove." -title "ColDog Locker"
-    }
+
+    $selectedPair = $result.selectedPair
+
+    # Show confirmation prompt
+    $confirmation = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to remove $($selectedPair.lockerName)?", "Remove Locker", "YesNo", "Warning")
+    
+    if ($confirmation -eq "Yes") { Remove-LockerPasswordPair }    
 }
 
 #MARK: ----------[ Lock-CDL ]----------#
 function Lock-CDL {
-    # If the JSON file does not exist, return early, otherwise read its contents
-    if (-not (Test-Path "$roamingConfig\folders.json")) {
-        Show-Message -type "Warning" -message "There are no folders to lock." -title "ColDog Locker"
+
+    $result = Show-Lockers -action "Lock"
+
+    if (-not $result.success) {
         return
     }
 
-    # Get and Convert the JSON content to an array of folder-password pairs
-    $jsonContent = Get-Content "$roamingConfig\folders.json"
-    $folderPasswordPairs = $jsonContent | ConvertFrom-Json
-
-    # Ensure the content is an array
-    if ($folderPasswordPairs -isnot [System.Collections.IEnumerable]) {
-        $folderPasswordPairs = @($folderPasswordPairs)
-    }
-
-    # Check if there are any folder-password pairs with the isLocked : false attribute
-    $unlockedFolders = $folderPasswordPairs | Where-Object { $_.isLocked -eq $false }
-    $unlockedFolders = @($unlockedFolders)
-
-    if ($null -eq $unlockedFolders -or $unlockedFolders.Count -eq 0) {
-        Show-Message -type "Warning" -message "There are no unlocked folders to lock." -title "ColDog Locker"
-        return
-    }
-
-    # call functions
-    Show-MenuTitle -subMenu "Main Menu > Lock Folder"
-
-    # Display each folder name to the console
-    Write-Host "Unlocked Folders:"
-    Write-Host ""
-    for ($i = 0; $i -lt $unlockedFolders.Count; $i++) {
-        Write-Host "$($i + 1). $($unlockedFolders[$i].folderName)"
-    }
-
-    # Prompt the user to choose a folder
-    Write-Host ""
-    $selectedPairIndex = Read-Host "Enter the number corresponding to the folder you want to lock"
-
-    # Validate user input
-    if (-not [int]::TryParse($selectedPairIndex, [ref]$null)) {
-        Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-        return
-    }
-
-    $selectedPairIndex = [int]$selectedPairIndex - 1
-
-    # Check if the selected index is within the valid range
-    if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $unlockedFolders.Count) {
-        Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-        return
-    }
+    $selectedPair = $result.selectedPair
 
     while ($true) {
-        # Show confirmation prompt
-        $script:selectedPair = $unlockedFolders[$selectedPairIndex]
-
-        Write-Host "`nYou selected $($script:selectedPair.folderName)"
-        Write-Host ""
-        $inputPassword = Read-Host -Prompt "Enter the password to lock $($script:selectedPair.folderName)" -AsSecureString
+        $inputPassword = Read-Host -Prompt "Enter the password to lock $($selectedPair.lockerName)" -AsSecureString
 
         # Convert SecureString to Clear Text for Password
         $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($inputPassword)
@@ -359,29 +245,29 @@ function Lock-CDL {
         # Check if the entered password is correct
         Invoke-PassHash
 
-        if ($script:selectedPair.password -ceq $script:hex512) {
+        if ($selectedPair.password -ceq $script:hex512) {
             try {
-                # Encrypt the folder by calling the EncryptDirectory method
-                [cdlEncryptor]::EncryptDirectory($script:selectedPair.cdlLocation, $script:inputPassClear)
+                # Encrypt the Locker by calling the EncryptDirectory method
+                [cdlEncryptor]::EncryptDirectory($selectedPair.cdlLocation, $script:inputPassClear)
 
-                # Lock the folder
-                Set-ItemProperty -Path $script:selectedPair.cdlLocation -Name Attributes -Value "Hidden, System"
-                $script:selectedPair.isLocked = $true
-                Rename-Item -Path $script:selectedPair.cdlLocation -NewName ".$($script:selectedPair.folderName)"
-                $script:selectedPair.cdlLocation = "$cdlDir\.$($script:selectedPair.folderName)"
+                # Lock the Locker
+                Set-ItemProperty -Path $selectedPair.cdlLocation -Name Attributes -Value "Hidden, System"
+                $selectedPair.isLocked = $true
+                Rename-Item -Path $selectedPair.cdlLocation -NewName ".$($selectedPair.lockerName)"
+                $selectedPair.cdlLocation = "$cdlDir\.$($selectedPair.lockerName)"
 
                 # Convert the updated array to JSON and write it to the file
-                $json = $folderPasswordPairs | ConvertTo-Json -Depth 3
-                Set-Content -Path "$roamingConfig\folders.json" -Value $json
+                $json = $LockerPasswordPairs | ConvertTo-Json -Depth 3
+                Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-                Invoke-Log -message "Folder $($script:selectedPair.folderName) locked successfully." -level "Success"
-                Show-Message -type "Info" -message "Folder $($script:selectedPair.folderName) locked successfully." -title "ColDog Locker"
+                Invoke-Log -message "Locker $($selectedPair.lockerName) locked successfully." -level "Success"
+                Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) locked successfully." -title "ColDog Locker"
                 break
             }
             catch {
                 # Handle any errors that occurred during the script execution
-                Invoke-Log -message "An error occurred while locking $script:selectedPair.folderName: $($_.Exception.Message)" -level "Error"
-                Show-Message -type "Error" -message "An error occurred while locking $script:selectedPair.folderName: $($_.Exception.Message)" -title "Error - ColDog Locker"
+                Invoke-Log -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -level "Error"
+                Show-Message -type "Error" -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit
             }
         }
@@ -394,68 +280,19 @@ function Lock-CDL {
 
 #MARK: ----------[ Unlock-CDL ]----------#
 function Unlock-CDL {
-    # If the JSON file does not exist, return early, otherwise read its contents
-    if (-not (Test-Path "$roamingConfig\folders.json")) {
-        Show-Message -type "Warning" -message "There are no locked folders to unlock." -title "ColDog Locker"
+
+    $result = Show-Lockers -action "Unlock"
+
+    if (-not $result.success) {
         return
     }
 
-    # Get and Convert the JSON content to an array of folder-password pairs
-    $jsonContent = Get-Content "$roamingConfig\folders.json"
-    $folderPasswordPairs = $jsonContent | ConvertFrom-Json
-
-    # Ensure the content is an array
-    if ($folderPasswordPairs -isnot [System.Collections.IEnumerable]) {
-        $folderPasswordPairs = @($folderPasswordPairs)
-    }
-
-    # Check if there are any folder-password pairs with the isLocked : true attribute
-    $lockedFolders = $folderPasswordPairs | Where-Object { $_.isLocked -eq $true }
-    $lockedFolders = @($lockedFolders)
-
-    # If there are no locked folders, return early
-    if ($null -eq $lockedFolders -or $lockedFolders.Count -eq 0) {
-        Show-Message -type "Warning" -message "There are no locked folders to unlock." -title "ColDog Locker"
-        return
-    }
-
-    # call functions
-    Show-MenuTitle -subMenu "Main Menu > Unlock Folder"
-
-    # Display each folder name to the console
-    Write-Host "Locked Folders:"
-    Write-Host ""
-    for ($i = 0; $i -lt $lockedFolders.Count; $i++) {
-        Write-Host "$($i + 1). $($lockedFolders[$i].folderName)"
-    }
-
-    # Prompt the user to choose a folder
-    Write-Host ""
-    $selectedPairIndex = Read-Host "Enter the number corresponding to the folder you want to unlock"
-
-    # Validate user input
-    if (-not [int]::TryParse($selectedPairIndex, [ref]$null)) {
-        Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-        return
-    }
-
-    $selectedPairIndex = [int]$selectedPairIndex - 1
-
-    # Check if the selected index is within the valid range
-    if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $lockedFolders.Count) {
-        Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
-        return
-    }
-
+    $selectedPair = $result.selectedPair
     $failedAttempts = 0
 
     while ($true) {
         # Show confirmation prompt
-        $script:selectedPair = $lockedFolders[$selectedPairIndex]
-
-        Write-Host "`nYou selected $($script:selectedPair.folderName)"
-        Write-Host ""
-        $inputPassword = Read-Host -Prompt "Enter the password to unlock $($script:selectedPair.folderName)" -AsSecureString
+        $inputPassword = Read-Host -Prompt "Enter the password to unlock $($selectedPair.lockerName)" -AsSecureString
 
         # Convert SecureString to Clear Text for Password
         $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($inputPassword)
@@ -464,37 +301,37 @@ function Unlock-CDL {
         # Check if the entered password is correct
         Invoke-PassHash
 
-        if ($script:selectedPair.password -ceq $script:hex512) {
+        if ($selectedPair.password -ceq $script:hex512) {
             try {
-                # Decrypt the folder by calling the DecryptDirectory method
-                [cdlEncryptor]::DecryptDirectory($script:selectedPair.cdlLocation, $script:inputPassClear)
+                # Decrypt the Locker by calling the DecryptDirectory method
+                [cdlEncryptor]::DecryptDirectory($selectedPair.cdlLocation, $script:inputPassClear)
 
-                # Unlock the folder
-                Set-ItemProperty -Path $script:selectedPair.cdlLocation -Name Attributes -Value "Normal"
-                $script:selectedPair.isLocked = $false
-                Rename-Item -Path $script:selectedPair.cdlLocation -NewName $script:selectedPair.folderName
-                $script:selectedPair.cdlLocation = "$cdlDir\$($script:selectedPair.folderName)"
+                # Unlock the Locker
+                Set-ItemProperty -Path $selectedPair.cdlLocation -Name Attributes -Value "Normal"
+                $selectedPair.isLocked = $false
+                Rename-Item -Path $selectedPair.cdlLocation -NewName $selectedPair.lockerName
+                $selectedPair.cdlLocation = "$cdlDir\$($selectedPair.lockerName)"
 
                 # Convert the updated array to JSON and write it to the file
-                $json = $folderPasswordPairs | ConvertTo-Json -Depth 3
-                Set-Content -Path "$roamingConfig\folders.json" -Value $json
+                $json = $LockerPasswordPairs | ConvertTo-Json -Depth 3
+                Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-                Invoke-Log -message "Folder $($script:selectedPair.folderName) unlocked successfully." -level "Success"
-                Show-Message -type "Info" -message "Folder $($script:selectedPair.folderName) unlocked successfully." -title "ColDog Locker"
+                Invoke-Log -message "Locker $($selectedPair.lockerName) unlocked successfully." -level "Success"
+                Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) unlocked successfully." -title "ColDog Locker"
                 break
             }
             catch {
                 # Handle any errors that occurred during the script execution
-                Invoke-Log -message "An error occurred while unlocking $($script:selectedPair.folderName): $($_.Exception.Message)" -level "Error"
-                Show-Message -type "Error" -message "An error occurred while unlocking $($script:selectedPair.folderName): $($_.Exception.Message)" -title "Error - ColDog Locker"
+                Invoke-Log -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -level "Error"
+                Show-Message -type "Error" -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit
             }
         }
         else {
             $failedAttempts++
             if ($failedAttempts -ge 10) {
-                Invoke-Log -message "10 failed password attempts. Locking $script:selectedPair.folderName permanently." -level "Error"
-                Show-Message -type "Error" -message "10 failed password attempts. Locking $script:selectedPair.folderName permanently." -title "ColDog Locker"
+                Invoke-Log -message "10 failed password attempts. Locking $selectedPair.lockerName permanently." -level "Error"
+                Show-Message -type "Error" -message "10 failed password attempts. Locking $selectedPair.lockerName permanently." -title "ColDog Locker"
 
                 break
             }
@@ -510,36 +347,22 @@ function Unlock-CDL {
 #MARK: ----------[ Utility Functions ]----------#
 
 function Get-cdlAbout {
-    try {
-        $message = "The idea of ColDog Locker was created by Collin 'ColDog' Laney on 11/17/21, for a security project in Cybersecurity class.`n" +
-        "Collin Laney is the Founder and CEO of ColDog Studios"
-        
-        Show-Message -type "Info" -message $message -title "About ColDog Locker"
-    }
-    catch {
-        # Handle any errors that occurred during execution
-        Invoke-Log -Message "An error occurred in about: $($_.Exception.Message)" -Level "Error"
-        Show-Message -type "Error" -message "An error occurred in about: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
-    }
+
+    $message = "The idea of ColDog Locker was created by Collin 'ColDog' Laney on 11/17/21, for a security project in Cybersecurity class.`n" +
+    "Collin Laney is the Founder and CEO of ColDog Studios"
+    
+    Show-Message -type "Info" -message $message -title "About ColDog Locker"
 }
 
 function Get-cdlHelp {
-    try {
-        $message = "ColDog Locker is a simple file locker that allows you to lock and unlock folders with a password.`n`n" +
-        "To lock a folder, select the 'Lock Folder' option from the main menu and follow the prompts.`n`n" +
-        "To unlock a folder, select the 'Unlock Folder' option from the main menu and follow the prompts.`n`n" +
-        "To remove a folder, select the 'Remove Folder' option from the main menu and follow the prompts.`n`n" +
-        "To check for updates, select the 'Check for Updates' option from the main menu."
+
+    $message = "ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.`n`n" +
+    "To lock a directory, select the 'Lock Locker' option from the main menu and follow the prompts.`n`n" +
+    "To unlock a directory, select the 'Unlock Locker' option from the main menu and follow the prompts.`n`n" +
+    "To remove a directory from ColDog Locker management, select the 'Remove Locker' option from the main menu and follow the prompts.`n`n" +
+    "To check for updates, select the 'Check for Updates' option from the main menu."
         
-        Show-Message -type "Info" -message $message -title "ColDog Locker Help"
-    }
-    catch {
-        # Handle any errors that occurred during execution
-        Invoke-Log -Message "An error occurred in help: $($_.Exception.Message)" -Level "Error"
-        Show-Message -type "Error" -message "An error occurred in help: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
-    }
+    Show-Message -type "Info" -message $message -title "ColDog Locker Help"
 }
 
 function Get-cdlUpdates {
@@ -599,19 +422,15 @@ function Get-cdlUpdates {
 }
 
 function Get-cdlDeveloperInfo {
-    try {
-        $message = "Current Version: $version `n" +
-        "Date Modified: $dateMod `n" +
-        "Alpha Build"
-        
-        Show-Message -type "Info" -message $message -title "Development"
-    }
-    catch {
-        # Handle any errors that occurred during execution
-        Invoke-Log -message "An error occurred in dev: $($_.Exception.Message)" -level "Error"
-        Show-Message -type "Error" -message "An error occurred in dev: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
-    }
+
+    $message = "Current Version: $version `n" +
+    "Date Modified: $dateMod `n" +
+    "Alpha Build `n`n" +
+    "Metadata Location: $localConfig`n" +
+    "Old Metadata Location: $roamingConfig"
+
+
+    Show-Message -type "Info" -message $message -title "Development"
 }
 
 #MARK: ----------[ Reference Functions ]----------#
@@ -641,7 +460,7 @@ function Show-MenuTitle {
     Write-Host $emptyLine
 }
 
-# used by: New-cdlFolder, Unlock-CDL
+# used by: New-cdlLocker, Unlock-CDL
 function Invoke-PassHash {
     try {
         # Convert the input string to a byte array
@@ -683,101 +502,212 @@ function Invoke-PassHash {
 #$script:inputPassClear = ConvertSecureStringToClearText $inputPassword
 #$confirmPassClear = ConvertSecureStringToClearText $confirmPassword
 
-# used by: New-cdlFolder, Remove-cdlFolder, Lock-CDL, Unlock-CDL
-function Get-FolderPasswordPairs {
-    # If the JSON file exists, read it from the file, otherwise initialize an empty array
-    if (Test-Path "$roamingConfig\folders.json") {
-        $content = Get-Content "$roamingConfig\folders.json" | ForEach-Object { $_.Trim() }
-        if ($content -eq '') {
-            $script:folderPasswordPairs = @()
-        }
-        else {
-            $script:folderPasswordPairs = $content | ConvertFrom-Json
-        }
-    }
-    else {
-        $script:folderPasswordPairs = @()
-    }
-}
-
-# used by: New-cdlFolder
-function Add-FolderPasswordPair {
+#MARK: ----------[ Add-LockerPasswordPair ]----------#
+function Add-LockerPasswordPair {
     try {
         # If the JSON table exists, read it from the file, otherwise initialize an empty array
-        if (Test-Path "$roamingConfig\folders.json") {
-            $folderPasswordPairs = Get-Content "$roamingConfig\folders.json" | ConvertFrom-Json
+        if (Test-Path "$localConfig\lockers.json") {
+            $content = Get-Content "$localConfig\lockers.json" | ForEach-Object { $_.Trim() }
+            if ($content -eq '') {
+                $LockerPasswordPairs = @()
+            }
+            else {
+                $LockerPasswordPairs = $content | ConvertFrom-Json
+            }
         }
         else {
-            $folderPasswordPairs = @()
+            $LockerPasswordPairs = @()
         }
         
-        # Ensure $folderPasswordPairs is an array
-        if (-not $folderPasswordPairs) {
-            $folderPasswordPairs = @()
+        # Ensure $LockerPasswordPairs is an array
+        if (-not $LockerPasswordPairs) {
+            $LockerPasswordPairs = @()
         }
-        elseif ($folderPasswordPairs -isnot [System.Collections.IEnumerable]) {
-            $folderPasswordPairs = @($folderPasswordPairs)
+        elseif ($LockerPasswordPairs -isnot [System.Collections.IEnumerable]) {
+            $LockerPasswordPairs = @($LockerPasswordPairs)
+        }
+
+        # Check if Locker name already exists
+        $LockerExists = $LockerPasswordPairs | Where-Object { $_.lockerName -eq $script:inputLockerName }
+
+        if ($LockerExists) {
+            Invoke-Log -message "A locker with the name '$script:inputLockerName' already exists." -level "Warning"
+            Show-Message -type "Warning" -message "A locker with the name '$script:inputLockerName' already exists. Please choose a different name." -title "ColDog Locker"
+            return
         }
         
-        # Create a hashtable with the guid, folder name, password, location, and isLocked attribute
-        $folderPasswordPair = [PSCustomObject]@{
+        # Create a hashtable with the guid, Locker name, password, location, and isLocked attribute
+        $LockerPasswordPair = [PSCustomObject]@{
             guid        = [guid]::NewGuid().ToString()
-            folderName  = $script:inputFolderName
+            LockerName  = $script:inputLockerName
             password    = $script:hex512
-            cdlLocation = "$cdlDir\$script:inputFolderName"
+            cdlLocation = "$cdlDir\$script:inputLockerName"
             isLocked    = $false
         }
     
         # Add the hashtable to the array
-        $updatedFolderPasswordPairs = @($folderPasswordPairs + $folderPasswordPair)
+        $updatedLockerPasswordPairs = @($LockerPasswordPairs + $LockerPasswordPair)
     
         # Convert the array to JSON and write it to the file
-        $json = $updatedFolderPasswordPairs | ConvertTo-Json
-        Set-Content -Path "$roamingConfig\folders.json" -Value $json
+        $json = $updatedLockerPasswordPairs | ConvertTo-Json
+        Set-Content -Path "$localConfig\lockers.json" -Value $json
     
         # Assign the modified array back to the script-scoped variable
-        $script:folderPasswordPairs = $updatedFolderPasswordPairs
+        $LockerPasswordPairs = $updatedLockerPasswordPairs
     
-        # Create the folder
-        New-Item -ItemType Directory -Path "$cdlDir\$script:inputFolderName" | Out-Null
+        # Create the Locker
+        New-Item -ItemType Directory -Path "$cdlDir\$script:inputLockerName" | Out-Null
     
-        Invoke-Log -message "$script:inputFolderName created successfully." -level "Success"
-        Show-Message -type "Info" -message "$script:inputFolderName created successfully." -title "ColDog Locker"
+        Invoke-Log -message "$script:inputLockerName created successfully." -level "Success"
+        Show-Message -type "Info" -message "$script:inputLockerName created successfully." -title "ColDog Locker"
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred while adding $script:inputFolderName to the JSON table: $($_.Exception.Message)" -Level "Error"
-        Show-Message -type "Error" -message "An error occurred while adding $script:inputFolderName to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        Invoke-Log -Message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -Level "Error"
+        Show-Message -type "Error" -message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
 }
 
-# used by: Remove-cdlFolder
-function Remove-FolderPasswordPair {
+#MARK: ----------[ Remove-LockerPasswordPair ]----------#
+function Remove-LockerPasswordPair {
     try {
-        # Read the existing folder-password pairs from the JSON file
-        $jsonContent = Get-Content "$roamingConfig\folders.json"
-        $folderPasswordPairs = $jsonContent | ConvertFrom-Json
-
-        # Ensure the content is an array
-        if ($folderPasswordPairs -isnot [System.Collections.IEnumerable]) {
-            $folderPasswordPairs = @($folderPasswordPairs)
-        }
-
-        # Remove the selected folder-password pair
-        $folderPasswordPairs = $folderPasswordPairs | Where-Object { $_.folderName -ne $script:selectedPair.folderName }
+        # Remove the selected Locker-password pair
+        $lockers = $lockers | Where-Object { $_.lockerName -ne $selectedPair.lockerName }
 
         # Convert the updated array to JSON and write it to the file
-        $json = $folderPasswordPairs | ConvertTo-Json -Depth 3
-        Set-Content -Path "$roamingConfig\folders.json" -Value $json
+        $json = $lockers | ConvertTo-Json -Depth 3
+        Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-        Invoke-Log -message "Folder $($script:selectedPair.folderName) removed successfully." -level "Success"
-        Show-Message -type "Info" -message "Folder $($script:selectedPair.folderName) removed successfully." -title "ColDog Locker"
+        Invoke-Log -message "Locker $($selectedPair.lockerName) removed successfully." -level "Success"
+        Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) removed successfully." -title "ColDog Locker"
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred while removing $script:selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
-        Show-Message -type "Error" -message "An error occurred while removing $script:selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        Invoke-Log -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
+        Show-Message -type "Error" -message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        exit
+    }
+}
+
+#MARK: ----------[ Show-Lockers ]----------#
+function Show-Lockers {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("Remove", "Lock", "Unlock")]
+        [string]$action
+    )
+
+    try {
+        # If the JSON file does not exist, return early, otherwise read its contents
+        if (-not (Test-Path "$localConfig\lockers.json")) {
+            Show-Message -type "Warning" -message "There are no lockers created." -title "ColDog Locker"
+            return @{ success = $false }
+        }
+
+        # Get and Convert the JSON content to an array of Locker-password pairs
+        $jsonContent = Get-Content "$localConfig\lockers.json"
+        $lockers = $jsonContent | ConvertFrom-Json
+
+        # Ensure the content is an array
+        if ($lockers -isnot [System.Collections.IEnumerable]) {
+            $lockers = @($lockers)
+        }
+
+        # Specify Locked and Unlocked lockers
+        $unlockedLockers = $lockers | Where-Object { $_.isLocked -eq $false }
+        $unlockedLockers = @($unlockedLockers)
+        $lockedLockers = $lockers | Where-Object { $_.isLocked -eq $true }
+        $lockedLockers = @($lockedLockers)
+
+        # Check if there are any lockers of each type
+        if ($null -eq $lockers -or $lockers.Count -eq 0) {
+            Show-Message -type "Warning" -message "There are no lockers created." -title "ColDog Locker"
+            return @{ success = $false }
+        }
+        elseif ($action -eq "Lock" -and ($null -eq $unlockedLockers -or $unlockedLockers.Count -eq 0)) {
+            Show-Message -type "Warning" -message "There are no unlocked lockers to lock." -title "ColDog Locker"
+            return @{ success = $false }
+        }
+        elseif ($action -eq "Unlock" -and ($null -eq $lockedLockers -or $lockedLockers.Count -eq 0)) {
+            Show-Message -type "Warning" -message "There are no locked lockers to unlock." -title "ColDog Locker"
+            return @{ success = $false }
+        }
+
+        Show-MenuTitle -subMenu "Main Menu > $action Locker"
+
+        # Display each Locker name to the console based on the action
+        switch ($action) {
+            "Remove" {
+                Write-Host "Lockers:"
+                Write-Host ""
+                for ($i = 0; $i -lt $lockers.Count; $i++) {
+                    Write-Host "$($i + 1). $($lockers[$i].lockerName)"
+                }
+            }
+            "Lock" {
+                Write-Host "Unlocked Lockers:"
+                Write-Host ""
+                for ($i = 0; $i -lt $unlockedLockers.Count; $i++) {
+                    Write-Host "$($i + 1). $($unlockedLockers[$i].lockerName)"
+                }
+            }
+            "Unlock" {
+                Write-Host "Locked Lockers:"
+                Write-Host ""
+                for ($i = 0; $i -lt $lockedLockers.Count; $i++) {
+                    Write-Host "$($i + 1). $($lockedLockers[$i].lockerName)"
+                }
+            }
+        }
+
+        # Prompt the user to choose a Locker to remove, lock, or unlock
+        $selectedPairIndex = Read-Host "`nEnter the number corresponding to the locker you want to $($action.ToLower())"
+        Write-Host ""
+
+        # Validate user input
+        if (-not [int]::TryParse($selectedPairIndex, [ref]$null)) {
+            Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
+            return @{ success = $false }
+        }
+
+        $selectedPairIndex = [int]$selectedPairIndex - 1
+
+        # Check if the selected index is within the valid range
+        switch ($action) {
+            "Remove" {
+                if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $lockers.Count) {
+                    Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
+                    return @{ success = $false }
+                }
+            }
+            "Lock" {
+                if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $unlockedLockers.Count) {
+                    Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
+                    return @{ success = $false }
+                }
+            }
+            "Unlock" {
+                if ($selectedPairIndex -lt 0 -or $selectedPairIndex -ge $lockedLockers.Count) {
+                    Show-Message -type "Warning" -message "Invalid selection. Please choose a valid number from the list." -title "ColDog Locker"
+                    return @{ success = $false }
+                }
+            }
+        }
+
+        # Show confirmation prompt
+        switch ($action) {
+            "Remove" { $selectedPair = $lockers[$selectedPairIndex] }
+            "Lock" { $selectedPair = $unlockedLockers[$selectedPairIndex] }
+            "Unlock" { $selectedPair = $lockedLockers[$selectedPairIndex] }
+        }
+
+        return @{ success = $true; selectedPair = $selectedPair }
+    }
+    catch {
+        # Handle any errors that occurred during the script execution
+        Invoke-Log -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -level "Error"
+        Show-Message -type "Error" -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
 }
@@ -792,11 +722,57 @@ function Invoke-Log {
         [ValidateSet("Info", "Success", "Warning", "Error", "Debug")]
         [string]$level,
 
-        [string]$logFile = "$localConfig\cdl.log"
+        [string]$logDirectory = "$localConfig\logs"
     )
 
+    # Ensure the log folder exists
+    if (!(Test-Path -Path $logFolder)) {
+        New-Item -ItemType Directory -Path $logDirectory
+    }
+
+    # Create the log entry
     $logEntry = "[$(Get-Date)] [$level] $message"
-    Add-Content -Path $logFile -Value $logEntry
+
+    # Write the log entry to the level-specific log file and the combined log file
+    Add-Content -Path "$logDirectory\cdl$level.log" -Value $logEntry
+    Add-Content -Path "$logDirectory\cdl.log" -Value $logEntry
+}
+
+function Resize-Log {
+    param(
+        [string]$logDirectory = "$localConfig\logs"
+    )
+
+    try {
+        # Resize each log file if it's larger than 10MB
+        Get-ChildItem -Path $logDirectory -Filter "*.log" | ForEach-Object {
+            $logFilePath = $_.FullName
+
+            # Get the file size in bytes
+            $fileSizeBytes = (Get-Item $logFilePath).Length
+
+            # Convert the file size to megabytes
+            $fileSizeMB = $fileSizeBytes / 1MB
+
+            # Check if the file size is greater than 10MB
+            if ($fileSizeMB -gt 10) {
+                # Keep the last 1000 lines and overwrite the file
+                Get-Content $logFilePath | Select-Object -Last 1000 | Set-Content $logFilePath
+            }
+        }
+    }
+    # catch if no log files exist
+    catch [System.Management.Automation.ItemNotFoundException] {
+        Invoke-Log -message "No log files found in the log directory." -level "Info"
+        return
+    }
+    catch {
+        # Handle any errors that occurred during the script execution
+        Invoke-Log -message "An error occurred while resizing the log files: $($_.Exception.Message)" -level "Error"
+        Show-Message -type "Error" -message "An error occurred while resizing the log files: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        exit
+    
+    }
 }
 
 #MARK: ----------[ Message Boxes ]----------#
@@ -823,6 +799,4 @@ function Show-Message {
 #MARK: ----------[ Run Program ]----------#
 Show-cdlMenu
 
-# TODO: Add a function to edit the log file
 # TODO: Add a function to display system information
-# TODOL: Fix JSON get folder-password pairs - create function to elimiate repeated code
