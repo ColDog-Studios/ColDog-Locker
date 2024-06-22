@@ -1,0 +1,48 @@
+name: Ask a Question
+description: Ask a Question
+title: "[Question]: "
+labels: ["type: question"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for asking a question!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What is your Question?
+      placeholder: What is your Question?
+      value: "My Question"
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of ColDog Locker are you running?
+      options:
+        - 0.1.0-Beta-1
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: OS
+      description: What OS are you seeing the problem on?
+      options:
+        - Windows 11
+        - Windows 10
+        - Server 2022
+        - Other (put OS in description)
+    validations:
+      required: true

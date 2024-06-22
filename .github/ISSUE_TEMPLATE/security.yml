@@ -1,0 +1,54 @@
+name: Security Issue
+description: File a security issue or vulnerability
+title: "[Security]: "
+labels: ["type: security"]
+assignees:
+  - 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this security report!
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you do to get here?
+      placeholder: Tell us what is broken!
+      value: "A vulnerability appeared!"
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of ColDog Locker Windows are you running?
+      options:
+        - v0.1.0-Beta-1
+    validations:
+      required: true
+  - type: dropdown
+    id: OS
+    attributes:
+      label: OS
+      description: What OS are you seeing the vulnerability on?
+      options:
+        - Windows 11
+        - Windows 10
+        - Server 2022
+        - Other (put OS in description)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output.
