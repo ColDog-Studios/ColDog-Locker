@@ -100,7 +100,7 @@ Add-Type -TypeDefinition @"
 
 $version = "v0.0.5-Alpha"
 $currentVersion = ($version.TrimStart("v")).TrimEnd("-Alpha")
-$dateMod = "6/15/2024"
+$dateMod = "7/1/2024"
 $roamingConfig = "$env:AppData\ColDog Studios\ColDog Locker"
 $localConfig = "$env:LocalAppData\ColDog Studios\ColDog Locker"
 $cdlDir = Get-Location
@@ -117,7 +117,7 @@ if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
 
 #MARK: ----------[ Main Functions ]----------#
 
-function Show-cdlMenu {
+function Show-Menu {
     while ($true) {
 
         Show-MenuTitle -subMenu "Main Menu"
@@ -136,15 +136,15 @@ function Show-cdlMenu {
         $menuChoice = Read-Host -Prompt ">"
 
         switch ($menuChoice) {
-            1 { New-cdlLocker }
-            2 { Remove-cdlLocker }
+            1 { New-Locker }
+            2 { Remove-Locker }
             3 { Lock-CDL }
             4 { Unlock-CDL }
-            5 { Get-cdlAbout }
-            6 { Get-cdlHelp }
-            7 { Get-cdlUpdates }
-            9 { Update-cdlSettings }
-            "dev" { Get-cdlDeveloperInfo }
+            5 { Show-About }
+            6 { Show-Help }
+            7 { Update-ColDogLocker }
+            9 { Update-Settings }
+            "dev" { Show-Dev }
             #"sysinfo" { Get-SystemInformation }
             default {
                 Show-Message -type "Warning" -message "Please select a valid option." -title "ColDog Locker"
@@ -153,8 +153,8 @@ function Show-cdlMenu {
     }
 }
 
-#MARK: ----------[ New-cdlLocker ]----------#
-function New-cdlLocker {
+#MARK: ----------[ New-Locker ]----------#
+function New-Locker {
 
     Show-MenuTitle -subMenu "Main Menu > New File"
 
@@ -186,10 +186,10 @@ function New-cdlLocker {
     elseif ("$inputPassClear" -ceq "$confirmPassClear") {
         try {
             # Password hashing
-            Invoke-PassHash
+            Invoke-PasswordHashing
 
             # Create config
-            Add-LockerPasswordPair
+            Add-LockerMetadata
         }
         catch {
             # Handle any errors that occurred during the script execution
@@ -203,8 +203,8 @@ function New-cdlLocker {
     }
 }
 
-#MARK: ----------[ Remove-cdlLocker ]----------#
-function Remove-cdlLocker {
+#MARK: ----------[ Remove-Locker ]----------#
+function Remove-Locker {
 
     $result = Show-Lockers -action "Remove"
 
@@ -217,7 +217,7 @@ function Remove-cdlLocker {
     # Show confirmation prompt
     $confirmation = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to remove $($selectedPair.lockerName)?", "Remove Locker", "YesNo", "Warning")
     
-    if ($confirmation -eq "Yes") { Remove-LockerPasswordPair }    
+    if ($confirmation -eq "Yes") { Remove-LockerMetadata }    
 }
 
 #MARK: ----------[ Lock-CDL ]----------#
@@ -239,7 +239,7 @@ function Lock-CDL {
         $script:inputPassClear = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
 
         # Check if the entered password is correct
-        Invoke-PassHash
+        Invoke-PasswordHashing
 
         if ($selectedPair.password -ceq $script:hex512) {
             try {
@@ -295,7 +295,7 @@ function Unlock-CDL {
         $script:inputPassClear = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
 
         # Check if the entered password is correct
-        Invoke-PassHash
+        Invoke-PasswordHashing
 
         if ($selectedPair.password -ceq $script:hex512) {
             try {
@@ -342,7 +342,7 @@ function Unlock-CDL {
 
 #MARK: ----------[ Utility Functions ]----------#
 
-function Get-cdlAbout {
+function Show-About {
 
     $message = "The idea of ColDog Locker was created by Collin 'ColDog' Laney on 11/17/21, for a security project in Cybersecurity class.`n" +
     "Collin Laney is the Founder and CEO of ColDog Studios"
@@ -350,7 +350,7 @@ function Get-cdlAbout {
     Show-Message -type "Info" -message $message -title "About ColDog Locker"
 }
 
-function Get-cdlHelp {
+function Show-Help {
 
     $message = "ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.`n`n" +
     "To lock a directory, select the 'Lock Locker' option from the main menu and follow the prompts.`n`n" +
@@ -361,7 +361,7 @@ function Get-cdlHelp {
     Show-Message -type "Info" -message $message -title "ColDog Locker Help"
 }
 
-function Get-cdlUpdates {
+function Update-ColDogLocker {
     try {
         # variables setup
         $owner = "ColDogStudios"
@@ -417,7 +417,7 @@ function Get-cdlUpdates {
     }
 }
 
-function Get-cdlDeveloperInfo {
+function Show-Dev {
 
     $message = "Current Version: $version `n" +
     "Date Modified: $dateMod `n" +
@@ -456,8 +456,8 @@ function Show-MenuTitle {
     Write-Output $emptyLine
 }
 
-# used by: New-cdlLocker, Unlock-CDL
-function Invoke-PassHash {
+# used by: New-Locker, Unlock-CDL
+function Invoke-PasswordHashing {
     try {
         # Convert the input string to a byte array
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($script:inputPassClear)
@@ -498,8 +498,8 @@ function Invoke-PassHash {
 #$script:inputPassClear = ConvertSecureStringToClearText $inputPassword
 #$confirmPassClear = ConvertSecureStringToClearText $confirmPassword
 
-#MARK: ----------[ Add-LockerPasswordPair ]----------#
-function Add-LockerPasswordPair {
+#MARK: ----------[ Add-LockerMetadata ]----------#
+function Add-LockerMetadata {
     try {
         # If the JSON table exists, read it from the file, otherwise initialize an empty array
         if (Test-Path "$localConfig\lockers.json") {
@@ -565,8 +565,8 @@ function Add-LockerPasswordPair {
     }
 }
 
-#MARK: ----------[ Remove-LockerPasswordPair ]----------#
-function Remove-LockerPasswordPair {
+#MARK: ----------[ Remove-LockerMetadata ]----------#
+function Remove-LockerMetadata {
     try {
         # Remove the selected Locker-password pair
         $lockers = $lockers | Where-Object { $_.lockerName -ne $selectedPair.lockerName }
@@ -709,7 +709,7 @@ function Show-Lockers {
 }
 
 #MARK: ----------[ Logging ]----------#
-function Invoke-Log {
+function Add-LogEntry {
     param(
         [Parameter(Mandatory = $true)]
         [string]$message,
@@ -868,4 +868,11 @@ function Update-Settings {
 }
 
 #MARK: ----------[ Run Program ]----------#
-Show-cdlMenu
+
+Get-Settings
+
+if ($cdlSettings.autoUpdate) {
+    Update-ColDogLocker
+}
+
+Show-Menu
