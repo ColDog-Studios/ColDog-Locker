@@ -72,7 +72,7 @@ Add-Type -TypeDefinition @"
                 Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(password, new byte[] {0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76}, 10000, HashAlgorithmName.SHA256);
                 aes.Key = pdb.GetBytes(32);
                 aes.IV = pdb.GetBytes(16);
-            
+
                 using (FileStream fsCrypt = new FileStream(inputFile, FileMode.Open))
                 {
                     using (CryptoStream cs = new CryptoStream(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
@@ -88,7 +88,7 @@ Add-Type -TypeDefinition @"
                         }
                     }
                 }
-            
+
                 File.Delete(inputFile);
                 File.Move(inputFile + ".dec", inputFile);
             }
@@ -197,7 +197,7 @@ function New-Locker {
             # Handle any errors that occurred during the script execution
             Add-LogEntry -message "An error occurred while creating your locker: $($_.Exception.Message)" -level "Error"
             Show-Message -type "Error" -message "An error occurred while creating your locker: $($_.Exception.Message)" -title "Error - ColDog Locker"
-            exit
+            exit 1
         }
     }
     else {
@@ -218,8 +218,8 @@ function Remove-Locker {
 
     # Show confirmation prompt
     $confirmation = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to remove $($selectedPair.lockerName)?", "Remove Locker", "YesNo", "Warning")
-    
-    if ($confirmation -eq "Yes") { Remove-LockerMetadata }    
+
+    if ($confirmation -eq "Yes") { Remove-LockerMetadata }
 }
 
 #MARK: ----------[ Lock-CDL ]----------#
@@ -266,7 +266,7 @@ function Lock-CDL {
                 # Handle any errors that occurred during the script execution
                 Add-LogEntry -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -title "Error - ColDog Locker"
-                exit
+                exit 1
             }
         }
         else {
@@ -322,7 +322,7 @@ function Unlock-CDL {
                 # Handle any errors that occurred during the script execution
                 Add-LogEntry -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -title "Error - ColDog Locker"
-                exit
+                exit 1
             }
         }
         else {
@@ -348,7 +348,7 @@ function Show-About {
 
     $message = "The idea of ColDog Locker was created by Collin 'ColDog' Laney on 11/17/21, for a security project in Cybersecurity class.`n" +
     "Collin Laney is the Founder and CEO of ColDog Studios"
-    
+
     Show-Message -type "Info" -message $message -title "About ColDog Locker"
 }
 
@@ -359,18 +359,20 @@ function Show-Help {
     "To unlock a directory, select the 'Unlock Locker' option from the main menu and follow the prompts.`n`n" +
     "To remove a directory from ColDog Locker management, select the 'Remove Locker' option from the main menu and follow the prompts.`n`n" +
     "To check for updates, select the 'Check for Updates' option from the main menu."
-        
+
     Show-Message -type "Info" -message $message -title "ColDog Locker Help"
 }
 
 function Update-ColDogLocker {
+    [Parameter(Mandatory = $false)]
+    [string]$owner = "ColDogStudios"
+    [Parameter(Mandatory = $false)]
+    [string]$repository = "ColDog-Locker"
+    [Parameter(Mandatory = $false)]
+    [string]$downloadDirectory = "$env:userprofile\Downloads"
+    [Parameter(Mandatory = $false)]
+    [string]$uri = "https://api.github.com/repos/$owner/$repository/releases/latest"
     try {
-        # variables setup
-        $owner = "ColDogStudios"
-        $repository = "ColDog-Locker"
-        $downloadDirectory = "$env:userprofile\Downloads"
-        $uri = "https://api.github.com/repos/$owner/$repository/releases/latest"
-
         # Get the release info using the GitHub API
         $releaseInfo = Invoke-RestMethod -Uri $uri
         $downloadVersion = $releaseInfo.tag_name
@@ -400,6 +402,7 @@ function Update-ColDogLocker {
                 catch {
                     Add-LogEntry -message "An error occurred while downloading the latest version: $($_.Exception.Message)" -level "Error"
                     Show-Message -type "Error" -message "An error occurred while downloading the latest version: $($_.Exception.Message)" -title "Error - ColDog Locker"
+                    exit 1
                 }
             }
         }
@@ -415,7 +418,7 @@ function Update-ColDogLocker {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while checking for updates: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while checking for updates: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
+        exit 1
     }
 }
 
@@ -485,7 +488,7 @@ function Invoke-PasswordHashing {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred with password hashing: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred with password hashing: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
+        exit 1
     }
 }
 <#
@@ -517,7 +520,7 @@ function Add-LockerMetadata {
         else {
             $LockerPasswordPairs = @()
         }
-        
+
         # Ensure $LockerPasswordPairs is an array
         if (-not $LockerPasswordPairs) {
             $LockerPasswordPairs = @()
@@ -534,7 +537,7 @@ function Add-LockerMetadata {
             Show-Message -type "Warning" -message "A locker with the name '$script:inputLockerName' already exists. Please choose a different name." -title "ColDog Locker"
             return
         }
-        
+
         # Create a hashtable with the guid, Locker name, password, location, and isLocked attribute
         $LockerPasswordPair = [PSCustomObject]@{
             guid        = [guid]::NewGuid().ToString()
@@ -543,20 +546,20 @@ function Add-LockerMetadata {
             cdlLocation = "$cdlDir\$script:inputLockerName"
             isLocked    = $false
         }
-    
+
         # Add the hashtable to the array
         $updatedLockerPasswordPairs = @($LockerPasswordPairs + $LockerPasswordPair)
-    
+
         # Convert the array to JSON and write it to the file
         $json = $updatedLockerPasswordPairs | ConvertTo-Json
         Set-Content -Path "$localConfig\lockers.json" -Value $json
-    
+
         # Assign the modified array back to the script-scoped variable
         $LockerPasswordPairs = $updatedLockerPasswordPairs
-    
+
         # Create the Locker
         New-Item -ItemType Directory -Path "$cdlDir\$script:inputLockerName" | Out-Null
-    
+
         Add-LogEntry -message "$script:inputLockerName created successfully." -level "Success"
         Show-Message -type "Info" -message "$script:inputLockerName created successfully." -title "ColDog Locker"
     }
@@ -564,7 +567,7 @@ function Add-LockerMetadata {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
+        exit 1
     }
 }
 
@@ -585,7 +588,7 @@ function Remove-LockerMetadata {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
+        exit 1
     }
 }
 
@@ -707,7 +710,7 @@ function Show-Lockers {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
+        exit 1
     }
 }
 
@@ -777,8 +780,8 @@ function Resize-Log {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while resizing the log files: $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while resizing the log files: $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit
-    
+        exit 1
+
     }
 }
 
@@ -836,7 +839,7 @@ function Update-Settings {
         [Parameter(Mandatory = $false)]
         [bool]$AutoUpdate
     )
-    
+
     Get-Settings
 
     # Prompt the user to update the Debug Mode setting
