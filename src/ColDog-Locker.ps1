@@ -119,6 +119,7 @@ $Host.UI.RawUI.WindowTitle = "ColDog Locker $version"
 # Create CDL directories if they do not already exist
 #if (-not(Test-Path "$roamingConfig" -PathType Container)) { New-Item -ItemType Directory "$roamingConfig" }
 if (-not(Test-Path "$localConfig" -PathType Container)) { New-Item -ItemType Directory "$localConfig" }
+if (-not(Test-Path "$localConfig\config.json")) { Initialize-Config }
 if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
 
 #MARK: ----------[ Main Functions ]----------#
@@ -136,8 +137,8 @@ function Show-cdlMenu {
         " 6) ColDog Locker Help`n" +
         " 7) Check for Updates`n"
 
-        Write-Host "Choose an option from the following:`n" -ForegroundColor White
-        Write-Host $menuChoices
+        Write-Output "Choose an option from the following:`n" -ForegroundColor White
+        Write-Output $menuChoices
         $menuChoice = Read-Host -Prompt ">"
 
         switch ($menuChoice) {
@@ -164,8 +165,8 @@ function New-cdlLocker {
 
     # User Input
     $script:inputLockerName = Read-Host -Prompt "Locker Name"
-    Write-Host "`n    Minimum Password Length: 8 characters"
-    Write-Host "Recommended Password Length: 15 characters`n"
+    Write-Output "`n    Minimum Password Length: 8 characters"
+    Write-Output "Recommended Password Length: 15 characters`n"
     $inputPassword = Read-Host -Prompt " Locker Password" -AsSecureString
     $confirmPassword = Read-Host -Prompt "Confirm Password" -AsSecureString
 
@@ -449,15 +450,15 @@ function Show-MenuTitle {
     $separator = "-" * $separatorLength
     $emptyLine = " " * $width
 
-    Write-Host $line -ForegroundColor Blue
-    Write-Host $emptyLine
-    Write-Host ($title.PadLeft(($width + $title.Length) / 2)).PadRight($width) -ForegroundColor White
-    Write-Host ($subMenu.PadLeft(($width + $subMenu.Length) / 2)).PadRight($width) -ForegroundColor Yellow
-    Write-Host ($separator.PadLeft(($width + $separator.Length) / 2)).PadRight($width) -ForegroundColor DarkGray
-    Write-Host ($copyright.PadLeft(($width + $copyright.Length) / 2)).PadRight($width) -ForegroundColor White
-    Write-Host $emptyLine
-    Write-Host $line -ForegroundColor Blue
-    Write-Host $emptyLine
+    Write-Output $line -ForegroundColor Blue
+    Write-Output $emptyLine
+    Write-Output ($title.PadLeft(($width + $title.Length) / 2)).PadRight($width) -ForegroundColor White
+    Write-Output ($subMenu.PadLeft(($width + $subMenu.Length) / 2)).PadRight($width) -ForegroundColor Yellow
+    Write-Output ($separator.PadLeft(($width + $separator.Length) / 2)).PadRight($width) -ForegroundColor DarkGray
+    Write-Output ($copyright.PadLeft(($width + $copyright.Length) / 2)).PadRight($width) -ForegroundColor White
+    Write-Output $emptyLine
+    Write-Output $line -ForegroundColor Blue
+    Write-Output $emptyLine
 }
 
 # used by: New-cdlLocker, Unlock-CDL
@@ -639,31 +640,31 @@ function Show-Lockers {
         # Display each Locker name to the console based on the action
         switch ($action) {
             "Remove" {
-                Write-Host "Lockers:"
-                Write-Host ""
+                Write-Output "Lockers:"
+                Write-Output ""
                 for ($i = 0; $i -lt $lockers.Count; $i++) {
-                    Write-Host "$($i + 1). $($lockers[$i].lockerName)"
+                    Write-Output "$($i + 1). $($lockers[$i].lockerName)"
                 }
             }
             "Lock" {
-                Write-Host "Unlocked Lockers:"
-                Write-Host ""
+                Write-Output "Unlocked Lockers:"
+                Write-Output ""
                 for ($i = 0; $i -lt $unlockedLockers.Count; $i++) {
-                    Write-Host "$($i + 1). $($unlockedLockers[$i].lockerName)"
+                    Write-Output "$($i + 1). $($unlockedLockers[$i].lockerName)"
                 }
             }
             "Unlock" {
-                Write-Host "Locked Lockers:"
-                Write-Host ""
+                Write-Output "Locked Lockers:"
+                Write-Output ""
                 for ($i = 0; $i -lt $lockedLockers.Count; $i++) {
-                    Write-Host "$($i + 1). $($lockedLockers[$i].lockerName)"
+                    Write-Output "$($i + 1). $($lockedLockers[$i].lockerName)"
                 }
             }
         }
 
         # Prompt the user to choose a Locker to remove, lock, or unlock
         $selectedPairIndex = Read-Host "`nEnter the number corresponding to the locker you want to $($action.ToLower())"
-        Write-Host ""
+        Write-Output ""
 
         # Validate user input
         if (-not [int]::TryParse($selectedPairIndex, [ref]$null)) {
@@ -733,6 +734,11 @@ function Invoke-Log {
     # Create the log entry
     $logEntry = "[$(Get-Date)] [$level] $message"
 
+    # If the level is "Debug" and there is an error, add the line of code causing the error to the log entry
+    if ($level -eq "Debug" -and $Error[0]) {
+        $logEntry += " Line: $($Error[0].InvocationInfo.ScriptLineNumber)"
+    }
+
     # Write the log entry to the level-specific log file and the combined log file
     Add-Content -Path "$logDirectory\cdl$level.log" -Value $logEntry
     Add-Content -Path "$logDirectory\cdl.log" -Value $logEntry
@@ -793,6 +799,36 @@ function Show-Message {
         "Info" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Information") }
         "Warning" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Warning") }
         "Error" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Error") }
+    }
+}
+
+#MARK: ----------[ ColDog Locker Settings ]----------#
+function Initialize-Settings {
+    $settings = @{
+        $debugMode  = $false
+        $maxLogSize = 10485760
+        $autoUpdate = $true
+    }
+
+    $settings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+}
+
+function Update-Settings {
+    param(
+        [Parameter(Mandatory = $false)]
+        [bool]$DebugMode,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxLogSize,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$AutoUpdate
+    )
+    
+    if (Test-Path "$localConfig\settings.json") {
+        $settings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+
+
     }
 }
 
