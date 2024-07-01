@@ -39,7 +39,7 @@ jobs:
                   path: .\
                   recurse: true
                   # Include your own basic security rules. Removing this option will run all the rules
-                  includeRule: '"PSAvoidGlobalAliases", "PSAvoidUsingConvertToSecureStringWithPlainText", "UseApprovedVerbs", "AvoidReservedCharInCmdlet", "AvoidReservedParams", "AvoidUsingCmdletAliases", "AvoidUsingWMICmdlet", "AvoidUsingEmptyCatchBlock", "UseCmdletCorrectly", "AvoidUsingPositionalParameters", "AvoidGlobalVars", "UseDeclaredVarsMoreThanAssignments", "AvoidUsingInvokeExpression", "AvoidUsingPlainTextForPassword", "UsePSCredentialType", "AvoidUsingUsernameAndPasswordParams"'
+                  includeRule: '"PSAvoidGlobalAliases", "PSAvoidUsingConvertToSecureStringWithPlainText", "UseApprovedVerbs", "AvoidReservedCharInCmdlet", "AvoidReservedParams", "AvoidUsingCmdletAliases", "AvoidUsingWMICmdlet", "AvoidUsingEmptyCatchBlock", "UseCmdletCorrectly", "AvoidUsingPositionalParameters", "AvoidGlobalVars", "UseDeclaredVarsMoreThanAssignments", "AvoidUsingInvokeExpression", "AvoidUsingPlainTextForPassword", "UsePSCredentialType", "AvoidUsingUsernameAndPasswordParams", "PSAvoidTrailingWhitespace", "PSUseApprovedVerbs", "PSUseToExportFieldsInManifest", "PSUseToExportFunctionsInManifest", "PSUseToExportAliasesInManifest", "PSUseToExportVariablesInManifest", "PSUseToExportDscResourcesInManifest", "PSUseToExportCmdletsInManifest", "PSUseToExportWorkflowsInManifest", "PSUseToExportClassesInManifest", "PSUseToExportEnumsInManifest", "PSUseToExportModulesInManifest", "PSUseToExportFormatsInManifest", "PSUseToExportNestedModulesInManifest", "PSUseToExportScripts'
                   output: results.sarif
 
             # Upload the SARIF file generated in the previous step
