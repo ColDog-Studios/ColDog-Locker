@@ -128,7 +128,8 @@ function Show-cdlMenu {
         " 4) Unlock Locker`n" +
         " 5) About ColDog Locker`n" +
         " 6) ColDog Locker Help`n" +
-        " 7) Check for Updates`n"
+        " 7) Check for Updates`n" +
+        " 9) Update ColDog Locker Settings`n"
 
         Write-Output "Choose an option from the following:`n" -ForegroundColor White
         Write-Output $menuChoices
@@ -142,6 +143,7 @@ function Show-cdlMenu {
             5 { Get-cdlAbout }
             6 { Get-cdlHelp }
             7 { Get-cdlUpdates }
+            9 { Update-cdlSettings }
             "dev" { Get-cdlDeveloperInfo }
             #"sysinfo" { Get-SystemInformation }
             default {
@@ -706,14 +708,14 @@ function Show-Lockers {
     }
 }
 
-#MARK: ----------[ CDL Logging ]----------#
+#MARK: ----------[ Logging ]----------#
 function Invoke-Log {
     param(
         [Parameter(Mandatory = $true)]
         [string]$message,
 
         [Parameter(Mandatory = $true)]
-        [ValidateSet("Info", "Success", "Warning", "Error", "Debug")]
+        [ValidateSet("Info", "Success", "Warning", "Error")]
         [string]$level,
 
         [string]$logDirectory = "$localConfig\logs"
@@ -727,8 +729,11 @@ function Invoke-Log {
     # Create the log entry
     $logEntry = "[$(Get-Date)] [$level] $message"
 
-    # If the level is "Debug" and there is an error, add the line of code causing the error to the log entry
-    if ($level -eq "Debug" -and $Error[0]) {
+    # Check if Debug mode is enabled
+    Get-Settings
+
+    # If Debug mode is enabled, add the line of code causing the error to the log entry
+    if ($cdlSettings.debugMode) {
         $logEntry += " Line: $($Error[0].InvocationInfo.ScriptLineNumber)"
     }
 
@@ -774,7 +779,7 @@ function Resize-Log {
     }
 }
 
-#MARK: ----------[ Message Boxes ]----------#
+#MARK: ----------[ Msg Boxes ]----------#
 function Show-Message {
     param (
         [Parameter(Mandatory = $true)]
@@ -795,15 +800,26 @@ function Show-Message {
     }
 }
 
-#MARK: ----------[ ColDog Locker Settings ]----------#
+#MARK: ----------[ Settings ]----------#
 function Initialize-Settings {
-    $settings = @{
+    $cdlSettings = @{
         $debugMode  = $false
-        $maxLogSize = 10485760
+        $maxLogSize = 10485760 # 10MB
         $autoUpdate = $true
     }
 
-    $settings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+    return $cdlSettings
+}
+
+function Get-Settings {
+    if (Test-Path "$localConfig\settings.json") {
+        $cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+        return $cdlSettings
+    }
+    else {
+        Initialize-Settings
+    }
 }
 
 function Update-Settings {
@@ -818,14 +834,38 @@ function Update-Settings {
         [bool]$AutoUpdate
     )
     
-    if (Test-Path "$localConfig\settings.json") {
-        $settings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+    Get-Settings
 
+    # Read-Host for each setting to update
 
+    # Prompt the user to update the Debug Mode setting
+    $debugMode = Read-Host "Enable Debug Mode? (y/N)"
+
+    if ($debugMode -eq "y") {
+        $cdlSettings.debugMode = $true
     }
+    else {
+        $cdlSettings.debugMode = $false
+    }
+
+    # Prompt the user to update the Max Log Size setting in megabytes
+    $maxLogSize = Read-Host "Enter the maximum log file size in MB"
+    $maxLogSize = [int]$maxLogSize
+    $cdlSettings.maxLogSize = $maxLogSize * 1048576
+
+    # Prompt the user to update the Auto Update setting
+    $autoUpdate = Read-Host "Enable Auto Update? (y/N)"
+
+    if ($autoUpdate -eq "y") {
+        $cdlSettings.autoUpdate = $true
+    }
+    else {
+        $cdlSettings.autoUpdate = $false
+    }
+
+    # Update the settings file with the new settings
+    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
 }
 
 #MARK: ----------[ Run Program ]----------#
 Show-cdlMenu
-
-# TODO: Add a function to display system information
