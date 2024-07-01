@@ -112,8 +112,10 @@ $Host.UI.RawUI.WindowTitle = "ColDog Locker $version"
 # Create CDL directories if they do not already exist
 #if (-not(Test-Path "$roamingConfig" -PathType Container)) { New-Item -ItemType Directory "$roamingConfig" }
 if (-not(Test-Path "$localConfig" -PathType Container)) { New-Item -ItemType Directory "$localConfig" }
-if (-not(Test-Path "$localConfig\config.json")) { Initialize-Config }
+
+Get-Settings
 if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
+if ($cdlSettings.autoUpdate) { Update-ColDogLocker }
 
 #MARK: ----------[ Main Functions ]----------#
 
@@ -486,17 +488,18 @@ function Invoke-PasswordHashing {
         exit
     }
 }
+<#
+function ConvertSecureStringToClearText {
+    param (
+        [System.Security.SecureString]$secureString
+    )
+    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
+    return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+}
 
-#function ConvertSecureStringToClearText {
-#    param (
-#        [System.Security.SecureString]$secureString
-#    )
-#    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureString)
-#    return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-#}
-
-#$script:inputPassClear = ConvertSecureStringToClearText $inputPassword
-#$confirmPassClear = ConvertSecureStringToClearText $confirmPassword
+$script:inputPassClear = ConvertSecureStringToClearText $inputPassword
+$confirmPassClear = ConvertSecureStringToClearText $confirmPassword
+#>
 
 #MARK: ----------[ Add-LockerMetadata ]----------#
 function Add-LockerMetadata {
@@ -836,8 +839,6 @@ function Update-Settings {
     
     Get-Settings
 
-    # Read-Host for each setting to update
-
     # Prompt the user to update the Debug Mode setting
     $debugMode = Read-Host "Enable Debug Mode? (y/N)"
 
@@ -868,11 +869,5 @@ function Update-Settings {
 }
 
 #MARK: ----------[ Run Program ]----------#
-
-Get-Settings
-
-if ($cdlSettings.autoUpdate) {
-    Update-ColDogLocker
-}
 
 Show-Menu
