@@ -193,7 +193,7 @@ function New-Locker {
         }
         catch {
             # Handle any errors that occurred during the script execution
-            Invoke-Log -message "An error occurred while creating your locker: $($_.Exception.Message)" -level "Error"
+            Add-LogEntry -message "An error occurred while creating your locker: $($_.Exception.Message)" -level "Error"
             Show-Message -type "Error" -message "An error occurred while creating your locker: $($_.Exception.Message)" -title "Error - ColDog Locker"
             exit
         }
@@ -256,19 +256,19 @@ function Lock-CDL {
                 $json = $LockerPasswordPairs | ConvertTo-Json -Depth 3
                 Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-                Invoke-Log -message "Locker $($selectedPair.lockerName) locked successfully." -level "Success"
+                Add-LogEntry -message "Locker $($selectedPair.lockerName) locked successfully." -level "Success"
                 Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) locked successfully." -title "ColDog Locker"
                 break
             }
             catch {
                 # Handle any errors that occurred during the script execution
-                Invoke-Log -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -level "Error"
+                Add-LogEntry -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while locking $selectedPair.lockerName: $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit
             }
         }
         else {
-            Invoke-Log -message "Failed password attempt" -level "Warning"
+            Add-LogEntry -message "Failed password attempt" -level "Warning"
             Show-Message -type "Warning" -message "Failed password atttept. Please try again." -title "Warning"
         }
     }
@@ -312,13 +312,13 @@ function Unlock-CDL {
                 $json = $LockerPasswordPairs | ConvertTo-Json -Depth 3
                 Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-                Invoke-Log -message "Locker $($selectedPair.lockerName) unlocked successfully." -level "Success"
+                Add-LogEntry -message "Locker $($selectedPair.lockerName) unlocked successfully." -level "Success"
                 Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) unlocked successfully." -title "ColDog Locker"
                 break
             }
             catch {
                 # Handle any errors that occurred during the script execution
-                Invoke-Log -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -level "Error"
+                Add-LogEntry -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while unlocking $($selectedPair.lockerName): $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit
             }
@@ -326,14 +326,14 @@ function Unlock-CDL {
         else {
             $failedAttempts++
             if ($failedAttempts -ge 10) {
-                Invoke-Log -message "10 failed password attempts. Locking $selectedPair.lockerName permanently." -level "Error"
+                Add-LogEntry -message "10 failed password attempts. Locking $selectedPair.lockerName permanently." -level "Error"
                 Show-Message -type "Error" -message "10 failed password attempts. Locking $selectedPair.lockerName permanently." -title "ColDog Locker"
 
                 break
             }
             else {
                 $remainingAttempts = 10 - $failedAttempts
-                Invoke-Log -message "Failed password attempt. $remainingAttempts attempts remaining." -level "Warning"
+                Add-LogEntry -message "Failed password attempt. $remainingAttempts attempts remaining." -level "Warning"
                 Show-Message -type "Warning" -message "Failed password atttept. $remainingAttempts attempts remaining." -title "Warning"
             }
         }
@@ -392,11 +392,11 @@ function Update-ColDogLocker {
                     $fileName = Join-Path $downloadDirectory "ColDog_Locker_${downloadVersion}.exe"
                     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $fileName
 
-                    Invoke-Log -message "Downloaded the latest version to: $fileName" -level "Success"
+                    Add-LogEntry -message "Downloaded the latest version to: $fileName" -level "Success"
                     Show-Message -type "Info" -message "Downloaded the latest version to: $fileName.`nPlease run the installer to update ColDog Locker." -title "Download Complete"
                 }
                 catch {
-                    Invoke-Log -message "An error occurred while downloading the latest version: $($_.Exception.Message)" -level "Error"
+                    Add-LogEntry -message "An error occurred while downloading the latest version: $($_.Exception.Message)" -level "Error"
                     Show-Message -type "Error" -message "An error occurred while downloading the latest version: $($_.Exception.Message)" -title "Error - ColDog Locker"
                 }
             }
@@ -411,7 +411,7 @@ function Update-ColDogLocker {
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred while checking for updates: $($_.Exception.Message)" -Level "Error"
+        Add-LogEntry -Message "An error occurred while checking for updates: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while checking for updates: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
@@ -481,7 +481,7 @@ function Invoke-PasswordHashing {
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred with password hashing: $($_.Exception.Message)" -Level "Error"
+        Add-LogEntry -Message "An error occurred with password hashing: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred with password hashing: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
@@ -527,7 +527,7 @@ function Add-LockerMetadata {
         $LockerExists = $LockerPasswordPairs | Where-Object { $_.lockerName -eq $script:inputLockerName }
 
         if ($LockerExists) {
-            Invoke-Log -message "A locker with the name '$script:inputLockerName' already exists." -level "Warning"
+            Add-LogEntry -message "A locker with the name '$script:inputLockerName' already exists." -level "Warning"
             Show-Message -type "Warning" -message "A locker with the name '$script:inputLockerName' already exists. Please choose a different name." -title "ColDog Locker"
             return
         }
@@ -554,12 +554,12 @@ function Add-LockerMetadata {
         # Create the Locker
         New-Item -ItemType Directory -Path "$cdlDir\$script:inputLockerName" | Out-Null
     
-        Invoke-Log -message "$script:inputLockerName created successfully." -level "Success"
+        Add-LogEntry -message "$script:inputLockerName created successfully." -level "Success"
         Show-Message -type "Info" -message "$script:inputLockerName created successfully." -title "ColDog Locker"
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -Level "Error"
+        Add-LogEntry -Message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while adding $script:inputLockerName to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
@@ -575,12 +575,12 @@ function Remove-LockerMetadata {
         $json = $lockers | ConvertTo-Json -Depth 3
         Set-Content -Path "$localConfig\lockers.json" -Value $json
 
-        Invoke-Log -message "Locker $($selectedPair.lockerName) removed successfully." -level "Success"
+        Add-LogEntry -message "Locker $($selectedPair.lockerName) removed successfully." -level "Success"
         Show-Message -type "Info" -message "Locker $($selectedPair.lockerName) removed successfully." -title "ColDog Locker"
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
+        Add-LogEntry -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
@@ -702,7 +702,7 @@ function Show-Lockers {
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -level "Error"
+        Add-LogEntry -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while $($action)ing $($selectedPair): $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     }
@@ -767,12 +767,12 @@ function Resize-Log {
     }
     # catch if no log files exist
     catch [System.Management.Automation.ItemNotFoundException] {
-        Invoke-Log -message "No log files found in the log directory." -level "Info"
+        Add-LogEntry -message "No log files found in the log directory." -level "Info"
         return
     }
     catch {
         # Handle any errors that occurred during the script execution
-        Invoke-Log -message "An error occurred while resizing the log files: $($_.Exception.Message)" -level "Error"
+        Add-LogEntry -message "An error occurred while resizing the log files: $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while resizing the log files: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit
     
