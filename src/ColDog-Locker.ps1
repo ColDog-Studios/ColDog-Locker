@@ -96,13 +96,6 @@ Add-Type -TypeDefinition @"
     }
 "@
 
-# Use the cdlEncryptor class to encrypt and decrypt directories
-#$encryptionPassword = "your encryption password"
-#$inputDirectory = "C:\\Users\\ColDog\\Documents\\GitHub\\ColDog-Locker-Source\\Private"
-#
-#[cdlEncryptor]::EncryptDirectory($inputDirectory, $encryptionPassword)
-#[cdlEncryptor]::DecryptDirectory($inputDirectory, $encryptionPassword)
-
 #MARK: ----------[ Variables ]----------#
 
 $version = "v0.0.5-Alpha"
