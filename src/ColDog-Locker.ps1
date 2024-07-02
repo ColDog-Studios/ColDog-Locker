@@ -880,7 +880,6 @@ function Update-Settings {
     }
     elseif ($autoUpdate -eq "No") {
         $cdlSettings.autoUpdate = $false
-    
     }
 
     # Update the settings file with the new settings
