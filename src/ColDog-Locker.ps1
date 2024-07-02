@@ -387,7 +387,7 @@ function Update-ColDogLocker {
             "Latest Version: $latestVersion`n`n" +
             "Do you want to download the latest version?"
 
-            $updatePromptChoice = [System.Windows.Forms.MessageBox]::Show($message, "Update Available", "YesNo", "Information")
+            $updatePromptChoice = [System.Windows.Forms.MessageBox]::Show($message, "Update Available", "YesNo", "Question")
 
             if ("$updatePromptChoice" -eq "Yes" ) {
                 try {
@@ -842,29 +842,27 @@ function Update-Settings {
 
     Get-Settings
 
-    # Prompt the user to update the Debug Mode setting
-    $debugMode = Read-Host "Enable Debug Mode? (y/N)"
+    $debugMode = [System.Windows.Forms.MessageBox]::Show("Enable Debug Mode?", "Debug Mode", "YesNo", "Question")
 
-    if ($debugMode -eq "y") {
+    if ($debugMode -eq "Yes") {
         $cdlSettings.debugMode = $true
     }
-    else {
+    elseif ($debugMode -eq "No") {
         $cdlSettings.debugMode = $false
     }
 
-    # Prompt the user to update the Max Log Size setting in megabytes
     $maxLogSize = Read-Host "Enter the maximum log file size in MB"
     $maxLogSize = [int]$maxLogSize
     $cdlSettings.maxLogSize = $maxLogSize * 1048576
 
-    # Prompt the user to update the Auto Update setting
-    $autoUpdate = Read-Host "Enable Auto Update? (y/N)"
+    $autoUpdate = [System.Windows.Forms.MessageBox]::Show("Enable Auto Update?", "Auto Update", "YesNo", "Question")
 
-    if ($autoUpdate -eq "y") {
+    if ($autoUpdate -eq "Yes") {
         $cdlSettings.autoUpdate = $true
     }
-    else {
+    elseif ($autoUpdate -eq "No") {
         $cdlSettings.autoUpdate = $false
+    
     }
 
     # Update the settings file with the new settings
