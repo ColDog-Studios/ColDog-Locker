@@ -100,7 +100,7 @@ Add-Type -TypeDefinition @"
 
 $version = "v0.0.5-Alpha"
 $currentVersion = ($version.TrimStart("v")).TrimEnd("-Alpha")
-$dateMod = "7/1/2024"
+$dateMod = "7/2/2024"
 $roamingConfig = "$env:AppData\ColDog Studios\ColDog Locker"
 $localConfig = "$env:LocalAppData\ColDog Studios\ColDog Locker"
 $cdlDir = Get-Location
@@ -491,6 +491,26 @@ function Invoke-PasswordHashing {
         exit 1
     }
 }
+
+function Watch-Config {
+    $settingsWatcher = New-Object System.IO.FileSystemWatcher
+    $settingsWatcher.Path = "$localConfig"
+    $settingsWatcher.Filter = "settings.json"
+    $settingsWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
+    $settingsWatcher.EnableRaisingEvents = $true
+
+    $lockersWatcher = New-Object System.IO.FileSystemWatcher
+    $lockersWatcher.Path = "$localConfig"
+    $lockersWatcher.Filter = "lockers.json"
+    $lockersWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
+    $lockersWatcher.EnableRaisingEvents = $true
+
+    Register-ObjectEvent -InputObject $settingsWatcher -EventName "Changed" -Action { Get-Settings }
+    Register-ObjectEvent -InputObject $lockersWatcher -EventName "Changed" -Action { Get-LockerMetadata }
+}
+
+# Continue with the rest of your script...
+
 <#
 function ConvertSecureStringToClearText {
     param (
@@ -588,6 +608,27 @@ function Remove-LockerMetadata {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        exit 1
+    }
+}
+
+function Get-LockerMetadata {
+    try {
+        if (-not (Test-Path "$localConfig\lockers.json")) {
+            return
+        }
+
+        $script:cdlLockers = Get-Content "$localConfig\lockers.json" | ConvertFrom-Json
+
+        # Ensure the content is an array
+        if ($script:cdlLockers -isnot [System.Collections.IEnumerable]) {
+            $script:cdlLockers = @($script:cdlLockers)
+        }
+    }
+    catch {
+        # Handle any errors that occurred during the script execution
+        Add-LogEntry -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -level "Error"
+        Show-Message -type "Error" -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
     }
 }
@@ -785,43 +826,20 @@ function Resize-Log {
     }
 }
 
-#MARK: ----------[ Msg Boxes ]----------#
-function Show-Message {
-    param (
-        [Parameter(Mandatory = $true)]
-        [ValidateSet("Info", "Warning", "Error")]
-        [string]$type,
-
-        [Parameter(Mandatory = $true)]
-        [string]$message,
-
-        [Parameter(Mandatory = $true)]
-        [string]$title
-    )
-
-    switch ($type) {
-        "Info" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Information") }
-        "Warning" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Warning") }
-        "Error" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Error") }
-    }
-}
-
 #MARK: ----------[ Settings ]----------#
 function Initialize-Settings {
-    $cdlSettings = @{
+    $script:cdlSettings = @{
         $debugMode  = $false
         $maxLogSize = 10485760 # 10MB
         $autoUpdate = $true
     }
 
-    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
-    return $cdlSettings
+    $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
 }
 
 function Get-Settings {
     if (Test-Path "$localConfig\settings.json") {
-        $cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
-        return $cdlSettings
+        $script:cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
     }
     else {
         Initialize-Settings
@@ -872,6 +890,28 @@ function Update-Settings {
     Show-Message -type "Info" -message "Settings updated successfully." -title "ColDog Locker"
 }
 
+#MARK: ----------[ Msg Boxes ]----------#
+function Show-Message {
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("Info", "Warning", "Error")]
+        [string]$type,
+
+        [Parameter(Mandatory = $true)]
+        [string]$message,
+
+        [Parameter(Mandatory = $true)]
+        [string]$title
+    )
+
+    switch ($type) {
+        "Info" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Information") }
+        "Warning" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Warning") }
+        "Error" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Error") }
+    }
+}
+
 #MARK: ----------[ Run Program ]----------#
 
+Watch-Config
 Show-Menu
