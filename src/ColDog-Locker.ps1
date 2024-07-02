@@ -867,6 +867,9 @@ function Update-Settings {
 
     # Update the settings file with the new settings
     $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+
+    Add-LogEntry -message "Settings updated successfully. Debug mode: $debugMode. Max log file size: $($cdlSettings.maxLogSize). Auto update: $autoUpdate" -level "Success"
+    Show-Message -type "Info" -message "Settings updated successfully." -title "ColDog Locker"
 }
 
 #MARK: ----------[ Run Program ]----------#
