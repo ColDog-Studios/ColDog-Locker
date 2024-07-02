@@ -100,7 +100,7 @@ Add-Type -TypeDefinition @"
 
 $version = "v0.0.5-Alpha"
 $currentVersion = ($version.TrimStart("v")).TrimEnd("-Alpha")
-$dateMod = "7/1/2024"
+$dateMod = "7/2/2024"
 $roamingConfig = "$env:AppData\ColDog Studios\ColDog Locker"
 $localConfig = "$env:LocalAppData\ColDog Studios\ColDog Locker"
 $cdlDir = Get-Location
@@ -387,7 +387,7 @@ function Update-ColDogLocker {
             "Latest Version: $latestVersion`n`n" +
             "Do you want to download the latest version?"
 
-            $updatePromptChoice = [System.Windows.Forms.MessageBox]::Show($message, "Update Available", "YesNo", "Information")
+            $updatePromptChoice = [System.Windows.Forms.MessageBox]::Show($message, "Update Available", "YesNo", "Question")
 
             if ("$updatePromptChoice" -eq "Yes" ) {
                 try {
@@ -491,6 +491,26 @@ function Invoke-PasswordHashing {
         exit 1
     }
 }
+
+function Watch-Config {
+    $settingsWatcher = New-Object System.IO.FileSystemWatcher
+    $settingsWatcher.Path = "$localConfig"
+    $settingsWatcher.Filter = "settings.json"
+    $settingsWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
+    $settingsWatcher.EnableRaisingEvents = $true
+
+    $lockersWatcher = New-Object System.IO.FileSystemWatcher
+    $lockersWatcher.Path = "$localConfig"
+    $lockersWatcher.Filter = "lockers.json"
+    $lockersWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
+    $lockersWatcher.EnableRaisingEvents = $true
+
+    Register-ObjectEvent -InputObject $settingsWatcher -EventName "Changed" -Action { Get-Settings }
+    Register-ObjectEvent -InputObject $lockersWatcher -EventName "Changed" -Action { Get-LockerMetadata }
+}
+
+# Continue with the rest of your script...
+
 <#
 function ConvertSecureStringToClearText {
     param (
@@ -588,6 +608,27 @@ function Remove-LockerMetadata {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while removing $selectedPair to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
+        exit 1
+    }
+}
+
+function Get-LockerMetadata {
+    try {
+        if (-not (Test-Path "$localConfig\lockers.json")) {
+            return
+        }
+
+        $script:cdlLockers = Get-Content "$localConfig\lockers.json" | ConvertFrom-Json
+
+        # Ensure the content is an array
+        if ($script:cdlLockers -isnot [System.Collections.IEnumerable]) {
+            $script:cdlLockers = @($script:cdlLockers)
+        }
+    }
+    catch {
+        # Handle any errors that occurred during the script execution
+        Add-LogEntry -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -level "Error"
+        Show-Message -type "Error" -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
     }
 }
@@ -785,6 +826,69 @@ function Resize-Log {
     }
 }
 
+#MARK: ----------[ Settings ]----------#
+function Initialize-Settings {
+    $script:cdlSettings = @{
+        $debugMode  = $false
+        $maxLogSize = 10485760 # 10MB
+        $autoUpdate = $true
+    }
+
+    $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+}
+
+function Get-Settings {
+    if (Test-Path "$localConfig\settings.json") {
+        $script:cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+    }
+    else {
+        Initialize-Settings
+    }
+}
+
+function Update-Settings {
+    param(
+        [Parameter(Mandatory = $false)]
+        [bool]$DebugMode,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxLogSize,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$AutoUpdate
+    )
+
+    Get-Settings
+
+    $debugMode = [System.Windows.Forms.MessageBox]::Show("Enable Debug Mode?", "Debug Mode", "YesNo", "Question")
+
+    if ($debugMode -eq "Yes") {
+        $cdlSettings.debugMode = $true
+    }
+    elseif ($debugMode -eq "No") {
+        $cdlSettings.debugMode = $false
+    }
+
+    $maxLogSize = Read-Host "Enter the maximum log file size in MB"
+    $maxLogSize = [int]$maxLogSize
+    $cdlSettings.maxLogSize = $maxLogSize * 1048576
+
+    $autoUpdate = [System.Windows.Forms.MessageBox]::Show("Enable Auto Update?", "Auto Update", "YesNo", "Question")
+
+    if ($autoUpdate -eq "Yes") {
+        $cdlSettings.autoUpdate = $true
+    }
+    elseif ($autoUpdate -eq "No") {
+        $cdlSettings.autoUpdate = $false
+    }
+
+    # Update the settings file with the new settings
+    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+
+    Add-LogEntry -message "Settings updated successfully. Debug mode: $debugMode. Max log file size: $($cdlSettings.maxLogSize). Auto update: $autoUpdate" -level "Success"
+    Show-Message -type "Info" -message "Settings updated successfully." -title "ColDog Locker"
+}
+
 #MARK: ----------[ Msg Boxes ]----------#
 function Show-Message {
     param (
@@ -806,71 +910,7 @@ function Show-Message {
     }
 }
 
-#MARK: ----------[ Settings ]----------#
-function Initialize-Settings {
-    $cdlSettings = @{
-        $debugMode  = $false
-        $maxLogSize = 10485760 # 10MB
-        $autoUpdate = $true
-    }
-
-    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
-    return $cdlSettings
-}
-
-function Get-Settings {
-    if (Test-Path "$localConfig\settings.json") {
-        $cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
-        return $cdlSettings
-    }
-    else {
-        Initialize-Settings
-    }
-}
-
-function Update-Settings {
-    param(
-        [Parameter(Mandatory = $false)]
-        [bool]$DebugMode,
-
-        [Parameter(Mandatory = $false)]
-        [int]$MaxLogSize,
-
-        [Parameter(Mandatory = $false)]
-        [bool]$AutoUpdate
-    )
-
-    Get-Settings
-
-    # Prompt the user to update the Debug Mode setting
-    $debugMode = Read-Host "Enable Debug Mode? (y/N)"
-
-    if ($debugMode -eq "y") {
-        $cdlSettings.debugMode = $true
-    }
-    else {
-        $cdlSettings.debugMode = $false
-    }
-
-    # Prompt the user to update the Max Log Size setting in megabytes
-    $maxLogSize = Read-Host "Enter the maximum log file size in MB"
-    $maxLogSize = [int]$maxLogSize
-    $cdlSettings.maxLogSize = $maxLogSize * 1048576
-
-    # Prompt the user to update the Auto Update setting
-    $autoUpdate = Read-Host "Enable Auto Update? (y/N)"
-
-    if ($autoUpdate -eq "y") {
-        $cdlSettings.autoUpdate = $true
-    }
-    else {
-        $cdlSettings.autoUpdate = $false
-    }
-
-    # Update the settings file with the new settings
-    $cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
-}
-
 #MARK: ----------[ Run Program ]----------#
 
+Watch-Config
 Show-Menu
