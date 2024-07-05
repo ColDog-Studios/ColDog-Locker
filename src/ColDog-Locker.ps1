@@ -98,9 +98,9 @@ Add-Type -TypeDefinition @"
 
 #MARK: ----------[ Variables ]----------#
 
-$version = "v0.0.5-Alpha"
-$currentVersion = ($version.TrimStart("v")).TrimEnd("-Alpha")
-$dateMod = "7/2/2024"
+$version = "v0.1.0-Beta"
+$currentVersion = ($version.TrimStart("v")).TrimEnd("-Beta")
+$dateMod = "7/4/2024"
 $roamingConfig = "$env:AppData\ColDog Studios\ColDog Locker"
 $localConfig = "$env:LocalAppData\ColDog Studios\ColDog Locker"
 $cdlDir = Get-Location
@@ -201,10 +201,17 @@ function Protect-Locker {
     $selectedLocker = $result.selectedLocker
 
     while ($true) {
-        $pass = Read-Host -Prompt "Enter the password to lock $($selectedLocker.lockerName)" -AsSecureString
+        $pass = Read-Host -Prompt "`nEnter the password to lock $($selectedLocker.lockerName)" -AsSecureString
 
         $passClear = Convert-SecureString2Text -SecureString $pass
-        $passHash = Invoke-PasswordHashing -passClear $passClear
+
+        # Check if the password is null or empty. If not, hash the password
+        if ($null -eq $passClear -or $passClear -eq "" ) {
+            Add-LogEntry -message "Password cannot be empty, blank, or null." -level "Warning"
+            Show-Message -type "Warning" -message "Password cannot be empty, blank, or null. Please try again." -title "ColDog Locker"
+            continue
+        }
+        else { $passHash = Invoke-PasswordHashing -passClear $passClear }
 
         if ($selectedLocker.password -ceq $passHash) {
             try {
@@ -251,10 +258,17 @@ function Unprotect-Locker {
 
     while ($true) {
         # Show confirmation prompt
-        $pass = Read-Host -Prompt "Enter the password to unlock $($selectedLocker.lockerName)" -AsSecureString
+        $pass = Read-Host -Prompt "`nEnter the password to unlock $($selectedLocker.lockerName)" -AsSecureString
 
         $passClear = Convert-SecureString2Text -secureString $pass
-        $passHash = Invoke-PasswordHashing -passClear $passClear
+
+        # Check if the password is null or empty. If not, hash the password
+        if ($null -eq $passClear -or $passClear -eq "" ) {
+            Add-LogEntry -message "Password cannot be empty, blank, or null." -level "Warning"
+            Show-Message -type "Warning" -message "Password cannot be empty, blank, or null. Please try again." -title "ColDog Locker"
+            continue
+        }
+        else { $passHash = Invoke-PasswordHashing -passClear $passClear }
 
         if ($selectedLocker.password -ceq $passHash) {
             try {
@@ -506,7 +520,7 @@ function Update-Settings {
     if ($debugMode -eq "Yes") { $script:cdlSettings.debugMode = $true }
     elseif ($debugMode -eq "No") { $script:cdlSettings.debugMode = $false }
 
-    $maxLogSize = Read-Host "Enter the maximum log file size in MB"
+    $maxLogSize = Read-Host "`nEnter the maximum log file size in MB"
     $maxLogSize = [int]$maxLogSize
     $script:cdlSettings.maxLogSize = $maxLogSize * 1048576
 
@@ -568,8 +582,11 @@ function Add-LockerMetadata {
         $json = $script:cdlLockers | ConvertTo-Json -Depth 3
         Set-Content -Path "$localConfig\lockers.json" -Value $json | Out-Null
 
-        # Create the Locker
-        New-Item -ItemType Directory -Path "$cdlDir\$lockerName" | Out-Null
+        # Check if the directory already exists, otherwise create it
+        if (Test-Path "$cdlDir\$lockerName") {
+            Add-LogEntry -message "A directory with the name '$lockerName' already exists. Ignoring creating a new directory. " -level "Info"
+        }
+        else { New-Item -ItemType Directory -Path "$cdlDir\$lockerName" | Out-Null }
 
         Add-LogEntry -message "$lockerName created successfully." -level "Success"
         Show-Message -type "Info" -message "$lockerName created successfully." -title "ColDog Locker"
@@ -799,8 +816,7 @@ function Resize-Log {
             $fileSizeMB = $fileSizeBytes / 1MB
 
             # Check if the file size is greater than 10MB
-            if ($fileSizeMB -gt 10)
-            {
+            if ($fileSizeMB -gt 10) {
                 # Keep the last 1000 lines and overwrite the file
                 Get-Content $logFilePath | Select-Object -Last 1000 | Set-Content $logFilePath
             }
@@ -834,9 +850,9 @@ function Show-Message {
     )
 
     switch ($type) {
-        "Info" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Information") }
-        "Warning" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Warning") }
-        "Error" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Error") }
+        "Info" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Information") | Out-Null }
+        "Warning" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Warning") | Out-Null }
+        "Error" { [System.Windows.Forms.MessageBox]::Show($message, $title, "OK", "Error") | Out-Null }
     }
 }
 
