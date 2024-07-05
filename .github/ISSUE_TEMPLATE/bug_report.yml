@@ -31,8 +31,8 @@ body:
           label: Version
           description: What version of ColDog Locker are you running?
           options:
-              - v0.0.5
-              - v0.0.4
+              - v0.1.0-Beta
+              - v0.0.4-Alpha
       validations:
           required: true
     - type: dropdown
