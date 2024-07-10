@@ -111,6 +111,8 @@ $Host.UI.RawUI.WindowTitle = "ColDog Locker $version"
 
 function Show-Menu {
     while ($true) {
+        Get-Settings
+        Get-LockerMetadata
         Show-MenuTitle -subMenu "Main Menu"
 
         $menuChoices = " 1) New Locker`n" +
@@ -386,7 +388,7 @@ function Update-ColDogLocker {
             "Current Version: $currentVersion `n" +
             "Latest Version: $latestVersion"
 
-            Add-LogEntry -message "Successfully checked for updates: $($message)" -level "Success"
+            #Add-LogEntry -message "Successfully checked for updates: $($message)" -level "Success"
         }
     }
     catch {
@@ -645,6 +647,9 @@ function Show-Lockers {
         [string]$action
     )
 
+    Get-Settings
+    Get-LockerMetadata
+
     # Specify Locked and Unlocked lockers
     $unlockedLockers = $script:cdlLockers | Where-Object { $_.isLocked -eq $false }
     $unlockedLockers = @($unlockedLockers)
@@ -736,32 +741,6 @@ function Show-Lockers {
         # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while $($action)ing $($selectedLocker): $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while $($action)ing $($selectedLocker): $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit 1
-    }
-}
-
-#MARK: ----------[ Watch Config ]----------#
-function Watch-Config {
-    $settingsWatcher = New-Object System.IO.FileSystemWatcher
-    $settingsWatcher.Path = "$localConfig"
-    $settingsWatcher.Filter = "settings.json"
-    $settingsWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
-    $settingsWatcher.EnableRaisingEvents = $true
-
-    $lockersWatcher = New-Object System.IO.FileSystemWatcher
-    $lockersWatcher.Path = "$localConfig"
-    $lockersWatcher.Filter = "lockers.json"
-    $lockersWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
-    $lockersWatcher.EnableRaisingEvents = $true
-
-    try {
-        Register-ObjectEvent -InputObject $settingsWatcher -EventName "Changed" -Action { Get-Settings } | Out-Null
-        Register-ObjectEvent -InputObject $lockersWatcher -EventName "Changed" -Action { Get-LockerMetadata } | Out-Null
-    }
-    catch {
-        # Handle any errors that occurred during the script execution
-        Add-LogEntry -message "An error occurred while watching the config files: $($_.Exception.Message)" -level "Error"
-        Show-Message -type "Error" -message "An error occurred while watching the config files: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
     }
 }
@@ -864,7 +843,7 @@ if (-not(Test-Path "$localConfig" -PathType Container)) { New-Item -ItemType Dir
 
 Get-Settings
 Get-LockerMetadata
-Watch-Config
+
 if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
 if ($script:cdlSettings.autoUpdate) { Update-ColDogLocker }
 
