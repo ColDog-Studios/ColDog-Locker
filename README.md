@@ -1,12 +1,12 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
+
 [![Release][release-shield]][release-url]
 [![Downloads][downloads-shield]][downloads-url]
 [![Issues][issues-shield]][issues-url]
 [![Stargazers][stars-shield]][stars-url]
 [![LinkedIn][linkedin-shield]][linkedin-cds-url]
-
 
 <!-- PROJECT LOGO -->
 <br>
@@ -35,7 +35,6 @@
   </p>
 </div>
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -62,27 +61,26 @@
   </ol>
 </details>
 
-
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
 ### IMPORTANT NOTE:
 
-***ColDog Locker is still in development and does not currently have an official supported release***
+**_ColDog Locker is still in development and does not currently have an official supported release_**
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 ### Built With
 
-* [![PowerShell][PowerShell-shield]][PowerShell-url]
-* [![C#][C#-shield]][C#-url]
-* [![.Net][.Net-shield]][.Net-url]
+-   [![PowerShell][PowerShell-shield]][PowerShell-url]
+-   [![C#][C#-shield]][C#-url]
+-   [![.Net][.Net-shield]][.Net-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- GETTING STARTED -->
+
 ## Getting Started
 
 ### Important Notice
@@ -91,9 +89,9 @@ ColDog Studios is committed to keeping your files secure and will fix any securi
 
 Your anti-virus will potentially flag ColDog Locker as a virus. This is a false positive and you will need to make an exclusion.
 
-  - By using this software, you agree that ColDog Studios is not held responsible for any data lost, stolen, or accessed.
-  - The software is provided as is and without warranty as to its features, functionality, or performance.
-  - Any unauthorized copying, distributing, or selling of this software is prohibited.
+-   By using this software, you agree that ColDog Studios is not held responsible for any data lost, stolen, or accessed.
+-   The software is provided as is and without warranty as to its features, functionality, or performance.
+-   Any unauthorized copying, distributing, or selling of this software is prohibited.
 
 ### Disclaimer of Warranties
 
@@ -101,20 +99,19 @@ THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR
 
 ### Compatability
 
-|                           | Requirments         | Recommendations            |
-| ------------------------- | :-----------------: | :------------------------: |
-| Operating System (64 bit) | Windows 10          | Windows 10 or later        |
-| PowerShell Version        | PowerShell 5.1      | PowerShell 5.1 or later    |
-| .Net Framework            | .Net Framework 4.0  | .Net Framwork 4.5 or later |
+|                           |    Requirments     |      Recommendations       |
+| ------------------------- | :----------------: | :------------------------: |
+| Operating System (64 bit) |     Windows 10     |    Windows 10 or later     |
+| PowerShell Version        |   PowerShell 5.1   |  PowerShell 5.1 or later   |
+| .Net Framework            | .Net Framework 4.0 | .Net Framwork 4.5 or later |
 
 ### Prerequisites
 
 What you need before you can install and run ColDog Locker
 
-* Windows 10 or 11 (64 bit)
-* PowerShell 5.1 or later (Preinsalled on Windows)
-* .Net 4.5 or later (Preinstalled on Windows)
-
+-   Windows 10 or 11 (64 bit)
+-   PowerShell 5.1 or later (Preinsalled on Windows)
+-   .Net 4.5 or later (Preinstalled on Windows)
 
 ### Installation
 
@@ -138,11 +135,9 @@ PS > Set-ExecutionPolicy RemoteSigned -Scope LocalMachine
 PS > Unblock-File .\ColDog-Locker.ps1
 ```
 
-2. Run ```ColDog Locker Setup``` and install the software
-
+2. Run `ColDog Locker Setup` and install the software
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 <!-- USAGE EXAMPLES -->
 <!--## Usage
@@ -155,23 +150,24 @@ Use this space to show useful examples of how a project can be used. Additional 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 -->
 
-
 <!-- FEATURES -->
+
 ## Features
 
-- Folder Encryption (AES)
-- Password Protected Folders
-- Multiple folders
-- Failed Attempts Lockout
-- GitHub integrated Updates
+-   Folder encryption (AES-256)
+-   Password protected folders
+-   Multiple folders
+-   Failed attempts lockout
+-   GitHub integrated updates
+-   Optional automatically check for updates
 
 See the [open issues](https://github.com/ColDogStudios/ColDog-Locker/issues) for a full list of proposed features (and known issues).
 See the ColDog Locker [Project Board](https://github.com/orgs/ColDogStudios/projects/2) for a full list of features being worked on
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- CONTACT -->
+
 ## Contact
 
 ColDog Studios - [@ColDogStudios](https://twitter.com/ColDogStudios) - contact@coldogstudios.com
@@ -186,26 +182,27 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
 <!-- ACKNOWLEDGMENTS -->
+
 ## Acknowledgments
 
-* [Wayne Boggs]() - Alpha Tester, Cybersecurity Instructor
-* []()
-* []()
+-   [Wayne Boggs]() - Cybersecurity Instructor
+-   []()
+-   []()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-      _____      _ _____                   _                _             
-     / ____|    | |  __ \                 | |              | |            
-    | |     ___ | | |  | | ___   __ _     | |     ___   ___| | _____ _ __ 
+      _____      _ _____                   _                _
+     / ____|    | |  __ \                 | |              | |
+    | |     ___ | | |  | | ___   __ _     | |     ___   ___| | _____ _ __
     | |    / _ \| | |  | |/ _ \ / _` |    | |    / _ \ / __| |/ / _ \ '__|
-    | |___| (_) | | |__| | (_) | (_| |    | |___| (_) | (__|   <  __/ |   
-     \_____\___/|_|_____/ \___/ \__, |    |______\___/ \___|_|\_\___|_|   
-                                 __/ |                                    
-                                |___/                                       
+    | |___| (_) | | |__| | (_) | (_| |    | |___| (_) | (__|   <  __/ |
+     \_____\___/|_|_____/ \___/ \__, |    |______\___/ \___|_|\_\___|_|
+                                 __/ |
+                                |___/
 
 <!-- MARKDOWN LINKS & IMAGES -->
+
 [release-shield]: https://img.shields.io/github/v/release/ColDogStudios/ColDog-Locker?style=for-the-badge
 [release-url]: https://github.com/ColDogStudios/ColDog-Locker
 [downloads-shield]: https://img.shields.io/github/downloads/ColDogStudios/ColDog-Locker/total.svg?style=for-the-badge
@@ -214,20 +211,15 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 [issues-url]: https://github.com/ColDogStudios/ColDog-Locker/issues
 [stars-shield]: https://img.shields.io/github/stars/ColDogStudios/ColDog-Locker.svg?style=for-the-badge
 [stars-url]: https://github.com/ColDogStudios/ColDog-Locker/stargazers
-
 [github-shield]: https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white
 [github-url]: https://github.com/ColDogStudios
-
 [twitter-shield]: https://img.shields.io/badge/Twitter-%231DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=white
 [linkedin-shield]: https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white
-
 [twitter-cds-url]: https://twitter.com/ColDogStudios
 [linkedin-cds-url]: https://www.linkedin.com/company/coldog-studios
-
 [twitter-coldog-url]: https://twitter.com/ColDog5044
 [linkedin-coldog-url]: https://www.linkedin.com/in/collin-laney/
-
-[PowerShell-shield]:https://img.shields.io/badge/PowerShell-%235391FE.svg?style=for-the-badge&logo=powershell&logoColor=white
+[PowerShell-shield]: https://img.shields.io/badge/PowerShell-%235391FE.svg?style=for-the-badge&logo=powershell&logoColor=white
 [PowerShell-url]: https://docs.microsoft.com/en-us/powershell/
 [C#-shield]: https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=c-sharp&logoColor=white
 [C#-url]: https://docs.microsoft.com/en-us/dotnet/csharp/
