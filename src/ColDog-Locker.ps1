@@ -337,7 +337,7 @@ function Show-Help {
 function Update-ColDogLocker {
     param (
         [Parameter(Mandatory = $false)]
-        [string]$owner = "ColDogStudios",
+        [string]$owner = "ColDog-Studios",
 
         [Parameter(Mandatory = $false)]
         [string]$repository = "ColDog-Locker",
