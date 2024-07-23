@@ -49,7 +49,7 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#important-notice-and-disclaimer">Important Notice and Disclaimer</a></li>
-        <li><a href="#compatability">Compatability</a></li>
+        <li><a href="#compatibility">Compatibility</a></li>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
@@ -65,11 +65,8 @@
 
 ## About The Project
 
-### IMPORTANT NOTE:
-
-**_ColDog Locker is still in development and does not currently have an official supported release_**
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+> [!NOTE]
+> ColDog Locker is still in development and does not currently have an official supported release
 
 ### Built With
 
@@ -83,34 +80,33 @@
 
 ## Getting Started
 
-### Important Notice
+> [!NOTE] Important Notice
+> ColDog Studios is committed to keeping your files secure and will fix any security vulnerability immediately. ColDog Studios does not receive any information from you such as passwords. All of the configuration is stored on your local machine.
+>
+> -   By using this software, you agree that ColDog Studios is not held responsible for any data lost, stolen, or accessed.
+> -   The software is provided as is and without warranty as to its features, functionality, or performance.
+> -   Any unauthorized copying, distributing, or selling of this software is prohibited.
 
-ColDog Studios is committed to keeping your files secure and will fix any security vulnerability immediately. ColDog Studios does not receive any information from you such as passwords. All of the configuration is stored on your local machine.
+> [!WARNING]
+> Your anti-virus will potentially flag ColDog Locker as a virus. This is a false positive and you will need to make an exclusion.
 
-Your anti-virus will potentially flag ColDog Locker as a virus. This is a false positive and you will need to make an exclusion.
+> [!IMPORTANT] Disclaimer of Warranties
+> THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET LICENSEE'S REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE.
 
--   By using this software, you agree that ColDog Studios is not held responsible for any data lost, stolen, or accessed.
--   The software is provided as is and without warranty as to its features, functionality, or performance.
--   Any unauthorized copying, distributing, or selling of this software is prohibited.
+### Compatibility
 
-### Disclaimer of Warranties
-
-THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET LICENSEE'S REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE.
-
-### Compatability
-
-|                           |    Requirments     |      Recommendations       |
-| ------------------------- | :----------------: | :------------------------: |
-| Operating System (64 bit) |     Windows 10     |    Windows 10 or later     |
-| PowerShell Version        |   PowerShell 5.1   |  PowerShell 5.1 or later   |
-| .Net Framework            | .Net Framework 4.0 | .Net Framwork 4.5 or later |
+|                           |    Requirements    |       Recommendations       |
+| ------------------------- | :----------------: | :-------------------------: |
+| Operating System (64 bit) |     Windows 10     |     Windows 10 or later     |
+| PowerShell Version        |   PowerShell 5.1   |   PowerShell 5.1 or later   |
+| .Net Framework            | .Net Framework 4.0 | .Net Framework 4.5 or later |
 
 ### Prerequisites
 
 What you need before you can install and run ColDog Locker
 
 -   Windows 10 or 11 (64 bit)
--   PowerShell 5.1 or later (Preinsalled on Windows)
+-   PowerShell 5.1 or later (Preinstalled on Windows)
 -   .Net 4.5 or later (Preinstalled on Windows)
 
 ### Installation
