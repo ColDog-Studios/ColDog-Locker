@@ -22,6 +22,7 @@ jobs:
 
             - name: Convert PS1 to EXE
               run: |
+                  Import-Module -Name ps2exe -Global
                   $sourcePath = "./src/ColDog-Locker.ps1"
                   $outputPath = "./bin/ColDog Locker.exe"
                   $iconPath = "./images/cdlIcon.ico"
