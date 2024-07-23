@@ -18,20 +18,20 @@ jobs:
             - name: Install PS2EXE
               run: |
                   Install-Module -Name ps2exe -Scope CurrentUser -Force
+                  Import-Module -Name ps2exe -Force
               shell: pwsh
 
             - name: Convert PS1 to EXE
               run: |
-                  Import-Module -Name ps2exe -Global
-                  $sourcePath = "./src/ColDog-Locker.ps1"
-                  $outputPath = "./bin/ColDog Locker.exe"
-                  $iconPath = "./images/cdlIcon.ico"
+                  $sourcePath = ".\src\ColDog-Locker.ps1"
+                  $outputPath = ".\bin\ColDog Locker.exe"
+                  $iconPath = ".\images\cdlIcon.ico"
                   $title = "ColDog Locker"
                   $description = "ColDog Studios ColDog Locker"
                   $company = "ColDog Studios"
                   $copyright = "© 2024 ColDog Studios"
                   $version = "0.1.0"
-                  Invoke-PS2EXE -inputFile $sourcePath -outputFile $outputPath -x64 -iconFile ..\images\cdlIcon.ico -title $title -description $description -company $company -copyright $copyright -version $version
+                  .\src\ps2exe.ps1 -inputFile $sourcePath -outputFile $outputPath -x64 -iconFile $iconPath -title $title -description $description -company $company -copyright $copyright -version $version
               shell: pwsh
 
             - name: Upload EXE as Artifact
