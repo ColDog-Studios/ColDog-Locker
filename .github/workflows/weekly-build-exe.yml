@@ -21,6 +21,11 @@ jobs:
                   Import-Module -Name ps2exe -Force
               shell: pwsh
 
+            - name: Create bin directory
+              run: |
+                  New-Item -Path .\bin -ItemType Directory -Force
+              shell: pwsh
+
             - name: Convert PS1 to EXE
               run: |
                   $sourcePath = ".\src\ColDog-Locker.ps1"
