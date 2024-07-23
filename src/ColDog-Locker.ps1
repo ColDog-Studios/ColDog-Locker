@@ -474,7 +474,7 @@ function Invoke-PasswordHashing {
 #MARK: ----------[ Settings ]----------#
 function Initialize-Settings {
     $autoUpdate = [System.Windows.Forms.MessageBox]::Show("Automatically check for updates on ColDog Locker startup?", "Auto Update", "YesNo", "Question")
-    
+
     if ($autoUpdate -eq "Yes") { $autoUpdate = $true }
     elseif ($autoUpdate -eq "No") { $autoUpdate = $false }
 
