@@ -40,7 +40,31 @@ jobs:
               shell: pwsh
 
             - name: Upload EXE as Artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                   name: ColDog-Locker-EXE
                   path: ./bin/ColDog Locker.exe
+
+    commit-artifact:
+        needs: build
+        runs-on: windows-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: ColDog-Locker-EXE
+                  path: ./bin
+
+            - name: Configure Git
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+            - name: Commit and push
+              run: |
+                  git add ./bin/ColDog\ Locker.exe
+                  git commit -m "Automatically commit ColDog Locker.exe"
+                  git push
