@@ -65,6 +65,6 @@ jobs:
 
             - name: Commit and push
               run: |
-                  git add ./bin/ColDog\ Locker.exe
-                  git commit -m "Automatically commit ColDog Locker.exe"
+                  git add "./bin/ColDog Locker.exe"
+                  git commit -m "Weekly build of ColDog Locker.exe"
                   git push
