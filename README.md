@@ -80,7 +80,10 @@
 
 ## Getting Started
 
-> [!NOTE] Important Notice
+> [!NOTE]
+>
+> ### Important Notice
+>
 > ColDog Studios is committed to keeping your files secure and will fix any security vulnerability immediately. ColDog Studios does not receive any information from you such as passwords. All of the configuration is stored on your local machine.
 >
 > -   By using this software, you agree that ColDog Studios is not held responsible for any data lost, stolen, or accessed.
@@ -90,7 +93,10 @@
 > [!WARNING]
 > Your anti-virus will potentially flag ColDog Locker as a virus. This is a false positive and you will need to make an exclusion.
 
-> [!IMPORTANT] Disclaimer of Warranties
+> [!IMPORTANT]
+>
+> ### Disclaimer of Warranties
+>
 > THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET LICENSEE'S REQUIREMENTS OR THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE.
 
 ### Compatibility
