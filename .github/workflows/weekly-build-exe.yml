@@ -1,0 +1,40 @@
+name: Weekly EXE Build
+
+on:
+    schedule:
+        - cron: "0 0 * * 0" # Every Sunday at 8 PM EST (which is 0:00 UTC on Monday)
+    push:
+        branches: [main, development]
+
+jobs:
+    build:
+        name: Convert PS1 to EXE
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install PS2EXE
+              run: |
+                  Install-Module -Name ps2exe -Scope CurrentUser -Force
+              shell: pwsh
+
+            - name: Convert PS1 to EXE
+              run: |
+                  $sourcePath = "./src/ColDog-Locker.ps1"
+                  $outputPath = "./bin/ColDog Locker.exe"
+                  $iconPath = "./images/cdlIcon.ico"
+                  $title = "ColDog Locker"
+                  $description = "ColDog Studios ColDog Locker"
+                  $company = "ColDog Studios"
+                  $copyright = "© 2024 ColDog Studios"
+                  $version = "0.1.0"
+                  Invoke-PS2EXE -inputFile $sourcePath -outputFile $outputPath -x64 -iconFile ..\images\cdlIcon.ico -title $title -description $description -company $company -copyright $copyright -version $version
+              shell: pwsh
+
+            - name: Upload EXE as Artifact
+              uses: actions/upload-artifact@v3
+              with:
+                  name: ColDog-Locker-EXE
+                  path: ./bin/ColDog Locker.exe
