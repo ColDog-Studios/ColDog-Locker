@@ -45,7 +45,7 @@ jobs:
                   name: ColDog-Locker-EXE
                   path: ./bin/ColDog Locker.exe
 
-    commit-artifact:
+    download-and-commit:
         needs: build
         runs-on: windows-latest
         steps:
