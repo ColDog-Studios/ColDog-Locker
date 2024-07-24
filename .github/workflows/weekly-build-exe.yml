@@ -60,7 +60,7 @@ jobs:
 
             - name: Configure Git
               run: |
-                  git config --local user.email "noreply@github.com"
+                  git config --local user.email "action@github.com"
                   git config --local user.name "GitHub Action"
 
             - name: Commit and push
