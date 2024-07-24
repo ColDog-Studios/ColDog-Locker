@@ -18,7 +18,6 @@
 *.log
 
 # Ignore built executables and binaries
-*.exe
 *.dll
 *.pdb
 
