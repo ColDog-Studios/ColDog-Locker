@@ -480,7 +480,7 @@ function Initialize-Settings {
 
     $script:cdlSettings = [PSCustomObject] @{
         debugMode  = $false
-        maxLogSize = 10485760 # 10MB
+        maxLogSize = 1048576 # 1MB
         autoUpdate = $autoUpdate
     }
 
@@ -490,6 +490,29 @@ function Initialize-Settings {
 function Get-Settings {
     if (Test-Path "$localConfig\settings.json") {
         $script:cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+
+        if ($null -eq $script:cdlSettings) { Initialize-Settings }
+
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "DebugMode") {
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "DebugMode" -Value $false
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Debug Mode value (false) added to settings." -level "Info"
+        }
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "MaxLogSize") {
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "MaxLogSize" -Value 1048576
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Max Log Size value (1MB) added to settings." -level "Info"
+        }
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "AutoUpdate") {
+            $autoUpdate = [System.Windows.Forms.MessageBox]::Show("Automatically check for updates on ColDog Locker startup?", "Auto Update", "YesNo", "Question")
+
+            if ($autoUpdate -eq "Yes") { $script:cdlSettings.auto = $true }
+            elseif ($autoUpdate -eq "No") { $autoUpdate = $false }
+
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "AutoUpdate" -Value $autoUpdate
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Auto Update value $($autoUpdate) added to settings." -level "Info"
+        }
     }
     else { Initialize-Settings }
 }
@@ -527,6 +550,36 @@ function Update-Settings {
 }
 
 #MARK: ----------[ Locker Manipulation ]----------#
+function Validate-LockerProperties {
+    foreach ($locker in $script:cdlLockers) {
+        if (-not $locker.PSObject.Properties.Name -contains "guid") {
+            $confirmation = [System.Windows.Forms.MessageBox]::Show("Locker $($locker.lockerName) is missing the 'guid' property. Would you like to add a generated GUID?", "ColDog Locker", "YesNo", "Warning")
+
+            if ($confirmation -eq "Yes") {
+                $locker | Add-Member -MemberType NoteProperty -Name "guid" -Value ([guid]::NewGuid().ToString())
+                Add-LogEntry -message "Added GUID to $($locker.lockerName)" -level "Info"
+            }
+            else {
+                Add-LogEntry -message "Missing GUID for $($locker.lockerName)" -level "Warning"
+            
+            }
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "LockerName") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "password") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "cdlLocation") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "isLocked") {
+
+        }
+    }
+    $script:cdlLockers | ConvertTo-Json -Depth 3 | Set-Content -Path "$localConfig\lockers.json"
+}
+
 function Add-LockerMetadata {
     param (
         [Parameter(Mandatory = $true)]
