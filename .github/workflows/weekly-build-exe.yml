@@ -3,8 +3,8 @@ name: Weekly EXE Build
 on:
     schedule:
         - cron: "0 0 * * 0" # Every Sunday at 8 PM EST (which is 0:00 UTC on Monday)
-    push:
-        branches: [main, development]
+    #push:
+    #    branches: [main, development]
 
 jobs:
     build:
