@@ -184,6 +184,16 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- CONTRIBUTORS -->
+
+## Contributors
+
+<a href="https://github.com/ColDog-Studios/ColDog-Locker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ColDog-Studios/ColDog-Locker" />
+</a>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 <!-- ACKNOWLEDGMENTS -->
 
 ## Acknowledgments
