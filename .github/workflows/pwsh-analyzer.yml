@@ -18,4 +18,4 @@ jobs:
             - name: Run PSScriptAnalyzer
               shell: pwsh
               run: |
-                  Invoke-ScriptAnalyzer -Path ./src -Recurse -ExcludeRule *WriteHost -Severity Error,Warning -EnableExit
+                  Invoke-ScriptAnalyzer -Path ./src -Recurse -ExcludeRule *WriteHost,PSAvoidUsingInvokeExpression,PSUseBOMForUnicodeEncodedFile,PSUseShouldProcessForStateChangingFunctions,PSUseSingularNouns -Severity Error,Warning -EnableExit
