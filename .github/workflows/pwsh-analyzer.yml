@@ -16,6 +16,10 @@ jobs:
 
             # Analyze PowerShell code
             - name: Run PSScriptAnalyzer
-              shell: pwsh
-              run: |
-                  Invoke-ScriptAnalyzer -Path ./src -Recurse -ExcludeRule *WriteHost,PSAvoidUsingInvokeExpression,PSUseBOMForUnicodeEncodedFile,PSUseShouldProcessForStateChangingFunctions,PSUseSingularNouns -Severity Error,Warning -EnableExit
+              uses: microsoft/psscriptanalyzer-action@v1.0
+              with:
+                  path: .\src
+                  recurse: true
+                  severity: '"Error", "Warning"'
+                  enableExit: true
+                  output: results.sarif
