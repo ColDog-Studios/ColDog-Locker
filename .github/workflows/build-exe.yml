@@ -1,0 +1,71 @@
+name: Build EXE
+
+on:
+    push:
+        branches: [development]
+    pull_request:
+        branches: [main, development]
+
+
+jobs:
+    build:
+        name: Convert PS1 to EXE
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install PS2EXE
+              run: |
+                  Install-Module -Name ps2exe -Scope CurrentUser -Force
+                  Import-Module -Name ps2exe -Force
+              shell: pwsh
+
+            - name: Create bin directory
+              run: |
+                  New-Item -Path .\bin -ItemType Directory -Force
+              shell: pwsh
+
+            - name: Convert PS1 to EXE
+              run: |
+                  $sourcePath = ".\src\ColDog-Locker.ps1"
+                  $outputPath = ".\bin\ColDog Locker.exe"
+                  $iconPath = ".\images\cdlIcon.ico"
+                  $title = "ColDog Locker"
+                  $description = "ColDog Studios ColDog Locker"
+                  $company = "ColDog Studios"
+                  $copyright = "© 2024 ColDog Studios"
+                  $version = "0.1.0"
+                  .\src\ps2exe.ps1 -inputFile $sourcePath -outputFile $outputPath -x64 -iconFile $iconPath -title $title -description $description -company $company -copyright $copyright -version $version
+              shell: pwsh
+
+            - name: Upload EXE as Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ColDog-Locker-EXE
+                  path: ./bin/ColDog Locker.exe
+
+    download-and-commit:
+        needs: build
+        runs-on: windows-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: ColDog-Locker-EXE
+                  path: ./bin
+
+            - name: Configure Git
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+            - name: Commit and push
+              run: |
+                  git add "./bin/ColDog Locker.exe"
+                  git commit -m "Weekly build of ColDog Locker.exe"
+                  git push

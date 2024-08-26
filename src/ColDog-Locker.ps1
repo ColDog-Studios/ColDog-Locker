@@ -111,6 +111,8 @@ $Host.UI.RawUI.WindowTitle = "ColDog Locker $version"
 
 function Show-Menu {
     while ($true) {
+        Get-Settings
+        Get-LockerMetadata
         Show-MenuTitle -subMenu "Main Menu"
 
         $menuChoices = " 1) New Locker`n" +
@@ -146,14 +148,12 @@ function Show-Menu {
 function New-Locker {
     Show-MenuTitle -subMenu "Main Menu > New File"
 
-    # User Input
     $lockerName = Read-Host -Prompt "Locker Name"
     Write-Host "`n    Minimum Password Length: 8 characters"
     Write-Host "Recommended Password Length: 15 characters`n"
     $pass = Read-Host -Prompt " Locker Password" -AsSecureString
     $passConfirm = Read-Host -Prompt "Confirm Password" -AsSecureString
 
-    # Convert SecureString to Clear Text for Passwords
     $passClear = Convert-SecureString2Text -secureString $pass
     $passConfirmClear = Convert-SecureString2Text -secureString $passConfirm
 
@@ -186,7 +186,6 @@ function Remove-Locker {
 
     $selectedLocker = $result.selectedLocker
 
-    # Show confirmation prompt
     $confirmation = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to remove $($selectedLocker.lockerName)?", "Remove Locker", "YesNo", "Warning")
 
     if ($confirmation -eq "Yes") { Remove-LockerMetadata }
@@ -213,9 +212,9 @@ function Protect-Locker {
         }
         else { $passHash = Invoke-PasswordHashing -passClear $passClear }
 
+        # Check if the password matches the stored password. If it does, encrypt the directory
         if ($selectedLocker.password -ceq $passHash) {
             try {
-                # Encrypt the Locker by calling the EncryptDirectory method
                 [cdlEncryptor]::EncryptDirectory($selectedLocker.cdlLocation, $passClear)
                 $passClear = $null
 
@@ -225,7 +224,6 @@ function Protect-Locker {
                 Rename-Item -Path $selectedLocker.cdlLocation -NewName ".$($selectedLocker.lockerName)" | Out-Null
                 $selectedLocker.cdlLocation = "$cdlDir\.$($selectedLocker.lockerName)"
 
-                # Convert the updated array to JSON and write it to the file
                 $json = $script:cdlLockers | ConvertTo-Json -Depth 3
                 Set-Content -Path "$localConfig\lockers.json" -Value $json | Out-Null
 
@@ -234,7 +232,6 @@ function Protect-Locker {
                 break
             }
             catch {
-                # Handle any errors that occurred during the script execution
                 Add-LogEntry -message "An error occurred while locking $selectedLocker.lockerName: $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while locking $selectedLocker.lockerName: $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit 1
@@ -257,7 +254,6 @@ function Unprotect-Locker {
     $failedAttempts = 0
 
     while ($true) {
-        # Show confirmation prompt
         $pass = Read-Host -Prompt "`nEnter the password to unlock $($selectedLocker.lockerName)" -AsSecureString
 
         $passClear = Convert-SecureString2Text -secureString $pass
@@ -270,19 +266,17 @@ function Unprotect-Locker {
         }
         else { $passHash = Invoke-PasswordHashing -passClear $passClear }
 
+        # Check if the password matches the stored password. If it does, decrypt the directory
         if ($selectedLocker.password -ceq $passHash) {
             try {
-                # Decrypt the Locker by calling the DecryptDirectory method
                 [cdlEncryptor]::DecryptDirectory($selectedLocker.cdlLocation, $passClear)
                 $passClear = $null
 
-                # Unlock the Locker
                 Set-ItemProperty -Path $selectedLocker.cdlLocation -Name Attributes -Value "Normal"
                 $selectedLocker.isLocked = $false
                 Rename-Item -Path $selectedLocker.cdlLocation -NewName $selectedLocker.lockerName | Out-Null
                 $selectedLocker.cdlLocation = "$cdlDir\$($selectedLocker.lockerName)"
 
-                # Convert the updated array to JSON and write it to the file
                 $json = $script:cdlLockers | ConvertTo-Json -Depth 3
                 Set-Content -Path "$localConfig\lockers.json" -Value $json
 
@@ -291,7 +285,6 @@ function Unprotect-Locker {
                 break
             }
             catch {
-                # Handle any errors that occurred during the script execution
                 Add-LogEntry -message "An error occurred while unlocking $($selectedLocker.lockerName): $($_.Exception.Message)" -level "Error"
                 Show-Message -type "Error" -message "An error occurred while unlocking $($selectedLocker.lockerName): $($_.Exception.Message)" -title "Error - ColDog Locker"
                 exit 1
@@ -335,7 +328,7 @@ function Show-Help {
 function Update-ColDogLocker {
     param (
         [Parameter(Mandatory = $false)]
-        [string]$owner = "ColDogStudios",
+        [string]$owner = "ColDog-Studios",
 
         [Parameter(Mandatory = $false)]
         [string]$repository = "ColDog-Locker",
@@ -390,7 +383,6 @@ function Update-ColDogLocker {
         }
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while checking for updates: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while checking for updates: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -473,7 +465,6 @@ function Invoke-PasswordHashing {
         return $hex512
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred with password hashing: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred with password hashing: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -489,7 +480,7 @@ function Initialize-Settings {
 
     $script:cdlSettings = [PSCustomObject] @{
         debugMode  = $false
-        maxLogSize = 10485760 # 10MB
+        maxLogSize = 1048576 # 1MB
         autoUpdate = $autoUpdate
     }
 
@@ -499,6 +490,29 @@ function Initialize-Settings {
 function Get-Settings {
     if (Test-Path "$localConfig\settings.json") {
         $script:cdlSettings = Get-Content "$localConfig\settings.json" | ConvertFrom-Json
+
+        if ($null -eq $script:cdlSettings) { Initialize-Settings }
+
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "DebugMode") {
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "DebugMode" -Value $false
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Debug Mode value (false) added to settings." -level "Info"
+        }
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "MaxLogSize") {
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "MaxLogSize" -Value 1048576
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Max Log Size value (1MB) added to settings." -level "Info"
+        }
+        if (-not $script:cdlSettings.PSObject.Properties.Name -contains "AutoUpdate") {
+            $autoUpdate = [System.Windows.Forms.MessageBox]::Show("Automatically check for updates on ColDog Locker startup?", "Auto Update", "YesNo", "Question")
+
+            if ($autoUpdate -eq "Yes") { $script:cdlSettings.auto = $true }
+            elseif ($autoUpdate -eq "No") { $autoUpdate = $false }
+
+            $script:cdlSettings | Add-Member -MemberType NoteProperty -Name "AutoUpdate" -Value $autoUpdate
+            $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
+            Add-LogEntry -message "Default Auto Update value $($autoUpdate) added to settings." -level "Info"
+        }
     }
     else { Initialize-Settings }
 }
@@ -529,7 +543,6 @@ function Update-Settings {
     if ($autoUpdate -eq "Yes") { $script:cdlSettings.autoUpdate = $true }
     elseif ($autoUpdate -eq "No") { $script:cdlSettings.autoUpdate = $false }
 
-    # Update the settings file with the new settings
     $script:cdlSettings | ConvertTo-Json | Set-Content "$localConfig\settings.json"
 
     Add-LogEntry -message "Settings updated successfully. Debug mode: $debugMode. Max log file size: $($script:cdlSettings.maxLogSize). Auto update: $autoUpdate" -level "Success"
@@ -537,6 +550,36 @@ function Update-Settings {
 }
 
 #MARK: ----------[ Locker Manipulation ]----------#
+function Validate-LockerProperties {
+    foreach ($locker in $script:cdlLockers) {
+        if (-not $locker.PSObject.Properties.Name -contains "guid") {
+            $confirmation = [System.Windows.Forms.MessageBox]::Show("Locker $($locker.lockerName) is missing the 'guid' property. Would you like to add a generated GUID?", "ColDog Locker", "YesNo", "Warning")
+
+            if ($confirmation -eq "Yes") {
+                $locker | Add-Member -MemberType NoteProperty -Name "guid" -Value ([guid]::NewGuid().ToString())
+                Add-LogEntry -message "Added GUID to $($locker.lockerName)" -level "Info"
+            }
+            else {
+                Add-LogEntry -message "Missing GUID for $($locker.lockerName)" -level "Warning"
+            
+            }
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "LockerName") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "password") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "cdlLocation") {
+
+        }
+        if (-not $locker.PSObject.Properties.Name -contains "isLocked") {
+
+        }
+    }
+    $script:cdlLockers | ConvertTo-Json -Depth 3 | Set-Content -Path "$localConfig\lockers.json"
+}
+
 function Add-LockerMetadata {
     param (
         [Parameter(Mandatory = $true)]
@@ -566,7 +609,6 @@ function Add-LockerMetadata {
     }
 
     try {
-        # Create a hashtable with the guid, Locker name, password, location, and isLocked attribute
         $cdlLocker = [PSCustomObject] @{
             guid        = [guid]::NewGuid().ToString()
             LockerName  = $lockerName
@@ -578,7 +620,6 @@ function Add-LockerMetadata {
         # Add the new locker to the array
         $script:cdlLockers += $cdlLocker
 
-        # Convert the array to JSON and write it to the file
         $json = $script:cdlLockers | ConvertTo-Json -Depth 3
         Set-Content -Path "$localConfig\lockers.json" -Value $json | Out-Null
 
@@ -592,7 +633,6 @@ function Add-LockerMetadata {
         Show-Message -type "Info" -message "$lockerName created successfully." -title "ColDog Locker"
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while adding $lockerName to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while adding $lockerName to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -601,10 +641,8 @@ function Add-LockerMetadata {
 
 function Remove-LockerMetadata {
     try {
-        # Remove the selected Locker-password pair
         $script:cdlLockers = $script:cdlLockers | Where-Object { $_.lockerName -ne $selectedLocker.lockerName }
 
-        # Convert the updated array to JSON and write it to the file
         $json = $script:cdlLockers | ConvertTo-Json -Depth 3
         Set-Content -Path "$localConfig\lockers.json" -Value $json
 
@@ -612,7 +650,6 @@ function Remove-LockerMetadata {
         Show-Message -type "Info" -message "Locker $($selectedLocker.lockerName) removed successfully." -title "ColDog Locker"
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -Message "An error occurred while removing $selectedLocker to the JSON table: $($_.Exception.Message)" -Level "Error"
         Show-Message -type "Error" -message "An error occurred while removing $selectedLocker to the JSON table: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -631,7 +668,6 @@ function Get-LockerMetadata {
         }
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while reading the lockers from the JSON file: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -644,6 +680,9 @@ function Show-Lockers {
         [ValidateSet("Remove", "Lock", "Unlock")]
         [string]$action
     )
+
+    Get-Settings
+    Get-LockerMetadata
 
     # Specify Locked and Unlocked lockers
     $unlockedLockers = $script:cdlLockers | Where-Object { $_.isLocked -eq $false }
@@ -690,7 +729,6 @@ function Show-Lockers {
             }
         }
 
-        # Prompt the user to choose a Locker to remove, lock, or unlock
         $selectedLockerIndex = Read-Host "`nEnter the number corresponding to the locker you want to $($action.ToLower())"
 
         # Validate user input
@@ -733,35 +771,8 @@ function Show-Lockers {
         return @{ success = $true; selectedLocker = $selectedLocker }
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while $($action)ing $($selectedLocker): $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while $($action)ing $($selectedLocker): $($_.Exception.Message)" -title "Error - ColDog Locker"
-        exit 1
-    }
-}
-
-#MARK: ----------[ Watch Config ]----------#
-function Watch-Config {
-    $settingsWatcher = New-Object System.IO.FileSystemWatcher
-    $settingsWatcher.Path = "$localConfig"
-    $settingsWatcher.Filter = "settings.json"
-    $settingsWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
-    $settingsWatcher.EnableRaisingEvents = $true
-
-    $lockersWatcher = New-Object System.IO.FileSystemWatcher
-    $lockersWatcher.Path = "$localConfig"
-    $lockersWatcher.Filter = "lockers.json"
-    $lockersWatcher.NotifyFilter = [System.IO.NotifyFilters]'LastWrite'
-    $lockersWatcher.EnableRaisingEvents = $true
-
-    try {
-        Register-ObjectEvent -InputObject $settingsWatcher -EventName "Changed" -Action { Get-Settings } | Out-Null
-        Register-ObjectEvent -InputObject $lockersWatcher -EventName "Changed" -Action { Get-LockerMetadata } | Out-Null
-    }
-    catch {
-        # Handle any errors that occurred during the script execution
-        Add-LogEntry -message "An error occurred while watching the config files: $($_.Exception.Message)" -level "Error"
-        Show-Message -type "Error" -message "An error occurred while watching the config files: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
     }
 }
@@ -785,7 +796,6 @@ function Add-LogEntry {
         New-Item -ItemType Directory -Path $logDirectory
     }
 
-    # Create the log entry
     $logEntry = "[$(Get-Date)] [$level] $message"
 
     # If Debug mode is enabled, add the line of code causing the error to the log entry
@@ -828,7 +838,6 @@ function Resize-Log {
         return
     }
     catch {
-        # Handle any errors that occurred during the script execution
         Add-LogEntry -message "An error occurred while resizing the log files: $($_.Exception.Message)" -level "Error"
         Show-Message -type "Error" -message "An error occurred while resizing the log files: $($_.Exception.Message)" -title "Error - ColDog Locker"
         exit 1
@@ -864,7 +873,7 @@ if (-not(Test-Path "$localConfig" -PathType Container)) { New-Item -ItemType Dir
 
 Get-Settings
 Get-LockerMetadata
-Watch-Config
+
 if (Test-Path "$localConfig\logs\*.log") { Resize-Log }
 if ($script:cdlSettings.autoUpdate) { Update-ColDogLocker }
 
