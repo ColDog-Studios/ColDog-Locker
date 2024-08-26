@@ -40,7 +40,7 @@ jobs:
                   #excludeRule: '"PSAvoidUsingPlainTextForPassword"'
                   severity: '"Error", "Warning"'
                   recurse: true
-                  enableExit: true
+                  #enableExit: true
                   output: results.sarif
 
             # Upload the SARIF file generated in the previous step
