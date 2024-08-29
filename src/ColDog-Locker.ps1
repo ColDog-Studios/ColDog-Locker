@@ -550,7 +550,7 @@ function Update-Settings {
 }
 
 #MARK: ----------[ Locker Manipulation ]----------#
-function Validate-LockerProperties {
+function Approve-LockerProperties {
     foreach ($locker in $script:cdlLockers) {
         if (-not $locker.PSObject.Properties.Name -contains "guid") {
             $confirmation = [System.Windows.Forms.MessageBox]::Show("Locker $($locker.lockerName) is missing the 'guid' property. Would you like to add a generated GUID?", "ColDog Locker", "YesNo", "Warning")
