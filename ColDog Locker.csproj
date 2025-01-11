@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ColDogStudios.ColDogLocker</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Title>ColDog Locker</Title>
+    <Version>0.1.0-pre</Version>
+    <Company>ColDog Studios</Company>
+    <Authors>ColDog Studios</Authors>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ColDog-Studios/ColDog-Locker</RepositoryUrl>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PackageIcon>cdlIcon-128.png</PackageIcon>
+    <ApplicationIcon>images\cdlIcon-128.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="src\_Reference\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include=".github\scripts\code_compliance.py" />
+    <None Include=".github\workflows\code-compliance.yml" />
+    <None Include="C:\Users\ColDog\Documents\GitHub\ColDog-Locker-CS\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="images\cdlIcon-125.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="images\cdlIcon-128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell -ExecutionPolicy Bypass -File .\scripts\Pre-Build.ps1" />
+  </Target>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\ColDog\Documents\GitHub\ColDog-Locker-CS\src\Menu\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="images\cdlIcon-128.ico" />
+  </ItemGroup>
+
+</Project>

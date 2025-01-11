@@ -1,0 +1,49 @@
+using ColDogStudios.ColDogLocker.Utils;
+
+namespace ColDogStudios.ColDogLocker.Core
+{
+    public static class Initialization
+    {
+        public static async Task InitializeAsync()
+        {
+            // Log the start of initialization
+            Logger.AddEntry("ColDog Locker initialization started.", LogLevel.Info);
+
+            // Create CDL directories if they do not already exist
+            if (!Directory.Exists(Variables.localConfig))
+            {
+                Directory.CreateDirectory(Variables.localConfig);
+                Logger.AddEntry($"Created directory: {Variables.localConfig}", LogLevel.Info);
+            }
+            if (!Directory.Exists(Path.Combine(Variables.localConfig, "logs")))
+            {
+                Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));
+                Logger.AddEntry($"Created directory: {Path.Combine(Variables.localConfig, "logs")}", LogLevel.Info);
+            }
+
+            // Load settings and lockers
+            SettingsManager.LoadSettings();
+            Logger.AddEntry("Settings loaded.", LogLevel.Info);
+            Locker.LoadLockers();
+            Logger.AddEntry("Lockers loaded.", LogLevel.Info);
+
+            // Initialize file watchers
+            FileWatchers.InitializeWatchers();
+            Logger.AddEntry("File watchers initialized.", LogLevel.Info);
+
+            // Resize logs if needed
+            Logger.TrimLog();
+
+            // Check for updates if auto-update is enabled
+            if (SettingsManager.Settings.AutoUpdate)
+            {
+                Logger.AddEntry("Auto-update is enabled. Checking for updates.", LogLevel.Info);
+                // Hide message if there are no updates available
+                await UpdateManager.CheckForUpdatesAsync(true);
+            }
+
+            // Log the end of initialization
+            Logger.AddEntry("Initialization completed.", LogLevel.Info);
+        }
+    }
+}
