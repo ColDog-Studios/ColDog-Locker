@@ -57,8 +57,6 @@
 
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
 ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password. It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
 
 > [!NOTE]
@@ -68,9 +66,9 @@ ColDog Locker is a simple file locker that allows you to encrypt and decrypt the
 
 ### Built With
 
--   [![.Net 8][.Net-shield]][.Net-url]
--   [![C# 12.0][C#-shield]][C#-url]
--   [![PowerShell 7][PowerShell-shield]][PowerShell-url]
+- [![.Net 8][.Net-shield]][.Net-url]
+- [![C# 12.0][C#-shield]][C#-url]
+- [![PowerShell 7][PowerShell-shield]][PowerShell-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -80,8 +78,8 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
--   [![.Net 8][.Net-shield]][.Net-url] .Net 8 SDK
--   [![PowerShell 7][PowerShell-shield]][PowerShell-url] PowerShell 7
+- [![.Net 8][.Net-shield]][.Net-url] .Net 8 SDK
+- [![PowerShell 7][PowerShell-shield]][PowerShell-url] PowerShell 7
 
 ```bash
 dotnet --version
@@ -184,9 +182,9 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 ## Acknowledgments
 
-* [Microsoft .NET](https://dotnet.microsoft.com/)
-* [Newtonsoft.Json](https://www.newtonsoft.com/json)
-* 
+- [Microsoft .NET](https://dotnet.microsoft.com/)
+- [Newtonsoft.Json](https://www.newtonsoft.com/json)
+-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
