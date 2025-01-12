@@ -34,7 +34,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="src\_Reference\" />
     <Folder Include="tests\Models\" />
     <Folder Include="tests\Menu\" />
   </ItemGroup>
