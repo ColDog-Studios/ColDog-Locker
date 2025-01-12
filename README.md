@@ -14,7 +14,7 @@
     <img src="images/cdlIcon.png" alt="Logo" width="500" height="500">
   </a>
 
-<h3 align="center">ColDog Locker</h3>
+<h1 align="center">ColDog Locker</h1>
 
   <p align="center">
     A simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.
