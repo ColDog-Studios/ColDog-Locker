@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using ColDogStudios.ColDogLocker.Core;
+using System.Runtime.CompilerServices;
 
 namespace ColDogStudios.ColDogLocker.Utils
 {

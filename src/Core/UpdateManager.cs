@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
 using ColDogStudios.ColDogLocker.Menu;
 using ColDogStudios.ColDogLocker.Utils;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
 
 namespace ColDogStudios.ColDogLocker.Core
 {
