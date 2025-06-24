@@ -79,39 +79,41 @@ namespace ColDogStudios.ColDogLocker.Utils
             }
 
             int totalTrimmed = 0;
+            DateTime cutoffDate = DateTime.Now.AddDays(-_logRetentionDays);
 
             // Iterate through all log files in the log directory
             foreach (var logFile in Directory.GetFiles(_logDirectory, "*.log"))
             {
-                // Read all lines from the log file
-                var lines = File.ReadAllLines(logFile);
-                int originalCount = lines.Length;
-
-                // Filter out log entries older than the specified number of days
-                var trimmedLines = lines.Where(line =>
+                try
                 {
-                    // Ensure the line is long enough to contain a date
-                    if (line.Length < 21)
+                    // Read all lines from the log file
+                    var lines = File.ReadAllLines(logFile);
+                    int originalCount = lines.Length;
+
+                    // Filter out log entries older than the specified number of days
+                    var trimmedLines = lines.Where(line => IsLineWithinRetention(line, cutoffDate)).ToArray();
+
+                    // Only write back if there were changes
+                    if (trimmedLines.Length != originalCount)
                     {
-                        return false;
+                        File.WriteAllLines(logFile, trimmedLines);
+                        int removedCount = originalCount - trimmedLines.Length;
+                        totalTrimmed += removedCount;
                     }
-
-                    // Extract the date part from the log entry
-                    var datePart = line.Substring(1, 19);
-
-                    // Parse the date and check if it is within the retention period
-                    if (DateTime.TryParse(datePart, out DateTime logDate))
+                }
+                catch (Exception ex)
+                {
+                    // Log error directly to avoid recursion, but continue with other files
+                    string errorEntry = $"[{DateTime.Now}] [Error] Failed to trim log file {logFile}: {ex.Message}";
+                    try
                     {
-                        return logDate >= DateTime.Now.AddDays(-_logRetentionDays);
+                        File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), errorEntry + Environment.NewLine);
                     }
-                    return false;
-                }).ToArray();
-
-                // Write the filtered log entries back to the log file
-                File.WriteAllLines(logFile, trimmedLines);
-
-                int removedCount = originalCount - trimmedLines.Length;
-                totalTrimmed += removedCount;
+                    catch
+                    {
+                        // If we can't even write to the main log, just continue
+                    }
+                }
             }
 
             // Only log if we actually trimmed something, and do it after all files are processed
@@ -121,9 +123,51 @@ namespace ColDogStudios.ColDogLocker.Utils
                 string logEntry = $"[{DateTime.Now}] [Info] {message}";
                 
                 // Write directly to avoid recursion
-                File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), logEntry + Environment.NewLine);
-                File.AppendAllText(Path.Combine(_logDirectory, "info.log"), logEntry + Environment.NewLine);
+                try
+                {
+                    File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), logEntry + Environment.NewLine);
+                    File.AppendAllText(Path.Combine(_logDirectory, "info.log"), logEntry + Environment.NewLine);
+                }
+                catch
+                {
+                    // If we can't log the trimming result, that's okay
+                }
             }
+        }
+
+        // Helper method to check if a log line is within the retention period
+        private static bool IsLineWithinRetention(string line, DateTime cutoffDate)
+        {
+            // If line is empty or too short, keep it (might be important)
+            if (string.IsNullOrWhiteSpace(line) || line.Length < 10)
+            {
+                return true;
+            }
+
+            // Look for the pattern [timestamp] at the beginning
+            if (!line.StartsWith("["))
+            {
+                return true; // Keep lines that don't follow expected format
+            }
+
+            // Find the closing bracket for the timestamp
+            int closingBracketIndex = line.IndexOf(']');
+            if (closingBracketIndex <= 1)
+            {
+                return true; // Keep malformed lines
+            }
+
+            // Extract the timestamp part (without the brackets)
+            string timestampPart = line.Substring(1, closingBracketIndex - 1);
+
+            // Try to parse the timestamp
+            if (DateTime.TryParse(timestampPart, out DateTime logDate))
+            {
+                return logDate >= cutoffDate;
+            }
+
+            // If we can't parse the date, keep the line to be safe
+            return true;
         }
     }
 }
