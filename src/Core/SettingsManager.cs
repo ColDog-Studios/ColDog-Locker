@@ -123,6 +123,19 @@ namespace ColDogStudios.ColDogLocker.Core
             // Prompt the user to enter the maximum log file size in MB
             Console.Write("Enter the maximum log file size in MB: ");
             var maxLogSizeInput = Console.ReadLine();
+
+            // Validate the input and convert it to bytes
+            if (string.IsNullOrEmpty(maxLogSizeInput) || !int.TryParse(maxLogSizeInput, out _))
+            {
+                Console.WriteLine("Invalid input. Setting maximum log size to default (1MB).");
+                maxLogSizeInput = "1"; // Default to 1MB if input is invalid
+            }
+            else if (int.Parse(maxLogSizeInput) <= 0)
+            {
+                Console.WriteLine("Maximum log size must be greater than 0. Setting to default (1MB).");
+                maxLogSizeInput = "1"; // Default to 1MB if input is less than or equal to 0
+            }
+            
             var maxLogSize = maxLogSizeInput != null ? int.Parse(maxLogSizeInput) * 1048576 : 1048576; // Convert MB to bytes
 
             // Prompt the user to enable or disable auto updates
