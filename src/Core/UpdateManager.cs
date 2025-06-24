@@ -12,6 +12,9 @@ namespace ColDogStudios.ColDogLocker.Core
         // Check for updates and prompt the user to download if a new version is available
         public static async Task CheckForUpdatesAsync(bool hideUpToDateMessage)
         {
+            // Show Update Menu
+            MainMenu.MenuTitle("Main Menu > Check for Updates");
+
             // Log the start of the update check
             Logger.AddEntry("Starting update check.", LogLevel.Info);
 
@@ -19,7 +22,7 @@ namespace ColDogStudios.ColDogLocker.Core
             if (Variables.version.Contains('-'))
             {
                 Logger.AddEntry("Manual updates are required for preview versions.", LogLevel.Info);
-                Console.WriteLine("Manual updates are required for preview versions.");
+                Console.Write("Manual updates are required for preview versions.");
                 Console.ReadLine();
                 return;
             }
