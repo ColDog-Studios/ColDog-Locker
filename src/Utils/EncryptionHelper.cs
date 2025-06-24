@@ -4,6 +4,9 @@ namespace ColDogStudios.ColDogLocker.Utils
 {
     public static class EncryptionHelper
     {
+        private const int BufferSize = 81920; // 80KB buffer
+        private const int SaltSize = 16; // 16 bytes for salt
+
         // Encrypt all files and subdirectories in a directory
         public static void EncryptDirectory(string directory, string password)
         {
@@ -23,26 +26,45 @@ namespace ColDogStudios.ColDogLocker.Utils
         // Encrypt a single file
         public static void EncryptFile(string inputFile, string password)
         {
+            if (string.IsNullOrEmpty(inputFile))
+                throw new ArgumentException("Input file path cannot be null or empty.", nameof(inputFile));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            if (!File.Exists(inputFile))
+                throw new FileNotFoundException($"Input file not found: {inputFile}");
+
             // Create AES encryption object
             using Aes aes = Aes.Create();
 
-            // Generate key and IV from password using Rfc2898DeriveBytes
-            var pdb = new Rfc2898DeriveBytes(password, [0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76], 10000, HashAlgorithmName.SHA256);
+            // Generate a random salt for this file
+            byte[] salt = new byte[SaltSize];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            // Generate key and IV from password using the random salt
+            var pdb = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
             aes.Key = pdb.GetBytes(32);
             aes.IV = pdb.GetBytes(16);
 
             // Open input file and create encrypted output file
             using (FileStream fsIn = new(inputFile, FileMode.Open))
             using (FileStream fsCrypt = new(inputFile + ".enc", FileMode.Create))
-            using (CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
             {
-                byte[] buffer = new byte[81920]; // 80KB buffer
-                int read;
-
-                // Read from input file and write encrypted data to output file
-                while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
+                // Write the salt at the beginning of the encrypted file
+                fsCrypt.Write(salt, 0, salt.Length);
+                
+                using (CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
                 {
-                    cs.Write(buffer, 0, read);
+                    byte[] buffer = new byte[BufferSize];
+                    int read;
+
+                    // Read from input file and write encrypted data to output file
+                    while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        cs.Write(buffer, 0, read);
+                    }
                 }
             }
 
@@ -70,26 +92,45 @@ namespace ColDogStudios.ColDogLocker.Utils
         // Decrypt a single file
         public static void DecryptFile(string inputFile, string password)
         {
+            if (string.IsNullOrEmpty(inputFile))
+                throw new ArgumentException("Input file path cannot be null or empty.", nameof(inputFile));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            if (!File.Exists(inputFile))
+                throw new FileNotFoundException($"Input file not found: {inputFile}");
+
             // Create AES decryption object
             using Aes aes = Aes.Create();
 
-            // Generate key and IV from password using Rfc2898DeriveBytes
-            var pdb = new Rfc2898DeriveBytes(password, [0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76], 10000, HashAlgorithmName.SHA256);
-            aes.Key = pdb.GetBytes(32);
-            aes.IV = pdb.GetBytes(16);
-
-            // Open encrypted input file and create decrypted output file
+            // Open encrypted input file and read the salt
             using (FileStream fsCrypt = new(inputFile, FileMode.Open))
-            using (CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
-            using (FileStream fsOut = new(inputFile + ".dec", FileMode.Create))
             {
-                byte[] buffer = new byte[81920]; // 80KB buffer
-                int read;
+                // Verify file is large enough to contain salt
+                if (fsCrypt.Length < SaltSize)
+                    throw new InvalidDataException("File is too small to contain encryption data.");
 
-                // Read from encrypted file and write decrypted data to output file
-                while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
+                // Read the salt from the beginning of the file
+                byte[] salt = new byte[SaltSize];
+                int bytesRead = fsCrypt.Read(salt, 0, salt.Length);
+                if (bytesRead != SaltSize)
+                    throw new InvalidDataException("Unable to read salt from encrypted file.");
+
+                // Generate key and IV from password using the stored salt
+                var pdb = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
+                aes.Key = pdb.GetBytes(32);
+                aes.IV = pdb.GetBytes(16);
+
+                using (CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
+                using (FileStream fsOut = new(inputFile + ".dec", FileMode.Create))
                 {
-                    fsOut.Write(buffer, 0, read);
+                    byte[] buffer = new byte[BufferSize];
+                    int read;
+
+                    // Read from encrypted file and write decrypted data to output file
+                    while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        fsOut.Write(buffer, 0, read);
+                    }
                 }
             }
 

@@ -22,6 +22,9 @@
 
         public static void SecurityCheck(string password)
         {
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.");
+
             for (int i = 0; i < SecurityRules.Count; i++)
             {
                 if (!SecurityRules[i](password))
@@ -33,6 +36,9 @@
 
         public static void IllegalWordCheck(string password)
         {
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.");
+
             // List of illegal words
             string[] illegalWords =
             [
@@ -53,12 +59,12 @@
                 "welcome"
             ];
 
-            // Check if password contains any illegal words
+            // Check if password contains any illegal words (case-insensitive)
             foreach (string illegalWord in illegalWords)
             {
-                if (password.Contains(illegalWord))
+                if (password.Contains(illegalWord, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new Exception($"{illegalWord} is considered a common word. Please enter a new password.");
+                    throw new Exception($"'{illegalWord}' is considered a common word. Please enter a new password.");
                 }
             }
         }

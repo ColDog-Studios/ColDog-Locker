@@ -78,11 +78,14 @@ namespace ColDogStudios.ColDogLocker.Utils
                 return;
             }
 
+            int totalTrimmed = 0;
+
             // Iterate through all log files in the log directory
             foreach (var logFile in Directory.GetFiles(_logDirectory, "*.log"))
             {
                 // Read all lines from the log file
                 var lines = File.ReadAllLines(logFile);
+                int originalCount = lines.Length;
 
                 // Filter out log entries older than the specified number of days
                 var trimmedLines = lines.Where(line =>
@@ -107,9 +110,19 @@ namespace ColDogStudios.ColDogLocker.Utils
                 // Write the filtered log entries back to the log file
                 File.WriteAllLines(logFile, trimmedLines);
 
-                // Log the trimming operation
-                string message = $"Trimmed log file '{logFile}' to retain only the last {_logRetentionDays} days of log entries";
-                AddEntry(message, LogLevel.Info);
+                int removedCount = originalCount - trimmedLines.Length;
+                totalTrimmed += removedCount;
+            }
+
+            // Only log if we actually trimmed something, and do it after all files are processed
+            if (totalTrimmed > 0)
+            {
+                string message = $"Trimmed {totalTrimmed} log entries older than {_logRetentionDays} days";
+                string logEntry = $"[{DateTime.Now}] [Info] {message}";
+                
+                // Write directly to avoid recursion
+                File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), logEntry + Environment.NewLine);
+                File.AppendAllText(Path.Combine(_logDirectory, "info.log"), logEntry + Environment.NewLine);
             }
         }
     }

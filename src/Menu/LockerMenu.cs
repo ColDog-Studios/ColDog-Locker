@@ -6,9 +6,6 @@ namespace ColDogStudios.ColDogLocker.Menu
 {
     public static class LockerMenu
     {
-        // List to store all lockers
-        public static readonly List<LockerModel> Lockers = [];
-
         // Create a new locker ///////////////////////////////////////////////////////////////////////////////////
         public static void NewLocker()
         {

@@ -100,8 +100,23 @@ namespace ColDogStudios.ColDogLocker.Core
         {
             try
             {
+                // Ensure the directory exists
+                var directory = Path.GetDirectoryName(settingsFile);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
                 File.WriteAllText(settingsFile, JsonConvert.SerializeObject(Settings, Formatting.Indented));
                 Logger.AddEntry("Settings saved successfully.", LogLevel.Success);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.AddEntry($"Access denied when saving settings: {ex.Message}", LogLevel.Error);
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                Logger.AddEntry($"Settings directory not found: {ex.Message}", LogLevel.Error);
             }
             catch (Exception ex)
             {

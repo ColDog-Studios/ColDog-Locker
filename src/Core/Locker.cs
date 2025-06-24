@@ -24,13 +24,24 @@ namespace ColDogStudios.ColDogLocker.Core
                     {
                         Lockers.Clear();
                         Lockers.AddRange(lockers);
+                        Logger.AddEntry($"Successfully loaded {lockers.Count} lockers.", LogLevel.Info);
                     }
+                    else
+                    {
+                        Logger.AddEntry("Lockers file is empty or invalid. Starting with empty locker list.", LogLevel.Warning);
+                        Lockers.Clear();
+                    }
+                }
+                else
+                {
+                    Logger.AddEntry("Lockers file not found. Starting with empty locker list.", LogLevel.Info);
+                    Lockers.Clear();
                 }
             }
             catch (Exception ex)
             {
-                Logger.AddEntry($"An error occurred while reading the lockers from the JSON file: {ex.Message}", LogLevel.Error);
-                throw;
+                Logger.AddEntry($"An error occurred while reading the lockers from the JSON file: {ex.Message}. Starting with empty locker list.", LogLevel.Error);
+                Lockers.Clear(); // Ensure we have a clean state
             }
         }
 
@@ -59,7 +70,11 @@ namespace ColDogStudios.ColDogLocker.Core
                 Logger.AddEntry($"{locker.LockerName} already exists. Skipping directory creation.", LogLevel.Info);
                 Console.WriteLine($"\n{locker.LockerName} already exists. Skipping directory creation.");
             }
-            Directory.CreateDirectory(locker.LockerLocation);
+            else
+            {
+                Directory.CreateDirectory(locker.LockerLocation);
+                Logger.AddEntry($"Created directory: {locker.LockerLocation}", LogLevel.Info);
+            }
 
             // Add the locker to the metadata
             Lockers.Add(locker);
@@ -85,6 +100,11 @@ namespace ColDogStudios.ColDogLocker.Core
         // Method to lock the locker
         public static void Lock(LockerModel locker, string password)
         {
+            if (locker == null)
+                throw new ArgumentNullException(nameof(locker));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+
             // Hash the password and compare it to the stored hash
             string passwordHash = EncryptionHelper.HashPassword(password);
 
@@ -97,7 +117,12 @@ namespace ColDogStudios.ColDogLocker.Core
 
             // Rename the locker directory to be prefixed with a period
             string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
-            if (lockerDirectory == null) { return; }
+            if (string.IsNullOrEmpty(lockerDirectory))
+            {
+                Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
+                throw new InvalidOperationException("Invalid locker location.");
+            }
+            
             string newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
             Directory.Move(locker.LockerLocation, newLockerLocation);
 
@@ -123,6 +148,11 @@ namespace ColDogStudios.ColDogLocker.Core
         // Method to unlock the locker
         public static void Unlock(LockerModel locker, string password)
         {
+            if (locker == null)
+                throw new ArgumentNullException(nameof(locker));
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+
             // Hash the password and compare it to the stored hash
             string passwordHash = EncryptionHelper.HashPassword(password);
 
@@ -135,7 +165,12 @@ namespace ColDogStudios.ColDogLocker.Core
 
             // Rename the locker directory to remove the period prefix and verify it is not null
             string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
-            if (lockerDirectory == null) { return; }
+            if (string.IsNullOrEmpty(lockerDirectory))
+            {
+                Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
+                throw new InvalidOperationException("Invalid locker location.");
+            }
+            
             string newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
             Directory.Move(locker.LockerLocation, newLockerLocation);
 
