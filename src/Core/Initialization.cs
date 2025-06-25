@@ -28,7 +28,7 @@ namespace ColDogStudios.ColDogLocker.Core
             Logger.AddEntry("Lockers loaded.", LogLevel.Info);
 
             // Initialize file watchers
-            FileWatchers.InitializeWatchers();
+            FileWatcherManager.InitializeWatchers();
             Logger.AddEntry("File watchers initialized.", LogLevel.Info);
 
             // Resize logs if needed

@@ -2,10 +2,12 @@ using ColDogStudios.ColDogLocker.Utils;
 
 namespace ColDogStudios.ColDogLocker.Core
 {
-    public static class FileWatchers
+    public static class FileWatcherManager
     {
         private static FileSystemWatcher? settingsWatcher;
         private static FileSystemWatcher? lockersWatcher;
+        private static DateTime lastSettingsReload = DateTime.MinValue;
+        private static readonly TimeSpan ReloadCooldown = TimeSpan.FromMilliseconds(500); // Prevent reload spam
 
         public static void InitializeWatchers()
         {
@@ -57,6 +59,14 @@ namespace ColDogStudios.ColDogLocker.Core
 
         private static void OnSettingsChanged(object sender, FileSystemEventArgs e)
         {
+            // Debounce rapid file changes to prevent infinite reload loops
+            DateTime now = DateTime.Now;
+            if (now - lastSettingsReload < ReloadCooldown)
+            {
+                return; // Too soon since last reload, skip this one
+            }
+            
+            lastSettingsReload = now;
             Logger.AddEntry("Settings file changed. Reloading settings.", LogLevel.Info);
             SettingsManager.LoadSettings();
         }

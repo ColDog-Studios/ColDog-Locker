@@ -23,6 +23,15 @@ namespace ColDogStudios.ColDogLocker.Core
                 {
                     // Read and deserialize the settings file
                     var settingsContent = File.ReadAllText(settingsFile);
+                    
+                    // Check if the file is empty or just whitespace
+                    if (string.IsNullOrWhiteSpace(settingsContent))
+                    {
+                        Logger.AddEntry("Settings file is empty. Initializing default settings.", LogLevel.Warning);
+                        InitializeSettings();
+                        return;
+                    }
+
                     var deserializedSettings = JsonConvert.DeserializeObject<ApplicationSettings>(settingsContent);
                     if (deserializedSettings != null)
                     {
@@ -31,13 +40,21 @@ namespace ColDogStudios.ColDogLocker.Core
                     }
                     else
                     {
-                        Logger.AddEntry("Settings file is empty or invalid. Initializing default settings.", LogLevel.Warning);
+                        Logger.AddEntry("Settings file contains invalid JSON. Initializing default settings.", LogLevel.Warning);
+                        BackupCorruptedSettings();
                         InitializeSettings();
                     }
+                }
+                catch (JsonException jsonEx)
+                {
+                    Logger.AddEntry($"Settings file contains malformed JSON: {jsonEx.Message}. Initializing default settings.", LogLevel.Error);
+                    BackupCorruptedSettings();
+                    InitializeSettings();
                 }
                 catch (Exception ex)
                 {
                     Logger.AddEntry($"Error loading settings: {ex.Message}. Initializing default settings.", LogLevel.Error);
+                    BackupCorruptedSettings();
                     InitializeSettings();
                 }
             }
@@ -56,7 +73,7 @@ namespace ColDogStudios.ColDogLocker.Core
             Settings = new ApplicationSettings
             {
                 DebugMode = false,
-                MaxLogSize = 1048576, // 1MB
+                LogRetentionDays = 30, // Keep logs for 30 days by default
                 AutoUpdate = PromptForAutoUpdate()
             };
             SaveSettings();
@@ -74,25 +91,24 @@ namespace ColDogStudios.ColDogLocker.Core
                 return;
             }
 
-            if (Settings.MaxLogSize <= 0)
+            bool settingsChanged = false;
+
+            // Validate LogRetentionDays with reasonable bounds
+            if (Settings.LogRetentionDays <= 0 || Settings.LogRetentionDays > 3650) // Max 10 years
             {
-                Logger.AddEntry("Invalid MaxLogSize. Setting to default value (1MB).", LogLevel.Warning);
-                Settings.MaxLogSize = 1048576; // 1MB
+                Logger.AddEntry($"Invalid LogRetentionDays ({Settings.LogRetentionDays}). Setting to default value (30 days).", LogLevel.Warning);
+                Settings.LogRetentionDays = 30;
+                settingsChanged = true;
             }
 
-            if (Settings.DebugMode != true && Settings.DebugMode != false)
-            {
-                Logger.AddEntry("Invalid DebugMode. Setting to default value (false).", LogLevel.Warning);
-                Settings.DebugMode = false;
-            }
+            // Additional validation for any string properties that might be added in the future
+            // (Currently we don't have any required string properties)
 
-            if (Settings.AutoUpdate != true && Settings.AutoUpdate != false)
+            // Only save if we actually changed something
+            if (settingsChanged)
             {
-                Logger.AddEntry("Invalid AutoUpdate. Prompting user for value.", LogLevel.Warning);
-                Settings.AutoUpdate = PromptForAutoUpdate();
+                SaveSettings();
             }
-
-            SaveSettings();
         }
 
         // Save settings to the configuration file
@@ -107,20 +123,64 @@ namespace ColDogStudios.ColDogLocker.Core
                     Directory.CreateDirectory(directory);
                 }
 
-                File.WriteAllText(settingsFile, JsonConvert.SerializeObject(Settings, Formatting.Indented));
+                // Create a temporary file first to ensure atomic writes
+                var tempFile = settingsFile + ".tmp";
+                var jsonContent = JsonConvert.SerializeObject(Settings, Formatting.Indented);
+                
+                // Validate the JSON before writing (extra safety check)
+                JsonConvert.DeserializeObject<ApplicationSettings>(jsonContent);
+                
+                // Write to temporary file first
+                File.WriteAllText(tempFile, jsonContent);
+                
+                // Atomic replacement - if this fails, original file is still intact
+                if (File.Exists(settingsFile))
+                {
+                    File.Replace(tempFile, settingsFile, null);
+                }
+                else
+                {
+                    File.Move(tempFile, settingsFile);
+                }
+                
                 Logger.AddEntry("Settings saved successfully.", LogLevel.Success);
             }
             catch (UnauthorizedAccessException ex)
             {
                 Logger.AddEntry($"Access denied when saving settings: {ex.Message}", LogLevel.Error);
+                CleanupTempFile();
             }
             catch (DirectoryNotFoundException ex)
             {
                 Logger.AddEntry($"Settings directory not found: {ex.Message}", LogLevel.Error);
+                CleanupTempFile();
+            }
+            catch (JsonException ex)
+            {
+                Logger.AddEntry($"Failed to serialize settings to JSON: {ex.Message}", LogLevel.Error);
+                CleanupTempFile();
             }
             catch (Exception ex)
             {
                 Logger.AddEntry($"Error saving settings: {ex.Message}", LogLevel.Error);
+                CleanupTempFile();
+            }
+        }
+
+        // Clean up temporary files if save operation fails
+        private static void CleanupTempFile()
+        {
+            try
+            {
+                var tempFile = settingsFile + ".tmp";
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
+            catch
+            {
+                // If we can't clean up the temp file, it's not critical
             }
         }
 
@@ -130,39 +190,41 @@ namespace ColDogStudios.ColDogLocker.Core
             // Show Settings Menu
             MainMenu.MenuTitle("Main Menu > Settings");
 
+            Console.WriteLine("Current Settings Configuration:\n");
+
             // Prompt the user to enable or disable debug mode
-            Console.Write("Enable Debug Mode? (y/N): ");
+            Console.Write($"Enable Debug Mode? (y/N) [Current: {(Settings.DebugMode ? "Yes" : "No")}]: ");
             var debugModeInput = Console.ReadLine();
-            var debugMode = debugModeInput != null && debugModeInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var debugMode = !string.IsNullOrEmpty(debugModeInput) && debugModeInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
-            // Prompt the user to enter the maximum log file size in MB
-            Console.Write("Enter the maximum log file size in MB: ");
-            var maxLogSizeInput = Console.ReadLine();
+            // Prompt the user to enter the log retention period in days
+            Console.Write($"Log retention period in days [Current: {Settings.LogRetentionDays}]: ");
+            var retentionInput = Console.ReadLine();
 
-            // Validate the input and convert it to bytes
-            if (string.IsNullOrEmpty(maxLogSizeInput) || !int.TryParse(maxLogSizeInput, out _))
+            int logRetentionDays = Settings.LogRetentionDays;
+            if (!string.IsNullOrEmpty(retentionInput))
             {
-                Console.WriteLine("Invalid input. Setting maximum log size to default (1MB).");
-                maxLogSizeInput = "1"; // Default to 1MB if input is invalid
+                if (int.TryParse(retentionInput, out int parsedDays) && parsedDays > 0)
+                {
+                    logRetentionDays = parsedDays;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Log retention must be a positive number. Keeping current value.");
+                }
             }
-            else if (int.Parse(maxLogSizeInput) <= 0)
-            {
-                Console.WriteLine("Maximum log size must be greater than 0. Setting to default (1MB).");
-                maxLogSizeInput = "1"; // Default to 1MB if input is less than or equal to 0
-            }
-            
-            var maxLogSize = maxLogSizeInput != null ? int.Parse(maxLogSizeInput) * 1048576 : 1048576; // Convert MB to bytes
 
             // Prompt the user to enable or disable auto updates
-            Console.Write("Enable Auto Update? (y/N): ");
+            Console.Write($"Enable Auto Update? (y/N) [Current: {(Settings.AutoUpdate ? "Yes" : "No")}]: ");
             var autoUpdateInput = Console.ReadLine();
-            var autoUpdate = autoUpdateInput != null && autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var autoUpdate = string.IsNullOrEmpty(autoUpdateInput) ? Settings.AutoUpdate :
+                autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             // Update the settings object with the new values
             Settings = new ApplicationSettings
             {
                 DebugMode = debugMode,
-                MaxLogSize = maxLogSize,
+                LogRetentionDays = logRetentionDays,
                 AutoUpdate = autoUpdate
             };
 
@@ -171,7 +233,14 @@ namespace ColDogStudios.ColDogLocker.Core
 
             // Log the successful update of settings
             Logger.AddEntry("Settings updated successfully.", LogLevel.Success);
-            Console.Write("\nSettings updated successfully.");
+            
+            Console.WriteLine("\nSettings updated successfully!");
+            Console.WriteLine("\nNew Configuration:");
+            Console.WriteLine($"  Debug Mode: {(Settings.DebugMode ? "Enabled" : "Disabled")}");
+            Console.WriteLine($"  Log Retention: {Settings.LogRetentionDays} days");
+            Console.WriteLine($"  Auto Update: {(Settings.AutoUpdate ? "Enabled" : "Disabled")}");
+            
+            Console.Write("\nPress Enter to continue...");
             Console.ReadLine();
         }
 
@@ -185,6 +254,25 @@ namespace ColDogStudios.ColDogLocker.Core
             var autoUpdateInput = Console.ReadLine();
             return autoUpdateInput != null && autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
         }
+
+        // Backup a corrupted settings file for debugging
+        private static void BackupCorruptedSettings()
+        {
+            try
+            {
+                if (File.Exists(settingsFile))
+                {
+                    var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    var backupFile = Path.Combine(Variables.localConfig, $"settings_corrupted_{timestamp}.json.bak");
+                    File.Copy(settingsFile, backupFile, true);
+                    Logger.AddEntry($"Corrupted settings file backed up to: {backupFile}", LogLevel.Info);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.AddEntry($"Failed to backup corrupted settings file: {ex.Message}", LogLevel.Warning);
+            }
+        }
     }
 
     // Class to hold application settings
@@ -196,9 +284,9 @@ namespace ColDogStudios.ColDogLocker.Core
         public bool DebugMode { get; set; }
 
         /// <summary>
-        /// Gets or sets the maximum log file size in bytes.
+        /// Gets or sets the number of days to retain log files.
         /// </summary>
-        public int MaxLogSize { get; set; }
+        public int LogRetentionDays { get; set; } = 30;
 
         /// <summary>
         /// Gets or sets a value indicating whether auto updates are enabled.

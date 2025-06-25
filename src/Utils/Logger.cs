@@ -1,21 +1,49 @@
 using ColDogStudios.ColDogLocker.Core;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Utils
 {
     public enum LogLevel
     {
-        Info,
         Debug,
+        Info,
         Success,
         Warning,
         Error
     }
 
+    public class LogEntry
+    {
+        [JsonProperty("timestamp")]
+        public DateTime Timestamp { get; set; }
+
+        [JsonProperty("level")]
+        public string Level { get; set; } = string.Empty;
+
+        [JsonProperty("message")]
+        public string Message { get; set; } = string.Empty;
+
+        [JsonProperty("source_file")]
+        public string? SourceFile { get; set; }
+
+        [JsonProperty("line_number")]
+        public int? LineNumber { get; set; }
+
+        [JsonProperty("session_id")]
+        public string SessionId { get; set; } = string.Empty;
+    }
+
     public static class Logger
     {
         private static readonly string _logDirectory = Path.Combine(Variables.localConfig, "logs");
-        private static readonly int _logRetentionDays = 120;
+        private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        private static readonly string _logFilePath = Path.Combine(_logDirectory, $"session_{_sessionId}.json");
+        private static readonly object _lockObject = new object();
+        
+        // Dynamic property that reads from settings
+        private static int LogRetentionDays => SettingsManager.Settings?.LogRetentionDays ?? 30;
+        
         private static readonly HashSet<LogLevel> _enabledLogLevels =
         [
             LogLevel.Info,
@@ -39,28 +67,52 @@ namespace ColDogStudios.ColDogLocker.Utils
                 Directory.CreateDirectory(_logDirectory);
             }
 
-            // Create the log entry with timestamp and level
-            string logEntry = $"[{DateTime.Now}] [{level}] {message}";
+            // Create the log entry object
+            var logEntry = new LogEntry
+            {
+                Timestamp = DateTime.Now,
+                Level = level.ToString(),
+                Message = message,
+                SessionId = _sessionId
+            };
 
-            // If in debug mode, include the file name and line number in the log entry
+            // If in debug mode, include the file name and line number
             if (SettingsManager.Settings.DebugMode)
             {
-                string fileName = Path.GetFileName(filePath);
-                logEntry = $"[{DateTime.Now}] [{level}] {fileName}:{lineNumber} {message}";
+                logEntry.SourceFile = Path.GetFileName(filePath);
+                logEntry.LineNumber = lineNumber;
             }
 
-            // Append the log entry to the master log file
-            File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), logEntry + Environment.NewLine);
-
-            // Append the log entry to the category-specific log file
-            string categoryLogFilePath = GetCategoryLogFilePath(level);
-            File.AppendAllText(categoryLogFilePath, logEntry + Environment.NewLine);
+            // Convert to JSON and append to log file (thread-safe)
+            lock (_lockObject)
+            {
+                try
+                {
+                    // NDJSON format - each line is a separate JSON object
+                    string jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
+                    File.AppendAllText(_logFilePath, jsonLine + Environment.NewLine);
+                }
+                catch (Exception ex)
+                {
+                    // If we can't log, try to write to a fallback file
+                    try
+                    {
+                        string fallbackPath = Path.Combine(_logDirectory, $"fallback_{_sessionId}.txt");
+                        string fallbackEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{level}] {message} (Logging Error: {ex.Message})";
+                        File.AppendAllText(fallbackPath, fallbackEntry + Environment.NewLine);
+                    }
+                    catch
+                    {
+                        // If even fallback fails, we can't do much
+                    }
+                }
+            }
         }
 
         // Get the log file path based on the log level
         private static string GetCategoryLogFilePath(LogLevel level)
         {
-            return Path.Combine(_logDirectory, $"{level.ToString().ToLower()}.log");
+            return _logFilePath; // Single file for all levels
         }
 
         // Check if the specified log level is enabled
@@ -69,105 +121,94 @@ namespace ColDogStudios.ColDogLocker.Utils
             return _enabledLogLevels.Contains(level);
         }
 
-        // Trim log entries older than the specified number of days
+        // Trim log files older than the specified number of days
         public static void TrimLog()
         {
-            // Verify the log files exist
-            if (Directory.GetFiles(_logDirectory, "*.log").Length == 0)
+            TrimOldLogFiles();
+        }
+
+        // Remove log files older than the retention period
+        private static void TrimOldLogFiles()
+        {
+            try
             {
-                return;
-            }
+                if (!Directory.Exists(_logDirectory))
+                    return;
 
-            int totalTrimmed = 0;
-            DateTime cutoffDate = DateTime.Now.AddDays(-_logRetentionDays);
+                DateTime cutoffDate = DateTime.Now.AddDays(-LogRetentionDays);
+                var allLogFiles = Directory.GetFiles(_logDirectory, "session_*.json")
+                    .Concat(Directory.GetFiles(_logDirectory, "fallback_*.txt"))
+                    .ToArray();
+                
+                int totalDeleted = 0;
 
-            // Iterate through all log files in the log directory
-            foreach (var logFile in Directory.GetFiles(_logDirectory, "*.log"))
-            {
-                try
+                foreach (var logFile in allLogFiles)
                 {
-                    // Read all lines from the log file
-                    var lines = File.ReadAllLines(logFile);
-                    int originalCount = lines.Length;
-
-                    // Filter out log entries older than the specified number of days
-                    var trimmedLines = lines.Where(line => IsLineWithinRetention(line, cutoffDate)).ToArray();
-
-                    // Only write back if there were changes
-                    if (trimmedLines.Length != originalCount)
-                    {
-                        File.WriteAllLines(logFile, trimmedLines);
-                        int removedCount = originalCount - trimmedLines.Length;
-                        totalTrimmed += removedCount;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log error directly to avoid recursion, but continue with other files
-                    string errorEntry = $"[{DateTime.Now}] [Error] Failed to trim log file {logFile}: {ex.Message}";
                     try
                     {
-                        File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), errorEntry + Environment.NewLine);
+                        var fileInfo = new FileInfo(logFile);
+                        
+                        // Delete files older than retention period
+                        if (fileInfo.CreationTime < cutoffDate)
+                        {
+                            File.Delete(logFile);
+                            totalDeleted++;
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // If we can't even write to the main log, just continue
+                        // Log error for specific file but continue with others
+                        LogDirectly($"Failed to delete old log file {logFile}: {ex.Message}", "Warning");
                     }
+                }
+
+                // Log the cleanup result if files were deleted
+                if (totalDeleted > 0)
+                {
+                    LogDirectly($"Deleted {totalDeleted} log files older than {LogRetentionDays} days", "Info");
                 }
             }
-
-            // Only log if we actually trimmed something, and do it after all files are processed
-            if (totalTrimmed > 0)
+            catch (Exception ex)
             {
-                string message = $"Trimmed {totalTrimmed} log entries older than {_logRetentionDays} days";
-                string logEntry = $"[{DateTime.Now}] [Info] {message}";
-                
-                // Write directly to avoid recursion
-                try
-                {
-                    File.AppendAllText(Path.Combine(_logDirectory, "cdl.log"), logEntry + Environment.NewLine);
-                    File.AppendAllText(Path.Combine(_logDirectory, "info.log"), logEntry + Environment.NewLine);
-                }
-                catch
-                {
-                    // If we can't log the trimming result, that's okay
-                }
+                LogDirectly($"Error during log cleanup: {ex.Message}", "Error");
             }
         }
 
-        // Helper method to check if a log line is within the retention period
-        private static bool IsLineWithinRetention(string line, DateTime cutoffDate)
+        // Direct logging method to avoid recursion during maintenance operations
+        private static void LogDirectly(string message, string level)
         {
-            // If line is empty or too short, keep it (might be important)
-            if (string.IsNullOrWhiteSpace(line) || line.Length < 10)
+            try
             {
-                return true;
-            }
+                var logEntry = new LogEntry
+                {
+                    Timestamp = DateTime.Now,
+                    Level = level,
+                    Message = message,
+                    SessionId = _sessionId
+                };
 
-            // Look for the pattern [timestamp] at the beginning
-            if (!line.StartsWith("["))
+                lock (_lockObject)
+                {
+                    string jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
+                    File.AppendAllText(_logFilePath, jsonLine + Environment.NewLine);
+                }
+            }
+            catch
             {
-                return true; // Keep lines that don't follow expected format
+                // If direct logging fails, there's not much we can do
             }
+        }
 
-            // Find the closing bracket for the timestamp
-            int closingBracketIndex = line.IndexOf(']');
-            if (closingBracketIndex <= 1)
-            {
-                return true; // Keep malformed lines
-            }
+        // Helper method to get session information
+        public static string GetCurrentSessionId()
+        {
+            return _sessionId;
+        }
 
-            // Extract the timestamp part (without the brackets)
-            string timestampPart = line.Substring(1, closingBracketIndex - 1);
-
-            // Try to parse the timestamp
-            if (DateTime.TryParse(timestampPart, out DateTime logDate))
-            {
-                return logDate >= cutoffDate;
-            }
-
-            // If we can't parse the date, keep the line to be safe
-            return true;
+        // Helper method to get current session log file path
+        public static string GetCurrentLogFilePath()
+        {
+            return _logFilePath;
         }
     }
 }
