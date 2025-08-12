@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #1f95d2;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3, .cls-4 {
+        fill: none;
+      }
+
+      .cls-4 {
+        stroke: #888;
+        stroke-miterlimit: 10;
+        stroke-width: 60px;
+      }
+    </style>
+  </defs>
+  <rect class="cls-3" width="500" height="500"/>
+  <rect class="cls-1" x="25" y="197.5" width="450" height="275" rx="80" ry="80"/>
+  <rect class="cls-2" x="187.5" y="241.25" width="125" height="125" rx="62.49994" ry="62.49994"/>
+  <rect class="cls-2" x="225" y="303.75" width="50" height="125"/>
+  <path class="cls-4" d="M137.5,197.5v-41.2502c0-55.22836,50.36792-99.9998,112.49989-99.9998h.00023c62.13197,0,112.49989,44.77144,112.49989,99.9998v41.2502"/>
+</svg>
