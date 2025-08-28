@@ -54,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Utils
             {
                 // Write the salt at the beginning of the encrypted file
                 fsCrypt.Write(salt, 0, salt.Length);
-                
+
                 using (CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
                 {
                     byte[] buffer = new byte[BufferSize];
@@ -153,5 +153,25 @@ namespace ColDogStudios.ColDogLocker.Utils
             byte[] hash512 = SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(hex256));
             return BitConverter.ToString(hash512).Replace("-", "").ToLowerInvariant();
         }
+        
+        // Improved password hashing using bcrypt
+        public static string NewHashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+
+            // Cost factor of 14 provides enhanced security vs performance trade-off
+            return BCrypt.Net.BCrypt.HashPassword(password, 14); // 12-13 recommended
+        }
+
+        // Method to verify password against hash
+        public static bool VerifyPassword(string password, string hash)
+        {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
+                return false;
+
+            return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+        
     }
 }
