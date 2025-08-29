@@ -105,11 +105,8 @@ namespace ColDogStudios.ColDogLocker.Core
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
-            // Hash the password and compare it to the stored hash
-            string passwordHash = EncryptionHelper.HashPassword(password);
-
-            // Check if the password is correct, if not, throw an exception
-            if (locker.Password != passwordHash)
+            // Verify the password against the stored hash using bcrypt
+            if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
                 Logger.AddEntry($"Failed to lock locker {locker.LockerName}. Incorrect password.", LogLevel.Error);
                 throw new UnauthorizedAccessException("Incorrect password.");
@@ -153,11 +150,8 @@ namespace ColDogStudios.ColDogLocker.Core
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
-            // Hash the password and compare it to the stored hash
-            string passwordHash = EncryptionHelper.HashPassword(password);
-
-            // Check if the password is correct, if not, throw an exception
-            if (locker.Password != passwordHash)
+            // Verify the password against the stored hash using bcrypt
+            if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
                 Logger.AddEntry($"Failed to unlock locker {locker.LockerName}. Incorrect password.", LogLevel.Error);
                 throw new UnauthorizedAccessException("Incorrect password.");

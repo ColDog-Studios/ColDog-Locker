@@ -139,23 +139,8 @@ namespace ColDogStudios.ColDogLocker.Utils
             File.Move(inputFile + ".dec", inputFile);
         }
 
-        // Hash a password using SHA-256 and SHA-512
-        public static string HashPassword(string password)
-        {
-            // Convert password to byte array
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(password);
-
-            // Compute SHA-256 hash
-            byte[] hash256 = SHA256.HashData(bytes);
-            string hex256 = BitConverter.ToString(hash256).Replace("-", "").ToLowerInvariant();
-
-            // Compute SHA-512 hash of the SHA-256 hash
-            byte[] hash512 = SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(hex256));
-            return BitConverter.ToString(hash512).Replace("-", "").ToLowerInvariant();
-        }
-        
         // Improved password hashing using bcrypt
-        public static string NewHashPassword(string password)
+        public static string HashPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
@@ -173,5 +158,19 @@ namespace ColDogStudios.ColDogLocker.Utils
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
         
+        // Hash a password using SHA-256 and SHA-512
+        public static string LegacyHashPassword(string password)
+        {
+            // Convert password to byte array
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(password);
+
+            // Compute SHA-256 hash
+            byte[] hash256 = SHA256.HashData(bytes);
+            string hex256 = BitConverter.ToString(hash256).Replace("-", "").ToLowerInvariant();
+
+            // Compute SHA-512 hash of the SHA-256 hash
+            byte[] hash512 = SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(hex256));
+            return BitConverter.ToString(hash512).Replace("-", "").ToLowerInvariant();
+        }
     }
 }
