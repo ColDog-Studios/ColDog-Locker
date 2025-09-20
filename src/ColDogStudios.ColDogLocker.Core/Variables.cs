@@ -7,21 +7,21 @@ namespace ColDogStudios.ColDogLocker.Core
         //////////////////////////////////////////
 
         // Local configuration directory
-        public static readonly string localConfig = Path.Combine(
+        public static readonly string LocalConfig = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "ColDog Studios",
             "ColDog Locker"
         );
 
         // Roaming configuration directory (to be phased out)
-        public static readonly string roamingConfig = Path.Combine(
+        public static readonly string RoamingConfig = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "ColDog Studios",
             "ColDog Locker"
         );
 
         // ColDog Locker Directory
-        public static readonly string cdlDir = Path.Combine(
+        public static readonly string CdlDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             "ColDog Locker"
         );
@@ -30,9 +30,9 @@ namespace ColDogStudios.ColDogLocker.Core
         // Build Information (Auto-generated)
         //////////////////////////////////////////
 
-        public const string version = "0.1.0-pre";
-        public const string buildVersion = "0.1.0-pre.2025.0104.2003";
-        public const string buildNumber = "2025.0104.2003";
-        public const string buildDate = "2025-01-04";
+        public const string Version = "0.1.0-pre";
+        public const string BuildVersion = "0.1.0-pre.2025.0829.1827";
+        public const string BuildNumber = "2025.0829.1827";
+        public const string BuildDate = "2025-08-29";
     }
 }

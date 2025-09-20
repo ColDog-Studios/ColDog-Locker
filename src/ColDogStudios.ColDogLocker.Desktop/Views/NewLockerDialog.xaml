@@ -1,0 +1,76 @@
+<Window x:Class="ColDogStudios.ColDogLocker.Desktop.Views.NewLockerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Create New Locker" 
+        Height="300" 
+        Width="550"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" 
+                   Text="Create a new secure locker" 
+                   FontSize="16" 
+                   FontWeight="Bold"/>
+
+        <!-- Locker Name -->
+        <Label Grid.Row="2" Content="Locker Name:" Target="{Binding ElementName=LockerNameTextBox}"/>
+        <TextBox x:Name="LockerNameTextBox" 
+                 Grid.Row="3" 
+                 Height="25" 
+                 TextChanged="LockerNameTextBox_TextChanged"/>
+
+        <!-- Locker Path -->
+        <Label Grid.Row="5" Content="Locker Directory:" Target="{Binding ElementName=LockerPathTextBox}"/>
+        <Grid Grid.Row="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox x:Name="LockerPathTextBox" 
+                     Grid.Column="0" 
+                     Height="25" 
+                     Margin="0,0,10,0"
+                     TextChanged="LockerPathTextBox_TextChanged"/>
+            <Button Grid.Column="1" 
+                    Content="Browse..." 
+                    Width="80" 
+                    Height="25"
+                    Click="BrowseButton_Click"/>
+        </Grid>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="8" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,20,0,0">
+            <Button x:Name="OkButton" 
+                    Content="Create" 
+                    Width="80" 
+                    Height="30" 
+                    Margin="0,0,10,0" 
+                    IsDefault="True"
+                    IsEnabled="False"
+                    Click="OkButton_Click"/>
+            <Button Content="Cancel" 
+                    Width="80" 
+                    Height="30" 
+                    IsCancel="True"
+                    Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

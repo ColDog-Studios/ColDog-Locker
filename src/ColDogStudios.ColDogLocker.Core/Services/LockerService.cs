@@ -1,10 +1,10 @@
-using ColDogStudios.ColDogLocker.Models;
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Core.Utils;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Core.Services
 {
-    public static class Locker
+    public static class LockerService
     {
         public static readonly List<LockerModel> Lockers = [];
 
@@ -13,11 +13,9 @@ namespace ColDogStudios.ColDogLocker.Core
         {
             try
             {
-                // Define file path
-                string filePath = Path.Combine(Variables.localConfig, "lockers.json");
+                string filePath = Path.Combine(Variables.LocalConfig, "lockers.json");
                 if (File.Exists(filePath))
                 {
-                    // Read and deserialize JSON data
                     string json = File.ReadAllText(filePath);
                     var lockers = JsonConvert.DeserializeObject<List<LockerModel>>(json);
                     if (lockers != null)
@@ -41,7 +39,7 @@ namespace ColDogStudios.ColDogLocker.Core
             catch (Exception ex)
             {
                 Logger.AddEntry($"An error occurred while reading the lockers from the JSON file: {ex.Message}. Starting with empty locker list.", LogLevel.Error);
-                Lockers.Clear(); // Ensure we have a clean state
+                Lockers.Clear();
             }
         }
 
@@ -50,9 +48,8 @@ namespace ColDogStudios.ColDogLocker.Core
         {
             try
             {
-                // Serialize and write JSON data
                 string json = JsonConvert.SerializeObject(Lockers, Formatting.Indented);
-                File.WriteAllText(Path.Combine(Variables.localConfig, "lockers.json"), json);
+                File.WriteAllText(Path.Combine(Variables.LocalConfig, "lockers.json"), json);
             }
             catch (Exception ex)
             {
@@ -64,127 +61,130 @@ namespace ColDogStudios.ColDogLocker.Core
         // Add a new locker to the metadata
         public static void AddLocker(LockerModel locker)
         {
-            // Create locker directory if it does not exist
-            if (Directory.Exists(locker.LockerLocation))
+            if (Directory.Exists(locker.LockerPath))
             {
                 Logger.AddEntry($"{locker.LockerName} already exists. Skipping directory creation.", LogLevel.Info);
-                Console.WriteLine($"\n{locker.LockerName} already exists. Skipping directory creation.");
             }
             else
             {
-                Directory.CreateDirectory(locker.LockerLocation);
-                Logger.AddEntry($"Created directory: {locker.LockerLocation}", LogLevel.Info);
+                Directory.CreateDirectory(locker.LockerPath);
+                Logger.AddEntry($"Created directory: {locker.LockerPath}", LogLevel.Info);
             }
 
-            // Add the locker to the metadata
+            locker.UpdateSize(); // Calculate initial size
             Lockers.Add(locker);
             SaveLockers();
 
             Logger.AddEntry($"{locker.LockerName} created successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} created successfully.");
-            Console.ReadLine();
         }
 
         // Remove a locker from the metadata
         public static void RemoveLocker(LockerModel locker)
         {
-            // Remove the locker from the metadata
             Lockers.Remove(locker);
             SaveLockers();
-
             Logger.AddEntry($"{locker.LockerName} removed successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} removed successfully.");
-            Console.ReadLine();
         }
 
-        // Method to lock the locker
-        public static void Lock(LockerModel locker, string password)
+        // Method to lock the locker with async support
+        public static async Task LockAsync(LockerModel locker, string password, IProgress<EncryptionHelper.ProgressInfo>? progress = null, CancellationToken cancellationToken = default)
         {
             if (locker == null)
                 throw new ArgumentNullException(nameof(locker));
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
-            // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
                 Logger.AddEntry($"Failed to lock locker {locker.LockerName}. Incorrect password.", LogLevel.Error);
                 throw new UnauthorizedAccessException("Incorrect password.");
             }
 
-            // Rename the locker directory to be prefixed with a period
-            string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
+            string? lockerDirectory = Path.GetDirectoryName(locker.LockerPath);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
-                Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
+                Logger.AddEntry($"Invalid locker location: {locker.LockerPath}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
             
             string newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
-            Directory.Move(locker.LockerLocation, newLockerLocation);
+            Directory.Move(locker.LockerPath, newLockerLocation);
 
-            // Encrypt the locker directory
-            EncryptionHelper.EncryptDirectory(newLockerLocation, password);
+            await EncryptionHelper.EncryptDirectoryAsync(newLockerLocation, password, progress, cancellationToken);
 
-            // Set Hidden and System attributes to the locker directory
             File.SetAttributes(newLockerLocation, File.GetAttributes(newLockerLocation) | FileAttributes.Hidden | FileAttributes.System);
 
-            // Update the locker status
             locker.IsLocked = true;
-            locker.LockerLocation = newLockerLocation;
+            locker.LockerPath = newLockerLocation;
+            locker.LastModified = DateTime.Now;
 
-            // Save the updated locker metadata
             SaveLockers();
-
-            // Log and display success message
             Logger.AddEntry($"Locker {locker.LockerName} locked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} locked successfully.");
-            Console.ReadLine();
         }
 
-        // Method to unlock the locker
-        public static void Unlock(LockerModel locker, string password)
+        // Synchronous version for backward compatibility
+        public static void Lock(LockerModel locker, string password)
+        {
+            LockAsync(locker, password).GetAwaiter().GetResult();
+        }
+
+        // Method to unlock the locker with async support
+        public static async Task UnlockAsync(LockerModel locker, string password, IProgress<EncryptionHelper.ProgressInfo>? progress = null, CancellationToken cancellationToken = default)
         {
             if (locker == null)
                 throw new ArgumentNullException(nameof(locker));
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
-            // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
                 Logger.AddEntry($"Failed to unlock locker {locker.LockerName}. Incorrect password.", LogLevel.Error);
                 throw new UnauthorizedAccessException("Incorrect password.");
             }
 
-            // Rename the locker directory to remove the period prefix and verify it is not null
-            string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
+            string? lockerDirectory = Path.GetDirectoryName(locker.LockerPath);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
-                Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
+                Logger.AddEntry($"Invalid locker location: {locker.LockerPath}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
             
             string newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
-            Directory.Move(locker.LockerLocation, newLockerLocation);
+            Directory.Move(locker.LockerPath, newLockerLocation);
 
-            // Decrypt the locker directory
-            EncryptionHelper.DecryptDirectory(newLockerLocation, password);
+            await EncryptionHelper.DecryptDirectoryAsync(newLockerLocation, password, progress, cancellationToken);
 
-            // Remove Hidden and System attributes from the locker directory
             File.SetAttributes(newLockerLocation, File.GetAttributes(newLockerLocation) & ~FileAttributes.Hidden & ~FileAttributes.System);
 
-            // Update the locker status
             locker.IsLocked = false;
-            locker.LockerLocation = newLockerLocation;
+            locker.LockerPath = newLockerLocation;
+            locker.LastModified = DateTime.Now;
+            locker.UpdateSize();
 
-            // Save the updated locker metadata
             SaveLockers();
-
-            // Log and display success message
             Logger.AddEntry($"{locker.LockerName} unlocked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} unlocked successfully.");
-            Console.ReadLine();
+        }
+
+        // Synchronous version for backward compatibility
+        public static void Unlock(LockerModel locker, string password)
+        {
+            UnlockAsync(locker, password).GetAwaiter().GetResult();
+        }
+
+        // Get all lockers (for GUI binding)
+        public static List<LockerModel> GetAllLockers()
+        {
+            foreach (var locker in Lockers)
+            {
+                locker.UpdateSize(); // Refresh size information
+            }
+            return Lockers.ToList();
+        }
+
+        // Get filtered lockers by locked status
+        public static List<LockerModel> GetLockers(bool isLocked)
+        {
+            return Lockers.Where(l => l.IsLocked == isLocked).ToList();
         }
     }
 }

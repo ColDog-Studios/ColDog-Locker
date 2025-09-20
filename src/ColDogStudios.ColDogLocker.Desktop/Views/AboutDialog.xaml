@@ -1,0 +1,64 @@
+<Window x:Class="ColDogStudios.ColDogLocker.Desktop.Views.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About ColDog Locker" 
+        Height="350" 
+        Width="450"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Application Name (moved icon to here temporarily) -->
+        <TextBlock Grid.Row="0" 
+                   Text="🔒 ColDog Locker" 
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center"/>
+
+        <!-- Version -->
+        <TextBlock x:Name="VersionTextBlock" 
+                   Grid.Row="2" 
+                   Text="Version 1.0.0" 
+                   FontSize="14" 
+                   HorizontalAlignment="Center"/>
+
+        <!-- Copyright -->
+        <TextBlock x:Name="CopyrightTextBlock" 
+                   Grid.Row="4" 
+                   Text="Copyright © ColDog Studios 2025" 
+                   FontSize="12" 
+                   HorizontalAlignment="Center"/>
+
+        <!-- Description -->
+        <TextBlock Grid.Row="6" 
+                   TextWrapping="Wrap" 
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center">
+            <Run Text="Secure file encryption and locker management application."/>
+            <LineBreak/>
+            <LineBreak/>
+            <Run Text="Protect your sensitive files with industry-standard encryption."/>
+        </TextBlock>
+
+        <!-- OK Button -->
+        <Button Grid.Row="8" 
+                Content="OK" 
+                Width="80" 
+                Height="30" 
+                HorizontalAlignment="Center"
+                IsDefault="True"
+                Click="OkButton_Click"/>
+    </Grid>
+</Window>

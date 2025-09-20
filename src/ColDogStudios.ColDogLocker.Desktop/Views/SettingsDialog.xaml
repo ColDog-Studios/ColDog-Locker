@@ -1,0 +1,100 @@
+<Window x:Class="ColDogStudios.ColDogLocker.Desktop.Views.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" 
+        Height="500" 
+        Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" 
+                   Text="Application Settings" 
+                   FontSize="16" 
+                   FontWeight="Bold"/>
+
+        <!-- Settings Content -->
+        <TabControl Grid.Row="2">
+            <TabItem Header="Security">
+                <StackPanel Margin="10">
+                    <GroupBox Header="Encryption" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <Label Content="Encryption Level:" Target="{Binding ElementName=EncryptionLevelComboBox}"/>
+                            <ComboBox x:Name="EncryptionLevelComboBox" Width="200" HorizontalAlignment="Left">
+                                <ComboBoxItem Content="AES-128"/>
+                                <ComboBoxItem Content="AES-256"/>
+                                <ComboBoxItem Content="AES-512"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Security Options" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox x:Name="AutoLockCheckBox" Content="Auto-lock after inactivity" Margin="0,5"/>
+                            <CheckBox Content="Require password confirmation" Margin="0,5"/>
+                            <CheckBox Content="Clear clipboard after copy" Margin="0,5"/>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="General">
+                <StackPanel Margin="10">
+                    <GroupBox Header="Backup" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox x:Name="BackupEnabledCheckBox" Content="Enable automatic backups" Margin="0,5"/>
+                            <Label Content="Backup Location:" Target="{Binding ElementName=BackupLocationTextBox}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="BackupLocationTextBox" Grid.Column="0" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="Browse..." Width="80"/>
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Interface" Margin="0,0,0,10">
+                        <StackPanel Margin="10">
+                            <CheckBox Content="Start minimized to system tray" Margin="0,5"/>
+                            <CheckBox Content="Show file count in status bar" Margin="0,5"/>
+                            <CheckBox Content="Remember window position" Margin="0,5"/>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,20,0,0">
+            <Button Content="OK" 
+                    Width="80" 
+                    Height="30" 
+                    Margin="0,0,10,0" 
+                    IsDefault="True"
+                    Click="OkButton_Click"/>
+            <Button Content="Cancel" 
+                    Width="80" 
+                    Height="30" 
+                    Margin="0,0,10,0"
+                    IsCancel="True"
+                    Click="CancelButton_Click"/>
+            <Button Content="Apply" 
+                    Width="80" 
+                    Height="30"
+                    Click="ApplyButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

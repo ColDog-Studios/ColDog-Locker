@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+    <UseWPF>true</UseWPF>
+    <StartupObject>ColDogStudios.ColDogLocker.Desktop.Program</StartupObject>
+    <AssemblyTitle>ColDog Locker</AssemblyTitle>
+    <AssemblyDescription>Secure file encryption and locker management</AssemblyDescription>
+    <AssemblyCompany>ColDog Studios</AssemblyCompany>
+    <AssemblyProduct>ColDog Locker</AssemblyProduct>
+    <Copyright>Copyright © ColDog Studios 2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <!-- Icon references using CDL (ColDog Locker) icons -->
+    <ApplicationIcon>..\..\images\icons\cdlIcon-32.ico</ApplicationIcon>
+    <PackageIcon>cdlIcon-128.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ColDogStudios.ColDogLocker.Core\ColDogStudios.ColDogLocker.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- Package icon reference for CDL (ColDog Locker) -->
+  <ItemGroup>
+    <None Include="..\..\images\icons\cdlIcon-128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <!-- Local Resources - Images copied to project -->
+  <ItemGroup>
+    <Resource Include="Resources\Images\cdlIcon-32.png" />
+    <Resource Include="Resources\Images\cdlIcon-128.png" />
+    <Resource Include="Resources\Images\cdsLogo-1000.png" />
+  </ItemGroup>
+
+  <!-- Embedded UI resources - will be available when you add the image files -->
+  <ItemGroup>
+    <Resource Include="..\..\images\ui\toolbar\*.png" Condition="Exists('..\..\images\ui\toolbar\')" />
+    <Resource Include="..\..\images\ui\menu\*.png" Condition="Exists('..\..\images\ui\menu\')" />
+    <Resource Include="..\..\images\ui\dialogs\*.png" Condition="Exists('..\..\images\ui\dialogs\')" />
+    <Resource Include="..\..\images\branding\*.png" Condition="Exists('..\..\images\branding\')" />
+  </ItemGroup>
+
+</Project>
