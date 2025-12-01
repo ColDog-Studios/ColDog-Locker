@@ -17,8 +17,14 @@ namespace ColDogStudios.ColDogLocker.Menu
                 MainMenu.MenuTitle("Main Menu > New Locker");
 
                 // Get locker name from user
-                Console.Write("Enter Locker Name: ");
+                Console.Write("Enter Locker Name (or 0 to return): ");
                 lockerName = Console.ReadLine();
+
+                // Check if user wants to return to main menu
+                if (lockerName == "0")
+                {
+                    return;
+                }
 
                 // Validate locker name
                 if (!string.IsNullOrEmpty(lockerName))
@@ -94,9 +100,25 @@ namespace ColDogStudios.ColDogLocker.Menu
                 // List unlocked lockers
                 var unlockedLockers = LockerFilter.ListLockers(false);
 
+                // Check if there are any unlocked lockers
+                if (unlockedLockers.Count == 0)
+                {
+                    Console.Write("\nYou have no lockers to remove. Press Enter to continue...");
+                    Console.ReadLine();
+                    return;
+                }
+
                 // Get locker index from user
-                Console.Write("\nEnter the number of the locker to remove: ");
-                if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= unlockedLockers.Count)
+                Console.Write("\nEnter the number of the locker to remove (or 0 to return): ");
+                string? input = Console.ReadLine();
+                
+                // Check if user wants to return to main menu
+                if (input == "0")
+                {
+                    return;
+                }
+
+                if (int.TryParse(input, out int index) && index > 0 && index <= unlockedLockers.Count)
                 {
                     var locker = unlockedLockers[index - 1];
 
@@ -110,7 +132,7 @@ namespace ColDogStudios.ColDogLocker.Menu
                     return;
                 }
 
-                Console.Write("\nInvalid selection.");
+                Console.Write("\nInvalid selection. Press Enter to continue...");
                 Console.ReadLine();
             }
         }
@@ -124,11 +146,27 @@ namespace ColDogStudios.ColDogLocker.Menu
             // List unlocked lockers
             var unlockedLockers = LockerFilter.ListLockers(false);
 
-            // Get locker index from user
-            Console.Write("\nEnter the number of the locker to lock: ");
-            if (!int.TryParse(Console.ReadLine(), out int index) || index <= 0 || index > unlockedLockers.Count)
+            // Check if there are any unlocked lockers
+            if (unlockedLockers.Count == 0)
             {
-                Console.Write("\nInvalid selection.");
+                Console.Write("\nYou have no lockers to lock. Press Enter to continue...");
+                Console.ReadLine();
+                return;
+            }
+
+            // Get locker index from user
+            Console.Write("\nEnter the number of the locker to lock (or 0 to return): ");
+            string? input = Console.ReadLine();
+            
+            // Check if user wants to return to main menu
+            if (input == "0")
+            {
+                return;
+            }
+
+            if (!int.TryParse(input, out int index) || index <= 0 || index > unlockedLockers.Count)
+            {
+                Console.Write("\nInvalid selection. Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
@@ -142,7 +180,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             // Validate password
             if (string.IsNullOrEmpty(password))
             {
-                Console.Write("\nPassword cannot be empty.");
+                Console.Write("\nPassword cannot be empty. Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
@@ -155,7 +193,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.Write(ex.Message);
+                Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
@@ -170,11 +208,27 @@ namespace ColDogStudios.ColDogLocker.Menu
             // List locked lockers
             var lockedLockers = LockerFilter.ListLockers(true);
 
-            // Get locker index from user
-            Console.Write("\nEnter the number of the locker to unlock: ");
-            if (!int.TryParse(Console.ReadLine(), out int index) || index <= 0 || index > lockedLockers.Count)
+            // Check if there are any locked lockers
+            if (lockedLockers.Count == 0)
             {
-                Console.WriteLine("\nInvalid selection.");
+                Console.Write("\nYou have no lockers to unlock. Press Enter to continue...");
+                Console.ReadLine();
+                return;
+            }
+
+            // Get locker index from user
+            Console.Write("\nEnter the number of the locker to unlock (or 0 to return): ");
+            string? input = Console.ReadLine();
+            
+            // Check if user wants to return to main menu
+            if (input == "0")
+            {
+                return;
+            }
+
+            if (!int.TryParse(input, out int index) || index <= 0 || index > lockedLockers.Count)
+            {
+                Console.WriteLine("\nInvalid selection. Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
@@ -188,7 +242,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             // Validate password
             if (string.IsNullOrEmpty(password))
             {
-                Console.Write("\nPassword cannot be empty.");
+                Console.Write("\nPassword cannot be empty. Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
@@ -202,7 +256,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.Write(ex.Message);
+                Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }

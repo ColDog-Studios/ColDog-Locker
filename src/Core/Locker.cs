@@ -81,7 +81,7 @@ namespace ColDogStudios.ColDogLocker.Core
             SaveLockers();
 
             Logger.AddEntry($"{locker.LockerName} created successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} created successfully.");
+            Console.Write($"\n{locker.LockerName} created successfully. Press Enter to continue...");
             Console.ReadLine();
         }
 
@@ -93,7 +93,7 @@ namespace ColDogStudios.ColDogLocker.Core
             SaveLockers();
 
             Logger.AddEntry($"{locker.LockerName} removed successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} removed successfully.");
+            Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
             Console.ReadLine();
         }
 
@@ -138,7 +138,7 @@ namespace ColDogStudios.ColDogLocker.Core
 
             // Log and display success message
             Logger.AddEntry($"Locker {locker.LockerName} locked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} locked successfully.");
+            Console.Write($"\n{locker.LockerName} locked successfully. Press Enter to continue...");
             Console.ReadLine();
         }
 
@@ -183,7 +183,7 @@ namespace ColDogStudios.ColDogLocker.Core
 
             // Log and display success message
             Logger.AddEntry($"{locker.LockerName} unlocked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} unlocked successfully.");
+            Console.Write($"\n{locker.LockerName} unlocked successfully. Press Enter to continue...");
             Console.ReadLine();
         }
     }

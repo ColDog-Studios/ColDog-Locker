@@ -31,8 +31,8 @@ namespace ColDogStudios.ColDogLocker.Core
         //////////////////////////////////////////
 
         public const string version = "0.1.0-pre";
-        public const string buildVersion = "0.1.0-pre.2025.0104.2003";
-        public const string buildNumber = "2025.0104.2003";
-        public const string buildDate = "2025-01-04";
+        public const string buildVersion = "0.1.0-pre.2025.1201.1154";
+        public const string buildNumber = "2025.1201.1154";
+        public const string buildDate = "2025-12-01";
     }
 }
