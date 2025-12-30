@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Cli;
+﻿namespace ColDogStudios.ColDogLocker.Cli;
 
 class Program
 {
@@ -44,12 +44,12 @@ class Program
 
     static int LaunchGui()
     {
-        return ColDogLocker.Gui.GuiLauncher.Launch();
+        return ColDogStudios.ColDogLocker.Gui.GuiLauncher.Launch();
     }
 
     static int LaunchTui()
     {
-        return ColDogLocker.Tui.TuiLauncher.Launch();
+        return ColDogStudios.ColDogLocker.Tui.TuiLauncher.Launch();
     }
 
     #endregion

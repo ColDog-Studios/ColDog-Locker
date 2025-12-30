@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Gui.Tests;
+﻿namespace ColDogStudios.ColDogLocker.Gui.Tests;
 
 public class UnitTest1
 {

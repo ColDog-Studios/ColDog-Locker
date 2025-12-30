@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Application;
+﻿namespace ColDogStudios.ColDogLocker.Application;
 
 public class Class1
 {

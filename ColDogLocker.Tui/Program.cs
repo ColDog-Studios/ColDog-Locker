@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Tui;
+﻿namespace ColDogStudios.ColDogLocker.Tui;
 
 /// <summary>
 /// Entry point for the TUI (Terminal User Interface) application.

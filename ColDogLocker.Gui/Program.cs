@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Gui;
+﻿namespace ColDogStudios.ColDogLocker.Gui;
 
 /// <summary>
 /// Entry point for the GUI application.

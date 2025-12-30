@@ -1,4 +1,4 @@
-﻿namespace ColDogLocker.Infrastructure;
+﻿namespace ColDogStudios.ColDogLocker.Infrastructure;
 
 public class Class1
 {
