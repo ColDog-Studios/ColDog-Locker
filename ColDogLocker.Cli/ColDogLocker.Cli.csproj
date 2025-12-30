@@ -1,15 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" />
-    <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>ColDogLocker</AssemblyName>
+    <ApplicationIcon>..\resources\cdlIcon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" />
+    <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
+    <ProjectReference Include="..\ColDogLocker.Gui\ColDogLocker.Gui.csproj" />
+    <ProjectReference Include="..\ColDogLocker.Tui\ColDogLocker.Tui.csproj" />
+  </ItemGroup>
 
 </Project>
