@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <!-- Output all projects to root bin directory -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
+    
+    <!-- Alternative: Completely flat structure (all DLLs/EXEs in one folder) -->
+    <!-- Uncomment below and comment above if you want everything in bin\Debug or bin\Release -->
+    <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <!-- Exclude test projects from root bin (optional) -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
+    <!-- Test projects use their local bin folder -->
+    <BaseOutputPath>bin\</BaseOutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+</Project>
