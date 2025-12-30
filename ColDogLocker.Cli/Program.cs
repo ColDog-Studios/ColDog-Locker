@@ -246,9 +246,11 @@ class Program
 
     static int HandleVersionCommand()
     {
-        // TODO: Get version from assembly attributes
-        Console.WriteLine("ColDogLocker v0.1.0-dev");
+        Console.WriteLine($"ColDog Locker v{BuildInfo.Version}");
         Console.WriteLine("A secure file locker application");
+        Console.WriteLine("Copyright © 2025 ColDog Studios");
+        Console.WriteLine($"Build: {BuildInfo.BuildVersion}");
+        Console.WriteLine($"Built: {BuildInfo.BuildDate} at {BuildInfo.BuildTime}");
         return 0;
     }
 
