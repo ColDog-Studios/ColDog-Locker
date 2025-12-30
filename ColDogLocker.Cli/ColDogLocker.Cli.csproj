@@ -10,8 +10,9 @@
     
     <!-- Product Information -->
     <Product>ColDog Locker</Product>
-    <AssemblyTitle>A secure file locker application</AssemblyTitle>
-    <Copyright>Copyright © 2025 ColDog Studios. All Rights Reserved.</Copyright>
+    <AssemblyTitle>ColDog Locker</AssemblyTitle>
+    <Description>A secure file locker application</Description>
+    <Copyright>© ColDog Studios. All Rights Reserved.</Copyright>
     
     <!-- Version Information - EDIT VERSION HERE ONLY -->
     <Version>0.2.0-pre</Version>
