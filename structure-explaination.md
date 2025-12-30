@@ -146,6 +146,68 @@ Terminal User Interface, similar to the GUI but for environments with no availab
 
 **Dependencies**: ColDogLocker.Application, ColDogLocker.Infrastructure
 
+## Versioning and Build Information
+
+ColDogLocker uses **automatic build-time version generation** to ensure every build is uniquely identified without manual file editing or pre-build scripts.
+
+### Version Format
+
+The project follows **Semantic Versioning (SemVer)** with build metadata:
+
+- **Version**: `0.1.0-pre` (Semantic version - manually updated in .csproj)
+- **BuildNumber**: `20251230.1445` (UTC date/time: `yyyyMMdd.HHmm`)
+- **BuildVersion**: `0.1.0-pre+20251230.1445` (Full version with build metadata)
+- **BuildDate**: `2025-12-30` (ISO format date)
+- **BuildTime**: `14:45:32 UTC` (UTC time with timezone indicator)
+
+### Windows Properties Display
+
+When you right-click on `ColDogLocker.exe` → Properties → Details:
+- **File Version**: `0.1.0.20251230` (Numeric only, as required by Windows)
+- **Product Version**: `0.1.0-pre+20251230.1445` (Full SemVer with build metadata)
+
+### Accessing Build Information in Code
+
+A `BuildInfo` class is automatically generated during compilation at `obj/Debug/net10.0/BuildInfo.g.cs`:
+
+```csharp
+using ColDogLocker.Cli;
+
+// Access version information
+Console.WriteLine($"Version: {BuildInfo.Version}");
+Console.WriteLine($"Build: {BuildInfo.BuildVersion}");
+Console.WriteLine($"Built on: {BuildInfo.BuildDate} at {BuildInfo.BuildTime}");
+```
+
+**Available Properties**:
+- `BuildInfo.Version` - Semantic version (e.g., "0.1.0-pre")
+- `BuildInfo.BuildNumber` - Build number (e.g., "20251230.1445")
+- `BuildInfo.BuildVersion` - Full version with build metadata (e.g., "0.1.0-pre+20251230.1445")
+- `BuildInfo.BuildDate` - Build date in ISO format (e.g., "2025-12-30")
+- `BuildInfo.BuildTime` - Build time in UTC (e.g., "14:45:32 UTC")
+
+### How It Works
+
+The version information is generated automatically via an MSBuild target in `ColDogLocker.Cli.csproj`:
+
+1. **At build time**, MSBuild calculates the build number from the current UTC date/time
+2. A `BuildInfo.g.cs` file is generated in the `obj/` directory
+3. The file is included in compilation automatically
+4. **No source files are modified** - the generated file is not tracked by Git
+5. Every build gets a unique, traceable identifier
+
+### Updating the Version
+
+To update the semantic version, edit the `<Version>` property in `ColDogLocker.Cli.csproj`:
+
+```xml
+<PropertyGroup>
+  <Version>0.2.0-beta</Version>  <!-- Update this for new releases -->
+</PropertyGroup>
+```
+
+The build number is always auto-generated, ensuring deterministic builds and eliminating version conflicts.
+
 ## Test Projects
 
 Each layer has a corresponding test project:
