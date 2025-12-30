@@ -11,7 +11,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/ColDog-Studios/ColDog-Locker">
-    <img src="images/cdlIcon-500.png" alt="Logo" width="500" height="500">
+    <img src="resources/cdlIcon.ico" alt="Logo">
   </a>
 
 <h1 align="center">ColDog Locker</h1>
@@ -66,9 +66,8 @@ ColDog Locker is a simple file locker that allows you to encrypt and decrypt the
 
 ### Built With
 
-- [![.Net 8][.Net-shield]][.Net-url]
-- [![C# 12.0][C#-shield]][C#-url]
-- [![PowerShell 7][PowerShell-shield]][PowerShell-url]
+- [![.Net][.Net-shield]][.Net-url]
+- [![C#][C#-shield]][C#-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -78,8 +77,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-- [![.Net 8][.Net-shield]][.Net-url] .Net 8 SDK
-- [![PowerShell 7][PowerShell-shield]][PowerShell-url] PowerShell 7
+- [![.Net][.Net-shield]][.Net-url] .Net 10 SDK
 
 ```bash
 dotnet --version
@@ -182,21 +180,21 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 ## Acknowledgments
 
+- [BCrypt.Net](https://github.com/BcryptNet/bcrypt.net)
 - [Microsoft .NET](https://dotnet.microsoft.com/)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)
--
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
-[release-shield]: https://img.shields.io/github/v/release/ColDogStudios/ColDog-Locker?style=for-the-badge
-[release-url]: https://github.com/ColDogStudios/ColDog-Locker
-[downloads-shield]: https://img.shields.io/github/downloads/ColDogStudios/ColDog-Locker/total.svg?style=for-the-badge
-[downloads-url]: https://github.com/ColDogStudios/ColDog-Locker
-[issues-shield]: https://img.shields.io/github/issues/ColDogStudios/ColDog-Locker.svg?style=for-the-badge
-[issues-url]: https://github.com/ColDogStudios/ColDog-Locker/issues
-[stars-shield]: https://img.shields.io/github/stars/ColDogStudios/ColDog-Locker.svg?style=for-the-badge
+[release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?style=for-the-badge
+[release-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[downloads-shield]: https://img.shields.io/github/downloads/ColDog-Studios/ColDog-Locker/total.svg?style=for-the-badge
+[downloads-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[issues-shield]: https://img.shields.io/github/issues/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
+[issues-url]: https://github.com/ColDog-Studios/ColDog-Locker/issues
+[stars-shield]: https://img.shields.io/github/stars/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
 [stars-url]: https://github.com/ColDogStudios/ColDog-Locker/stargazers
 [github-shield]: https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white
 [github-url]: https://github.com/ColDogStudios
