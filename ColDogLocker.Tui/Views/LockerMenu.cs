@@ -41,10 +41,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             string passwordSecurityMessage =
                 "\nPassword Requirements:\n" +
+                " - At least 10 characters long\n" +
                 " - At least an upper-case letter\n" +
                 " - At least a lower-case letter\n" +
                 " - At least a number\n" +
-                " - At least a special character\n";
+                " - At least a special character (!@#$%^&*)\n";
 
             string? password;
             string? confirmPassword;
