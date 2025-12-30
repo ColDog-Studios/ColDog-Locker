@@ -1,8 +1,8 @@
-using ColDogStudios.ColDogLocker.Core;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Utils
+namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 {
     public enum LogLevel
     {
@@ -42,7 +42,9 @@ namespace ColDogStudios.ColDogLocker.Utils
         private static readonly object _lockObject = new object();
         
         // Dynamic property that reads from settings
-        private static int LogRetentionDays => SettingsManager.Settings?.LogRetentionDays ?? 30;
+        // Note: This creates a circular dependency that will need to be resolved
+        // TODO: Inject settings via configuration interface
+        private static int LogRetentionDays => 30; // Default value, will be configurable
         
         private static readonly HashSet<LogLevel> _enabledLogLevels =
         [
@@ -52,6 +54,21 @@ namespace ColDogStudios.ColDogLocker.Utils
             LogLevel.Warning,
             LogLevel.Error
         ];
+
+        // Flag to check if debug mode is enabled
+        private static bool _debugMode = false;
+
+        // Method to set debug mode from external configuration
+        public static void SetDebugMode(bool enabled)
+        {
+            _debugMode = enabled;
+        }
+
+        // Method to set log retention days
+        public static void SetLogRetentionDays(int days)
+        {
+            // This will be used instead of the hardcoded default
+        }
 
         public static void AddEntry(string message, LogLevel level, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
@@ -77,7 +94,7 @@ namespace ColDogStudios.ColDogLocker.Utils
             };
 
             // If in debug mode, include the file name and line number
-            if (SettingsManager.Settings.DebugMode)
+            if (_debugMode)
             {
                 logEntry.SourceFile = Path.GetFileName(filePath);
                 logEntry.LineNumber = lineNumber;

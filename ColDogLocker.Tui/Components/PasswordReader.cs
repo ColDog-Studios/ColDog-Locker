@@ -1,5 +1,6 @@
-﻿using System.Text;
-namespace ColDogStudios.ColDogLocker.Utils
+using System.Text;
+
+namespace ColDogStudios.ColDogLocker.Tui.Components
 {
     public static class Password
     {

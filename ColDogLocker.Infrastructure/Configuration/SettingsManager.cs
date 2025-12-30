@@ -1,8 +1,8 @@
-using ColDogStudios.ColDogLocker.Menu;
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 {
     public static class SettingsManager
     {
@@ -10,7 +10,7 @@ namespace ColDogStudios.ColDogLocker.Core
         private static readonly string settingsFile = Path.Combine(Variables.localConfig, "settings.json");
 
         // Property to hold the application settings
-        public static ApplicationSettings Settings { get; private set; } = new ApplicationSettings();
+        public static ApplicationSettings Settings { get; set; } = new ApplicationSettings();
 
         // Load settings from the configuration file
         public static void LoadSettings()
@@ -37,6 +37,9 @@ namespace ColDogStudios.ColDogLocker.Core
                     {
                         Settings = deserializedSettings;
                         ValidateSettings();
+                        
+                        // Update logger with settings
+                        Logger.SetDebugMode(Settings.DebugMode);
                     }
                     else
                     {
@@ -74,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Core
             {
                 DebugMode = false,
                 LogRetentionDays = 30, // Keep logs for 30 days by default
-                AutoUpdate = PromptForAutoUpdate()
+                AutoUpdate = false  // Will be prompted during first run
             };
             SaveSettings();
         }
@@ -182,77 +185,6 @@ namespace ColDogStudios.ColDogLocker.Core
             {
                 // If we can't clean up the temp file, it's not critical
             }
-        }
-
-        // Update settings based on user input
-        public static void UpdateSettings()
-        {
-            // Show Settings Menu
-            MainMenu.MenuTitle("Main Menu > Settings");
-
-            Console.WriteLine("Current Settings Configuration:\n");
-
-            // Prompt the user to enable or disable debug mode
-            Console.Write($"Enable Debug Mode? (y/N) [Current: {(Settings.DebugMode ? "Yes" : "No")}]: ");
-            var debugModeInput = Console.ReadLine();
-            var debugMode = !string.IsNullOrEmpty(debugModeInput) && debugModeInput.Equals("y", StringComparison.OrdinalIgnoreCase);
-
-            // Prompt the user to enter the log retention period in days
-            Console.Write($"Log retention period in days [Current: {Settings.LogRetentionDays}]: ");
-            var retentionInput = Console.ReadLine();
-
-            int logRetentionDays = Settings.LogRetentionDays;
-            if (!string.IsNullOrEmpty(retentionInput))
-            {
-                if (int.TryParse(retentionInput, out int parsedDays) && parsedDays > 0)
-                {
-                    logRetentionDays = parsedDays;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid input. Log retention must be a positive number. Keeping current value.");
-                }
-            }
-
-            // Prompt the user to enable or disable auto updates
-            Console.Write($"Enable Auto Update? (y/N) [Current: {(Settings.AutoUpdate ? "Yes" : "No")}]: ");
-            var autoUpdateInput = Console.ReadLine();
-            var autoUpdate = string.IsNullOrEmpty(autoUpdateInput) ? Settings.AutoUpdate :
-                autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
-
-            // Update the settings object with the new values
-            Settings = new ApplicationSettings
-            {
-                DebugMode = debugMode,
-                LogRetentionDays = logRetentionDays,
-                AutoUpdate = autoUpdate
-            };
-
-            // Save the updated settings to the configuration file
-            SaveSettings();
-
-            // Log the successful update of settings
-            Logger.AddEntry("Settings updated successfully.", LogLevel.Success);
-            
-            Console.WriteLine("\nSettings updated successfully!");
-            Console.WriteLine("\nNew Configuration:");
-            Console.WriteLine($"  Debug Mode: {(Settings.DebugMode ? "Enabled" : "Disabled")}");
-            Console.WriteLine($"  Log Retention: {Settings.LogRetentionDays} days");
-            Console.WriteLine($"  Auto Update: {(Settings.AutoUpdate ? "Enabled" : "Disabled")}");
-            
-            Console.Write("\nPress Enter to continue...");
-            Console.ReadLine();
-        }
-
-        // Prompt the user to enable auto updates
-        private static bool PromptForAutoUpdate()
-        {
-            // Show Settings Menu
-            MainMenu.MenuTitle("Main Menu > Settings");
-
-            Console.Write("Enable Auto Update? (y/N): ");
-            var autoUpdateInput = Console.ReadLine();
-            return autoUpdateInput != null && autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
         }
 
         // Backup a corrupted settings file for debugging

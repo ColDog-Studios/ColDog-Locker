@@ -1,5 +1,9 @@
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Core.Constants
 {
+    /// <summary>
+    /// Application-wide path configuration and constants.
+    /// Build version information is available in BuildInfo (auto-generated at compile time).
+    /// </summary>
     public static class Variables
     {
         //////////////////////////////////////////
@@ -25,14 +29,5 @@ namespace ColDogStudios.ColDogLocker.Core
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             "ColDog Locker"
         );
-
-        //////////////////////////////////////////
-        // Build Information (Auto-generated)
-        //////////////////////////////////////////
-
-        public const string version = "0.1.0-pre";
-        public const string buildVersion = "0.1.0-pre.2025.1201.1154";
-        public const string buildNumber = "2025.1201.1154";
-        public const string buildDate = "2025-12-01";
     }
 }

@@ -1,8 +1,12 @@
-﻿using ColDogStudios.ColDogLocker.Core;
-using ColDogStudios.ColDogLocker.Models;
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Application.Validation;
+using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Tui.Components;
 
-namespace ColDogStudios.ColDogLocker.Menu
+namespace ColDogStudios.ColDogLocker.Tui.Views
 {
     public static class LockerMenu
     {
@@ -86,7 +90,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             // Hash the password and create locker
             string passwordHash = EncryptionHelper.HashPassword(password);
             var locker = new LockerModel(lockerName, passwordHash, Path.Combine(Variables.cdlDir, lockerName));
-            Locker.AddLocker(locker);
+            LockerService.AddLocker(locker);
         }
 
         // Remove an existing locker /////////////////////////////////////////////////////////////////////////////
@@ -127,7 +131,7 @@ namespace ColDogStudios.ColDogLocker.Menu
                     if (Console.ReadLine()?.ToLower() == "y")
                     {
                         // Remove locker from the metadata
-                        Locker.RemoveLocker(locker);
+                        LockerService.RemoveLocker(locker);
                     }
                     return;
                 }
@@ -188,7 +192,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             // Attempt to lock the locker
             try
             {
-                Locker.Lock(locker, password);
+                LockerService.Lock(locker, password);
                 return;
             }
             catch (UnauthorizedAccessException ex)
@@ -250,7 +254,7 @@ namespace ColDogStudios.ColDogLocker.Menu
             // Attempt to unlock the locker
             try
             {
-                Locker.Unlock(locker, password);
+                LockerService.Unlock(locker, password);
                 return;
 
             }

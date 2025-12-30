@@ -1,25 +1,28 @@
-using ColDogStudios.ColDogLocker.Menu;
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Application.Services
 {
     public static class UpdateManager
     {
         private static readonly string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
 
+        // Delegate for showing menu title (to avoid dependency on TUI)
+        public static Action<string>? ShowMenuTitle { get; set; }
+
         // Check for updates and prompt the user to download if a new version is available
         public static async Task CheckForUpdatesAsync(bool hideUpToDateMessage)
         {
             // Show Update Menu
-            MainMenu.MenuTitle("Main Menu > Check for Updates");
+            ShowMenuTitle?.Invoke("Main Menu > Check for Updates");
 
             // Log the start of the update check
             Logger.AddEntry("Starting update check.", LogLevel.Info);
 
             // Skip update check for preview versions -- Will add support in the future
-            if (Variables.version.Contains('-'))
+            if (BuildInfo.Version.Contains('-'))
             {
                 Logger.AddEntry("Manual updates are required for preview versions.", LogLevel.Info);
                 Console.Write("Manual updates are required for preview versions.");
@@ -50,14 +53,14 @@ namespace ColDogStudios.ColDogLocker.Core
                 string latestVersion = releaseInfo.tag_name;
 
                 // Display the menu title
-                MainMenu.MenuTitle("Main Menu > Check for Updates");
+                ShowMenuTitle?.Invoke("Main Menu > Check for Updates");
 
                 // Compare the latest version with the current version
-                if (new Version(latestVersion) > new Version(Variables.version))
+                if (new Version(latestVersion) > new Version(BuildInfo.Version))
                 {
                     // Prompt the user to download the latest version
                     string message = $"A newer version is available:\n\n" +
-                                     $"Current Version: {Variables.version}\n" +
+                                     $"Current Version: {BuildInfo.Version}\n" +
                                      $"Latest Version: {latestVersion}\n\n" +
                                      "Do you want to download the latest version? (y/N): ";
 
@@ -134,7 +137,7 @@ namespace ColDogStudios.ColDogLocker.Core
                 {
                     // Log and optionally display a message if the application is up to date
                     string message = $"ColDog Locker is up to date:\n\n" +
-                                     $"Current Version: {Variables.version}\n" +
+                                     $"Current Version: {BuildInfo.Version}\n" +
                                      $"Latest Version: {latestVersion}";
 
                     Logger.AddEntry($"Successfully checked for updates: {message}", LogLevel.Success);

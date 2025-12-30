@@ -1,6 +1,7 @@
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
 {
     public static class FileWatcherManager
     {
@@ -8,6 +9,10 @@ namespace ColDogStudios.ColDogLocker.Core
         private static FileSystemWatcher? lockersWatcher;
         private static DateTime lastSettingsReload = DateTime.MinValue;
         private static readonly TimeSpan ReloadCooldown = TimeSpan.FromMilliseconds(500); // Prevent reload spam
+
+        // Delegates for handling file changes (to avoid circular dependencies)
+        public static Action? OnSettingsFileChanged { get; set; }
+        public static Action? OnLockersFileChanged { get; set; }
 
         public static void InitializeWatchers()
         {
@@ -68,13 +73,13 @@ namespace ColDogStudios.ColDogLocker.Core
             
             lastSettingsReload = now;
             Logger.AddEntry("Settings file changed. Reloading settings.", LogLevel.Info);
-            SettingsManager.LoadSettings();
+            OnSettingsFileChanged?.Invoke();
         }
 
         private static void OnLockersChanged(object sender, FileSystemEventArgs e)
         {
             Logger.AddEntry("Lockers file changed. Reloading lockers.", LogLevel.Info);
-            Locker.LoadLockers();
+            OnLockersFileChanged?.Invoke();
         }
 
         private static void OnWatcherError(object sender, ErrorEventArgs e)
