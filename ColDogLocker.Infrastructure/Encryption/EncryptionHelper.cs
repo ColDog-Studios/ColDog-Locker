@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace ColDogStudios.ColDogLocker.Utils
+namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
 {
     public static class EncryptionHelper
     {

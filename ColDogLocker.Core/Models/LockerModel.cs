@@ -1,4 +1,4 @@
-namespace ColDogStudios.ColDogLocker.Models
+namespace ColDogStudios.ColDogLocker.Core.Models
 {
     public class LockerModel(string lockerName, string password, string cdlLocation)
     {

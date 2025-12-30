@@ -1,4 +1,4 @@
-﻿namespace ColDogStudios.ColDogLocker.Utils
+namespace ColDogStudios.ColDogLocker.Application.Validation
 {
     public class PasswordFilter
     {

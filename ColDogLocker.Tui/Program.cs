@@ -1,4 +1,7 @@
-﻿namespace ColDogStudios.ColDogLocker.Tui;
+﻿using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Tui.Views;
+
+namespace ColDogStudios.ColDogLocker.Tui;
 
 /// <summary>
 /// Entry point for the TUI (Terminal User Interface) application.
@@ -12,15 +15,25 @@ public static class TuiLauncher
     /// <returns>Exit code (0 for success, non-zero for error)</returns>
     public static int Launch()
     {
-        // TODO: Initialize and launch the TUI application
-        Console.WriteLine("[TUI] Initializing terminal interface...");
-        Console.WriteLine("TUI implementation pending.");
-        
-        // Placeholder for future TUI framework initialization
-        // Examples:
-        // - Terminal.Gui: Application.Init(); Application.Run<MainWindow>(); Application.Shutdown();
-        // - Spectre.Console: var app = new CommandApp(); app.Run(args);
-        
-        return 0;
+        try
+        {
+            // Initialize the application
+            Initialization.InitializeAsync().GetAwaiter().GetResult();
+
+            // Set up the UpdateManager menu title delegate
+            UpdateManager.ShowMenuTitle = MainMenu.MenuTitle;
+
+            // Show the main menu (TUI)
+            MainMenu.MenuOptions().GetAwaiter().GetResult();
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine($"Error: {ex.Message}");
+            Console.ResetColor();
+            return 1;
+        }
     }
 }

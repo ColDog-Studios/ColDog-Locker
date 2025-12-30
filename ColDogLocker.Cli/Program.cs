@@ -1,4 +1,6 @@
-﻿namespace ColDogStudios.ColDogLocker.Cli;
+﻿using ColDogStudios.ColDogLocker.Core.Constants;
+
+namespace ColDogStudios.ColDogLocker.Cli;
 
 class Program
 {

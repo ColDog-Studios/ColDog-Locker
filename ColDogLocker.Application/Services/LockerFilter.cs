@@ -1,7 +1,6 @@
-using ColDogStudios.ColDogLocker.Core;
-using ColDogStudios.ColDogLocker.Models;
+using ColDogStudios.ColDogLocker.Core.Models;
 
-namespace ColDogStudios.ColDogLocker.Utils
+namespace ColDogStudios.ColDogLocker.Application.Services
 {
     public static class LockerFilter
     {
@@ -9,7 +8,7 @@ namespace ColDogStudios.ColDogLocker.Utils
         public static List<LockerModel> ListLockers(bool isLocked)
         {
             // Filter lockers based on the isLocked parameter
-            var filteredLockers = Locker.Lockers.Where(l => l.IsLocked == isLocked).ToList();
+            var filteredLockers = LockerService.Lockers.Where(l => l.IsLocked == isLocked).ToList();
 
             // Print lockers to the console
             for (int i = 0; i < filteredLockers.Count; i++)

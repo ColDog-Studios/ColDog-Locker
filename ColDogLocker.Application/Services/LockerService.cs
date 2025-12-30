@@ -1,10 +1,12 @@
-using ColDogStudios.ColDogLocker.Models;
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Application.Services
 {
-    public static class Locker
+    public static class LockerService
     {
         public static readonly List<LockerModel> Lockers = [];
 

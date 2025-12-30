@@ -1,6 +1,9 @@
-using ColDogStudios.ColDogLocker.Utils;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Infrastructure.FileSystem;
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Application.Services
 {
     public static class Initialization
     {
@@ -24,10 +27,12 @@ namespace ColDogStudios.ColDogLocker.Core
             // Load settings and lockers
             SettingsManager.LoadSettings();
             Logger.AddEntry("Settings loaded.", LogLevel.Info);
-            Locker.LoadLockers();
+            LockerService.LoadLockers();
             Logger.AddEntry("Lockers loaded.", LogLevel.Info);
 
             // Initialize file watchers
+            FileWatcherManager.OnSettingsFileChanged = SettingsManager.LoadSettings;
+            FileWatcherManager.OnLockersFileChanged = LockerService.LoadLockers;
             FileWatcherManager.InitializeWatchers();
             Logger.AddEntry("File watchers initialized.", LogLevel.Info);
 

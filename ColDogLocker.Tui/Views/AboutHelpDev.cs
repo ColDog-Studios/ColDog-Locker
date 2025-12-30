@@ -1,6 +1,6 @@
-using ColDogStudios.ColDogLocker.Core;
+using ColDogStudios.ColDogLocker.Core.Constants;
 
-namespace ColDogStudios.ColDogLocker.Menu
+namespace ColDogStudios.ColDogLocker.Tui.Views
 {
     public static class AboutHelpDev
     {
@@ -33,10 +33,11 @@ namespace ColDogStudios.ColDogLocker.Menu
         {
             MainMenu.MenuTitle("Main Menu > Dev");
 
-            Console.WriteLine($"\nVersion: {Variables.version}");
-            Console.WriteLine($"Build Version: {Variables.buildVersion}");
-            Console.WriteLine($"Build Number: {Variables.buildNumber}");
-            Console.WriteLine($"Build Date: {Variables.buildDate}");
+            Console.WriteLine($"\nVersion: {BuildInfo.Version}");
+            Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
+            Console.WriteLine($"Build Number: {BuildInfo.BuildNumber}");
+            Console.WriteLine($"Build Date: {BuildInfo.BuildDate}");
+            Console.WriteLine($"Build Time: {BuildInfo.BuildTime}");
             Console.WriteLine($"\nMetadata Location: {Variables.localConfig}");
             Console.Write($"Current Directory: {Variables.cdlDir}");
             Console.ReadLine();

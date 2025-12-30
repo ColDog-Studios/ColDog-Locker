@@ -1,6 +1,8 @@
-using ColDogStudios.ColDogLocker.Core;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
-namespace ColDogStudios.ColDogLocker.Menu
+namespace ColDogStudios.ColDogLocker.Tui.Views
 {
     public static class MainMenu
     {
@@ -50,7 +52,7 @@ namespace ColDogStudios.ColDogLocker.Menu
                         await UpdateManager.CheckForUpdatesAsync(false);
                         break;
                     case "9":
-                        SettingsManager.UpdateSettings();
+                        SettingsMenu.UpdateSettings();
                         break;
                     case "0":
                         return;
@@ -69,7 +71,7 @@ namespace ColDogStudios.ColDogLocker.Menu
         {
             Console.Clear();
             int width = Console.WindowWidth;
-            string title = $"ColDog Locker {Variables.version}";
+            string title = $"ColDog Locker {BuildInfo.Version}";
             string copyright = "Copyright (c) ColDog Studios. All Rights Reserved.";
             string line = new('#', width);
             int separatorLength = width / 2;
