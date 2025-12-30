@@ -44,9 +44,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             }
 
             // Generate key and IV from password using the random salt
-            var pdb = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
-            aes.Key = pdb.GetBytes(32);
-            aes.IV = pdb.GetBytes(16);
+            byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+            aes.Key = keyAndIv[..32];
+            aes.IV = keyAndIv[32..];
 
             // Open input file and create encrypted output file
             using (FileStream fsIn = new(inputFile, FileMode.Open))
@@ -116,9 +116,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
                     throw new InvalidDataException("Unable to read salt from encrypted file.");
 
                 // Generate key and IV from password using the stored salt
-                var pdb = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA256);
-                aes.Key = pdb.GetBytes(32);
-                aes.IV = pdb.GetBytes(16);
+                byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+                aes.Key = keyAndIv[..32];
+                aes.IV = keyAndIv[32..];
 
                 using (CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
                 using (FileStream fsOut = new(inputFile + ".dec", FileMode.Create))
