@@ -34,7 +34,7 @@ ColDog-Locker
 ├── ColDogLocker.Tui.Tests
 │   └── ColDogLocker.Tui.Tests.csproj
 ├── resources
-│   └── icon.ico
+│   └── cdlIcon.ico
 ├── scripts
 │   └── Pre-Build.ps1
 ├── .editorconfig
