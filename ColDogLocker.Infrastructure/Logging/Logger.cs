@@ -1,6 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 {
@@ -40,12 +40,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         private static readonly string _logFilePath = Path.Combine(_logDirectory, $"session_{_sessionId}.json");
         private static readonly object _lockObject = new object();
-        
+
         // Dynamic property that reads from settings
         // Note: This creates a circular dependency that will need to be resolved
         // TODO: Inject settings via configuration interface
         private static int LogRetentionDays => 30; // Default value, will be configurable
-        
+
         private static readonly HashSet<LogLevel> _enabledLogLevels =
         [
             LogLevel.Info,
@@ -156,7 +156,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                 var allLogFiles = Directory.GetFiles(_logDirectory, "session_*.json")
                     .Concat(Directory.GetFiles(_logDirectory, "fallback_*.txt"))
                     .ToArray();
-                
+
                 int totalDeleted = 0;
 
                 foreach (var logFile in allLogFiles)
@@ -164,7 +164,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                     try
                     {
                         var fileInfo = new FileInfo(logFile);
-                        
+
                         // Delete files older than retention period
                         if (fileInfo.CreationTime < cutoffDate)
                         {

@@ -157,7 +157,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
 
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
-        
+
         // Hash a password using SHA-256 and SHA-512
         public static string LegacyHashPassword(string password)
         {

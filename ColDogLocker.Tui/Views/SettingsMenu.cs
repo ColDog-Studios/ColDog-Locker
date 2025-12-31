@@ -1,4 +1,3 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
@@ -55,13 +54,13 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Log the successful update of settings
             Logger.AddEntry("Settings updated successfully.", LogLevel.Success);
-            
+
             Console.WriteLine("\nSettings updated successfully!");
             Console.WriteLine("\nNew Configuration:");
             Console.WriteLine($"  Debug Mode: {(SettingsManager.Settings.DebugMode ? "Enabled" : "Disabled")}");
             Console.WriteLine($"  Log Retention: {SettingsManager.Settings.LogRetentionDays} days");
             Console.WriteLine($"  Auto Update: {(SettingsManager.Settings.AutoUpdate ? "Enabled" : "Disabled")}");
-            
+
             Console.Write("\nPress Enter to continue...");
             Console.ReadLine();
         }

@@ -27,7 +27,7 @@ public static class SettingsCommandHandlers
         if (args.Length >= 3 && args[1].ToLowerInvariant() == "set")
         {
             var key = args[2].ToLowerInvariant();
-            
+
             if (args.Length < 4)
             {
                 System.Console.Error.WriteLine("Error: Value is required.");

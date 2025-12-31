@@ -23,7 +23,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 {
                     // Read and deserialize the settings file
                     var settingsContent = File.ReadAllText(settingsFile);
-                    
+
                     // Check if the file is empty or just whitespace
                     if (string.IsNullOrWhiteSpace(settingsContent))
                     {
@@ -37,7 +37,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     {
                         Settings = deserializedSettings;
                         ValidateSettings();
-                        
+
                         // Update logger with settings
                         Logger.SetDebugMode(Settings.DebugMode);
                     }
@@ -129,13 +129,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 // Create a temporary file first to ensure atomic writes
                 var tempFile = settingsFile + ".tmp";
                 var jsonContent = JsonConvert.SerializeObject(Settings, Formatting.Indented);
-                
+
                 // Validate the JSON before writing (extra safety check)
                 JsonConvert.DeserializeObject<ApplicationSettings>(jsonContent);
-                
+
                 // Write to temporary file first
                 File.WriteAllText(tempFile, jsonContent);
-                
+
                 // Atomic replacement - if this fails, original file is still intact
                 if (File.Exists(settingsFile))
                 {
@@ -145,7 +145,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 {
                     File.Move(tempFile, settingsFile);
                 }
-                
+
                 Logger.AddEntry("Settings saved successfully.", LogLevel.Success);
             }
             catch (UnauthorizedAccessException ex)

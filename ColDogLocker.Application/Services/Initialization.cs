@@ -1,8 +1,8 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.FileSystem;
 using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using ColDogStudios.ColDogLocker.Infrastructure.FileSystem;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {

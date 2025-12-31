@@ -164,7 +164,7 @@ public class EncryptionHelperTests
     {
         // Act & Assert
         // BCrypt throws an exception when given an invalid hash format
-        Assert.ThrowsAny<Exception>(() => 
+        Assert.ThrowsAny<Exception>(() =>
             EncryptionHelper.VerifyPassword("SomePassword", "InvalidHashFormat"));
     }
 
@@ -337,7 +337,7 @@ public class EncryptionHelperTests
     public void EncryptFile_WithNullFilePath_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.EncryptFile(null!, "password"));
         Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
     }
@@ -346,7 +346,7 @@ public class EncryptionHelperTests
     public void EncryptFile_WithEmptyFilePath_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.EncryptFile(string.Empty, "password"));
         Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
     }
@@ -355,7 +355,7 @@ public class EncryptionHelperTests
     public void EncryptFile_WithNullPassword_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.EncryptFile("somefile.txt", null!));
         Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
     }
@@ -364,7 +364,7 @@ public class EncryptionHelperTests
     public void EncryptFile_WithEmptyPassword_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.EncryptFile("somefile.txt", string.Empty));
         Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
     }
@@ -376,7 +376,7 @@ public class EncryptionHelperTests
         var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
 
         // Act & Assert
-        var exception = Assert.Throws<FileNotFoundException>(() => 
+        var exception = Assert.Throws<FileNotFoundException>(() =>
             EncryptionHelper.EncryptFile(nonExistentFile, "password"));
         Assert.Contains("Input file not found", exception.Message);
     }
@@ -385,7 +385,7 @@ public class EncryptionHelperTests
     public void DecryptFile_WithNullFilePath_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.DecryptFile(null!, "password"));
         Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
     }
@@ -394,7 +394,7 @@ public class EncryptionHelperTests
     public void DecryptFile_WithEmptyFilePath_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.DecryptFile(string.Empty, "password"));
         Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
     }
@@ -403,7 +403,7 @@ public class EncryptionHelperTests
     public void DecryptFile_WithNullPassword_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.DecryptFile("somefile.txt", null!));
         Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
     }
@@ -412,7 +412,7 @@ public class EncryptionHelperTests
     public void DecryptFile_WithEmptyPassword_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => 
+        var exception = Assert.Throws<ArgumentException>(() =>
             EncryptionHelper.DecryptFile("somefile.txt", string.Empty));
         Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
     }
@@ -424,7 +424,7 @@ public class EncryptionHelperTests
         var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
 
         // Act & Assert
-        var exception = Assert.Throws<FileNotFoundException>(() => 
+        var exception = Assert.Throws<FileNotFoundException>(() =>
             EncryptionHelper.DecryptFile(nonExistentFile, "password"));
         Assert.Contains("Input file not found", exception.Message);
     }
