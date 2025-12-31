@@ -194,13 +194,15 @@ jobs:
     - name: Test - Wrong Password
       run: |
         Write-Host "Testing lock with wrong password (should fail)..." -ForegroundColor Cyan
-        & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "WrongPassword123!"
+        & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "WrongPassword123!" 2>&1 | Out-Null
+        $exitCode = $LASTEXITCODE
         
-        if ($LASTEXITCODE -eq 0) {
+        if ($exitCode -eq 0) {
           throw "Lock succeeded with wrong password - this should have failed!"
         }
         
-        Write-Host "✓ Wrong password correctly rejected" -ForegroundColor Green
+        Write-Host "✓ Wrong password correctly rejected (exit code: $exitCode)" -ForegroundColor Green
+        exit 0  # Reset exit code so GitHub Actions doesn't fail
     
     - name: Test - Remove Locker
       run: |
