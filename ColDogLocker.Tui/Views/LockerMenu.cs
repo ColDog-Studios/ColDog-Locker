@@ -4,7 +4,7 @@ using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Application.Validation;
 using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using ColDogStudios.ColDogLocker.Tui.Components;
+using ColDogStudios.ColDogLocker.Infrastructure.Console;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -54,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 // Get locker password from user
                 Console.WriteLine(passwordSecurityMessage);
                 Console.Write("Enter Locker Password: ");
-                password = Password.SecureRead();
+                password = ConsoleHelper.ReadPassword();
 
                 // Validate password
                 try
@@ -77,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                 // Confirm locker password
                 Console.Write("Confirm Locker Password: ");
-                confirmPassword = Password.SecureRead();
+                confirmPassword = ConsoleHelper.ReadPassword();
 
                 // Validate password confirmation
                 if (password == confirmPassword)
@@ -180,7 +180,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker password from user
             Console.Write("\nEnter Locker Password: ");
-            string? password = Password.SecureRead();
+            string? password = ConsoleHelper.ReadPassword();
 
             // Validate password
             if (string.IsNullOrEmpty(password))
@@ -242,7 +242,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker password from user
             Console.Write("\nEnter Locker Password: ");
-            string? password = Password.SecureRead();
+            string? password = ConsoleHelper.ReadPassword();
 
             // Validate password
             if (string.IsNullOrEmpty(password))
