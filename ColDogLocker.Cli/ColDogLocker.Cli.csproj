@@ -13,7 +13,7 @@
     <Product>ColDog Locker</Product>
     <AssemblyTitle>ColDog Locker</AssemblyTitle>
     <Description>A secure file locker application</Description>
-    <Copyright>© ColDog Studios. All Rights Reserved.</Copyright>
+    <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
