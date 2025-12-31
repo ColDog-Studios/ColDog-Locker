@@ -74,8 +74,9 @@ jobs:
       run: |
         Write-Host "Testing help command..." -ForegroundColor Cyan
         $output = & ".\cli-publish\ColDogLocker.exe" help
+        $outputText = $output -join "`n"
         Write-Host "Output preview: $($output | Select-Object -First 5)" -ForegroundColor Gray
-        if ($output -notmatch "USAGE") {
+        if ($outputText -notmatch "USAGE") {
           throw "Help command failed - expected usage information"
         }
         Write-Host "✓ Help command passed" -ForegroundColor Green
@@ -127,9 +128,10 @@ jobs:
       run: |
         Write-Host "Testing list command (after creation)..." -ForegroundColor Cyan
         $output = & ".\cli-publish\ColDogLocker.exe" list
+        $outputText = $output -join "`n"
         Write-Host "Output: $output" -ForegroundColor Gray
         
-        if ($output -notmatch "E2ETestLocker") {
+        if ($outputText -notmatch "E2ETestLocker") {
           throw "Created locker not found in list"
         }
         Write-Host "✓ List command shows created locker" -ForegroundColor Green
@@ -149,9 +151,10 @@ jobs:
       run: |
         Write-Host "Verifying locker is locked..." -ForegroundColor Cyan
         $output = & ".\cli-publish\ColDogLocker.exe" status E2ETestLocker
+        $outputText = $output -join "`n"
         Write-Host "Status output: $output" -ForegroundColor Gray
         
-        if ($output -notmatch "locked|Locked") {
+        if ($outputText -notmatch "locked|Locked") {
           throw "Locker status does not show as locked"
         }
         Write-Host "✓ Locker is locked" -ForegroundColor Green
@@ -214,9 +217,10 @@ jobs:
       run: |
         Write-Host "Verifying locker was removed..." -ForegroundColor Cyan
         $output = & ".\cli-publish\ColDogLocker.exe" list
+        $outputText = $output -join "`n"
         Write-Host "Output: $output" -ForegroundColor Gray
         
-        if ($output -match "E2ETestLocker") {
+        if ($outputText -match "E2ETestLocker") {
           throw "Locker still appears in list after removal"
         }
         Write-Host "✓ Locker successfully removed" -ForegroundColor Green
