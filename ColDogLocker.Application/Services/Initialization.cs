@@ -2,6 +2,7 @@ using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Infrastructure.FileSystem;
+using ColDogStudios.ColDogLocker.Infrastructure.Data;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {
@@ -23,6 +24,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));
                 Logger.AddEntry($"Created directory: {Path.Combine(Variables.localConfig, "logs")}", LogLevel.Info);
             }
+
+            // Initialize database
+            LockerRepository.InitializeDatabase();
+            Logger.AddEntry("Database initialized.", LogLevel.Info);
+
+            // Migrate from JSON if needed
+            LockerRepository.MigrateFromJson();
+            Logger.AddEntry("Migration check completed.", LogLevel.Info);
 
             // Load settings and lockers
             SettingsManager.LoadSettings();
