@@ -229,9 +229,6 @@ jobs:
           throw "Locker still appears in list after removal"
         }
         Write-Host "✓ Locker successfully removed" -ForegroundColor Green
-          throw "Locker still appears in list after removal"
-        }
-        Write-Host "✓ Locker successfully removed" -ForegroundColor Green
     
     - name: Cleanup Test Directory
       if: always()
