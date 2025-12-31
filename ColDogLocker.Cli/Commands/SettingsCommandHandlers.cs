@@ -24,7 +24,7 @@ public static class SettingsCommandHandlers
             return 0;
         }
 
-        if (args.Length >= 3 && args[1].ToLowerInvariant() == "set")
+        if (args.Length >= 3 && args[1].Equals("set", StringComparison.InvariantCultureIgnoreCase))
         {
             var key = args[2].ToLowerInvariant();
 

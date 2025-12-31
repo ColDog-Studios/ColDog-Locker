@@ -114,7 +114,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
                         // Verify the hash
                         byte[] fileHashBytes = SHA256.HashData(fileBytes);
-                        string fileHash = BitConverter.ToString(fileHashBytes).Replace("-", "").ToLowerInvariant();
+                        string fileHash = Convert.ToHexStringLower(fileHashBytes);
 
                         // Delete the file if the hash does not match
                         if (fileHash != expectedHash)
