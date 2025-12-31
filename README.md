@@ -22,8 +22,6 @@
     <a href="https://github.com/ColDog-Studios/ColDog-Locker"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker">View Demo</a>
-    ·
     <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
     <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
@@ -43,7 +41,7 @@
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#building-from-source">Building from Source</a></li>
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
@@ -73,7 +71,10 @@ ColDog Locker is a simple file locker that allows you to encrypt and decrypt the
 
 ## Getting Started
 
-To get a local copy up and running follow these simple steps.
+The source code is publicly available for viewing and personal use. There are currently no official release binaries available yet. You can build from source following the instructions below.
+
+> [!IMPORTANT]
+> While the source code is public, this is proprietary software. Please review the [LICENSE](LICENSE) for usage restrictions before building or using.
 
 ### Prerequisites
 
@@ -83,9 +84,9 @@ To get a local copy up and running follow these simple steps.
 dotnet --version
 ```
 
-### Installation
+### Building from Source
 
-1. Clone the repo
+1. Clone the repository
 
 ```bash
 git clone https://github.com/ColDog-Studios/ColDog-Locker.git
@@ -112,64 +113,98 @@ dotnet build
 5. Run the project
 
 ```bash
-dotnet run
+dotnet run --project ColDogLocker.Cli
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Usage
 
-ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password. You can use it in three ways:
+ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password.
 
 ### Interactive Modes
-- **TUI (Terminal User Interface)**: Run `dotnet run terminal` for an interactive terminal menu
-- **GUI (Graphical User Interface)**: Run `dotnet run gui` for a graphical interface (in development)
+- **GUI (Graphical User Interface)**: Run `dotnet run --project ColDogLocker.Cli gui` for a graphical interface (in development)
+- **TUI (Terminal User Interface)**: Run `dotnet run --project ColDogLocker.Cli terminal` for an interactive terminal menu
 
 ### Command-Line Interface
-Use CLI commands for scripting and automation:
 
+For scripting, automation, and quick operations, use the CLI commands:
+
+#### Locker Commands
 ```bash
 # Create a new locker
-dotnet run new <locker-name> [--path <directory-path>]
+dotnet run --project ColDogLocker.Cli new <name> [--path <path>] [--password <pass>]
 
 # Lock a locker (encrypt and hide)
-dotnet run lock <locker-name>
+dotnet run --project ColDogLocker.Cli lock <name> [--password <pass>]
 
 # Unlock a locker (decrypt and unhide)
-dotnet run unlock <locker-name>
+dotnet run --project ColDogLocker.Cli unlock <name> [--password <pass>]
 
 # List all lockers
-dotnet run list [--locked | --unlocked]
+dotnet run --project ColDogLocker.Cli list [--locked | --unlocked]
 
-# Show detailed locker status
-dotnet run status <locker-name>
+# Show locker status
+dotnet run --project ColDogLocker.Cli status <name>
 
 # Remove a locker
-dotnet run remove <locker-name> [--force]
-
-# Display help
-dotnet run --help
+dotnet run --project ColDogLocker.Cli remove <name> [--force] [--delete]
 ```
 
-**Examples:**
+#### Locker Management
 ```bash
-# Create a locker in the default location
-dotnet run new MySecrets
+# Change locker password
+dotnet run --project ColDogLocker.Cli change-password <name>
 
-# Create a locker at a specific path
-dotnet run new ImportantDocs --path "C:\Users\Me\Documents\Private"
+# Verify locker integrity
+dotnet run --project ColDogLocker.Cli verify <name>
+```
 
-# Lock a locker (you'll be prompted for password)
-dotnet run lock MySecrets
+#### Settings & Database
+```bash
+# View or modify settings
+dotnet run --project ColDogLocker.Cli settings [set <key> <value>]
+
+# Optimize database
+dotnet run --project ColDogLocker.Cli db-vacuum
+
+# Show database information
+dotnet run --project ColDogLocker.Cli db-info
+```
+
+#### Help & Version
+```bash
+# Display help
+dotnet run --project ColDogLocker.Cli help [command]
+
+# Show version
+dotnet run --project ColDogLocker.Cli --version
+```
+
+### Quick Examples
+
+```bash
+# Create a locker with automatic password prompt
+dotnet run --project ColDogLocker.Cli new MySecrets
+
+# Create a locker at specific path
+dotnet run --project ColDogLocker.Cli new Docs --path "C:\Sensitive\Documents"
+
+# Lock a locker
+dotnet run --project ColDogLocker.Cli lock MySecrets
 
 # List only locked lockers
-dotnet run list --locked
+dotnet run --project ColDogLocker.Cli list --locked
 
-# Remove a locker without confirmation
-dotnet run remove OldLocker --force
+# Remove locker and delete its contents
+dotnet run --project ColDogLocker.Cli remove OldLocker --force --delete
+
+# Check locker integrity
+dotnet run --project ColDogLocker.Cli verify MySecrets
 ```
 
-_For more examples, please refer to the [Documentation](https://github.com/ColDog-Studios/ColDog-Locker)_
+> [!TIP]
+> For detailed command documentation, use `dotnet run --project ColDogLocker.Cli help <command>` or check the `/docs` folder (coming soon).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -181,28 +216,22 @@ See the [open issues](https://github.com/ColDog-Studios/ColDog-Locker/issues) fo
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+ColDog Locker is proprietary software and is not currently accepting public contributions. However, feedback and bug reports are always welcome!
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+If you encounter a bug or have a suggestion for improvement:
+1. Open an issue with the appropriate tag ("bug" or "enhancement")
+2. Provide detailed information about the issue or suggestion
+3. The ColDog Studios team will review and respond
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+For business inquiries or collaboration opportunities, please contact us directly.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Top contributors:
-
-<a href="https://github.com/ColDog-Studios/ColDog-Locker/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ColDog-Studios/ColDog-Locker" alt="contrib.rocks image" />
-</a>
-
 ## License
 
-Distributed under the License. See `LICENSE.txt` for more information.
+ColDog Locker is proprietary software. Copyright © 2025 Collin Laney. All Rights Reserved.
+
+This software is licensed for personal and internal business use only. Public distribution, commercial distribution, and SaaS hosting are not permitted. See [LICENSE](LICENSE) for complete terms and conditions.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -224,8 +253,9 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 ## Acknowledgments
 
-- [BCrypt.Net](https://github.com/BcryptNet/bcrypt.net)
+- [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net)
 - [Microsoft .NET](https://dotnet.microsoft.com/)
+- [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
