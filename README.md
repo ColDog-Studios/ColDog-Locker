@@ -119,17 +119,61 @@ dotnet run
 
 ## Usage
 
-ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password. Use the main menu options to lock, unlock, or remove directories from management.
+ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password. You can use it in three ways:
+
+### Interactive Modes
+- **TUI (Terminal User Interface)**: Run `dotnet run terminal` for an interactive terminal menu
+- **GUI (Graphical User Interface)**: Run `dotnet run gui` for a graphical interface (in development)
+
+### Command-Line Interface
+Use CLI commands for scripting and automation:
+
+```bash
+# Create a new locker
+dotnet run new <locker-name> [--path <directory-path>]
+
+# Lock a locker (encrypt and hide)
+dotnet run lock <locker-name>
+
+# Unlock a locker (decrypt and unhide)
+dotnet run unlock <locker-name>
+
+# List all lockers
+dotnet run list [--locked | --unlocked]
+
+# Show detailed locker status
+dotnet run status <locker-name>
+
+# Remove a locker
+dotnet run remove <locker-name> [--force]
+
+# Display help
+dotnet run --help
+```
+
+**Examples:**
+```bash
+# Create a locker in the default location
+dotnet run new MySecrets
+
+# Create a locker at a specific path
+dotnet run new ImportantDocs --path "C:\Users\Me\Documents\Private"
+
+# Lock a locker (you'll be prompted for password)
+dotnet run lock MySecrets
+
+# List only locked lockers
+dotnet run list --locked
+
+# Remove a locker without confirmation
+dotnet run remove OldLocker --force
+```
 
 _For more examples, please refer to the [Documentation](https://github.com/ColDog-Studios/ColDog-Locker)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Roadmap
-
-- [ ] Add more encryption algorithms
-- [ ] Improve user interface
-- [ ] Add support for cloud storage
 
 See the [open issues](https://github.com/ColDog-Studios/ColDog-Locker/issues) for a full list of proposed features (and known issues).
 
