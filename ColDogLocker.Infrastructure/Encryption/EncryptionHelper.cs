@@ -38,10 +38,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
 
             // Generate a random salt for this file
             byte[] salt = new byte[SaltSize];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
 
             // Generate key and IV from password using the random salt
             byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
@@ -49,23 +47,19 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             aes.IV = keyAndIv[32..];
 
             // Open input file and create encrypted output file
-            using (FileStream fsIn = new(inputFile, FileMode.Open))
-            using (FileStream fsCrypt = new(inputFile + ".enc", FileMode.Create))
+            using FileStream fsIn = new(inputFile, FileMode.Open);
+            using FileStream fsCrypt = new(inputFile + ".enc", FileMode.Create);
+            // Write the salt at the beginning of the encrypted file
+            fsCrypt.Write(salt, 0, salt.Length);
+
+            using CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write);
+            byte[] buffer = new byte[BufferSize];
+            int read;
+
+            // Read from input file and write encrypted data to output file
+            while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
             {
-                // Write the salt at the beginning of the encrypted file
-                fsCrypt.Write(salt, 0, salt.Length);
-
-                using (CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write))
-                {
-                    byte[] buffer = new byte[BufferSize];
-                    int read;
-
-                    // Read from input file and write encrypted data to output file
-                    while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        cs.Write(buffer, 0, read);
-                    }
-                }
+                cs.Write(buffer, 0, read);
             }
 
             // Replace original file with encrypted file
@@ -103,35 +97,31 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             using Aes aes = Aes.Create();
 
             // Open encrypted input file and read the salt
-            using (FileStream fsCrypt = new(inputFile, FileMode.Open))
+            using FileStream fsCrypt = new(inputFile, FileMode.Open);
+            // Verify file is large enough to contain salt
+            if (fsCrypt.Length < SaltSize)
+                throw new InvalidDataException("File is too small to contain encryption data.");
+
+            // Read the salt from the beginning of the file
+            byte[] salt = new byte[SaltSize];
+            int bytesRead = fsCrypt.Read(salt, 0, salt.Length);
+            if (bytesRead != SaltSize)
+                throw new InvalidDataException("Unable to read salt from encrypted file.");
+
+            // Generate key and IV from password using the stored salt
+            byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+            aes.Key = keyAndIv[..32];
+            aes.IV = keyAndIv[32..];
+
+            using CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using FileStream fsOut = new(inputFile + ".dec", FileMode.Create);
+            byte[] buffer = new byte[BufferSize];
+            int read;
+
+            // Read from encrypted file and write decrypted data to output file
+            while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
             {
-                // Verify file is large enough to contain salt
-                if (fsCrypt.Length < SaltSize)
-                    throw new InvalidDataException("File is too small to contain encryption data.");
-
-                // Read the salt from the beginning of the file
-                byte[] salt = new byte[SaltSize];
-                int bytesRead = fsCrypt.Read(salt, 0, salt.Length);
-                if (bytesRead != SaltSize)
-                    throw new InvalidDataException("Unable to read salt from encrypted file.");
-
-                // Generate key and IV from password using the stored salt
-                byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
-                aes.Key = keyAndIv[..32];
-                aes.IV = keyAndIv[32..];
-
-                using (CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read))
-                using (FileStream fsOut = new(inputFile + ".dec", FileMode.Create))
-                {
-                    byte[] buffer = new byte[BufferSize];
-                    int read;
-
-                    // Read from encrypted file and write decrypted data to output file
-                    while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        fsOut.Write(buffer, 0, read);
-                    }
-                }
+                fsOut.Write(buffer, 0, read);
             }
 
             // Replace encrypted file with decrypted file
@@ -157,7 +147,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
 
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
-
+        /*
         // Hash a password using SHA-256 and SHA-512
         public static string LegacyHashPassword(string password)
         {
@@ -172,5 +162,6 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             byte[] hash512 = SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(hex256));
             return BitConverter.ToString(hash512).Replace("-", "").ToLowerInvariant();
         }
+        */
     }
 }

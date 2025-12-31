@@ -80,8 +80,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         // Method to lock the locker
         public static void Lock(LockerModel locker, string password)
         {
-            if (locker == null)
-                throw new ArgumentNullException(nameof(locker));
+            ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
@@ -123,8 +122,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         // Method to unlock the locker
         public static void Unlock(LockerModel locker, string password)
         {
-            if (locker == null)
-                throw new ArgumentNullException(nameof(locker));
+            ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
 
@@ -166,8 +164,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         // Method to change a locker's password
         public static void ChangePassword(LockerModel locker, string oldPassword, string newPassword)
         {
-            if (locker == null)
-                throw new ArgumentNullException(nameof(locker));
+            ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(oldPassword))
                 throw new ArgumentException("Old password cannot be null or empty.", nameof(oldPassword));
             if (string.IsNullOrEmpty(newPassword))
@@ -207,8 +204,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         // Method to verify locker integrity and status
         public static LockerVerificationResult Verify(LockerModel locker)
         {
-            if (locker == null)
-                throw new ArgumentNullException(nameof(locker));
+            ArgumentNullException.ThrowIfNull(locker);
 
             var result = new LockerVerificationResult
             {
@@ -245,7 +241,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
                     // Check if directory name starts with period
                     string dirName = Path.GetFileName(locker.LockerLocation);
-                    if (!dirName.StartsWith("."))
+                    if (!dirName.StartsWith('.'))
                     {
                         result.AddWarning("Locked locker directory name should start with period");
                     }
@@ -260,7 +256,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
                     // Check if directory name starts with period
                     string dirName = Path.GetFileName(locker.LockerLocation);
-                    if (dirName.StartsWith("."))
+                    if (dirName.StartsWith('.'))
                     {
                         result.AddWarning("Unlocked locker directory name should not start with period");
                     }
@@ -308,8 +304,8 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         public bool HasAccess { get; set; }
         public int FileCount { get; set; }
         public int DirectoryCount { get; set; }
-        public List<string> Errors { get; } = new();
-        public List<string> Warnings { get; } = new();
+        public List<string> Errors { get; } = [];
+        public List<string> Warnings { get; } = [];
 
         public bool IsValid => Errors.Count == 0 && DirectoryExists && HasAccess;
 
