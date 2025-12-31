@@ -2,7 +2,7 @@ using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
-using Newtonsoft.Json;
+using ColDogStudios.ColDogLocker.Infrastructure.Data;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {
@@ -10,55 +10,37 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     {
         public static readonly List<LockerModel> Lockers = [];
 
-        // Load locker metadata from the JSON file
+        // Load locker metadata from the database
         public static void LoadLockers()
         {
             try
             {
-                // Define file path
-                string filePath = Path.Combine(Variables.localConfig, "lockers.json");
-                if (File.Exists(filePath))
-                {
-                    // Read and deserialize JSON data
-                    string json = File.ReadAllText(filePath);
-                    var lockers = JsonConvert.DeserializeObject<List<LockerModel>>(json);
-                    if (lockers != null)
-                    {
-                        Lockers.Clear();
-                        Lockers.AddRange(lockers);
-                        Logger.AddEntry($"Successfully loaded {lockers.Count} lockers.", LogLevel.Info);
-                    }
-                    else
-                    {
-                        Logger.AddEntry("Lockers file is empty or invalid. Starting with empty locker list.", LogLevel.Warning);
-                        Lockers.Clear();
-                    }
-                }
-                else
-                {
-                    Logger.AddEntry("Lockers file not found. Starting with empty locker list.", LogLevel.Info);
-                    Lockers.Clear();
-                }
+                Lockers.Clear();
+                Lockers.AddRange(LockerRepository.GetAllLockers());
             }
             catch (Exception ex)
             {
-                Logger.AddEntry($"An error occurred while reading the lockers from the JSON file: {ex.Message}. Starting with empty locker list.", LogLevel.Error);
+                Logger.AddEntry($"An error occurred while loading lockers from database: {ex.Message}. Starting with empty locker list.", LogLevel.Error);
                 Lockers.Clear(); // Ensure we have a clean state
             }
         }
 
-        // Save locker metadata to the JSON file
+        // Save locker metadata to the database (updates existing locker)
         public static void SaveLockers()
         {
+            // This method is now primarily for backwards compatibility
+            // Individual operations (Add, Remove, Lock, Unlock) will update the database directly
+            // But we can use this to sync the in-memory list back to the database if needed
             try
             {
-                // Serialize and write JSON data
-                string json = JsonConvert.SerializeObject(Lockers, Formatting.Indented);
-                File.WriteAllText(Path.Combine(Variables.localConfig, "lockers.json"), json);
+                foreach (var locker in Lockers)
+                {
+                    LockerRepository.UpdateLocker(locker);
+                }
             }
             catch (Exception ex)
             {
-                Logger.AddEntry($"An error occurred while saving the lockers to the JSON file: {ex.Message}", LogLevel.Error);
+                Logger.AddEntry($"An error occurred while saving lockers to database: {ex.Message}", LogLevel.Error);
                 throw;
             }
         }
@@ -70,7 +52,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             if (Directory.Exists(locker.LockerLocation))
             {
                 Logger.AddEntry($"{locker.LockerName} already exists. Skipping directory creation.", LogLevel.Info);
-                Console.WriteLine($"\n{locker.LockerName} already exists. Skipping directory creation.");
             }
             else
             {
@@ -78,21 +59,19 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Logger.AddEntry($"Created directory: {locker.LockerLocation}", LogLevel.Info);
             }
 
-            // Add the locker to the metadata
+            // Add the locker to the database and in-memory list
+            LockerRepository.InsertLocker(locker);
             Lockers.Add(locker);
-            SaveLockers();
 
             Logger.AddEntry($"{locker.LockerName} created successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} created successfully. Press Enter to continue...");
-            Console.ReadLine();
         }
 
         // Remove a locker from the metadata
         public static void RemoveLocker(LockerModel locker)
         {
-            // Remove the locker from the metadata
+            // Remove the locker from the database and in-memory list
+            LockerRepository.DeleteLocker(locker.Guid);
             Lockers.Remove(locker);
-            SaveLockers();
 
             Logger.AddEntry($"{locker.LockerName} removed successfully.", LogLevel.Success);
             Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
@@ -135,13 +114,11 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             locker.IsLocked = true;
             locker.LockerLocation = newLockerLocation;
 
-            // Save the updated locker metadata
-            SaveLockers();
+            // Save the updated locker to database
+            LockerRepository.UpdateLocker(locker);
 
             // Log and display success message
             Logger.AddEntry($"Locker {locker.LockerName} locked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} locked successfully. Press Enter to continue...");
-            Console.ReadLine();
         }
 
         // Method to unlock the locker
@@ -180,13 +157,164 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             locker.IsLocked = false;
             locker.LockerLocation = newLockerLocation;
 
-            // Save the updated locker metadata
-            SaveLockers();
+            // Save the updated locker to database
+            LockerRepository.UpdateLocker(locker);
 
             // Log and display success message
             Logger.AddEntry($"{locker.LockerName} unlocked successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} unlocked successfully. Press Enter to continue...");
-            Console.ReadLine();
         }
+
+        // Method to change a locker's password
+        public static void ChangePassword(LockerModel locker, string oldPassword, string newPassword)
+        {
+            if (locker == null)
+                throw new ArgumentNullException(nameof(locker));
+            if (string.IsNullOrEmpty(oldPassword))
+                throw new ArgumentException("Old password cannot be null or empty.", nameof(oldPassword));
+            if (string.IsNullOrEmpty(newPassword))
+                throw new ArgumentException("New password cannot be null or empty.", nameof(newPassword));
+
+            // Verify the old password
+            if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))
+            {
+                Logger.AddEntry($"Failed to change password for {locker.LockerName}. Incorrect old password.", LogLevel.Error);
+                throw new UnauthorizedAccessException("Incorrect old password.");
+            }
+
+            // Locker must be unlocked to change password
+            if (locker.IsLocked)
+            {
+                Logger.AddEntry($"Cannot change password for locked locker {locker.LockerName}. Unlock it first.", LogLevel.Error);
+                throw new InvalidOperationException("Locker must be unlocked to change password.");
+            }
+
+            // Verify directory exists
+            if (!Directory.Exists(locker.LockerLocation))
+            {
+                Logger.AddEntry($"Locker directory not found: {locker.LockerLocation}", LogLevel.Error);
+                throw new DirectoryNotFoundException($"Locker directory not found: {locker.LockerLocation}");
+            }
+
+            // Update password hash in database
+            // Note: Files are already decrypted when locker is unlocked, so no re-encryption needed
+            // The new password will be used next time the locker is locked
+            Logger.AddEntry($"Updating password for {locker.LockerName}...", LogLevel.Info);
+            locker.Password = EncryptionHelper.HashPassword(newPassword);
+            LockerRepository.UpdateLocker(locker);
+
+            Logger.AddEntry($"Password changed successfully for {locker.LockerName}.", LogLevel.Success);
+        }
+
+        // Method to verify locker integrity and status
+        public static LockerVerificationResult Verify(LockerModel locker)
+        {
+            if (locker == null)
+                throw new ArgumentNullException(nameof(locker));
+
+            var result = new LockerVerificationResult
+            {
+                LockerName = locker.LockerName,
+                Guid = locker.Guid,
+                IsLocked = locker.IsLocked
+            };
+
+            // Check if directory exists
+            if (!Directory.Exists(locker.LockerLocation))
+            {
+                result.DirectoryExists = false;
+                result.AddError("Directory does not exist at specified location");
+                Logger.AddEntry($"Verification failed for {locker.LockerName}: Directory not found.", LogLevel.Warning);
+                return result;
+            }
+
+            result.DirectoryExists = true;
+
+            try
+            {
+                // Check directory attributes
+                var attributes = File.GetAttributes(locker.LockerLocation);
+                bool isHidden = (attributes & FileAttributes.Hidden) == FileAttributes.Hidden;
+                bool isSystem = (attributes & FileAttributes.System) == FileAttributes.System;
+
+                if (locker.IsLocked)
+                {
+                    // Locked locker should be hidden
+                    if (!isHidden || !isSystem)
+                    {
+                        result.AddWarning("Locked locker directory is not properly hidden");
+                    }
+
+                    // Check if directory name starts with period
+                    string dirName = Path.GetFileName(locker.LockerLocation);
+                    if (!dirName.StartsWith("."))
+                    {
+                        result.AddWarning("Locked locker directory name should start with period");
+                    }
+                }
+                else
+                {
+                    // Unlocked locker should not be hidden
+                    if (isHidden || isSystem)
+                    {
+                        result.AddWarning("Unlocked locker directory should not be hidden");
+                    }
+
+                    // Check if directory name starts with period
+                    string dirName = Path.GetFileName(locker.LockerLocation);
+                    if (dirName.StartsWith("."))
+                    {
+                        result.AddWarning("Unlocked locker directory name should not start with period");
+                    }
+                }
+
+                // Count files and directories
+                var dirInfo = new DirectoryInfo(locker.LockerLocation);
+                result.FileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
+                result.DirectoryCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
+
+                // Check permissions
+                try
+                {
+                    // Try to read directory contents
+                    _ = dirInfo.GetFileSystemInfos();
+                    result.HasAccess = true;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    result.HasAccess = false;
+                    result.AddError("Access denied to locker directory");
+                }
+
+                Logger.AddEntry($"Verification completed for {locker.LockerName}. Status: {(result.IsValid ? "Valid" : result.Errors.Count > 0 ? "Invalid" : "Warning")}", LogLevel.Info);
+            }
+            catch (Exception ex)
+            {
+                result.AddError($"Verification error: {ex.Message}");
+                Logger.AddEntry($"Verification failed for {locker.LockerName}: {ex.Message}", LogLevel.Error);
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Result of locker verification
+    /// </summary>
+    public class LockerVerificationResult
+    {
+        public string LockerName { get; set; } = string.Empty;
+        public string Guid { get; set; } = string.Empty;
+        public bool IsLocked { get; set; }
+        public bool DirectoryExists { get; set; }
+        public bool HasAccess { get; set; }
+        public int FileCount { get; set; }
+        public int DirectoryCount { get; set; }
+        public List<string> Errors { get; } = new();
+        public List<string> Warnings { get; } = new();
+
+        public bool IsValid => Errors.Count == 0 && DirectoryExists && HasAccess;
+
+        public void AddError(string error) => Errors.Add(error);
+        public void AddWarning(string warning) => Warnings.Add(warning);
     }
 }

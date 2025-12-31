@@ -224,5 +224,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         /// Gets or sets a value indicating whether auto updates are enabled.
         /// </summary>
         public bool AutoUpdate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of days between database vacuum operations (0 = disabled).
+        /// </summary>
+        public int DatabaseVacuumInterval { get; set; } = 30;
+
+        /// <summary>
+        /// Gets or sets the last time the database was vacuumed.
+        /// </summary>
+        public DateTime? LastDatabaseVacuum { get; set; }
     }
 }
