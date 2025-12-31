@@ -4,6 +4,8 @@ using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Application.Validation;
 using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using ColDogStudios.ColDogLocker.Infrastructure.Console;
+using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands;
 
@@ -192,8 +194,11 @@ public static class LockerCommandHandlers
         // Remove the locker
         try
         {
+            // Use LockerService.RemoveLocker to properly delete from database
+            // Note: RemoveLocker has a Console.ReadLine() which we need to avoid in CLI
+            LockerRepository.DeleteLocker(locker.Guid);
             LockerService.Lockers.Remove(locker);
-            LockerService.SaveLockers();
+            Logger.AddEntry($"{lockerName} removed successfully.", LogLevel.Success);
 
             // Delete directory if requested
             if (deleteDirectory && Directory.Exists(locker.LockerLocation))

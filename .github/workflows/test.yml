@@ -207,7 +207,10 @@ jobs:
     - name: Test - Remove Locker
       run: |
         Write-Host "Testing remove command..." -ForegroundColor Cyan
-        & ".\cli-publish\ColDogLocker.exe" remove E2ETestLocker --force
+        Write-Host "Command: remove E2ETestLocker --force" -ForegroundColor Gray
+        $output = & ".\cli-publish\ColDogLocker.exe" remove E2ETestLocker --force
+        Write-Host "Remove output: $output" -ForegroundColor Gray
+        Write-Host "Exit code: $LASTEXITCODE" -ForegroundColor Gray
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to remove locker (exit code: $LASTEXITCODE)"
@@ -223,6 +226,9 @@ jobs:
         Write-Host "Output: $output" -ForegroundColor Gray
         
         if ($outputText -match "E2ETestLocker") {
+          throw "Locker still appears in list after removal"
+        }
+        Write-Host "✓ Locker successfully removed" -ForegroundColor Green
           throw "Locker still appears in list after removal"
         }
         Write-Host "✓ Locker successfully removed" -ForegroundColor Green
