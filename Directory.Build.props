@@ -1,5 +1,25 @@
 <Project>
   <PropertyGroup>
+    <!-- Shared Version Information - Edit version here only -->
+    <Version>0.2.0-pre</Version>
+    <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
+    <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
+    <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
+    
+    <!-- Product Information -->
+    <Product>ColDog Locker</Product>
+    <AssemblyTitle>ColDog Locker</AssemblyTitle>
+    <Description>A secure file locker application</Description>
+    <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
+    <Authors>Collin Laney</Authors>
+    <Company>ColDog Studios</Company>
+    
+    <!-- Package Metadata -->
+    <PackageProjectUrl>https://github.com/ColDog-Studios/ColDog-Locker</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    
     <!-- Output all projects to root bin directory -->
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>

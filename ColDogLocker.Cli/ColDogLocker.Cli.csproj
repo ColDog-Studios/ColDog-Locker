@@ -7,14 +7,36 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ColDogStudios.ColDogLocker.Cli</RootNamespace>
     <AssemblyName>ColDogLocker</AssemblyName>
-    <ApplicationIcon>..\resources\cdlIcon.ico</ApplicationIcon>
     
-    <!-- Product Information -->
-    <Product>ColDog Locker</Product>
-    <AssemblyTitle>ColDog Locker</AssemblyTitle>
-    <Description>A secure file locker application</Description>
-    <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
+    <!-- Single File Publishing -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>..\resources\cdlIcon.ico</ApplicationIcon>
+    <SignAssembly>False</SignAssembly>
+    <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj" />
