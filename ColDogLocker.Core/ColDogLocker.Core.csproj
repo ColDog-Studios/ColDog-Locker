@@ -6,10 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
     
-    <!-- Version Information - EDIT VERSION HERE ONLY -->
-    <Version>0.2.0-pre</Version>
-    <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
-    <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
+    <!-- Version is inherited from Directory.Build.props -->
   </PropertyGroup>
 
   <!-- Auto-generate BuildInfo.cs at build time -->
