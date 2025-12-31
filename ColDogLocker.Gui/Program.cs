@@ -15,13 +15,13 @@ public static class GuiLauncher
         // TODO: Initialize and launch the GUI application
         Console.WriteLine("[GUI] Initializing graphical interface...");
         Console.WriteLine("GUI implementation pending.");
-        
+
         // Placeholder for future GUI framework initialization
         // Examples:
         // - WPF: var app = new Application(); app.Run(new MainWindow());
         // - Avalonia: BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         // - MAUI: var app = MauiProgram.CreateMauiApp(); app.Run();
-        
+
         return 0;
     }
 }

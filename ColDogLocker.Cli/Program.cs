@@ -1,7 +1,7 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Cli.Commands;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Cli;
 
@@ -10,7 +10,7 @@ class Program
     static int Main(string[] args)
     {
         System.Console.WriteLine();
-        
+
         try
         {
             // Initialize application for CLI commands (except for UI launchers)

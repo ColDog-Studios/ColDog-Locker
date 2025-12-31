@@ -1,8 +1,7 @@
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {
@@ -100,7 +99,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
-            
+
             string newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
             Directory.Move(locker.LockerLocation, newLockerLocation);
 
@@ -143,7 +142,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
-            
+
             string newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
             Directory.Move(locker.LockerLocation, newLockerLocation);
 

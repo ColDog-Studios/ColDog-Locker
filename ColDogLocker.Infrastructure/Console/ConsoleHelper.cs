@@ -16,11 +16,11 @@ public static class ConsoleHelper
     {
         var password = new StringBuilder();
         ConsoleKeyInfo key;
-        
+
         do
         {
             key = System.Console.ReadKey(intercept: true);
-            
+
             if (key.Key != ConsoleKey.Backspace && key.Key != ConsoleKey.Enter)
             {
                 password.Append(key.KeyChar);
@@ -32,7 +32,7 @@ public static class ConsoleHelper
                 System.Console.Write("\b \b");
             }
         } while (key.Key != ConsoleKey.Enter);
-        
+
         System.Console.WriteLine();
         return password.ToString();
     }

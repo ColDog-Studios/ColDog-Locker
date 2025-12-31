@@ -70,7 +70,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
             {
                 return; // Too soon since last reload, skip this one
             }
-            
+
             lastSettingsReload = now;
             Logger.AddEntry("Settings file changed. Reloading settings.", LogLevel.Info);
             OnSettingsFileChanged?.Invoke();

@@ -1,10 +1,10 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Application.Validation;
-using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Console;
 using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands;
@@ -17,7 +17,7 @@ public static class LockerCommandHandlers
     public static int HandleNew(string[] args)
     {
         // Usage: ColDogLocker.exe new <Locker Name> [--path "D:\Lockers"] [--password <password>]
-        
+
         if (args.Length < 2)
         {
             System.Console.Error.WriteLine("Error: Locker name is required.");
@@ -45,7 +45,7 @@ public static class LockerCommandHandlers
         }
 
         // Determine locker location
-        string lockerLocation = customPath != null 
+        string lockerLocation = customPath != null
             ? Path.Combine(customPath, lockerName)
             : Path.Combine(Variables.cdlDir, lockerName);
 
@@ -62,7 +62,7 @@ public static class LockerCommandHandlers
         {
             // Use provided password (for automation)
             password = providedPassword;
-            
+
             // Still validate it
             try
             {
@@ -90,7 +90,7 @@ public static class LockerCommandHandlers
             {
                 System.Console.Write("Enter password: ");
                 password = ConsoleHelper.ReadPassword();
-                
+
                 if (string.IsNullOrEmpty(password))
                 {
                     System.Console.WriteLine("Password cannot be empty.");
@@ -124,7 +124,7 @@ public static class LockerCommandHandlers
         {
             string passwordHash = EncryptionHelper.HashPassword(password);
             var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
-            
+
             LockerService.AddLocker(locker);
 
             System.Console.ForegroundColor = ConsoleColor.Green;
@@ -155,7 +155,7 @@ public static class LockerCommandHandlers
         var deleteDirectory = args.Contains("--delete");
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)
@@ -182,7 +182,7 @@ public static class LockerCommandHandlers
             {
                 System.Console.Write($"Are you sure you want to remove locker '{lockerName}'? (y/N): ");
             }
-            
+
             var confirmation = System.Console.ReadLine()?.Trim().ToLowerInvariant();
             if (confirmation != "y" && confirmation != "yes")
             {
@@ -215,7 +215,7 @@ public static class LockerCommandHandlers
                 System.Console.ResetColor();
                 System.Console.WriteLine($"Note: The directory at '{locker.LockerLocation}' was not deleted.");
             }
-            
+
             return 0;
         }
         catch (Exception ex)
@@ -250,7 +250,7 @@ public static class LockerCommandHandlers
         }
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)
@@ -326,7 +326,7 @@ public static class LockerCommandHandlers
         }
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)
@@ -408,7 +408,7 @@ public static class LockerCommandHandlers
                 System.Console.WriteLine("No unlocked lockers found.");
             else
                 System.Console.WriteLine("No lockers found.");
-            
+
             System.Console.WriteLine($"Create a new locker with: ColDogLocker new <name>");
             return 0;
         }
@@ -441,7 +441,7 @@ public static class LockerCommandHandlers
         var lockerName = args[1];
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)
@@ -455,14 +455,14 @@ public static class LockerCommandHandlers
         System.Console.WriteLine($"Status: {(locker.IsLocked ? "Locked" : "Unlocked")}");
         System.Console.WriteLine($"Location: {locker.LockerLocation}");
         System.Console.WriteLine($"GUID: {locker.Guid}");
-        
+
         // Check if directory exists
         if (Directory.Exists(locker.LockerLocation))
         {
             var dirInfo = new DirectoryInfo(locker.LockerLocation);
             System.Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
             System.Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
-            
+
             // Count files
             int fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
             int folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
@@ -492,7 +492,7 @@ public static class LockerCommandHandlers
         var lockerName = args[1];
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)
@@ -532,7 +532,7 @@ public static class LockerCommandHandlers
         {
             System.Console.Write("Enter new password: ");
             newPassword = ConsoleHelper.ReadPassword();
-            
+
             if (string.IsNullOrEmpty(newPassword))
             {
                 System.Console.WriteLine("Password cannot be empty.");
@@ -597,7 +597,7 @@ public static class LockerCommandHandlers
         var lockerName = args[1];
 
         // Find the locker
-        var locker = LockerService.Lockers.FirstOrDefault(l => 
+        var locker = LockerService.Lockers.FirstOrDefault(l =>
             l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
         if (locker == null)

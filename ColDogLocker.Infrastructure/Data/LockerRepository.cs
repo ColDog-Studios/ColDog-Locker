@@ -1,8 +1,7 @@
-using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Microsoft.Data.Sqlite;
-using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Data
 {
@@ -172,7 +171,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                 command.CommandText = @"
                     INSERT INTO Lockers (Guid, LockerName, Password, LockerLocation, IsLocked)
                     VALUES ($guid, $name, $password, $location, $isLocked)";
-                
+
                 command.Parameters.AddWithValue("$guid", locker.Guid);
                 command.Parameters.AddWithValue("$name", locker.LockerName);
                 command.Parameters.AddWithValue("$password", locker.Password);
@@ -214,7 +213,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                         IsLocked = $isLocked,
                         UpdatedAt = datetime('now')
                     WHERE Guid = $guid";
-                
+
                 command.Parameters.AddWithValue("$guid", locker.Guid);
                 command.Parameters.AddWithValue("$name", locker.LockerName);
                 command.Parameters.AddWithValue("$password", locker.Password);
@@ -222,7 +221,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                 command.Parameters.AddWithValue("$isLocked", locker.IsLocked ? 1 : 0);
 
                 var rowsAffected = command.ExecuteNonQuery();
-                
+
                 if (rowsAffected == 0)
                 {
                     Logger.AddEntry($"Locker with GUID '{locker.Guid}' not found for update.", LogLevel.Warning);
@@ -253,7 +252,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                 command.Parameters.AddWithValue("$guid", guid);
 
                 var rowsAffected = command.ExecuteNonQuery();
-                
+
                 if (rowsAffected == 0)
                 {
                     Logger.AddEntry($"Locker with GUID '{guid}' not found for deletion.", LogLevel.Warning);
@@ -301,7 +300,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             try
             {
                 string jsonPath = Path.Combine(Variables.localConfig, "lockers.json");
-                
+
                 if (!File.Exists(jsonPath))
                 {
                     Logger.AddEntry("No lockers.json file found. Skipping migration.", LogLevel.Info);

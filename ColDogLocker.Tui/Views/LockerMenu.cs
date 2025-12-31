@@ -1,10 +1,10 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Application.Validation;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Infrastructure.Console;
 using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using ColDogStudios.ColDogLocker.Infrastructure.Console;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -116,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 // Get locker index from user
                 Console.Write("\nEnter the number of the locker to remove (or 0 to return): ");
                 string? input = Console.ReadLine();
-                
+
                 // Check if user wants to return to main menu
                 if (input == "0")
                 {
@@ -162,7 +162,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to lock (or 0 to return): ");
             string? input = Console.ReadLine();
-            
+
             // Check if user wants to return to main menu
             if (input == "0")
             {
@@ -224,7 +224,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to unlock (or 0 to return): ");
             string? input = Console.ReadLine();
-            
+
             // Check if user wants to return to main menu
             if (input == "0")
             {
