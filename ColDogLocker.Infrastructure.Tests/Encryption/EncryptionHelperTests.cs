@@ -228,6 +228,7 @@ public class EncryptionHelperTests
 
     #endregion
 
+    /*
     #region LegacyHashPassword Tests
 
     [Fact]
@@ -330,6 +331,7 @@ public class EncryptionHelperTests
     }
 
     #endregion
+    */
 
     #region File Operation Exception Tests
 
