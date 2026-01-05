@@ -67,7 +67,6 @@ class Program
 
         // Initialize database and migrate from JSON if needed
         Infrastructure.Data.LockerRepository.InitializeDatabase();
-        Infrastructure.Data.LockerRepository.MigrateFromJson();
 
         // Load settings and lockers (minimal initialization for CLI)
         SettingsManager.LoadSettings();

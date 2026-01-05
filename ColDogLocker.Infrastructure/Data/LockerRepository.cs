@@ -293,68 +293,6 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         }
 
         /// <summary>
-        /// Migrate data from the legacy JSON file to the SQLite database
-        /// </summary>
-        public static void MigrateFromJson()
-        {
-            try
-            {
-                string jsonPath = Path.Combine(Variables.localConfig, "lockers.json");
-
-                if (!File.Exists(jsonPath))
-                {
-                    Logger.AddEntry("No lockers.json file found. Skipping migration.", LogLevel.Info);
-                    return;
-                }
-
-                // Read and parse JSON
-                string json = File.ReadAllText(jsonPath);
-                var lockers = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LockerModel>>(json);
-
-                if (lockers == null || lockers.Count == 0)
-                {
-                    Logger.AddEntry("No lockers found in JSON file. Skipping migration.", LogLevel.Info);
-                    return;
-                }
-
-                // Insert each locker into the database
-                int migratedCount = 0;
-                foreach (var locker in lockers)
-                {
-                    try
-                    {
-                        // Check if locker already exists in database
-                        if (!LockerExists(locker.LockerName))
-                        {
-                            InsertLocker(locker);
-                            migratedCount++;
-                        }
-                        else
-                        {
-                            Logger.AddEntry($"Locker '{locker.LockerName}' already exists in database. Skipping.", LogLevel.Info);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.AddEntry($"Failed to migrate locker '{locker.LockerName}': {ex.Message}", LogLevel.Warning);
-                    }
-                }
-
-                Logger.AddEntry($"Migration completed. {migratedCount} locker(s) migrated from JSON to SQLite.", LogLevel.Success);
-
-                // Backup the old JSON file
-                string backupPath = Path.Combine(Variables.localConfig, $"lockers.json.backup.{DateTime.Now:yyyyMMddHHmmss}");
-                File.Move(jsonPath, backupPath);
-                Logger.AddEntry($"Original JSON file backed up to: {backupPath}", LogLevel.Info);
-            }
-            catch (Exception ex)
-            {
-                Logger.AddEntry($"Migration from JSON failed: {ex.Message}", LogLevel.Error);
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Vacuum the database to reclaim space and optimize performance
         /// </summary>
         public static long VacuumDatabase()

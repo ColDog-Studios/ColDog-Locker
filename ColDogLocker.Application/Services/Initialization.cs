@@ -30,7 +30,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.AddEntry("Database initialized.", LogLevel.Info);
 
             // Migrate from JSON if needed
-            LockerRepository.MigrateFromJson();
             Logger.AddEntry("Migration check completed.", LogLevel.Info);
 
             // Load settings and lockers
