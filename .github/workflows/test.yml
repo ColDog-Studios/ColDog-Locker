@@ -307,10 +307,10 @@ jobs:
         
         foreach ($test in $tests) {
           $icon = switch ($test.Result) {
-            "success" { "✓"; $passed++; $icon }
-            "failure" { "✗"; $failed++; $icon }
-            "skipped" { "⊘"; $skipped++; $icon }
-            default { "?"; $icon }
+            "success" { $passed++; "✓" }
+            "failure" { $failed++; "✗" }
+            "skipped" { $skipped++; "⊘" }
+            default { "?" }
           }
           Write-Output "  $icon $($test.Name): $($test.Result)"
         }
