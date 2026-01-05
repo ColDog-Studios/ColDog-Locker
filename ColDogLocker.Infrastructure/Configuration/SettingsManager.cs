@@ -77,7 +77,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             {
                 DebugMode = false,
                 LogRetentionDays = 30, // Keep logs for 30 days by default
-                AutoUpdate = false  // Will be prompted during first run
+                AutoUpdate = false,  // Will be prompted during first run
+                UpdateChannel = UpdateChannel.Stable  // Default to stable channel
             };
             SaveSettings();
         }
@@ -207,6 +208,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         }
     }
 
+    // Enum for update channel selection
+    public enum UpdateChannel
+    {
+        Stable,
+        Prerelease
+    }
+
     // Class to hold application settings
     public class ApplicationSettings
     {
@@ -234,5 +242,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         /// Gets or sets the last time the database was vacuumed.
         /// </summary>
         public DateTime? LastDatabaseVacuum { get; set; }
+
+        /// <summary>
+        /// Gets or sets the update channel (Stable or Prerelease).
+        /// </summary>
+        public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
     }
 }

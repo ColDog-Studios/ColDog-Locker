@@ -9,7 +9,7 @@ class Program
 {
     static int Main(string[] args)
     {
-        System.Console.WriteLine();
+        Console.WriteLine();
 
         try
         {
@@ -50,9 +50,9 @@ class Program
         }
         catch (Exception ex)
         {
-            System.Console.ForegroundColor = ConsoleColor.Red;
-            System.Console.Error.WriteLine($"Error: {ex.Message}");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine($"Error: {ex.Message}");
+            Console.ResetColor();
             return 1;
         }
     }
@@ -66,8 +66,8 @@ class Program
         }
 
         // Initialize database and migrate from JSON if needed
-        ColDogStudios.ColDogLocker.Infrastructure.Data.LockerRepository.InitializeDatabase();
-        ColDogStudios.ColDogLocker.Infrastructure.Data.LockerRepository.MigrateFromJson();
+        Infrastructure.Data.LockerRepository.InitializeDatabase();
+        Infrastructure.Data.LockerRepository.MigrateFromJson();
 
         // Load settings and lockers (minimal initialization for CLI)
         SettingsManager.LoadSettings();
@@ -78,12 +78,12 @@ class Program
 
     static int LaunchGui()
     {
-        return ColDogStudios.ColDogLocker.Gui.GuiLauncher.Launch();
+        return Gui.GuiLauncher.Launch();
     }
 
     static int LaunchTui()
     {
-        return ColDogStudios.ColDogLocker.Tui.TuiLauncher.Launch();
+        return Tui.TuiLauncher.Launch();
     }
 
     #endregion
@@ -106,14 +106,14 @@ class Program
     static int HandleVersionCommand()
     {
         var version = typeof(Program).Assembly.GetName().Version;
-        System.Console.WriteLine($"ColDog Locker v{version}");
+        Console.WriteLine($"ColDog Locker v{version}");
         return 0;
     }
 
     static int HandleUnknownCommand(string command)
     {
-        System.Console.Error.WriteLine($"Error: Unknown command '{command}'");
-        System.Console.WriteLine();
+        Console.Error.WriteLine($"Error: Unknown command '{command}'");
+        Console.WriteLine();
         HelpSystem.ShowGeneralHelp();
         return 1;
     }

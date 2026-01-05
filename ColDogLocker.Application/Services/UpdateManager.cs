@@ -7,7 +7,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 {
     public static class UpdateManager
     {
-        private static readonly string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
 
         // Delegate for showing menu title (to avoid dependency on TUI)
         public static Action<string>? ShowMenuTitle { get; set; }
@@ -21,32 +20,18 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             // Log the start of the update check
             Logger.AddEntry("Starting update check.", LogLevel.Info);
 
-            // Skip update check for preview versions -- Will add support in the future
-            if (BuildInfo.Version.Contains('-'))
-            {
-                Logger.AddEntry("Manual updates are required for preview versions.", LogLevel.Info);
-                Console.Write("Manual updates are required for preview versions.");
-                Console.ReadLine();
-                return;
-            }
-
             try
             {
                 // Create an HttpClient instance
                 using HttpClient client = new();
                 client.DefaultRequestHeaders.Add("User-Agent", "request");
 
-                // Fetch the latest release information from GitHub
-                string json = await client.GetStringAsync(uri);
+                // Fetch the latest release information based on configured channel
+                dynamic? releaseInfo = await FetchLatestReleaseAsync(client);
 
-                // Deserialize the JSON response
-                dynamic? releaseInfo = JsonConvert.DeserializeObject(json) ?? throw new Exception("Failed to retrieve release information.");
-
-                // Verify that the latest release is not a pre-release
-                if (releaseInfo.prerelease == true)
+                if (releaseInfo == null)
                 {
-                    Logger.AddEntry("Latest release was identified as a pre-release.", LogLevel.Warning);
-                    throw new Exception("Latest release was identified as a pre-release.");
+                    throw new Exception("Failed to retrieve release information.");
                 }
 
                 // Extract the latest version from the release information
@@ -156,6 +141,37 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Logger.AddEntry($"An error occurred while checking for updates: {ex.Message}", LogLevel.Error);
                 Console.WriteLine($"An error occurred while checking for updates: {ex.Message}");
                 Console.ReadLine();
+            }
+        }
+
+        // Fetch the latest release based on the configured update channel
+        private static async Task<dynamic?> FetchLatestReleaseAsync(HttpClient client)
+        {
+            var channel = Infrastructure.Configuration.SettingsManager.Settings.UpdateChannel;
+
+            if (channel == Infrastructure.Configuration.UpdateChannel.Stable)
+            {
+                // Use /releases/latest for stable releases only
+                string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
+                Logger.AddEntry("Checking for updates on Stable channel.", LogLevel.Info);
+                string json = await client.GetStringAsync(uri);
+                return JsonConvert.DeserializeObject(json);
+            }
+            else
+            {
+                // Use /releases and get the first item (most recent, including prereleases)
+                string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
+                Logger.AddEntry("Checking for updates on Prerelease channel.", LogLevel.Info);
+                string json = await client.GetStringAsync(uri);
+                dynamic[]? releases = JsonConvert.DeserializeObject<dynamic[]>(json);
+                
+                if (releases == null || releases.Length == 0)
+                {
+                    return null;
+                }
+
+                // Return the first release (most recent)
+                return releases[0];
             }
         }
     }

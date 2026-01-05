@@ -41,12 +41,33 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             var autoUpdate = string.IsNullOrEmpty(autoUpdateInput) ? SettingsManager.Settings.AutoUpdate :
                 autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
+            // Prompt the user to select update channel
+            Console.Write($"Update Channel (stable/prerelease) [Current: {SettingsManager.Settings.UpdateChannel}]: ");
+            var channelInput = Console.ReadLine()?.ToLowerInvariant();
+            var updateChannel = SettingsManager.Settings.UpdateChannel;
+            if (!string.IsNullOrEmpty(channelInput))
+            {
+                if (channelInput == "stable" || channelInput == "s")
+                {
+                    updateChannel = UpdateChannel.Stable;
+                }
+                else if (channelInput == "prerelease" || channelInput == "pre" || channelInput == "p")
+                {
+                    updateChannel = UpdateChannel.Prerelease;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Keeping current value.");
+                }
+            }
+
             // Update the settings object with the new values
             SettingsManager.Settings = new ApplicationSettings
             {
                 DebugMode = debugMode,
                 LogRetentionDays = logRetentionDays,
-                AutoUpdate = autoUpdate
+                AutoUpdate = autoUpdate,
+                UpdateChannel = updateChannel
             };
 
             // Save the updated settings to the configuration file
@@ -60,6 +81,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine($"  Debug Mode: {(SettingsManager.Settings.DebugMode ? "Enabled" : "Disabled")}");
             Console.WriteLine($"  Log Retention: {SettingsManager.Settings.LogRetentionDays} days");
             Console.WriteLine($"  Auto Update: {(SettingsManager.Settings.AutoUpdate ? "Enabled" : "Disabled")}");
+            Console.WriteLine($"  Update Channel: {SettingsManager.Settings.UpdateChannel}");
 
             Console.Write("\nPress Enter to continue...");
             Console.ReadLine();

@@ -20,8 +20,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker new <Locker Name> [--path <path>] [--password <password>]");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker new <Locker Name> [--path <path>] [--password <password>]");
             return 1;
         }
 
@@ -52,7 +52,7 @@ public static class LockerCommandHandlers
         // Check if locker already exists
         if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' already exists.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' already exists.");
             return 1;
         }
 
@@ -71,29 +71,29 @@ public static class LockerCommandHandlers
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Error: Password validation failed: {ex.Message}");
+                Console.Error.WriteLine($"Error: Password validation failed: {ex.Message}");
                 return 1;
             }
         }
         else
         {
             // Prompt for password
-            System.Console.WriteLine("Password Requirements:");
-            System.Console.WriteLine("  - At least 10 characters");
-            System.Console.WriteLine("  - At least one uppercase letter");
-            System.Console.WriteLine("  - At least one lowercase letter");
-            System.Console.WriteLine("  - At least one digit");
-            System.Console.WriteLine("  - At least one special character");
-            System.Console.WriteLine();
+            Console.WriteLine("Password Requirements:");
+            Console.WriteLine("  - At least 10 characters");
+            Console.WriteLine("  - At least one uppercase letter");
+            Console.WriteLine("  - At least one lowercase letter");
+            Console.WriteLine("  - At least one digit");
+            Console.WriteLine("  - At least one special character");
+            Console.WriteLine();
 
             while (true)
             {
-                System.Console.Write("Enter password: ");
+                Console.Write("Enter password: ");
                 password = ConsoleHelper.ReadPassword();
 
                 if (string.IsNullOrEmpty(password))
                 {
-                    System.Console.WriteLine("Password cannot be empty.");
+                    Console.WriteLine("Password cannot be empty.");
                     continue;
                 }
 
@@ -105,16 +105,16 @@ public static class LockerCommandHandlers
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine($"Password validation failed: {ex.Message}");
+                    Console.WriteLine($"Password validation failed: {ex.Message}");
                 }
             }
 
-            System.Console.Write("Confirm password: ");
+            Console.Write("Confirm password: ");
             string confirmPassword = ConsoleHelper.ReadPassword();
 
             if (password != confirmPassword)
             {
-                System.Console.Error.WriteLine("Error: Passwords do not match.");
+                Console.Error.WriteLine("Error: Passwords do not match.");
                 return 1;
             }
         }
@@ -127,14 +127,14 @@ public static class LockerCommandHandlers
 
             LockerService.AddLocker(locker);
 
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine($"\nLocker '{lockerName}' created successfully at: {lockerLocation}");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\nLocker '{lockerName}' created successfully at: {lockerLocation}");
+            Console.ResetColor();
             return 0;
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error creating locker: {ex.Message}");
+            Console.Error.WriteLine($"Error creating locker: {ex.Message}");
             return 1;
         }
     }
@@ -145,8 +145,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker remove <Locker Name> [--force] [--delete]");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker remove <Locker Name> [--force] [--delete]");
             return 1;
         }
 
@@ -160,14 +160,14 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Check if locked
         if (locker.IsLocked)
         {
-            System.Console.Error.WriteLine($"Error: Cannot remove locked locker '{lockerName}'. Unlock it first.");
+            Console.Error.WriteLine($"Error: Cannot remove locked locker '{lockerName}'. Unlock it first.");
             return 1;
         }
 
@@ -176,17 +176,17 @@ public static class LockerCommandHandlers
         {
             if (deleteDirectory)
             {
-                System.Console.Write($"Are you sure you want to remove locker '{lockerName}' and DELETE its directory? This cannot be undone! (y/N): ");
+                Console.Write($"Are you sure you want to remove locker '{lockerName}' and DELETE its directory? This cannot be undone! (y/N): ");
             }
             else
             {
-                System.Console.Write($"Are you sure you want to remove locker '{lockerName}'? (y/N): ");
+                Console.Write($"Are you sure you want to remove locker '{lockerName}'? (y/N): ");
             }
 
-            var confirmation = System.Console.ReadLine()?.Trim().ToLowerInvariant();
+            var confirmation = Console.ReadLine()?.Trim().ToLowerInvariant();
             if (confirmation != "y" && confirmation != "yes")
             {
-                System.Console.WriteLine("Operation cancelled.");
+                Console.WriteLine("Operation cancelled.");
                 return 0;
             }
         }
@@ -204,23 +204,23 @@ public static class LockerCommandHandlers
             if (deleteDirectory && Directory.Exists(locker.LockerLocation))
             {
                 Directory.Delete(locker.LockerLocation, recursive: true);
-                System.Console.ForegroundColor = ConsoleColor.Green;
-                System.Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
-                System.Console.ResetColor();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
+                Console.ResetColor();
             }
             else
             {
-                System.Console.ForegroundColor = ConsoleColor.Green;
-                System.Console.WriteLine($"Locker '{lockerName}' removed successfully.");
-                System.Console.ResetColor();
-                System.Console.WriteLine($"Note: The directory at '{locker.LockerLocation}' was not deleted.");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Locker '{lockerName}' removed successfully.");
+                Console.ResetColor();
+                Console.WriteLine($"Note: The directory at '{locker.LockerLocation}' was not deleted.");
             }
 
             return 0;
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error removing locker: {ex.Message}");
+            Console.Error.WriteLine($"Error removing locker: {ex.Message}");
             return 1;
         }
     }
@@ -231,8 +231,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker lock <Locker Name> [--password <password>]");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker lock <Locker Name> [--password <password>]");
             return 1;
         }
 
@@ -255,27 +255,27 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Check if already locked
         if (locker.IsLocked)
         {
-            System.Console.WriteLine($"Locker '{lockerName}' is already locked.");
+            Console.WriteLine($"Locker '{lockerName}' is already locked.");
             return 0;
         }
 
         // Prompt for password if not provided
         if (string.IsNullOrEmpty(password))
         {
-            System.Console.Write("Enter password: ");
+            Console.Write("Enter password: ");
             password = ConsoleHelper.ReadPassword();
         }
 
         if (string.IsNullOrEmpty(password))
         {
-            System.Console.Error.WriteLine("Error: Password cannot be empty.");
+            Console.Error.WriteLine("Error: Password cannot be empty.");
             return 1;
         }
 
@@ -284,19 +284,19 @@ public static class LockerCommandHandlers
         {
             LockerService.Lock(locker, password);
 
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine($"Locker '{lockerName}' locked successfully.");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Locker '{lockerName}' locked successfully.");
+            Console.ResetColor();
             return 0;
         }
         catch (UnauthorizedAccessException)
         {
-            System.Console.Error.WriteLine("Error: Incorrect password.");
+            Console.Error.WriteLine("Error: Incorrect password.");
             return 1;
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error locking locker: {ex.Message}");
+            Console.Error.WriteLine($"Error locking locker: {ex.Message}");
             return 1;
         }
     }
@@ -307,8 +307,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker unlock <Locker Name> [--password <password>]");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker unlock <Locker Name> [--password <password>]");
             return 1;
         }
 
@@ -331,27 +331,27 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Check if already unlocked
         if (!locker.IsLocked)
         {
-            System.Console.WriteLine($"Locker '{lockerName}' is already unlocked.");
+            Console.WriteLine($"Locker '{lockerName}' is already unlocked.");
             return 0;
         }
 
         // Prompt for password if not provided
         if (string.IsNullOrEmpty(password))
         {
-            System.Console.Write("Enter password: ");
+            Console.Write("Enter password: ");
             password = ConsoleHelper.ReadPassword();
         }
 
         if (string.IsNullOrEmpty(password))
         {
-            System.Console.Error.WriteLine("Error: Password cannot be empty.");
+            Console.Error.WriteLine("Error: Password cannot be empty.");
             return 1;
         }
 
@@ -360,19 +360,19 @@ public static class LockerCommandHandlers
         {
             LockerService.Unlock(locker, password);
 
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine($"Locker '{lockerName}' unlocked successfully.");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Locker '{lockerName}' unlocked successfully.");
+            Console.ResetColor();
             return 0;
         }
         catch (UnauthorizedAccessException)
         {
-            System.Console.Error.WriteLine("Error: Incorrect password.");
+            Console.Error.WriteLine("Error: Incorrect password.");
             return 1;
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error unlocking locker: {ex.Message}");
+            Console.Error.WriteLine($"Error unlocking locker: {ex.Message}");
             return 1;
         }
     }
@@ -403,27 +403,27 @@ public static class LockerCommandHandlers
         if (lockerList.Count == 0)
         {
             if (filterLocked == true)
-                System.Console.WriteLine("No locked lockers found.");
+                Console.WriteLine("No locked lockers found.");
             else if (filterLocked == false)
-                System.Console.WriteLine("No unlocked lockers found.");
+                Console.WriteLine("No unlocked lockers found.");
             else
-                System.Console.WriteLine("No lockers found.");
+                Console.WriteLine("No lockers found.");
 
-            System.Console.WriteLine($"Create a new locker with: ColDogLocker new <name>");
+            Console.WriteLine($"Create a new locker with: ColDogLocker new <name>");
             return 0;
         }
 
-        System.Console.WriteLine($"{"Name",-20} {"Status",-10} {"Location"}");
-        System.Console.WriteLine(new string('-', 80));
+        Console.WriteLine($"{"Name",-20} {"Status",-10} {"Location"}");
+        Console.WriteLine(new string('-', 80));
 
         foreach (var locker in lockerList)
         {
             var status = locker.IsLocked ? "Locked" : "Unlocked";
-            System.Console.WriteLine($"{locker.LockerName,-20} {status,-10} {locker.LockerLocation}");
+            Console.WriteLine($"{locker.LockerName,-20} {status,-10} {locker.LockerLocation}");
         }
 
-        System.Console.WriteLine();
-        System.Console.WriteLine($"Total: {lockerList.Count} locker(s)");
+        Console.WriteLine();
+        Console.WriteLine($"Total: {lockerList.Count} locker(s)");
         return 0;
     }
 
@@ -433,8 +433,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker status <Locker Name>");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker status <Locker Name>");
             return 1;
         }
 
@@ -446,33 +446,33 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Display status
-        System.Console.WriteLine($"Locker: {locker.LockerName}");
-        System.Console.WriteLine($"Status: {(locker.IsLocked ? "Locked" : "Unlocked")}");
-        System.Console.WriteLine($"Location: {locker.LockerLocation}");
-        System.Console.WriteLine($"GUID: {locker.Guid}");
+        Console.WriteLine($"Locker: {locker.LockerName}");
+        Console.WriteLine($"Status: {(locker.IsLocked ? "Locked" : "Unlocked")}");
+        Console.WriteLine($"Location: {locker.LockerLocation}");
+        Console.WriteLine($"GUID: {locker.Guid}");
 
         // Check if directory exists
         if (Directory.Exists(locker.LockerLocation))
         {
             var dirInfo = new DirectoryInfo(locker.LockerLocation);
-            System.Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
-            System.Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
+            Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
 
             // Count files
             int fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
             int folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
-            System.Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
+            Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
         }
         else
         {
-            System.Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Warning: Directory does not exist.");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Warning: Directory does not exist.");
+            Console.ResetColor();
         }
 
         return 0;
@@ -484,8 +484,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker change-password <Locker Name>");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker change-password <Locker Name>");
             return 1;
         }
 
@@ -497,45 +497,45 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Check if locked
         if (locker.IsLocked)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' must be unlocked to change password.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' must be unlocked to change password.");
             return 1;
         }
 
         // Get old password
-        System.Console.Write("Enter current password: ");
+        Console.Write("Enter current password: ");
         string oldPassword = ConsoleHelper.ReadPassword();
 
         if (string.IsNullOrEmpty(oldPassword))
         {
-            System.Console.Error.WriteLine("Error: Password cannot be empty.");
+            Console.Error.WriteLine("Error: Password cannot be empty.");
             return 1;
         }
 
         // Get new password
-        System.Console.WriteLine("\nPassword Requirements:");
-        System.Console.WriteLine("  - At least 10 characters");
-        System.Console.WriteLine("  - At least one uppercase letter");
-        System.Console.WriteLine("  - At least one lowercase letter");
-        System.Console.WriteLine("  - At least one digit");
-        System.Console.WriteLine("  - At least one special character");
-        System.Console.WriteLine();
+        Console.WriteLine("\nPassword Requirements:");
+        Console.WriteLine("  - At least 10 characters");
+        Console.WriteLine("  - At least one uppercase letter");
+        Console.WriteLine("  - At least one lowercase letter");
+        Console.WriteLine("  - At least one digit");
+        Console.WriteLine("  - At least one special character");
+        Console.WriteLine();
 
         string newPassword;
         while (true)
         {
-            System.Console.Write("Enter new password: ");
+            Console.Write("Enter new password: ");
             newPassword = ConsoleHelper.ReadPassword();
 
             if (string.IsNullOrEmpty(newPassword))
             {
-                System.Console.WriteLine("Password cannot be empty.");
+                Console.WriteLine("Password cannot be empty.");
                 continue;
             }
 
@@ -547,38 +547,38 @@ public static class LockerCommandHandlers
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Password validation failed: {ex.Message}");
+                Console.WriteLine($"Password validation failed: {ex.Message}");
             }
         }
 
-        System.Console.Write("Confirm new password: ");
+        Console.Write("Confirm new password: ");
         string confirmPassword = ConsoleHelper.ReadPassword();
 
         if (newPassword != confirmPassword)
         {
-            System.Console.Error.WriteLine("Error: Passwords do not match.");
+            Console.Error.WriteLine("Error: Passwords do not match.");
             return 1;
         }
 
         // Change password
         try
         {
-            System.Console.WriteLine("\nChanging password...");
+            Console.WriteLine("\nChanging password...");
             LockerService.ChangePassword(locker, oldPassword, newPassword);
 
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine($"Password changed successfully for '{lockerName}'.");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Password changed successfully for '{lockerName}'.");
+            Console.ResetColor();
             return 0;
         }
         catch (UnauthorizedAccessException)
         {
-            System.Console.Error.WriteLine("Error: Incorrect current password.");
+            Console.Error.WriteLine("Error: Incorrect current password.");
             return 1;
         }
         catch (Exception ex)
         {
-            System.Console.Error.WriteLine($"Error changing password: {ex.Message}");
+            Console.Error.WriteLine($"Error changing password: {ex.Message}");
             return 1;
         }
     }
@@ -589,8 +589,8 @@ public static class LockerCommandHandlers
 
         if (args.Length < 2)
         {
-            System.Console.Error.WriteLine("Error: Locker name is required.");
-            System.Console.WriteLine("Usage: ColDogLocker verify <Locker Name>");
+            Console.Error.WriteLine("Error: Locker name is required.");
+            Console.WriteLine("Usage: ColDogLocker verify <Locker Name>");
             return 1;
         }
 
@@ -602,74 +602,74 @@ public static class LockerCommandHandlers
 
         if (locker == null)
         {
-            System.Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
+            Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
             return 1;
         }
 
         // Verify locker
         var result = LockerService.Verify(locker);
 
-        System.Console.WriteLine();
-        System.Console.WriteLine($"Locker: {result.LockerName}");
-        System.Console.WriteLine($"GUID: {result.Guid}");
-        System.Console.WriteLine($"Status: {(result.IsLocked ? "Locked" : "Unlocked")}");
-        System.Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine($"Locker: {result.LockerName}");
+        Console.WriteLine($"GUID: {result.Guid}");
+        Console.WriteLine($"Status: {(result.IsLocked ? "Locked" : "Unlocked")}");
+        Console.WriteLine();
 
         // Display checks
-        System.Console.WriteLine($"[{(result.DirectoryExists ? "OK" : "FAIL")}] Directory exists");
-        System.Console.WriteLine($"[{(result.HasAccess ? "OK" : "FAIL")}] Directory accessible");
+        Console.WriteLine($"[{(result.DirectoryExists ? "OK" : "FAIL")}] Directory exists");
+        Console.WriteLine($"[{(result.HasAccess ? "OK" : "FAIL")}] Directory accessible");
         if (result.DirectoryExists)
         {
-            System.Console.WriteLine($"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)");
+            Console.WriteLine($"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)");
         }
 
         // Display errors
         if (result.Errors.Count > 0)
         {
-            System.Console.WriteLine();
-            System.Console.ForegroundColor = ConsoleColor.Red;
-            System.Console.WriteLine("ERRORS:");
-            System.Console.ResetColor();
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("ERRORS:");
+            Console.ResetColor();
             foreach (var error in result.Errors)
             {
-                System.Console.WriteLine($"  [!] {error}");
+                Console.WriteLine($"  [!] {error}");
             }
         }
 
         // Display warnings
         if (result.Warnings.Count > 0)
         {
-            System.Console.WriteLine();
-            System.Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("WARNINGS:");
-            System.Console.ResetColor();
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("WARNINGS:");
+            Console.ResetColor();
             foreach (var warning in result.Warnings)
             {
-                System.Console.WriteLine($"  [!] {warning}");
+                Console.WriteLine($"  [!] {warning}");
             }
         }
 
         // Overall status
-        System.Console.WriteLine();
+        Console.WriteLine();
         if (result.IsValid)
         {
-            System.Console.ForegroundColor = ConsoleColor.Green;
-            System.Console.WriteLine("Overall: VALID");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Overall: VALID");
+            Console.ResetColor();
             return 0;
         }
         else if (result.Errors.Count > 0)
         {
-            System.Console.ForegroundColor = ConsoleColor.Red;
-            System.Console.WriteLine("Overall: INVALID");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Overall: INVALID");
+            Console.ResetColor();
             return 1;
         }
         else
         {
-            System.Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Overall: WARNING");
-            System.Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Overall: WARNING");
+            Console.ResetColor();
             return 0;
         }
     }
