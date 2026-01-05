@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, test ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ main, test, dev ]
   workflow_dispatch:
 
 jobs:
@@ -40,13 +40,14 @@ jobs:
     - name: Test Summary
       if: always()
       run: |
-        Write-Host "Unit Tests Completed" -ForegroundColor Green
-        Write-Host "Check the test results artifact for details" -ForegroundColor Yellow
+        Write-Output "Unit Tests Completed"
+        Write-Output "Check the test results artifact for details"
 
   cli-e2e-tests:
     name: CLI End-to-End Tests
     runs-on: windows-latest
     needs: unit-tests
+    if: always()
     
     steps:
     - name: Checkout code
@@ -61,38 +62,46 @@ jobs:
       run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
     
     - name: Test - Version Command
+      id: test-version
+      continue-on-error: true
       run: |
-        Write-Host "Testing --version command..." -ForegroundColor Cyan
+        Write-Output "Testing --version command..."
         $output = & ".\cli-publish\ColDogLocker.exe" --version
-        Write-Host "Output: $output" -ForegroundColor Gray
+        Write-Output "Output: $output"
         if ($output -notmatch "ColDog Locker") {
           throw "Version command failed - expected version info"
         }
-        Write-Host "✓ Version command passed" -ForegroundColor Green
+        Write-Output "✓ Version command passed"
     
     - name: Test - Help Command
+      id: test-help
+      continue-on-error: true
       run: |
-        Write-Host "Testing help command..." -ForegroundColor Cyan
+        Write-Output "Testing help command..."
         $output = & ".\cli-publish\ColDogLocker.exe" help
         $outputText = $output -join "`n"
-        Write-Host "Output preview: $($output | Select-Object -First 5)" -ForegroundColor Gray
+        Write-Output "Output preview: $($output | Select-Object -First 5)"
         if ($outputText -notmatch "USAGE") {
           throw "Help command failed - expected usage information"
         }
-        Write-Host "✓ Help command passed" -ForegroundColor Green
+        Write-Output "✓ Help command passed"
     
     - name: Test - List Empty Lockers
+      id: test-list-empty
+      continue-on-error: true
       run: |
-        Write-Host "Testing list command (before creating lockers)..." -ForegroundColor Cyan
+        Write-Output "Testing list command (before creating lockers)..."
         $output = & ".\cli-publish\ColDogLocker.exe" list
-        Write-Host "Output: $output" -ForegroundColor Gray
-        Write-Host "✓ List command passed" -ForegroundColor Green
+        Write-Output "Output: $output"
+        Write-Output "✓ List command passed"
     
     - name: Test - Create Locker (Automated)
+      id: test-create-locker
+      continue-on-error: true
       run: |
-        Write-Host "Testing locker creation..." -ForegroundColor Cyan
+        Write-Output "Testing locker creation..."
         $testDir = Join-Path $env:TEMP "e2e-test-locker-$(New-Guid)"
-        Write-Host "Creating locker at: $testDir" -ForegroundColor Gray
+        Write-Output "Creating locker at: $testDir"
         
         & ".\cli-publish\ColDogLocker.exe" new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
         
@@ -105,15 +114,21 @@ jobs:
           throw "Locker directory was not created"
         }
         
-        Write-Host "✓ Locker creation passed" -ForegroundColor Green
+        Write-Output "✓ Locker creation passed"
         
         # Save test dir for cleanup
         $testDir | Out-File -FilePath "test-locker-path.txt"
     
     - name: Test - Create Test Files
+      id: test-create-files
+      continue-on-error: true
       run: |
-        Write-Host "Creating test files in locker..." -ForegroundColor Cyan
-        $testDir = Get-Content "test-locker-path.txt"
+        Write-Output "Creating test files in locker..."
+        $testDir = Get-Content "test-locker-path.txt" -ErrorAction SilentlyContinue
+        if (-not $testDir) {
+          Write-Output "⚠ Cannot create test files - locker path not found"
+          exit 1
+        }
         
         # Create test files with known content
         "Secret Content 1" | Out-File -FilePath "$testDir\file1.txt" -Encoding UTF8
@@ -122,58 +137,72 @@ jobs:
         New-Item -ItemType Directory -Path "$testDir\subfolder" -Force | Out-Null
         "Secret Content 3" | Out-File -FilePath "$testDir\subfolder\file3.txt" -Encoding UTF8
         
-        Write-Host "✓ Test files created" -ForegroundColor Green
+        Write-Output "✓ Test files created"
     
     - name: Test - List Lockers
+      id: test-list-lockers
+      continue-on-error: true
       run: |
-        Write-Host "Testing list command (after creation)..." -ForegroundColor Cyan
+        Write-Output "Testing list command (after creation)..."
         $output = & ".\cli-publish\ColDogLocker.exe" list
         $outputText = $output -join "`n"
-        Write-Host "Output: $output" -ForegroundColor Gray
+        Write-Output "Output: $output"
         
         if ($outputText -notmatch "E2ETestLocker") {
           throw "Created locker not found in list"
         }
-        Write-Host "✓ List command shows created locker" -ForegroundColor Green
+        Write-Output "✓ List command shows created locker"
     
     - name: Test - Lock Locker
+      id: test-lock
+      continue-on-error: true
       run: |
-        Write-Host "Testing lock command..." -ForegroundColor Cyan
+        Write-Output "Testing lock command..."
         & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to lock locker (exit code: $LASTEXITCODE)"
         }
         
-        Write-Host "✓ Lock command passed" -ForegroundColor Green
+        Write-Output "✓ Lock command passed"
     
     - name: Test - Verify Locker is Locked
+      id: test-verify-locked
+      continue-on-error: true
       run: |
-        Write-Host "Verifying locker is locked..." -ForegroundColor Cyan
+        Write-Output "Verifying locker is locked..."
         $output = & ".\cli-publish\ColDogLocker.exe" status E2ETestLocker
         $outputText = $output -join "`n"
-        Write-Host "Status output: $output" -ForegroundColor Gray
+        Write-Output "Status output: $output"
         
         if ($outputText -notmatch "locked|Locked") {
           throw "Locker status does not show as locked"
         }
-        Write-Host "✓ Locker is locked" -ForegroundColor Green
+        Write-Output "✓ Locker is locked"
     
     - name: Test - Unlock Locker
+      id: test-unlock
+      continue-on-error: true
       run: |
-        Write-Host "Testing unlock command..." -ForegroundColor Cyan
+        Write-Output "Testing unlock command..."
         & ".\cli-publish\ColDogLocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to unlock locker (exit code: $LASTEXITCODE)"
         }
         
-        Write-Host "✓ Unlock command passed" -ForegroundColor Green
+        Write-Output "✓ Unlock command passed"
     
     - name: Test - Verify Files Intact
+      id: test-verify-files
+      continue-on-error: true
       run: |
-        Write-Host "Verifying files are intact after unlock..." -ForegroundColor Cyan
-        $testDir = Get-Content "test-locker-path.txt"
+        Write-Output "Verifying files are intact after unlock..."
+        $testDir = Get-Content "test-locker-path.txt" -ErrorAction SilentlyContinue
+        if (-not $testDir) {
+          Write-Output "⚠ Cannot verify files - locker path not found"
+          exit 1
+        }
         
         $content1 = Get-Content "$testDir\file1.txt" -Raw
         $content2 = Get-Content "$testDir\file2.txt" -Raw
@@ -189,11 +218,13 @@ jobs:
           throw "File3 content was corrupted"
         }
         
-        Write-Host "✓ All files intact after lock/unlock cycle" -ForegroundColor Green
+        Write-Output "✓ All files intact after lock/unlock cycle"
     
     - name: Test - Wrong Password
+      id: test-wrong-password
+      continue-on-error: true
       run: |
-        Write-Host "Testing lock with wrong password (should fail)..." -ForegroundColor Cyan
+        Write-Output "Testing lock with wrong password (should fail)..."
         & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "WrongPassword123!" 2>&1 | Out-Null
         $exitCode = $LASTEXITCODE
         
@@ -201,34 +232,38 @@ jobs:
           throw "Lock succeeded with wrong password - this should have failed!"
         }
         
-        Write-Host "✓ Wrong password correctly rejected (exit code: $exitCode)" -ForegroundColor Green
+        Write-Output "✓ Wrong password correctly rejected (exit code: $exitCode)"
         exit 0  # Reset exit code so GitHub Actions doesn't fail
     
     - name: Test - Remove Locker
+      id: test-remove
+      continue-on-error: true
       run: |
-        Write-Host "Testing remove command..." -ForegroundColor Cyan
-        Write-Host "Command: remove E2ETestLocker --force" -ForegroundColor Gray
+        Write-Output "Testing remove command..."
+        Write-Output "Command: remove E2ETestLocker --force"
         $output = & ".\cli-publish\ColDogLocker.exe" remove E2ETestLocker --force
-        Write-Host "Remove output: $output" -ForegroundColor Gray
-        Write-Host "Exit code: $LASTEXITCODE" -ForegroundColor Gray
+        Write-Output "Remove output: $output"
+        Write-Output "Exit code: $LASTEXITCODE"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to remove locker (exit code: $LASTEXITCODE)"
         }
         
-        Write-Host "✓ Remove command passed" -ForegroundColor Green
+        Write-Output "✓ Remove command passed"
     
     - name: Test - Verify Removal
+      id: test-verify-removal
+      continue-on-error: true
       run: |
-        Write-Host "Verifying locker was removed..." -ForegroundColor Cyan
+        Write-Output "Verifying locker was removed..."
         $output = & ".\cli-publish\ColDogLocker.exe" list
         $outputText = $output -join "`n"
-        Write-Host "Output: $output" -ForegroundColor Gray
+        Write-Output "Output: $output"
         
         if ($outputText -match "E2ETestLocker") {
           throw "Locker still appears in list after removal"
         }
-        Write-Host "✓ Locker successfully removed" -ForegroundColor Green
+        Write-Output "✓ Locker successfully removed"
     
     - name: Cleanup Test Directory
       if: always()
@@ -237,27 +272,56 @@ jobs:
           $testDir = Get-Content "test-locker-path.txt"
           if (Test-Path $testDir) {
             Remove-Item -Path $testDir -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "Cleaned up test directory: $testDir" -ForegroundColor Yellow
+            Write-Output "Cleaned up test directory: $testDir"
           }
         }
     
     - name: E2E Test Summary
       if: always()
       run: |
-        Write-Host ""
-        Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
-        Write-Host "  CLI End-to-End Tests Completed" -ForegroundColor Green
-        Write-Host "════════════════════════════════════════" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host "Tested workflows:" -ForegroundColor White
-        Write-Host "  ✓ Version and Help commands" -ForegroundColor Gray
-        Write-Host "  ✓ Locker creation" -ForegroundColor Gray
-        Write-Host "  ✓ File encryption (lock)" -ForegroundColor Gray
-        Write-Host "  ✓ File decryption (unlock)" -ForegroundColor Gray
-        Write-Host "  ✓ Data integrity after lock/unlock" -ForegroundColor Gray
-        Write-Host "  ✓ Password validation" -ForegroundColor Gray
-        Write-Host "  ✓ Locker removal" -ForegroundColor Gray
-        Write-Host ""
+        Write-Output ""
+        Write-Output "═══════════════════════════════════════════════════════"
+        Write-Output "           CLI End-to-End Test Results"
+        Write-Output "═══════════════════════════════════════════════════════"
+        Write-Output ""
+        
+        $tests = @(
+          @{Name="Version Command"; Result="${{ steps.test-version.outcome }}"},
+          @{Name="Help Command"; Result="${{ steps.test-help.outcome }}"},
+          @{Name="List Empty Lockers"; Result="${{ steps.test-list-empty.outcome }}"},
+          @{Name="Create Locker"; Result="${{ steps.test-create-locker.outcome }}"},
+          @{Name="Create Test Files"; Result="${{ steps.test-create-files.outcome }}"},
+          @{Name="List Lockers"; Result="${{ steps.test-list-lockers.outcome }}"},
+          @{Name="Lock Locker"; Result="${{ steps.test-lock.outcome }}"},
+          @{Name="Verify Locked"; Result="${{ steps.test-verify-locked.outcome }}"},
+          @{Name="Unlock Locker"; Result="${{ steps.test-unlock.outcome }}"},
+          @{Name="Verify Files Intact"; Result="${{ steps.test-verify-files.outcome }}"},
+          @{Name="Wrong Password Validation"; Result="${{ steps.test-wrong-password.outcome }}"},
+          @{Name="Remove Locker"; Result="${{ steps.test-remove.outcome }}"},
+          @{Name="Verify Removal"; Result="${{ steps.test-verify-removal.outcome }}"}
+        )
+        
+        $passed = 0
+        $failed = 0
+        $skipped = 0
+        
+        foreach ($test in $tests) {
+          $icon = switch ($test.Result) {
+            "success" { "✓"; $passed++; $icon }
+            "failure" { "✗"; $failed++; $icon }
+            "skipped" { "⊘"; $skipped++; $icon }
+            default { "?"; $icon }
+          }
+          Write-Output "  $icon $($test.Name): $($test.Result)"
+        }
+        
+        Write-Output ""
+        Write-Output "Summary: $passed passed, $failed failed, $skipped skipped"
+        Write-Output ""
+        
+        if ($failed -gt 0) {
+          exit 1
+        }
 
   test-summary:
     name: Test Summary
@@ -268,19 +332,26 @@ jobs:
     steps:
     - name: Overall Summary
       run: |
-        Write-Host ""
-        Write-Host "╔════════════════════════════════════════╗" -ForegroundColor Cyan
-        Write-Host "║      ColDog Locker - Test Summary      ║" -ForegroundColor Cyan
-        Write-Host "╚════════════════════════════════════════╝" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host "Unit Tests:        ${{ needs.unit-tests.result }}" -ForegroundColor $(if ("${{ needs.unit-tests.result }}" -eq "success") { "Green" } else { "Red" })
-        Write-Host "CLI E2E Tests:     ${{ needs.cli-e2e-tests.result }}" -ForegroundColor $(if ("${{ needs.cli-e2e-tests.result }}" -eq "success") { "Green" } else { "Red" })
-        Write-Host ""
+        Write-Output ""
+        Write-Output "╔════════════════════════════════════════╗"
+        Write-Output "║      ColDog Locker - Test Summary      ║"
+        Write-Output "╚════════════════════════════════════════╝"
+        Write-Output ""
         
-        if ("${{ needs.unit-tests.result }}" -eq "success" -and "${{ needs.cli-e2e-tests.result }}" -eq "success") {
-          Write-Host "✓ All tests passed!" -ForegroundColor Green
+        $unitResult = "${{ needs.unit-tests.result }}"
+        $e2eResult = "${{ needs.cli-e2e-tests.result }}"
+        
+        $unitIcon = if ($unitResult -eq "success") { "✓" } else { "✗" }
+        $e2eIcon = if ($e2eResult -eq "success") { "✓" } else { "✗" }
+        
+        Write-Output "Unit Tests:        $unitIcon $unitResult"
+        Write-Output "CLI E2E Tests:     $e2eIcon $e2eResult"
+        Write-Output ""
+        
+        if ($unitResult -eq "success" -and $e2eResult -eq "success") {
+          Write-Output "✓ All tests passed!"
           exit 0
         } else {
-          Write-Host "✗ Some tests failed" -ForegroundColor Red
+          Write-Output "✗ Some tests failed"
           exit 1
         }
