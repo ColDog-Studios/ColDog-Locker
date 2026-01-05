@@ -1,8 +1,8 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {
@@ -13,7 +13,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         public static Action<string>? ShowMenuTitle { get; set; }
 
         // Check for updates and prompt the user to download if a new version is available
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dynamic types are required for GitHub API response parsing")]
         public static async Task CheckForUpdatesAsync(bool hideUpToDateMessage)
         {
             // Show Update Menu
@@ -29,7 +28,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 client.DefaultRequestHeaders.Add("User-Agent", "request");
 
                 // Fetch the latest release information based on configured channel
-                dynamic? releaseInfo = await FetchLatestReleaseAsync(client);
+                GitHubRelease? releaseInfo = await FetchLatestReleaseAsync(client);
 
                 if (releaseInfo == null)
                 {
@@ -37,7 +36,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 }
 
                 // Extract the latest version from the release information
-                string latestVersion = releaseInfo.tag_name;
+                string latestVersion = releaseInfo.TagName;
 
                 // Display the menu title
                 ShowMenuTitle?.Invoke("Main Menu > Check for Updates");
@@ -61,16 +60,16 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                         string? hashUrl = null;
                         string? installerFileName = null;
 
-                        foreach (var asset in releaseInfo.assets)
+                        foreach (var asset in releaseInfo.Assets)
                         {
-                            if (asset.name.EndsWith(".exe") || asset.name.EndsWith(".msi"))
+                            if (asset.Name.EndsWith(".exe") || asset.Name.EndsWith(".msi"))
                             {
-                                downloadUrl = asset.browser_download_url;
-                                installerFileName = asset.name;
+                                downloadUrl = asset.BrowserDownloadUrl;
+                                installerFileName = asset.Name;
                             }
-                            else if (asset.name.EndsWith(".sha256"))
+                            else if (asset.Name.EndsWith(".sha256"))
                             {
-                                hashUrl = asset.browser_download_url;
+                                hashUrl = asset.BrowserDownloadUrl;
                             }
                         }
 
@@ -147,10 +146,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         // Fetch the latest release based on the configured update channel
-        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonConvert is needed for GitHub API deserialization")]
-        private static async Task<dynamic?> FetchLatestReleaseAsync(HttpClient client)
+        private static async Task<GitHubRelease?> FetchLatestReleaseAsync(HttpClient client)
         {
             var channel = Infrastructure.Configuration.SettingsManager.Settings.UpdateChannel;
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
 
             if (channel == Infrastructure.Configuration.UpdateChannel.Stable)
             {
@@ -158,7 +161,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
                 Logger.AddEntry("Checking for updates on Stable channel.", LogLevel.Info);
                 string json = await client.GetStringAsync(uri);
-                return JsonConvert.DeserializeObject(json);
+                return JsonSerializer.Deserialize<GitHubRelease>(json, options);
             }
             else
             {
@@ -166,9 +169,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
                 Logger.AddEntry("Checking for updates on Prerelease channel.", LogLevel.Info);
                 string json = await client.GetStringAsync(uri);
-                dynamic[]? releases = JsonConvert.DeserializeObject<dynamic[]>(json);
+                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, options);
                 
-                if (releases == null || releases.Length == 0)
+                if (releases == null || releases.Count == 0)
                 {
                     return null;
                 }
