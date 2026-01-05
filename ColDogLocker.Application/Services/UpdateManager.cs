@@ -1,6 +1,7 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
@@ -12,6 +13,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         public static Action<string>? ShowMenuTitle { get; set; }
 
         // Check for updates and prompt the user to download if a new version is available
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Dynamic types are required for GitHub API response parsing")]
         public static async Task CheckForUpdatesAsync(bool hideUpToDateMessage)
         {
             // Show Update Menu
@@ -145,6 +147,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         // Fetch the latest release based on the configured update channel
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JsonConvert is needed for GitHub API deserialization")]
         private static async Task<dynamic?> FetchLatestReleaseAsync(HttpClient client)
         {
             var channel = Infrastructure.Configuration.SettingsManager.Settings.UpdateChannel;

@@ -1,6 +1,7 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 {
@@ -13,6 +14,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         public static ApplicationSettings Settings { get; set; } = new ApplicationSettings();
 
         // Load settings from the configuration file
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for settings persistence")]
         public static void LoadSettings()
         {
             Logger.AddEntry("Loading settings.", LogLevel.Info);
@@ -116,6 +118,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         }
 
         // Save settings to the configuration file
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for settings persistence")]
         public static void SaveSettings()
         {
             try

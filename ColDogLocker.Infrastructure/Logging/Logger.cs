@@ -1,5 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
 using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
@@ -70,6 +71,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             // This will be used instead of the hardcoded default
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for log entries")]
         public static void AddEntry(string message, LogLevel level, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
         {
             // Check if the log level is enabled
@@ -192,6 +194,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         }
 
         // Direct logging method to avoid recursion during maintenance operations
+        [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for log entries")]
         private static void LogDirectly(string message, string level)
         {
             try
