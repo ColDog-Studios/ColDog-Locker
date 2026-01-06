@@ -108,7 +108,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                 try
                 {
                     // NDJSON format - each line is a separate JSON object
-                    string jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
+                    var jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
                     File.AppendAllText(_logFilePath, jsonLine + Environment.NewLine);
                 }
                 catch (Exception ex)
@@ -116,8 +116,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                     // If we can't log, try to write to a fallback file
                     try
                     {
-                        string fallbackPath = Path.Combine(_logDirectory, $"fallback_{_sessionId}.txt");
-                        string fallbackEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{level}] {message} (Logging Error: {ex.Message})";
+                        var fallbackPath = Path.Combine(_logDirectory, $"fallback_{_sessionId}.txt");
+                        var fallbackEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{level}] {message} (Logging Error: {ex.Message})";
                         File.AppendAllText(fallbackPath, fallbackEntry + Environment.NewLine);
                     }
                     catch
@@ -156,12 +156,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                     return;
                 }
 
-                DateTime cutoffDate = DateTime.Now.AddDays(-LogRetentionDays);
+                var cutoffDate = DateTime.Now.AddDays(-LogRetentionDays);
                 var allLogFiles = Directory.GetFiles(_logDirectory, "session_*.json")
                     .Concat(Directory.GetFiles(_logDirectory, "fallback_*.txt"))
                     .ToArray();
 
-                int totalDeleted = 0;
+                var totalDeleted = 0;
 
                 foreach (var logFile in allLogFiles)
                 {
@@ -211,7 +211,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
                 lock (_lockObject)
                 {
-                    string jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
+                    var jsonLine = JsonConvert.SerializeObject(logEntry, Formatting.None);
                     File.AppendAllText(_logFilePath, jsonLine + Environment.NewLine);
                 }
             }
@@ -222,7 +222,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         }
 
         // Helper method to get session information
-        public static string GetCurrentSessionId()
+        public static var GetCurrentSessionId()
         {
             return _sessionId;
         }

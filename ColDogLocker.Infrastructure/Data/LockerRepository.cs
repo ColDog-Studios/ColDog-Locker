@@ -7,8 +7,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
 {
     public static class LockerRepository
     {
-        private static readonly string DatabasePath = Path.Combine(Variables.localConfig, "lockers.db");
-        private static readonly string ConnectionString = $"Data Source={DatabasePath}";
+        private static readonly string _databasePath = Path.Combine(Variables.localConfig, "lockers.db");
+        private static readonly string _connectionString = $"Data Source={_databasePath}";
 
         /// <summary>
         /// Initialize the database and create the lockers table if it doesn't exist
@@ -17,7 +17,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -51,7 +51,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
 
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -90,7 +90,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -127,7 +127,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -164,7 +164,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -201,7 +201,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -244,7 +244,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -275,7 +275,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -302,24 +302,24 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                 long sizeBefore = 0;
                 long sizeAfter = 0;
 
-                if (File.Exists(DatabasePath))
+                if (File.Exists(_databasePath))
                 {
-                    sizeBefore = new FileInfo(DatabasePath).Length;
+                    sizeBefore = new FileInfo(_databasePath).Length;
                 }
 
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
                 command.CommandText = "VACUUM";
                 command.ExecuteNonQuery();
 
-                if (File.Exists(DatabasePath))
+                if (File.Exists(_databasePath))
                 {
-                    sizeAfter = new FileInfo(DatabasePath).Length;
+                    sizeAfter = new FileInfo(_databasePath).Length;
                 }
 
-                long reclaimed = sizeBefore - sizeAfter;
+                var reclaimed = sizeBefore - sizeAfter;
                 Logger.AddEntry($"Database vacuumed. Size before: {sizeBefore} bytes, after: {sizeAfter} bytes. Reclaimed: {reclaimed} bytes.", LogLevel.Info);
 
                 return reclaimed;
@@ -340,8 +340,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             {
                 var info = new DatabaseInfo
                 {
-                    Path = DatabasePath,
-                    Exists = File.Exists(DatabasePath)
+                    Path = _databasePath,
+                    Exists = File.Exists(_databasePath)
                 };
 
                 if (!info.Exists)
@@ -349,12 +349,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     return info;
                 }
 
-                var fileInfo = new FileInfo(DatabasePath);
+                var fileInfo = new FileInfo(_databasePath);
                 info.SizeBytes = fileInfo.Length;
                 info.Created = fileInfo.CreationTime;
                 info.LastModified = fileInfo.LastWriteTime;
 
-                using var connection = new SqliteConnection(ConnectionString);
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 // Get locker count

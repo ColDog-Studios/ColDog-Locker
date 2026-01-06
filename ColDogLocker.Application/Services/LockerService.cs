@@ -94,14 +94,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
 
             // Rename the locker directory to be prefixed with a period
-            string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
+            var lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
                 Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            string newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
+            var newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
             Directory.Move(locker.LockerLocation, newLockerLocation);
 
             // Encrypt the locker directory
@@ -138,14 +138,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
 
             // Rename the locker directory to remove the period prefix and verify it is not null
-            string? lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
+            var lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
                 Logger.AddEntry($"Invalid locker location: {locker.LockerLocation}", LogLevel.Error);
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            string newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
+            var newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
             Directory.Move(locker.LockerLocation, newLockerLocation);
 
             // Decrypt the locker directory
@@ -237,8 +237,8 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             {
                 // Check directory attributes
                 var attributes = File.GetAttributes(locker.LockerLocation);
-                bool isHidden = (attributes & FileAttributes.Hidden) == FileAttributes.Hidden;
-                bool isSystem = (attributes & FileAttributes.System) == FileAttributes.System;
+                var isHidden = (attributes & FileAttributes.Hidden) == FileAttributes.Hidden;
+                var isSystem = (attributes & FileAttributes.System) == FileAttributes.System;
 
                 if (locker.IsLocked)
                 {
@@ -249,7 +249,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     }
 
                     // Check if directory name starts with period
-                    string dirName = Path.GetFileName(locker.LockerLocation);
+                    var dirName = Path.GetFileName(locker.LockerLocation);
                     if (!dirName.StartsWith('.'))
                     {
                         result.AddWarning("Locked locker directory name should start with period");
@@ -264,7 +264,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     }
 
                     // Check if directory name starts with period
-                    string dirName = Path.GetFileName(locker.LockerLocation);
+                    var dirName = Path.GetFileName(locker.LockerLocation);
                     if (dirName.StartsWith('.'))
                     {
                         result.AddWarning("Unlocked locker directory name should not start with period");

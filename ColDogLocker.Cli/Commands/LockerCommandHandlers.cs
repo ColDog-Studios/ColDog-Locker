@@ -30,7 +30,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             string? providedPassword = null;
 
             // Parse optional parameters
-            for (int i = 2; i < args.Length; i++)
+            for (var i = 2; i < args.Length; i++)
             {
                 if (args[i] == "--path" && i + 1 < args.Length)
                 {
@@ -45,7 +45,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Determine locker location
-            string lockerLocation = customPath != null
+            var lockerLocation = customPath is not null
                 ? Path.Combine(customPath, lockerName)
                 : Path.Combine(Variables.cdlDir, lockerName);
 
@@ -110,7 +110,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 }
 
                 Console.Write("Confirm password: ");
-                string confirmPassword = ConsoleHelper.ReadPassword();
+                var confirmPassword = ConsoleHelper.ReadPassword();
 
                 if (password != confirmPassword)
                 {
@@ -122,7 +122,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Create the locker
             try
             {
-                string passwordHash = EncryptionHelper.HashPassword(password);
+                var passwordHash = EncryptionHelper.HashPassword(password);
                 var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
 
                 LockerService.AddLocker(locker);
@@ -158,7 +158,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;
@@ -184,7 +184,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 }
 
                 var confirmation = Console.ReadLine()?.Trim().ToLowerInvariant();
-                if (confirmation != "y" && confirmation != "yes")
+                if (confirmation is not "y" and not "yes")
                 {
                     Console.WriteLine("Operation cancelled.");
                     return 0;
@@ -240,7 +240,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             string? password = null;
 
             // Parse optional --password parameter
-            for (int i = 2; i < args.Length; i++)
+            for (var i = 2; i < args.Length; i++)
             {
                 if (args[i] == "--password" && i + 1 < args.Length)
                 {
@@ -253,7 +253,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;
@@ -316,7 +316,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             string? password = null;
 
             // Parse optional --password parameter
-            for (int i = 2; i < args.Length; i++)
+            for (var i = 2; i < args.Length; i++)
             {
                 if (args[i] == "--password" && i + 1 < args.Length)
                 {
@@ -329,7 +329,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;
@@ -406,11 +406,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             if (lockerList.Count == 0)
             {
-                if (filterLocked == true)
+                if (filterLocked is true)
                 {
                     Console.WriteLine("No locked lockers found.");
                 }
-                else if (filterLocked == false)
+                else if (filterLocked is false)
                 {
                     Console.WriteLine("No unlocked lockers found.");
                 }
@@ -454,7 +454,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;
@@ -474,8 +474,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
 
                 // Count files
-                int fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
-                int folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
+                var fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
+                var folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
                 Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
             }
             else
@@ -505,7 +505,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;
@@ -520,7 +520,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             // Get old password
             Console.Write("Enter current password: ");
-            string oldPassword = ConsoleHelper.ReadPassword();
+            var oldPassword = ConsoleHelper.ReadPassword();
 
             if (string.IsNullOrEmpty(oldPassword))
             {
@@ -562,7 +562,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             Console.Write("Confirm new password: ");
-            string confirmPassword = ConsoleHelper.ReadPassword();
+            var confirmPassword = ConsoleHelper.ReadPassword();
 
             if (newPassword != confirmPassword)
             {
@@ -610,7 +610,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var locker = LockerService.Lockers.FirstOrDefault(l =>
                 l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
 
-            if (locker == null)
+            if (locker is null)
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' not found.");
                 return 1;

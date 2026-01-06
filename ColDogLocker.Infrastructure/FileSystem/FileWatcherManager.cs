@@ -5,10 +5,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
 {
     public static class FileWatcherManager
     {
-        private static FileSystemWatcher? settingsWatcher;
-        private static FileSystemWatcher? lockersWatcher;
-        private static DateTime lastSettingsReload = DateTime.MinValue;
-        private static readonly TimeSpan ReloadCooldown = TimeSpan.FromMilliseconds(500); // Prevent reload spam
+        private static FileSystemWatcher? _settingsWatcher;
+        private static FileSystemWatcher? _lockersWatcher;
+        private static DateTime _lastSettingsReload = DateTime.MinValue;
+        private static readonly TimeSpan _reloadCooldown = TimeSpan.FromMilliseconds(500); // Prevent reload spam
 
         // Delegates for handling file changes (to avoid circular dependencies)
         public static Action? OnSettingsFileChanged { get; set; }
@@ -25,7 +25,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 }
 
                 // Initialize settings file watcher
-                settingsWatcher = new FileSystemWatcher
+                _settingsWatcher = new FileSystemWatcher
                 {
                     Path = Variables.localConfig,
                     Filter = "settings.json",
@@ -33,15 +33,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                     IncludeSubdirectories = false,
                     InternalBufferSize = 64 * 1024 // 64 KB buffer size
                 };
-                settingsWatcher.Changed += OnSettingsChanged;
-                settingsWatcher.Created += OnSettingsChanged;
-                settingsWatcher.Deleted += OnSettingsChanged;
-                settingsWatcher.Renamed += OnSettingsChanged;
-                settingsWatcher.Error += OnWatcherError;
-                settingsWatcher.EnableRaisingEvents = true;
+                _settingsWatcher.Changed += OnSettingsChanged;
+                _settingsWatcher.Created += OnSettingsChanged;
+                _settingsWatcher.Deleted += OnSettingsChanged;
+                _settingsWatcher.Renamed += OnSettingsChanged;
+                _settingsWatcher.Error += OnWatcherError;
+                _settingsWatcher.EnableRaisingEvents = true;
 
                 // Initialize lockers file watcher
-                lockersWatcher = new FileSystemWatcher
+                _lockersWatcher = new FileSystemWatcher
                 {
                     Path = Variables.localConfig,
                     Filter = "lockers.json",
@@ -49,12 +49,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                     IncludeSubdirectories = false,
                     InternalBufferSize = 64 * 1024 // 64 KB buffer size
                 };
-                lockersWatcher.Changed += OnLockersChanged;
-                lockersWatcher.Created += OnLockersChanged;
-                lockersWatcher.Deleted += OnLockersChanged;
-                lockersWatcher.Renamed += OnLockersChanged;
-                lockersWatcher.Error += OnWatcherError;
-                lockersWatcher.EnableRaisingEvents = true;
+                _lockersWatcher.Changed += OnLockersChanged;
+                _lockersWatcher.Created += OnLockersChanged;
+                _lockersWatcher.Deleted += OnLockersChanged;
+                _lockersWatcher.Renamed += OnLockersChanged;
+                _lockersWatcher.Error += OnWatcherError;
+                _lockersWatcher.EnableRaisingEvents = true;
             }
             catch (Exception ex)
             {
@@ -65,13 +65,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
         private static void OnSettingsChanged(object sender, FileSystemEventArgs e)
         {
             // Debounce rapid file changes to prevent infinite reload loops
-            DateTime now = DateTime.Now;
-            if (now - lastSettingsReload < ReloadCooldown)
+            var now = DateTime.Now;
+            if (now - _lastSettingsReload < _reloadCooldown)
             {
                 return; // Too soon since last reload, skip this one
             }
 
-            lastSettingsReload = now;
+            _lastSettingsReload = now;
             Logger.AddEntry("Settings file changed. Reloading settings.", LogLevel.Info);
             OnSettingsFileChanged?.Invoke();
         }
@@ -91,8 +91,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
         {
             try
             {
-                settingsWatcher?.Dispose();
-                lockersWatcher?.Dispose();
+                _settingsWatcher?.Dispose();
+                _lockersWatcher?.Dispose();
                 Logger.AddEntry("File watchers disposed successfully.", LogLevel.Info);
             }
             catch (Exception ex)

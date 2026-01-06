@@ -15,7 +15,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             try
             {
                 Console.WriteLine("Vacuuming database...");
-                long reclaimed = LockerRepository.VacuumDatabase();
+                var reclaimed = LockerRepository.VacuumDatabase();
 
                 // Update last vacuum time
                 SettingsManager.Settings.LastDatabaseVacuum = DateTime.Now;

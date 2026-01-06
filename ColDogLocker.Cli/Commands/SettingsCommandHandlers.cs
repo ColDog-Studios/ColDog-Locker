@@ -34,20 +34,16 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     case "debug":
                         Console.WriteLine($"Debug Mode: {SettingsManager.Settings.DebugMode}");
                         return 0;
-                    case "log-retention":
-                    case "logretention":
+                    case "log-retention" or "logretention":
                         Console.WriteLine($"Log Retention Days: {SettingsManager.Settings.LogRetentionDays}");
                         return 0;
-                    case "auto-update":
-                    case "autoupdate":
+                    case "auto-update" or "autoupdate":
                         Console.WriteLine($"Auto Update: {SettingsManager.Settings.AutoUpdate}");
                         return 0;
-                    case "update-channel":
-                    case "updatechannel":
+                    case "update-channel" or "updatechannel":
                         Console.WriteLine($"Update Channel: {SettingsManager.Settings.UpdateChannel}");
                         return 0;
-                    case "db-vacuum-interval":
-                    case "vacuuminterval":
+                    case "db-vacuum-interval" or "vacuuminterval":
                         Console.WriteLine($"Database Vacuum Interval: {SettingsManager.Settings.DatabaseVacuumInterval} days");
                         return 0;
                     default:
@@ -65,7 +61,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 switch (key)
                 {
                     case "debug":
-                        if (bool.TryParse(value, out bool debugMode))
+                        if (bool.TryParse(value, out var debugMode))
                         {
                             SettingsManager.Settings.DebugMode = debugMode;
                             Logger.SetDebugMode(debugMode);
@@ -79,9 +75,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
                         return 1;
 
-                    case "log-retention":
-                    case "logretention":
-                        if (int.TryParse(value, out int retention) && retention > 0 && retention <= 3650)
+                    case "log-retention" or "logretention":
+                        if (int.TryParse(value, out var retention) && retention > 0 && retention <= 3650)
                         {
                             SettingsManager.Settings.LogRetentionDays = retention;
                             Logger.SetLogRetentionDays(retention);
@@ -95,9 +90,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.Error.WriteLine("Error: Invalid value. Must be between 1 and 3650 days.");
                         return 1;
 
-                    case "auto-update":
-                    case "autoupdate":
-                        if (bool.TryParse(value, out bool autoUpdate))
+                    case "auto-update" or "autoupdate":
+                        if (bool.TryParse(value, out var autoUpdate))
                         {
                             SettingsManager.Settings.AutoUpdate = autoUpdate;
                             SettingsManager.SaveSettings();
@@ -110,9 +104,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
                         return 1;
 
-                    case "db-vacuum-interval":
-                    case "vacuuminterval":
-                        if (int.TryParse(value, out int interval) && interval >= 0 && interval <= 365)
+                    case "db-vacuum-interval" or "vacuuminterval":
+                        if (int.TryParse(value, out var interval) && interval >= 0 && interval <= 365)
                         {
                             SettingsManager.Settings.DatabaseVacuumInterval = interval;
                             SettingsManager.SaveSettings();
@@ -125,9 +118,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.Error.WriteLine("Error: Invalid value. Must be between 0 and 365 days.");
                         return 1;
 
-                    case "update-channel":
-                    case "updatechannel":
-                        if (value == "stable" || value == "s")
+                    case "update-channel" or "updatechannel":
+                        if (value is "stable" or "s")
                         {
                             SettingsManager.Settings.UpdateChannel = UpdateChannel.Stable;
                             SettingsManager.SaveSettings();
@@ -136,7 +128,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             Console.ResetColor();
                             return 0;
                         }
-                        else if (value == "prerelease" || value == "pre" || value == "p")
+                        else if (value is "prerelease" or "pre" or "p")
                         {
                             SettingsManager.Settings.UpdateChannel = UpdateChannel.Prerelease;
                             SettingsManager.SaveSettings();

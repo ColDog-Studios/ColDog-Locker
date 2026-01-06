@@ -8,7 +8,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
     public static class SettingsManager
     {
         // Path to the settings file
-        private static readonly string settingsFile = Path.Combine(Variables.localConfig, "settings.json");
+        private static readonly string _settingsFile = Path.Combine(Variables.localConfig, "settings.json");
 
         // Property to hold the application settings
         public static ApplicationSettings Settings { get; set; } = new ApplicationSettings();
@@ -19,12 +19,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             Logger.AddEntry("Loading settings.", LogLevel.Info);
 
-            if (File.Exists(settingsFile))
+            if (File.Exists(_settingsFile))
             {
                 try
                 {
                     // Read and deserialize the settings file
-                    var settingsContent = File.ReadAllText(settingsFile);
+                    var settingsContent = File.ReadAllText(_settingsFile);
 
                     // Check if the file is empty or just whitespace
                     if (string.IsNullOrWhiteSpace(settingsContent))
@@ -97,10 +97,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 return;
             }
 
-            bool settingsChanged = false;
+            var settingsChanged = false;
 
             // Validate LogRetentionDays with reasonable bounds
-            if (Settings.LogRetentionDays <= 0 || Settings.LogRetentionDays > 3650) // Max 10 years
+            if (Settings.LogRetentionDays is <= 0 or > 3650) // Max 10 years
             {
                 Logger.AddEntry($"Invalid LogRetentionDays ({Settings.LogRetentionDays}). Setting to default value (30 days).", LogLevel.Warning);
                 Settings.LogRetentionDays = 30;
@@ -124,14 +124,14 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             try
             {
                 // Ensure the directory exists
-                var directory = Path.GetDirectoryName(settingsFile);
+                var directory = Path.GetDirectoryName(_settingsFile);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     Directory.CreateDirectory(directory);
                 }
 
                 // Create a temporary file first to ensure atomic writes
-                var tempFile = settingsFile + ".tmp";
+                var tempFile = _settingsFile + ".tmp";
                 var jsonContent = JsonConvert.SerializeObject(Settings, Formatting.Indented);
 
                 // Validate the JSON before writing (extra safety check)
@@ -141,13 +141,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 File.WriteAllText(tempFile, jsonContent);
 
                 // Atomic replacement - if this fails, original file is still intact
-                if (File.Exists(settingsFile))
+                if (File.Exists(_settingsFile))
                 {
-                    File.Replace(tempFile, settingsFile, null);
+                    File.Replace(tempFile, _settingsFile, null);
                 }
                 else
                 {
-                    File.Move(tempFile, settingsFile);
+                    File.Move(tempFile, _settingsFile);
                 }
 
                 Logger.AddEntry("Settings saved successfully.", LogLevel.Success);
@@ -179,7 +179,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             try
             {
-                var tempFile = settingsFile + ".tmp";
+                var tempFile = _settingsFile + ".tmp";
                 if (File.Exists(tempFile))
                 {
                     File.Delete(tempFile);
@@ -196,11 +196,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             try
             {
-                if (File.Exists(settingsFile))
+                if (File.Exists(_settingsFile))
                 {
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                     var backupFile = Path.Combine(Variables.localConfig, $"settings_corrupted_{timestamp}.json.bak");
-                    File.Copy(settingsFile, backupFile, true);
+                    File.Copy(_settingsFile, backupFile, true);
                     Logger.AddEntry($"Corrupted settings file backed up to: {backupFile}", LogLevel.Info);
                 }
             }

@@ -28,15 +28,10 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 client.DefaultRequestHeaders.Add("User-Agent", "request");
 
                 // Fetch the latest release information based on configured channel
-                GitHubRelease? releaseInfo = await FetchLatestReleaseAsync(client);
-
-                if (releaseInfo == null)
-                {
-                    throw new Exception("Failed to retrieve release information.");
-                }
+                var releaseInfo = await FetchLatestReleaseAsync(client) ?? throw new Exception("Failed to retrieve release information.");
 
                 // Extract the latest version from the release information
-                string latestVersion = releaseInfo.TagName;
+                var latestVersion = releaseInfo.TagName;
 
                 // Display the menu title
                 ShowMenuTitle?.Invoke("Main Menu > Check for Updates");
@@ -45,7 +40,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 if (new Version(latestVersion) > new Version(BuildInfo.Version))
                 {
                     // Prompt the user to download the latest version
-                    string message = $"A newer version is available:\n\n" +
+                    var message = $"A newer version is available:\n\n" +
                                      $"Current Version: {BuildInfo.Version}\n" +
                                      $"Latest Version: {latestVersion}\n\n" +
                                      "Do you want to download the latest version? (y/N): ";
@@ -88,19 +83,19 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                         }
 
                         // Download the hash file
-                        string hashContent = await client.GetStringAsync(hashUrl);
-                        string expectedHash = hashContent.Split(' ')[0];
+                        var hashContent = await client.GetStringAsync(hashUrl);
+                        var expectedHash = hashContent.Split(' ')[0];
 
                         // Download the installer
-                        string downloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
-                        string fileName = Path.Combine(downloadDirectory, installerFileName);
+                        var downloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+                        var fileName = Path.Combine(downloadDirectory, installerFileName);
 
-                        byte[] fileBytes = await client.GetByteArrayAsync(downloadUrl);
+                        var fileBytes = await client.GetByteArrayAsync(downloadUrl);
                         await File.WriteAllBytesAsync(fileName, fileBytes);
 
                         // Verify the hash
-                        byte[] fileHashBytes = SHA256.HashData(fileBytes);
-                        string fileHash = Convert.ToHexStringLower(fileHashBytes);
+                        var fileHashBytes = SHA256.HashData(fileBytes);
+                        var fileHash = Convert.ToHexStringLower(fileHashBytes);
 
                         // Delete the file if the hash does not match
                         if (fileHash != expectedHash)
@@ -122,7 +117,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 else
                 {
                     // Log and optionally display a message if the application is up to date
-                    string message = $"ColDog Locker is up to date:\n\n" +
+                    var message = $"ColDog Locker is up to date:\n\n" +
                                      $"Current Version: {BuildInfo.Version}\n" +
                                      $"Latest Version: {latestVersion}";
 
@@ -158,17 +153,17 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             if (channel == Infrastructure.Configuration.UpdateChannel.Stable)
             {
                 // Use /releases/latest for stable releases only
-                string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
+                var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
                 Logger.AddEntry("Checking for updates on Stable channel.", LogLevel.Info);
-                string json = await client.GetStringAsync(uri);
+                var json = await client.GetStringAsync(uri);
                 return JsonSerializer.Deserialize<GitHubRelease>(json, options);
             }
             else
             {
                 // Use /releases and get the first item (most recent, including prereleases)
-                string uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
+                var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
                 Logger.AddEntry("Checking for updates on Prerelease channel.", LogLevel.Info);
-                string json = await client.GetStringAsync(uri);
+                var json = await client.GetStringAsync(uri);
                 var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, options);
 
                 if (releases == null || releases.Count == 0)

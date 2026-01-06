@@ -11,13 +11,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static void EncryptDirectory(string directory, string password)
         {
             // Encrypt each file in the directory
-            foreach (string file in Directory.GetFiles(directory))
+            foreach (var file in Directory.GetFiles(directory))
             {
                 EncryptFile(file, password);
             }
 
             // Recursively encrypt each subdirectory
-            foreach (string subDirectory in Directory.GetDirectories(directory))
+            foreach (var subDirectory in Directory.GetDirectories(directory))
             {
                 EncryptDirectory(subDirectory, password);
             }
@@ -42,15 +42,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             }
 
             // Create AES encryption object
-            using Aes aes = Aes.Create();
+            using var aes = Aes.Create();
 
             // Generate a random salt for this file
-            byte[] salt = new byte[SaltSize];
+            var salt = new byte[SaltSize];
             using var rng = RandomNumberGenerator.Create();
             rng.GetBytes(salt);
 
             // Generate key and IV from password using the random salt
-            byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+            var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
             aes.Key = keyAndIv[..32];
             aes.IV = keyAndIv[32..];
 
@@ -61,7 +61,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             fsCrypt.Write(salt, 0, salt.Length);
 
             using CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write);
-            byte[] buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize];
             int read;
 
             // Read from input file and write encrypted data to output file
@@ -79,13 +79,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static void DecryptDirectory(string directory, string password)
         {
             // Decrypt each file in the directory
-            foreach (string file in Directory.GetFiles(directory))
+            foreach (var file in Directory.GetFiles(directory))
             {
                 DecryptFile(file, password);
             }
 
             // Recursively decrypt each subdirectory
-            foreach (string subDirectory in Directory.GetDirectories(directory))
+            foreach (var subDirectory in Directory.GetDirectories(directory))
             {
                 DecryptDirectory(subDirectory, password);
             }
@@ -110,7 +110,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             }
 
             // Create AES decryption object
-            using Aes aes = Aes.Create();
+            using var aes = Aes.Create();
 
             // Open encrypted input file and read the salt
             using FileStream fsCrypt = new(inputFile, FileMode.Open);
@@ -121,21 +121,21 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             }
 
             // Read the salt from the beginning of the file
-            byte[] salt = new byte[SaltSize];
-            int bytesRead = fsCrypt.Read(salt, 0, salt.Length);
+            var salt = new byte[SaltSize];
+            var bytesRead = fsCrypt.Read(salt, 0, salt.Length);
             if (bytesRead != SaltSize)
             {
                 throw new InvalidDataException("Unable to read salt from encrypted file.");
             }
 
             // Generate key and IV from password using the stored salt
-            byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+            var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
             aes.Key = keyAndIv[..32];
             aes.IV = keyAndIv[32..];
 
             using CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read);
             using FileStream fsOut = new(inputFile + ".dec", FileMode.Create);
-            byte[] buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize];
             int read;
 
             // Read from encrypted file and write decrypted data to output file
