@@ -1,7 +1,7 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
-using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 {
@@ -152,7 +152,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             try
             {
                 if (!Directory.Exists(_logDirectory))
+                {
                     return;
+                }
 
                 DateTime cutoffDate = DateTime.Now.AddDays(-LogRetentionDays);
                 var allLogFiles = Directory.GetFiles(_logDirectory, "session_*.json")

@@ -23,7 +23,9 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         public static void SecurityCheck(string password)
         {
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.");
+            }
 
             for (int i = 0; i < SecurityRules.Count; i++)
             {
@@ -37,7 +39,9 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         public static void IllegalWordCheck(string password)
         {
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.");
+            }
 
             // List of illegal words
             string[] illegalWords =

@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 {

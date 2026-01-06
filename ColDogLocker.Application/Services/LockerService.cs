@@ -82,7 +82,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         {
             ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            }
 
             // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
@@ -124,7 +126,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         {
             ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            }
 
             // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
@@ -166,9 +170,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         {
             ArgumentNullException.ThrowIfNull(locker);
             if (string.IsNullOrEmpty(oldPassword))
+            {
                 throw new ArgumentException("Old password cannot be null or empty.", nameof(oldPassword));
+            }
+
             if (string.IsNullOrEmpty(newPassword))
+            {
                 throw new ArgumentException("New password cannot be null or empty.", nameof(newPassword));
+            }
 
             // Verify the old password
             if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))

@@ -134,6 +134,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         // Remove locker from the metadata
                         LockerService.RemoveLocker(locker);
                     }
+
                     return;
                 }
 

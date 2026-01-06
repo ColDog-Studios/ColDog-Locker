@@ -27,11 +27,19 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static void EncryptFile(string inputFile, string password)
         {
             if (string.IsNullOrEmpty(inputFile))
+            {
                 throw new ArgumentException("Input file path cannot be null or empty.", nameof(inputFile));
+            }
+
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            }
+
             if (!File.Exists(inputFile))
+            {
                 throw new FileNotFoundException($"Input file not found: {inputFile}");
+            }
 
             // Create AES encryption object
             using Aes aes = Aes.Create();
@@ -87,11 +95,19 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static void DecryptFile(string inputFile, string password)
         {
             if (string.IsNullOrEmpty(inputFile))
+            {
                 throw new ArgumentException("Input file path cannot be null or empty.", nameof(inputFile));
+            }
+
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            }
+
             if (!File.Exists(inputFile))
+            {
                 throw new FileNotFoundException($"Input file not found: {inputFile}");
+            }
 
             // Create AES decryption object
             using Aes aes = Aes.Create();
@@ -100,13 +116,17 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
             using FileStream fsCrypt = new(inputFile, FileMode.Open);
             // Verify file is large enough to contain salt
             if (fsCrypt.Length < SaltSize)
+            {
                 throw new InvalidDataException("File is too small to contain encryption data.");
+            }
 
             // Read the salt from the beginning of the file
             byte[] salt = new byte[SaltSize];
             int bytesRead = fsCrypt.Read(salt, 0, salt.Length);
             if (bytesRead != SaltSize)
+            {
                 throw new InvalidDataException("Unable to read salt from encrypted file.");
+            }
 
             // Generate key and IV from password using the stored salt
             byte[] keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
@@ -133,7 +153,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static string HashPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            }
 
             // Cost factor of 14 provides enhanced security vs performance trade-off
             return BCrypt.Net.BCrypt.HashPassword(password, 14); // 12-13 recommended
@@ -143,7 +165,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Encryption
         public static bool VerifyPassword(string password, string hash)
         {
             if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
+            {
                 return false;
+            }
 
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }

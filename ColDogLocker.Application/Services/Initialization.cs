@@ -19,6 +19,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Directory.CreateDirectory(Variables.localConfig);
                 Logger.AddEntry($"Created directory: {Variables.localConfig}", LogLevel.Info);
             }
+
             if (!Directory.Exists(Path.Combine(Variables.localConfig, "logs")))
             {
                 Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));

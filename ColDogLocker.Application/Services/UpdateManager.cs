@@ -1,8 +1,8 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using System.Security.Cryptography;
-using System.Text.Json;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
 {
@@ -170,7 +170,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 Logger.AddEntry("Checking for updates on Prerelease channel.", LogLevel.Info);
                 string json = await client.GetStringAsync(uri);
                 var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, options);
-                
+
                 if (releases == null || releases.Count == 0)
                 {
                     return null;
