@@ -222,7 +222,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         }
 
         // Helper method to get session information
-        public static var GetCurrentSessionId()
+        public static string GetCurrentSessionId()
         {
             return _sessionId;
         }
