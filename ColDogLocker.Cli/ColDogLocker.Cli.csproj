@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>ColDogStudios.ColDogLocker.Cli</RootNamespace>
-    <AssemblyName>ColDogLocker</AssemblyName>
+    <AssemblyName>cdlocker</AssemblyName>
     
     <!-- Single File Publishing -->
     <PublishSingleFile>true</PublishSingleFile>

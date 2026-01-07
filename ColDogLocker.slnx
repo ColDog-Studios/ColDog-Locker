@@ -4,10 +4,7 @@
   <Project Path="ColDogLocker.Cli/ColDogLocker.Cli.csproj" />
   <Project Path="ColDogLocker.Core.Tests/ColDogLocker.Core.Tests.csproj" />
   <Project Path="ColDogLocker.Core/ColDogLocker.Core.csproj" />
-  <Project Path="ColDogLocker.Gui.WinUI/ColDogLocker.Gui.WinUI.csproj" Id="71bb4e0e-7e72-4de4-835a-2833567de0c1">
-    <Platform Project="x64" />
-    <Deploy />
-  </Project>
+  <Project Path="ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj" Id="16cced71-e057-4a5e-9649-b580f104945c" />
   <Project Path="ColDogLocker.Gui/ColDogLocker.Gui.csproj" />
   <Project Path="ColDogLocker.Infrastructure.Tests/ColDogLocker.Infrastructure.Tests.csproj" />
   <Project Path="ColDogLocker.Infrastructure/ColDogLocker.Infrastructure.csproj" />
