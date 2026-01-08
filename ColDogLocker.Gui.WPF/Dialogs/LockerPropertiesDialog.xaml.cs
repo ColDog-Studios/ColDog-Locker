@@ -143,16 +143,15 @@ public partial class LockerPropertiesDialog : Window
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        var dialog = new Microsoft.Win32.OpenFolderDialog
         {
-            Description = "Select new location for locker",
-            ShowNewFolderButton = false,
-            SelectedPath = _locker.LockerLocation
+            Title = "Select new location for locker",
+            InitialDirectory = _locker.LockerLocation
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        if (dialog.ShowDialog() == true)
         {
-            LocationTextBox.Text = dialog.SelectedPath;
+            LocationTextBox.Text = dialog.FolderName;
             _hasChanges = LocationTextBox.Text != _locker.LockerLocation;
             SaveButton.IsEnabled = _hasChanges;
         }

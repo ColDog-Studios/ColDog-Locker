@@ -41,23 +41,22 @@ public partial class NewLockerDialog : Window
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        var dialog = new Microsoft.Win32.OpenFolderDialog
         {
-            Description = "Select folder to lock",
-            ShowNewFolderButton = true,
-            RootFolder = Environment.SpecialFolder.MyDocuments
+            Title = "Select folder to lock",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        if (dialog.ShowDialog() == true)
         {
-            LocationTextBox.Text = dialog.SelectedPath;
-            Location = dialog.SelectedPath;
+            LocationTextBox.Text = dialog.FolderName;
+            Location = dialog.FolderName;
             LocationErrorText.Visibility = Visibility.Collapsed;
 
             // Auto-fill locker name if empty
             if (string.IsNullOrWhiteSpace(LockerNameTextBox.Text))
             {
-                LockerNameTextBox.Text = Path.GetFileName(dialog.SelectedPath);
+                LockerNameTextBox.Text = Path.GetFileName(dialog.FolderName);
             }
 
             UpdateCreateButtonState();

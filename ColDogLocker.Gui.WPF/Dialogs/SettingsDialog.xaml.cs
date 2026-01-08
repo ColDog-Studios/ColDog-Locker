@@ -82,16 +82,15 @@ public partial class SettingsDialog : Window
 
     private void BrowseDefaultLocation_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new System.Windows.Forms.FolderBrowserDialog
+        var dialog = new Microsoft.Win32.OpenFolderDialog
         {
-            Description = "Select default locker folder",
-            ShowNewFolderButton = true,
-            SelectedPath = DefaultLocationTextBox.Text
+            Title = "Select default locker folder",
+            InitialDirectory = DefaultLocationTextBox.Text
         };
 
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        if (dialog.ShowDialog() == true)
         {
-            DefaultLocationTextBox.Text = dialog.SelectedPath;
+            DefaultLocationTextBox.Text = dialog.FolderName;
             _hasChanges = true;
         }
     }
