@@ -26,13 +26,23 @@ public partial class MainWindow : Window
         // Set window icon
         try
         {
-            var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "cdlIcon.ico");
-            if (System.IO.File.Exists(iconPath))
-            {
-                Icon = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconPath, UriKind.Absolute));
-            }
+            // Use pack URI for the window icon (taskbar)
+            var iconUri = new Uri("pack://application:,,,/cdlIcon.ico", UriKind.Absolute);
+            Icon = new System.Windows.Media.Imaging.BitmapImage(iconUri);
         }
-        catch { }
+        catch
+        {
+            // Fallback: try file system path
+            try
+            {
+                var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "cdlIcon.ico");
+                if (System.IO.File.Exists(iconPath))
+                {
+                    Icon = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                }
+            }
+            catch { }
+        }
         
         // Get ViewModel from service locator
         _viewModel = ServiceLocator.Instance.MainViewModel;
@@ -69,25 +79,12 @@ public partial class MainWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 2)
-        {
-            MaximizeRestore_Click(sender, e);
-        }
-        else
-        {
-            DragMove();
-        }
+        DragMove();
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
-    }
-
-    private void MaximizeRestore_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        MaximizeButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)
@@ -363,14 +360,14 @@ public partial class MainWindow : Window
         {
             LockersGridView.Visibility = Visibility.Visible;
             LockersListViewContainer.Visibility = Visibility.Collapsed;
-            ViewToggleLabel.Text = "List View";
+            //ViewToggleLabel.Text = "List View";
             ViewToggleIcon.Text = "\uE8FD"; // Grid icon
         }
         else
         {
             LockersGridView.Visibility = Visibility.Collapsed;
             LockersListViewContainer.Visibility = Visibility.Visible;
-            ViewToggleLabel.Text = "Grid View";
+            //ViewToggleLabel.Text = "Grid View";
             ViewToggleIcon.Text = "\uE80A"; // List icon
         }
     }

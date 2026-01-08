@@ -20,8 +20,8 @@
         <TabControl Grid.Row="0" x:Name="SettingsTabs">
             <!-- General Settings Tab -->
             <TabItem Header="General">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <!-- Default Locker Location -->
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Default Locker Location" 
@@ -65,8 +65,8 @@
 
             <!-- Appearance Tab -->
             <TabItem Header="Appearance">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <!-- Theme Selection -->
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Theme" 
@@ -142,8 +142,8 @@
 
             <!-- Advanced Tab -->
             <TabItem Header="Advanced">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <!-- Logging -->
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Logging" 

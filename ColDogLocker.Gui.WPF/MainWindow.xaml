@@ -6,14 +6,15 @@
         mc:Ignorable="d"
         Title="ColDog Locker" Height="600" Width="1000"
         WindowStyle="None"
-        Background="{DynamicResource BackgroundBrush}"
+        Background="{DynamicResource AppBackgroundGradientBrush}"
         ResizeMode="CanResize"
+        MaxHeight="{x:Static SystemParameters.MaximizedPrimaryScreenHeight}"
         Loaded="Window_Loaded">
     
     <DockPanel>
             <!-- Custom Title Bar -->
             <Grid DockPanel.Dock="Top" 
-                  Background="{DynamicResource CardBackgroundBrush}"
+                  Background="{DynamicResource HeaderGradientBrush}"
                   Height="40"
                   MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
@@ -24,10 +25,15 @@
                 
                 <!-- App Icon and Title -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="15,0,0,0" VerticalAlignment="Center">
+                    <Image Source="cdlIcon.ico"
+                           Width="32" 
+                           Height="32"
+                           Margin="0,0,10,0"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock Text="ColDog Locker" 
                                FontWeight="SemiBold"
-                               FontSize="14"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               FontSize="18"
+                               Foreground="{DynamicResource HeaderTextBrush}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 
@@ -35,19 +41,14 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="MinimizeButton" 
                             Content="─" 
-                            Width="46" Height="40"
+                            Width="40" Height="40"
                             Click="Minimize_Click"
                             Style="{DynamicResource WindowControlButtonStyle}"
+                            Foreground="{DynamicResource HeaderTextBrush}"
                             ToolTip="Minimize"/>
-                    <Button x:Name="MaximizeButton" 
-                            Content="□" 
-                            Width="46" Height="40"
-                            Click="MaximizeRestore_Click"
-                            Style="{DynamicResource WindowControlButtonStyle}"
-                            ToolTip="Maximize"/>
                     <Button x:Name="CloseButton" 
                             Content="✕" 
-                            Width="46" Height="40"
+                            Width="40" Height="40"
                             Click="Close_Click"
                             Style="{DynamicResource CloseButtonStyle}"
                             ToolTip="Close"/>
@@ -124,67 +125,67 @@
                         <Setter Property="Visibility" Value="Collapsed"/>
                     </Style>
                 </ToolBar.Resources>
+            <!-- New Locker -->
             <Button Click="NewLocker_Click" ToolTip="Create new locker (Ctrl+N)">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="New Locker" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
             
             <Separator/>
-            
+
+            <!-- Lock -->
             <Button x:Name="LockButton" Click="Lock_Click" ToolTip="Lock selected locker(s)">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="Lock" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
-            
+
+            <!-- Unlock -->
             <Button x:Name="UnlockButton" Click="Unlock_Click" ToolTip="Unlock selected locker(s)">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="Unlock" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
             
             <Separator/>
-            
+
+            <!-- Remove -->
             <Button x:Name="RemoveButton" Click="Remove_Click" ToolTip="Remove selected locker(s) (Delete)">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="Remove" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
             
             <Separator/>
-            
+
+            <!-- Select All -->
             <Button x:Name="SelectAllButton" Click="SelectAllToggle_Click" ToolTip="Select/Deselect all lockers">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="Select All" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
-            
-            <Separator/>
-            
-            <Button x:Name="ViewToggleButton" Click="ToggleView_Click" ToolTip="Switch between grid and list view">
+
+            <!-- View Toggle -->
+            <Button x:Name="ViewToggleButton" Click="ToggleView_Click" ToolTip="Toggle View">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="ViewToggleIcon" Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="ViewToggleLabel" Text="List View" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock x:Name="ViewToggleIcon" Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
-            
+
+            <Separator/>
+
+            <!-- Refresh -->
             <Button Click="Refresh_Click" ToolTip="Refresh locker list (F5)">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="Refresh" Margin="5,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
+                    </StackPanel>
             </Button>
         </ToolBar>
         </ToolBarTray>
 
         <!-- Status Bar -->
-        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom" Background="{DynamicResource CardBackgroundBrush}">
+        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom" Background="{DynamicResource SubtleGradientBrush}">
             <TextBlock x:Name="TotalLockersText" Text="0 lockers" Margin="0,0,20,0"/>
             <Separator/>
             <TextBlock x:Name="LockedCountText" Text="0 locked" Margin="0,0,20,0"/>
@@ -195,7 +196,7 @@
         </StatusBar>
 
         <!-- Main Content Area -->
-        <Grid x:Name="ContentArea" Background="{DynamicResource BackgroundBrush}">
+        <Grid x:Name="ContentArea" Background="Transparent">
             <!-- Grid View (ListBox with WrapPanel) -->
             <ListBox x:Name="LockersGridView" 
                      Visibility="Visible"
@@ -219,7 +220,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Border Width="150" Height="150" 
-                                Background="{DynamicResource CardBackgroundBrush}"
+                                Background="{DynamicResource CardGradientBrush}"
                                 CornerRadius="8" 
                                 Padding="10"
                                 BorderBrush="{DynamicResource BorderBrush}"

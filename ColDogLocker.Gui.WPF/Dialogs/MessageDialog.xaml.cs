@@ -77,17 +77,17 @@ public partial class MessageDialog : Window
                 AddButton("OK", MessageResult.OK, isDefault: true);
                 break;
             case MessageButtons.OKCancel:
-                AddButton("Cancel", MessageResult.Cancel, isCancel: true);
                 AddButton("OK", MessageResult.OK, isDefault: true);
+                AddButton("Cancel", MessageResult.Cancel, isCancel: true);
                 break;
             case MessageButtons.YesNo:
-                AddButton("No", MessageResult.No);
                 AddButton("Yes", MessageResult.Yes, isDefault: true);
+                AddButton("No", MessageResult.No);
                 break;
             case MessageButtons.YesNoCancel:
-                AddButton("Cancel", MessageResult.Cancel, isCancel: true);
-                AddButton("No", MessageResult.No);
                 AddButton("Yes", MessageResult.Yes, isDefault: true);
+                AddButton("No", MessageResult.No);
+                AddButton("Cancel", MessageResult.Cancel, isCancel: true);
                 break;
         }
     }
