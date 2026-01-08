@@ -2,10 +2,6 @@ using System;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using MessageBox = System.Windows.MessageBox;
-using MessageBoxButton = System.Windows.MessageBoxButton;
-using MessageBoxImage = System.Windows.MessageBoxImage;
-using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 
@@ -86,13 +82,10 @@ public partial class ProgressDialog : Window
     {
         if (!_isCancelled && CancelButton.Content.ToString() != "Close")
         {
-            var result = MessageBox.Show(
+            if (!MessageDialog.ShowQuestion(
                 "Are you sure you want to cancel the operation?",
                 "Cancel Operation",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.No)
+                this))
             {
                 e.Cancel = true;
             }

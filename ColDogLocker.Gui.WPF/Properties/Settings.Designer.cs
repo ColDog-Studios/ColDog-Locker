@@ -39,18 +39,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool AutoLockOnExit {
-            get {
-                return ((bool)(this["AutoLockOnExit"]));
-            }
-            set {
-                this["AutoLockOnExit"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool CheckUpdatesOnStartup {
             get {
@@ -70,30 +58,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Properties {
             }
             set {
                 this["DefaultViewIsGrid"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("150")]
-        public int GridIconSize {
-            get {
-                return ((int)(this["GridIconSize"]));
-            }
-            set {
-                this["GridIconSize"] = value;
-            }
-        }
-
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ShowStatusBar {
-            get {
-                return ((bool)(this["ShowStatusBar"]));
-            }
-            set {
-                this["ShowStatusBar"] = value;
             }
         }
 

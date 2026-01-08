@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Win32;
 using Application = System.Windows.Application;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services;
@@ -49,10 +51,38 @@ public class ThemeService : IThemeService
         return Task.CompletedTask;
     }
 
+    private AppTheme DetectWindowsTheme()
+    {
+        try
+        {
+            // Check Windows Registry for light/dark theme preference
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            var value = key?.GetValue("AppsUseLightTheme");
+            
+            if (value is int themeValue)
+            {
+                return themeValue == 1 ? AppTheme.Light : AppTheme.Dark;
+            }
+        }
+        catch
+        {
+            // If detection fails, default to Light theme
+        }
+        
+        return AppTheme.Light;
+    }
+
     private void ApplyTheme(AppTheme theme)
     {
-        var app = Application.Current;
+        var app = System.Windows.Application.Current;
         if (app == null) return;
+
+        // If Auto theme, detect Windows theme
+        var effectiveTheme = theme;
+        if (theme == AppTheme.Auto)
+        {
+            effectiveTheme = DetectWindowsTheme();
+        }
 
         // Clear existing theme dictionaries
         var themeDictionaries = app.Resources.MergedDictionaries
@@ -65,7 +95,7 @@ public class ThemeService : IThemeService
         }
 
         // Add new theme dictionary
-        var themeUri = theme switch
+        var themeUri = effectiveTheme switch
         {
             AppTheme.Light => new Uri("Themes/LightTheme.xaml", UriKind.Relative),
             AppTheme.Dark => new Uri("Themes/DarkTheme.xaml", UriKind.Relative),

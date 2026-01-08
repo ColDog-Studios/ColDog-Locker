@@ -7,6 +7,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services;
 /// </summary>
 public enum AppTheme
 {
+    Auto,
     Light,
     Dark,
     ColDogStudios

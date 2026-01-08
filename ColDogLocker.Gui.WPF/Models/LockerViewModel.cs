@@ -9,6 +9,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Models;
 public partial class LockerViewModel : ObservableObject
 {
     [ObservableProperty]
+    private string _guid = string.Empty;
+
+    [ObservableProperty]
     private string _name = string.Empty;
 
     [ObservableProperty]

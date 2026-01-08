@@ -45,6 +45,9 @@
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
     <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}"/>
 
+    <SolidColorBrush x:Key="HoverBrush" Color="#3A3A3A"/>
+    <SolidColorBrush x:Key="PressedBrush" Color="#4A4A4A"/>
+
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}"/>

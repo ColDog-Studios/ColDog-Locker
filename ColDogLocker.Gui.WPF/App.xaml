@@ -5,6 +5,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- Base styles and control templates -->
+                <ResourceDictionary Source="Themes/Base.xaml"/>
                 <!-- Theme dictionaries will be loaded dynamically -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

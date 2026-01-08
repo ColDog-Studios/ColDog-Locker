@@ -5,9 +5,54 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="ColDog Locker" Height="600" Width="1000"
-        Background="{DynamicResource BackgroundBrush}">
+        WindowStyle="None"
+        Background="{DynamicResource BackgroundBrush}"
+        ResizeMode="CanResize"
+        Loaded="Window_Loaded">
     
     <DockPanel>
+            <!-- Custom Title Bar -->
+            <Grid DockPanel.Dock="Top" 
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  Height="40"
+                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- App Icon and Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="15,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="ColDog Locker" 
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="MinimizeButton" 
+                            Content="─" 
+                            Width="46" Height="40"
+                            Click="Minimize_Click"
+                            Style="{DynamicResource WindowControlButtonStyle}"
+                            ToolTip="Minimize"/>
+                    <Button x:Name="MaximizeButton" 
+                            Content="□" 
+                            Width="46" Height="40"
+                            Click="MaximizeRestore_Click"
+                            Style="{DynamicResource WindowControlButtonStyle}"
+                            ToolTip="Maximize"/>
+                    <Button x:Name="CloseButton" 
+                            Content="✕" 
+                            Width="46" Height="40"
+                            Click="Close_Click"
+                            Style="{DynamicResource CloseButtonStyle}"
+                            ToolTip="Close"/>
+                </StackPanel>
+            </Grid>
         <!-- Menu Bar -->
         <Menu x:Name="MainMenu" DockPanel.Dock="Top">
             <!-- File Menu -->
@@ -64,6 +109,8 @@
             <!-- Help Menu -->
             <MenuItem Header="_Help" Click="MenuItem_Click">
                 <MenuItem Header="_Documentation" Click="Documentation_Click"/>
+                <Separator/>
+                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"/>
                 <Separator/>
                 <MenuItem Header="_About" Click="About_Click"/>
             </MenuItem>

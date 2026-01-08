@@ -8,19 +8,10 @@
     <Setting Name="DefaultLockerLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)"></Value>
     </Setting>
-    <Setting Name="AutoLockOnExit" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="CheckUpdatesOnStartup" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="DefaultViewIsGrid" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="GridIconSize" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">150</Value>
-    </Setting>
-    <Setting Name="ShowStatusBar" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ShowToolBar" Type="System.Boolean" Scope="User">

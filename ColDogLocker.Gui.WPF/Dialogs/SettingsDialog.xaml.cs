@@ -1,12 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
-using MessageBox = System.Windows.MessageBox;
-using MessageBoxButton = System.Windows.MessageBoxButton;
-using MessageBoxImage = System.Windows.MessageBoxImage;
-using MessageBoxResult = System.Windows.MessageBoxResult;
 using RadioButton = System.Windows.Controls.RadioButton;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
@@ -30,8 +27,9 @@ public partial class SettingsDialog : Window
     {
         // Load theme preference
         switch (_themeService.CurrentTheme)
-        {
-            case AppTheme.Light:
+        {            case AppTheme.Auto:
+                AutoThemeRadio.IsChecked = true;
+                break;            case AppTheme.Light:
                 LightThemeRadio.IsChecked = true;
                 break;
             case AppTheme.Dark:
@@ -53,19 +51,16 @@ public partial class SettingsDialog : Window
         DefaultLocationTextBox.Text = defaultLocation;
 
         // Load other settings from Properties.Settings.Default
-        AutoLockOnExitCheckBox.IsChecked = Properties.Settings.Default.AutoLockOnExit;
         CheckUpdatesOnStartupCheckBox.IsChecked = Properties.Settings.Default.CheckUpdatesOnStartup;
         
         GridViewRadio.IsChecked = Properties.Settings.Default.DefaultViewIsGrid;
         ListViewRadio.IsChecked = !Properties.Settings.Default.DefaultViewIsGrid;
         
-        IconSizeSlider.Value = Properties.Settings.Default.GridIconSize;
-        ShowStatusBarCheckBox.IsChecked = Properties.Settings.Default.ShowStatusBar;
         ShowToolBarCheckBox.IsChecked = Properties.Settings.Default.ShowToolBar;
         EnableLoggingCheckBox.IsChecked = Properties.Settings.Default.EnableLogging;
         DebugModeCheckBox.IsChecked = Properties.Settings.Default.DebugMode;
-        LogRetentionSlider.Value = Properties.Settings.Default.LogRetentionDays;
-        DbVacuumIntervalSlider.Value = Properties.Settings.Default.DbVacuumIntervalDays;
+        LogRetentionTextBox.Text = Properties.Settings.Default.LogRetentionDays.ToString();
+        DbVacuumIntervalTextBox.Text = Properties.Settings.Default.DbVacuumIntervalDays.ToString();
         EnableAnimationsCheckBox.IsChecked = Properties.Settings.Default.EnableAnimations;
 
         // Load update channel
@@ -74,11 +69,10 @@ public partial class SettingsDialog : Window
             case "Stable":
                 StableChannelRadio.IsChecked = true;
                 break;
-            case "Beta":
-                BetaChannelRadio.IsChecked = true;
-                break;
-            case "Dev":
-                DevChannelRadio.IsChecked = true;
+            case "Prerelease":
+            case "Beta": // Legacy support
+            case "Dev": // Legacy support
+                PrereleaseChannelRadio.IsChecked = true;
                 break;
             default:
                 StableChannelRadio.IsChecked = true;
@@ -108,7 +102,9 @@ public partial class SettingsDialog : Window
         {
             _hasChanges = true;
             
-            if (radio == LightThemeRadio)
+            if (radio == AutoThemeRadio)
+                _currentTheme = AppTheme.Auto;
+            else if (radio == LightThemeRadio)
                 _currentTheme = AppTheme.Light;
             else if (radio == DarkThemeRadio)
                 _currentTheme = AppTheme.Dark;
@@ -117,30 +113,36 @@ public partial class SettingsDialog : Window
         }
     }
 
-    private void IconSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void NumericTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (IconSizeText != null && IsLoaded)
+        if (sender is System.Windows.Controls.TextBox textBox && IsLoaded)
         {
-            IconSizeText.Text = $"{(int)e.NewValue}px";
-            _hasChanges = true;
-        }
-    }
-
-    private void LogRetentionSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (LogRetentionText != null && IsLoaded)
-        {
-            LogRetentionText.Text = $"{(int)e.NewValue} days";
-            _hasChanges = true;
-        }
-    }
-
-    private void DbVacuumIntervalSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (DbVacuumIntervalText != null && IsLoaded)
-        {
-            DbVacuumIntervalText.Text = $"{(int)e.NewValue} days";
-            _hasChanges = true;
+            // Allow only numeric input between 7 and 90
+            if (int.TryParse(textBox.Text, out int value))
+            {
+                if (value < 7)
+                {
+                    textBox.Text = "7";
+                    textBox.SelectionStart = textBox.Text.Length;
+                }
+                else if (value > 90)
+                {
+                    textBox.Text = "90";
+                    textBox.SelectionStart = textBox.Text.Length;
+                }
+                _hasChanges = true;
+            }
+            else if (!string.IsNullOrEmpty(textBox.Text))
+            {
+                // Remove non-numeric characters
+                var numericOnly = new string(textBox.Text.Where(char.IsDigit).ToArray());
+                if (numericOnly != textBox.Text)
+                {
+                    var selectionStart = textBox.SelectionStart;
+                    textBox.Text = numericOnly;
+                    textBox.SelectionStart = Math.Min(selectionStart, textBox.Text.Length);
+                }
+            }
         }
     }
 
@@ -161,44 +163,58 @@ public partial class SettingsDialog : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to open logs folder: {ex.Message}", "Error", 
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageDialog.ShowError($"Failed to open logs folder: {ex.Message}", "Error", this);
+        }
+    }
+
+    private void VacuumDatabase_Click(object sender, RoutedEventArgs e)
+    {
+        if (MessageDialog.ShowQuestion(
+            "This will optimize the database and reclaim unused space. Continue?",
+            "Vacuum Database",
+            this))
+        {
+            try
+            {
+                var reclaimed = ColDogStudios.ColDogLocker.Infrastructure.Data.LockerRepository.VacuumDatabase();
+                var reclaimedKB = reclaimed / 1024.0;
+                var message = reclaimed > 0 
+                    ? $"Database optimized successfully.\n\nSpace reclaimed: {reclaimedKB:F2} KB"
+                    : "Database optimized successfully.\n\nNo space was reclaimed (database was already optimal).";
+                MessageDialog.ShowInformation(message, "Database Vacuum Complete", this);
+            }
+            catch (Exception ex)
+            {
+                MessageDialog.ShowError($"Failed to vacuum database: {ex.Message}", "Error", this);
+            }
         }
     }
 
     private void ClearCache_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
-            "This will clear all cached data. Continue?",
+        if (MessageDialog.ShowQuestion(
+            "Are you sure you want to clear all cached data?",
             "Clear Cache",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (result == MessageBoxResult.Yes)
+            this))
         {
             try
             {
                 // TODO: Implement cache clearing logic
-                MessageBox.Show("Cache cleared successfully.", "Success", 
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageDialog.ShowInformation("Cache cleared successfully.", "Success", this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to clear cache: {ex.Message}", "Error", 
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageDialog.ShowError($"Failed to clear cache: {ex.Message}", "Error", this);
             }
         }
     }
 
     private void ResetSettings_Click(object sender, RoutedEventArgs e)
     {
-        var result = MessageBox.Show(
+        if (MessageDialog.ShowQuestion(
             "This will reset ALL settings to their default values. Continue?",
             "Reset Settings",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result == MessageBoxResult.Yes)
+            this))
         {
             RestoreDefaultSettings();
             LoadCurrentSettings();
@@ -224,25 +240,29 @@ public partial class SettingsDialog : Window
         {
             // Save all settings
             Properties.Settings.Default.DefaultLockerLocation = DefaultLocationTextBox.Text;
-            Properties.Settings.Default.AutoLockOnExit = AutoLockOnExitCheckBox.IsChecked ?? false;
             Properties.Settings.Default.CheckUpdatesOnStartup = CheckUpdatesOnStartupCheckBox.IsChecked ?? true;
             Properties.Settings.Default.DefaultViewIsGrid = GridViewRadio.IsChecked ?? true;
-            Properties.Settings.Default.GridIconSize = (int)IconSizeSlider.Value;
-            Properties.Settings.Default.ShowStatusBar = ShowStatusBarCheckBox.IsChecked ?? true;
             Properties.Settings.Default.ShowToolBar = ShowToolBarCheckBox.IsChecked ?? true;
             Properties.Settings.Default.EnableLogging = EnableLoggingCheckBox.IsChecked ?? true;
             Properties.Settings.Default.DebugMode = DebugModeCheckBox.IsChecked ?? false;
-            Properties.Settings.Default.LogRetentionDays = (int)LogRetentionSlider.Value;
-            Properties.Settings.Default.DbVacuumIntervalDays = (int)DbVacuumIntervalSlider.Value;
+            
+            // Apply logging settings to Infrastructure.Logging.Logger
+            var debugModeEnabled = DebugModeCheckBox.IsChecked ?? false;
+            ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.SetDebugMode(debugModeEnabled);
+            
+            // Parse numeric textbox values with validation
+            if (int.TryParse(LogRetentionTextBox.Text, out int logRetention))
+                Properties.Settings.Default.LogRetentionDays = Math.Clamp(logRetention, 7, 90);
+            if (int.TryParse(DbVacuumIntervalTextBox.Text, out int vacuumInterval))
+                Properties.Settings.Default.DbVacuumIntervalDays = Math.Clamp(vacuumInterval, 7, 90);
+            
             Properties.Settings.Default.EnableAnimations = EnableAnimationsCheckBox.IsChecked ?? true;
             
             // Save update channel
             if (StableChannelRadio.IsChecked == true)
                 Properties.Settings.Default.UpdateChannel = "Stable";
-            else if (BetaChannelRadio.IsChecked == true)
-                Properties.Settings.Default.UpdateChannel = "Beta";
-            else if (DevChannelRadio.IsChecked == true)
-                Properties.Settings.Default.UpdateChannel = "Dev";
+            else if (PrereleaseChannelRadio.IsChecked == true)
+                Properties.Settings.Default.UpdateChannel = "Prerelease";
             
             Properties.Settings.Default.Save();
 
@@ -257,8 +277,7 @@ public partial class SettingsDialog : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to save settings: {ex.Message}", "Error", 
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageDialog.ShowError($"Failed to save settings: {ex.Message}", "Error", this);
         }
     }
 
@@ -266,13 +285,10 @@ public partial class SettingsDialog : Window
     {
         if (_hasChanges)
         {
-            var result = MessageBox.Show(
+            if (!MessageDialog.ShowQuestion(
                 "You have unsaved changes. Are you sure you want to cancel?",
                 "Unsaved Changes",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.No)
+                this))
             {
                 return;
             }

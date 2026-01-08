@@ -54,10 +54,6 @@
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
-                            <CheckBox x:Name="AutoLockOnExitCheckBox" 
-                                      Content="Automatically lock all unlocked lockers on exit"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,8"/>
                             <CheckBox x:Name="CheckUpdatesOnStartupCheckBox" 
                                       Content="Check for updates on startup"
                                       IsChecked="True"
@@ -82,6 +78,12 @@
                                       FontSize="12"
                                       Margin="0,0,0,12"/>
                             
+                            <RadioButton x:Name="AutoThemeRadio" 
+                                        Content="Auto (Follow Windows)" 
+                                        GroupName="Theme"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"
+                                        Checked="ThemeRadio_Checked"/>
                             <RadioButton x:Name="LightThemeRadio" 
                                         Content="Light" 
                                         GroupName="Theme"
@@ -122,42 +124,12 @@
                                         Margin="0,0,0,8"/>
                         </StackPanel>
 
-                        <!-- Icon Size -->
-                        <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Grid View Icon Size" 
-                                      FontWeight="SemiBold" 
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,12"/>
-                            <StackPanel Orientation="Horizontal">
-                                <Slider x:Name="IconSizeSlider" 
-                                        Width="200"
-                                        Minimum="64" 
-                                        Maximum="256" 
-                                        Value="150"
-                                        TickFrequency="16"
-                                        IsSnapToTickEnabled="True"
-                                        VerticalAlignment="Center"
-                                        ValueChanged="IconSizeSlider_ValueChanged"/>
-                                <TextBlock x:Name="IconSizeText" 
-                                          Text="150px" 
-                                          Foreground="{DynamicResource TextPrimaryBrush}"
-                                          Margin="10,0,0,0"
-                                          VerticalAlignment="Center"
-                                          MinWidth="60"/>
-                            </StackPanel>
-                        </StackPanel>
-
                         <!-- Show/Hide Elements -->
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Interface Elements" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
-                            <CheckBox x:Name="ShowStatusBarCheckBox" 
-                                      Content="Show status bar"
-                                      IsChecked="True"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,8"/>
                             <CheckBox x:Name="ShowToolBarCheckBox" 
                                       Content="Show toolbar"
                                       IsChecked="True"
@@ -192,23 +164,11 @@
                                 <TextBlock Text="Log retention (days):" 
                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                           Margin="0,0,0,4"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <Slider x:Name="LogRetentionSlider" 
-                                            Width="200"
-                                            Minimum="7" 
-                                            Maximum="90" 
-                                            Value="30"
-                                            TickFrequency="1"
-                                            IsSnapToTickEnabled="True"
-                                            VerticalAlignment="Center"
-                                            ValueChanged="LogRetentionSlider_ValueChanged"/>
-                                    <TextBlock x:Name="LogRetentionText" 
-                                              Text="30 days" 
-                                              Foreground="{DynamicResource TextPrimaryBrush}"
-                                              Margin="10,0,0,0"
-                                              VerticalAlignment="Center"
-                                              MinWidth="60"/>
-                                </StackPanel>
+                                <TextBox x:Name="LogRetentionTextBox" 
+                                        Text="30"
+                                        Width="100"
+                                        HorizontalAlignment="Left"
+                                        TextChanged="NumericTextBox_TextChanged"/>
                             </StackPanel>
 
                             <Button Content="Open Logs Folder" 
@@ -233,24 +193,22 @@
                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                           FontSize="12"
                                           Margin="0,0,0,8"/>
-                                <StackPanel Orientation="Horizontal">
-                                    <Slider x:Name="DbVacuumIntervalSlider" 
-                                            Width="200"
-                                            Minimum="7" 
-                                            Maximum="90" 
-                                            Value="30"
-                                            TickFrequency="1"
-                                            IsSnapToTickEnabled="True"
-                                            VerticalAlignment="Center"
-                                            ValueChanged="DbVacuumIntervalSlider_ValueChanged"/>
-                                    <TextBlock x:Name="DbVacuumIntervalText" 
-                                              Text="30 days" 
-                                              Foreground="{DynamicResource TextPrimaryBrush}"
-                                              Margin="10,0,0,0"
-                                              VerticalAlignment="Center"
-                                              MinWidth="60"/>
-                                </StackPanel>
+                                <TextBox x:Name="DbVacuumIntervalTextBox" 
+                                        Text="30"
+                                        Width="100"
+                                        HorizontalAlignment="Left"
+                                        TextChanged="NumericTextBox_TextChanged"/>
                             </StackPanel>
+
+                            <Button Content="Vacuum Database Now" 
+                                    Click="VacuumDatabase_Click"
+                                    HorizontalAlignment="Left"
+                                    Padding="15,5"
+                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Manually optimize database and reclaim unused space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,0"/>
                         </StackPanel>
 
                         <!-- Updates -->
@@ -273,22 +231,12 @@
                                       FontSize="11"
                                       Margin="20,0,0,8"/>
                             
-                            <RadioButton x:Name="BetaChannelRadio" 
-                                        Content="Beta" 
+                            <RadioButton x:Name="PrereleaseChannelRadio" 
+                                        Content="Prerelease" 
                                         GroupName="UpdateChannel"
                                         Foreground="{DynamicResource TextPrimaryBrush}"
                                         Margin="0,0,0,4"/>
                             <TextBlock Text="Get early access to new features before stable release" 
-                                      Foreground="{DynamicResource TextSecondaryBrush}"
-                                      FontSize="11"
-                                      Margin="20,0,0,8"/>
-                            
-                            <RadioButton x:Name="DevChannelRadio" 
-                                        Content="Development" 
-                                        GroupName="UpdateChannel"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="Latest development builds (may be unstable)" 
                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                       FontSize="11"
                                       Margin="20,0,0,8"/>

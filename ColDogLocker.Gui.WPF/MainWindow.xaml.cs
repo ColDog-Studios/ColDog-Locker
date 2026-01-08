@@ -7,10 +7,7 @@ using System.Windows.Input;
 using ColDogStudios.ColDogLocker.Gui.WPF.ViewModels;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
-using MessageBox = System.Windows.MessageBox;
-using MessageBoxButton = System.Windows.MessageBoxButton;
-using MessageBoxImage = System.Windows.MessageBoxImage;
-using MessageBoxResult = System.Windows.MessageBoxResult;
+using ColDogStudios.ColDogLocker.Application.Services;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF;
 
@@ -45,46 +42,116 @@ public partial class MainWindow : Window
         UpdateStatusBar();
         UpdateCommandStates();
         
-        // TODO: Load lockers from service
-        LoadSampleData();
+        // Load lockers from database
+        LoadLockers();
     }
 
-    private void LoadSampleData()
+    private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        // Sample data for testing - will be replaced with actual service calls
-        _viewModel.Lockers.Add(new LockerViewModel
+        // Play scale-in animation if animations are enabled
+        if (Properties.Settings.Default.EnableAnimations)
         {
-            Name = "Personal Documents",
-            IsLocked = true,
-            Location = @"C:\Users\Documents\ColDog Locker\Personal Documents",
-            LastModified = DateTime.Now.AddDays(-2),
-            Size = 1024 * 1024 * 150 // 150 MB
-        });
-        
-        _viewModel.Lockers.Add(new LockerViewModel
-        {
-            Name = "Work Files",
-            IsLocked = false,
-            Location = @"C:\Users\Documents\ColDog Locker\Work Files",
-            LastModified = DateTime.Now.AddHours(-5),
-            Size = 1024 * 1024 * 250 // 250 MB
-        });
-        
-        _viewModel.Lockers.Add(new LockerViewModel
-        {
-            Name = "Photos",
-            IsLocked = true,
-            Location = @"C:\Users\Documents\ColDog Locker\Photos",
-            LastModified = DateTime.Now.AddDays(-10),
-            Size = 1024L * 1024L * 1024L * 2 // 2 GB
-        });
+            try
+            {
+                if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                {
+                    storyboard.Begin(this);
+                }
+            }
+            catch
+            {
+                // Animation failed, continue without it
+            }
+        }
+    }
 
-        // Update filtered list
-        _viewModel.FilteredLockers = new ObservableCollection<LockerViewModel>(_viewModel.Lockers.OrderBy(l => l.Name));
-        LockersGridView.ItemsSource = _viewModel.FilteredLockers;
-        LockersListView.ItemsSource = _viewModel.FilteredLockers;
-        
-        UpdateStatusBar();
+    #region Window Controls
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            MaximizeRestore_Click(sender, e);
+        }
+        else
+        {
+            DragMove();
+        }
+    }
+
+    private void Minimize_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeRestore_Click(object sender, RoutedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        MaximizeButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    #endregion
+
+    private void LoadLockers()
+    {
+        try
+        {
+            // Clear existing lockers
+            _viewModel.Lockers.Clear();
+
+            // Load lockers from database via LockerService
+            foreach (var locker in LockerService.Lockers)
+            {
+                _viewModel.Lockers.Add(new LockerViewModel
+                {
+                    Name = locker.LockerName,
+                    IsLocked = locker.IsLocked,
+                    Location = locker.LockerLocation,
+                    LastModified = System.IO.Directory.Exists(locker.LockerLocation) 
+                        ? System.IO.Directory.GetLastWriteTime(locker.LockerLocation) 
+                        : DateTime.MinValue,
+                    Size = CalculateDirectorySize(locker.LockerLocation),
+                    Guid = locker.Guid
+                });
+            }
+
+            // Update filtered list
+            _viewModel.FilteredLockers = new ObservableCollection<LockerViewModel>(_viewModel.Lockers.OrderBy(l => l.Name));
+            LockersGridView.ItemsSource = _viewModel.FilteredLockers;
+            LockersListView.ItemsSource = _viewModel.FilteredLockers;
+            
+            UpdateStatusBar();
+        }
+        catch (Exception ex)
+        {
+            Dialogs.ErrorDialog.Show(
+                "Failed to load lockers from database",
+                ex,
+                "Load Error",
+                this);
+        }
+    }
+
+    private long CalculateDirectorySize(string path)
+    {
+        try
+        {
+            if (!System.IO.Directory.Exists(path))
+                return 0;
+
+            var dirInfo = new System.IO.DirectoryInfo(path);
+            return dirInfo.EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
+                .Sum(file => file.Length);
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
     #region Menu and Toolbar Event Handlers
@@ -98,28 +165,40 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() == true && dialog.Success)
         {
-            var newLocker = new LockerViewModel
+            try
             {
-                Name = dialog.LockerName,
-                Location = dialog.Location,
-                IsLocked = dialog.LockImmediately,
-                LastModified = DateTime.Now,
-                Size = 0
-            };
+                // Create locker model with hashed password
+                var lockerModel = new Core.Models.LockerModel(
+                    dialog.LockerName,
+                    Infrastructure.Encryption.EncryptionHelper.HashPassword(dialog.Password),
+                    dialog.Location
+                );
 
-            _viewModel.Lockers.Add(newLocker);
-            _viewModel.FilteredLockers = new ObservableCollection<LockerViewModel>(_viewModel.Lockers.OrderBy(l => l.Name));
-            
-            if (_isGridView)
-            {
-                LockersGridView.ItemsSource = _viewModel.FilteredLockers;
+                // Add locker via service (creates directory and saves to database)
+                LockerService.AddLocker(lockerModel);
+
+                // Lock immediately if requested
+                if (dialog.LockImmediately)
+                {
+                    LockerService.Lock(lockerModel, dialog.Password);
+                }
+
+                // Reload lockers to reflect changes
+                LoadLockers();
+
+                Dialogs.MessageDialog.ShowInformation(
+                    $"Locker '{dialog.LockerName}' created successfully.",
+                    "Success",
+                    this);
             }
-            else
+            catch (Exception ex)
             {
-                LockersListView.ItemsSource = _viewModel.FilteredLockers;
+                Dialogs.ErrorDialog.Show(
+                    $"Failed to create locker '{dialog.LockerName}'",
+                    ex,
+                    "Create Locker Error",
+                    this);
             }
-            
-            UpdateStatusBar();
         }
     }
 
@@ -139,9 +218,25 @@ public partial class MainWindow : Window
 
             if (passwordDialog.ShowDialog() == true && passwordDialog.Success)
             {
-                // TODO: Actually lock the locker with LockerService
-                locker.IsLocked = true;
-                MessageBox.Show($"Locked: {locker.Name}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                try
+                {
+                    // Find the locker model from LockerService
+                    var lockerModel = LockerService.Lockers.FirstOrDefault(l => l.Guid == locker.Guid);
+                    if (lockerModel != null)
+                    {
+                        LockerService.Lock(lockerModel, passwordDialog.Password);
+                        locker.IsLocked = true;
+                        Dialogs.MessageDialog.ShowInformation($"Locked: {locker.Name}", "Success", this);
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    Dialogs.MessageDialog.ShowError("Incorrect password", "Lock Failed", this);
+                }
+                catch (Exception ex)
+                {
+                    Dialogs.ErrorDialog.Show($"Failed to lock '{locker.Name}'", ex, "Lock Error", this);
+                }
             }
         }
 
@@ -164,9 +259,26 @@ public partial class MainWindow : Window
 
             if (passwordDialog.ShowDialog() == true && passwordDialog.Success)
             {
-                // TODO: Actually unlock the locker with LockerService
-                locker.IsLocked = false;
-                MessageBox.Show($"Unlocked: {locker.Name}", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                try
+                {
+                    // Find the locker model from LockerService
+                    var lockerModel = LockerService.Lockers.FirstOrDefault(l => l.Guid == locker.Guid);
+                    if (lockerModel != null)
+                    {
+                        LockerService.Unlock(lockerModel, passwordDialog.Password);
+                        locker.IsLocked = false;
+                        locker.Location = lockerModel.LockerLocation; // Update location in case it changed
+                        Dialogs.MessageDialog.ShowInformation($"Unlocked: {locker.Name}", "Success", this);
+                    }
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    Dialogs.MessageDialog.ShowError("Incorrect password", "Unlock Failed", this);
+                }
+                catch (Exception ex)
+                {
+                    Dialogs.ErrorDialog.Show($"Failed to unlock '{locker.Name}'", ex, "Unlock Error", this);
+                }
             }
         }
 
@@ -178,16 +290,34 @@ public partial class MainWindow : Window
         var selectedItems = GetSelectedLockers();
         if (selectedItems.Count == 0) return;
         
-        var result = MessageBox.Show(
-            $"Are you sure you want to remove {selectedItems.Count} locker(s)?", 
-            "Confirm Remove", 
-            MessageBoxButton.YesNo, 
-            MessageBoxImage.Warning);
-        
-        if (result == MessageBoxResult.Yes)
+        if (Dialogs.MessageDialog.ShowQuestion(
+            $"Are you sure you want to remove {selectedItems.Count} locker(s)? This will remove them from the database but will NOT delete the files.", 
+            "Confirm Remove",
+            this))
         {
-            // TODO: Remove selected lockers
-            MessageBox.Show("Remove functionality will be implemented", "Remove", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                foreach (var locker in selectedItems.ToList())
+                {
+                    var lockerModel = LockerService.Lockers.FirstOrDefault(l => l.Guid == locker.Guid);
+                    if (lockerModel != null)
+                    {
+                        LockerService.RemoveLocker(lockerModel);
+                    }
+                }
+
+                // Reload lockers
+                LoadLockers();
+
+                Dialogs.MessageDialog.ShowInformation(
+                    $"{selectedItems.Count} locker(s) removed successfully.",
+                    "Success",
+                    this);
+            }
+            catch (Exception ex)
+            {
+                Dialogs.ErrorDialog.Show("Failed to remove lockers", ex, "Remove Error", this);
+            }
         }
     }
 
@@ -196,8 +326,15 @@ public partial class MainWindow : Window
         var selectedItems = GetSelectedLockers();
         if (selectedItems.Count != 1) return;
         
-        // TODO: Show properties dialog
-        MessageBox.Show($"Properties for {selectedItems[0].Name}", "Properties", MessageBoxButton.OK, MessageBoxImage.Information);
+        // Find the actual locker from LockerService
+        var locker = LockerService.Lockers.FirstOrDefault(l => l.Guid == selectedItems[0].Guid);
+        if (locker != null)
+        {
+            Dialogs.LockerPropertiesDialog.Show(locker, this);
+            
+            // Refresh the UI after properties dialog closes
+            LoadLockers();
+        }
     }
 
     private void OpenLocation_Click(object sender, RoutedEventArgs e)
@@ -213,7 +350,7 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to open location: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.MessageDialog.ShowError($"Failed to open location: {ex.Message}", "Error", this);
             }
         }
     }
@@ -240,9 +377,27 @@ public partial class MainWindow : Window
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Reload lockers from service
-        MessageBox.Show("Refresh functionality will be implemented", "Refresh", MessageBoxButton.OK, MessageBoxImage.Information);
-        UpdateStatusBar();
+        try
+        {
+            // Reload lockers from database
+            LockerService.LoadLockers();
+            
+            // Refresh UI
+            LoadLockers();
+            
+            Dialogs.MessageDialog.ShowInformation(
+                $"Refreshed successfully. {_viewModel.Lockers.Count} locker(s) loaded.",
+                "Refresh",
+                this);
+        }
+        catch (Exception ex)
+        {
+            Dialogs.ErrorDialog.Show(
+                "Failed to refresh lockers from database",
+                ex,
+                "Refresh Error",
+                this);
+        }
     }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
@@ -262,7 +417,7 @@ public partial class MainWindow : Window
     private void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         // TODO: Check for updates
-        MessageBox.Show("Check for updates functionality will be implemented", "Check Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+        Dialogs.MessageDialog.ShowInformation("Check for updates functionality will be implemented", "Check Updates", this);
     }
 
     private void Documentation_Click(object sender, RoutedEventArgs e)
@@ -280,8 +435,25 @@ public partial class MainWindow : Window
 
     private void About_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Show about dialog
-        MessageBox.Show("ColDog Locker\nVersion 1.0.0\n© ColDog Studios", "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        Dialogs.AboutDialog.Show(this);
+    }
+
+    private void TestErrorDialog_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Create a sample exception for testing
+            throw new InvalidOperationException("This is a test exception to demonstrate the error dialog functionality.");
+        }
+        catch (Exception ex)
+        {
+            Dialogs.ErrorDialog.Show(
+                "This is a test error message to verify the error dialog is working correctly. " +
+                "The error dialog should display this message, the exception details, and a stack trace.",
+                ex,
+                "Test Error Dialog",
+                this);
+        }
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e)
@@ -442,12 +614,6 @@ public partial class MainWindow : Window
     {
         // Apply settings that affect the UI immediately
         var settings = Properties.Settings.Default;
-
-        // Apply status bar visibility
-        if (MainStatusBar != null)
-        {
-            MainStatusBar.Visibility = settings.ShowStatusBar ? Visibility.Visible : Visibility.Collapsed;
-        }
 
         // Apply toolbar visibility
         if (MainToolBar != null)
