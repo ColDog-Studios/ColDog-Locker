@@ -6,11 +6,21 @@
         mc:Ignorable="d"
         Title="ColDog Locker" Height="600" Width="1000"
         WindowStyle="None"
-        Background="{DynamicResource AppBackgroundGradientBrush}"
+        AllowsTransparency="True"
+        Background="Transparent"
         ResizeMode="CanMinimize"
         Loaded="Window_Loaded">
     
-    <DockPanel>
+    <Border CornerRadius="10" 
+            BorderBrush="#80000000" 
+            BorderThickness="1">
+        <Border CornerRadius="9"
+                Background="{DynamicResource AppBackgroundGradientBrush}"
+                ClipToBounds="True">
+            <Border.Clip>
+                <RectangleGeometry RadiusX="9" RadiusY="9" Rect="0,0,998,598"/>
+            </Border.Clip>
+        <DockPanel>
             <!-- Custom Title Bar -->
             <Grid DockPanel.Dock="Top" 
                   Background="{DynamicResource HeaderGradientBrush}"
@@ -451,6 +461,8 @@
             </Grid>
         </Grid>
     </DockPanel>
+        </Border>
+    </Border>
     
     <Window.InputBindings>
         <KeyBinding Key="N" Modifiers="Control" Command="{Binding CreateNewLockerCommand}"/>
