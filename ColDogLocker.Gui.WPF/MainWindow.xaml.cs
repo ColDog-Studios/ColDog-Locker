@@ -8,6 +8,7 @@ using ColDogStudios.ColDogLocker.Gui.WPF.ViewModels;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
 using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF;
 
@@ -59,7 +60,7 @@ public partial class MainWindow : Window
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Play scale-in animation if animations are enabled
-        if (Properties.Settings.Default.EnableAnimations)
+        if (SettingsManager.Settings.EnableAnimations)
         {
             try
             {
@@ -411,10 +412,61 @@ public partial class MainWindow : Window
         }
     }
 
-    private void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Check for updates
-        Dialogs.MessageDialog.ShowInformation("Check for updates functionality will be implemented", "Check Updates", this);
+        try
+        {
+            var result = await Task.Run(() => UpdateManager.CheckForUpdatesAsync());
+
+            if (result.UpdateAvailable)
+            {
+                var message = $"A new version is available!\n\n" +
+                             $"Current Version: {result.CurrentVersion}\n" +
+                             $"Latest Version: {result.LatestVersion}\n\n" +
+                             "Would you like to download and install it now?";
+
+                if (Dialogs.MessageDialog.ShowQuestion(message, "Update Available", this))
+                {
+                    try
+                    {
+                        var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
+                        Dialogs.MessageDialog.ShowInformation(
+                            $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
+                            "Download Complete",
+                            this);
+                    }
+                    catch (Exception downloadEx)
+                    {
+                        var errorDialog = new Dialogs.ErrorDialog(
+                            $"Failed to download update: {downloadEx.Message}",
+                            downloadEx,
+                            "Download Failed")
+                        {
+                            Owner = this
+                        };
+                        errorDialog.ShowDialog();
+                    }
+                }
+            }
+            else
+            {
+                var message = $"ColDog Locker is up to date.\n\n" +
+                             $"Current Version: {result.CurrentVersion}\n" +
+                             $"Latest Version: {result.LatestVersion}";
+                Dialogs.MessageDialog.ShowInformation(message, "No Updates Available", this);
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new Dialogs.ErrorDialog(
+                $"Failed to check for updates: {ex.Message}",
+                ex,
+                "Update Check Failed")
+            {
+                Owner = this
+            };
+            errorDialog.ShowDialog();
+        }
     }
 
     private void Documentation_Click(object sender, RoutedEventArgs e)
@@ -610,15 +662,8 @@ public partial class MainWindow : Window
     private void ApplySettings()
     {
         // Apply settings that affect the UI immediately
-        var settings = Properties.Settings.Default;
+        var settings = SettingsManager.Settings;
 
-        // Apply toolbar visibility
-        if (MainToolBar != null)
-        {
-            MainToolBar.Visibility = settings.ShowToolBar ? Visibility.Visible : Visibility.Collapsed;
-        }
-
-        // Apply default view if no lockers yet or on fresh start
         // Theme is already applied by the SettingsDialog via ThemeService
     }
 

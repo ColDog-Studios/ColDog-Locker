@@ -4,6 +4,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using RadioButton = System.Windows.Controls.RadioButton;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
@@ -41,7 +43,7 @@ public partial class SettingsDialog : Window
         }
 
         // Load default location
-        var defaultLocation = Properties.Settings.Default.DefaultLockerLocation;
+        var defaultLocation = SettingsManager.Settings.DefaultLockerLocation;
         if (string.IsNullOrEmpty(defaultLocation))
         {
             defaultLocation = Path.Combine(
@@ -50,28 +52,25 @@ public partial class SettingsDialog : Window
         }
         DefaultLocationTextBox.Text = defaultLocation;
 
-        // Load other settings from Properties.Settings.Default
-        CheckUpdatesOnStartupCheckBox.IsChecked = Properties.Settings.Default.CheckUpdatesOnStartup;
+        // Load other settings from SettingsManager
+        AutoUpdateCheckBox.IsChecked = SettingsManager.Settings.AutoUpdate;
         
-        GridViewRadio.IsChecked = Properties.Settings.Default.DefaultViewIsGrid;
-        ListViewRadio.IsChecked = !Properties.Settings.Default.DefaultViewIsGrid;
+        GridViewRadio.IsChecked = SettingsManager.Settings.DefaultViewIsGrid;
+        ListViewRadio.IsChecked = !SettingsManager.Settings.DefaultViewIsGrid;
         
-        ShowToolBarCheckBox.IsChecked = Properties.Settings.Default.ShowToolBar;
-        EnableLoggingCheckBox.IsChecked = Properties.Settings.Default.EnableLogging;
-        DebugModeCheckBox.IsChecked = Properties.Settings.Default.DebugMode;
-        LogRetentionTextBox.Text = Properties.Settings.Default.LogRetentionDays.ToString();
-        DbVacuumIntervalTextBox.Text = Properties.Settings.Default.DbVacuumIntervalDays.ToString();
-        EnableAnimationsCheckBox.IsChecked = Properties.Settings.Default.EnableAnimations;
+        EnableLoggingCheckBox.IsChecked = SettingsManager.Settings.EnableLogging;
+        DebugModeCheckBox.IsChecked = SettingsManager.Settings.DebugMode;
+        LogRetentionTextBox.Text = SettingsManager.Settings.LogRetentionDays.ToString();
+        DbVacuumIntervalTextBox.Text = SettingsManager.Settings.DatabaseVacuumInterval.ToString();
+        EnableAnimationsCheckBox.IsChecked = SettingsManager.Settings.EnableAnimations;
 
         // Load update channel
-        switch (Properties.Settings.Default.UpdateChannel)
+        switch (SettingsManager.Settings.UpdateChannel)
         {
-            case "Stable":
+            case UpdateChannel.Stable:
                 StableChannelRadio.IsChecked = true;
                 break;
-            case "Prerelease":
-            case "Beta": // Legacy support
-            case "Dev": // Legacy support
+            case UpdateChannel.Prerelease:
                 PrereleaseChannelRadio.IsChecked = true;
                 break;
             default:
@@ -230,7 +229,9 @@ public partial class SettingsDialog : Window
 
     private void RestoreDefaultSettings()
     {
-        Properties.Settings.Default.Reset();
+        // Reset to default settings
+        SettingsManager.Settings = new ApplicationSettings();
+        SettingsManager.SaveSettings();
     }
 
     private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -238,12 +239,11 @@ public partial class SettingsDialog : Window
         try
         {
             // Save all settings
-            Properties.Settings.Default.DefaultLockerLocation = DefaultLocationTextBox.Text;
-            Properties.Settings.Default.CheckUpdatesOnStartup = CheckUpdatesOnStartupCheckBox.IsChecked ?? true;
-            Properties.Settings.Default.DefaultViewIsGrid = GridViewRadio.IsChecked ?? true;
-            Properties.Settings.Default.ShowToolBar = ShowToolBarCheckBox.IsChecked ?? true;
-            Properties.Settings.Default.EnableLogging = EnableLoggingCheckBox.IsChecked ?? true;
-            Properties.Settings.Default.DebugMode = DebugModeCheckBox.IsChecked ?? false;
+            SettingsManager.Settings.DefaultLockerLocation = DefaultLocationTextBox.Text;
+            SettingsManager.Settings.AutoUpdate = AutoUpdateCheckBox.IsChecked ?? true;
+            SettingsManager.Settings.DefaultViewIsGrid = GridViewRadio.IsChecked ?? true;
+            SettingsManager.Settings.EnableLogging = EnableLoggingCheckBox.IsChecked ?? true;
+            SettingsManager.Settings.DebugMode = DebugModeCheckBox.IsChecked ?? false;
             
             // Apply logging settings to Infrastructure.Logging.Logger
             var debugModeEnabled = DebugModeCheckBox.IsChecked ?? false;
@@ -251,19 +251,19 @@ public partial class SettingsDialog : Window
             
             // Parse numeric textbox values with validation
             if (int.TryParse(LogRetentionTextBox.Text, out int logRetention))
-                Properties.Settings.Default.LogRetentionDays = Math.Clamp(logRetention, 7, 90);
+                SettingsManager.Settings.LogRetentionDays = Math.Clamp(logRetention, 7, 90);
             if (int.TryParse(DbVacuumIntervalTextBox.Text, out int vacuumInterval))
-                Properties.Settings.Default.DbVacuumIntervalDays = Math.Clamp(vacuumInterval, 7, 90);
+                SettingsManager.Settings.DatabaseVacuumInterval = Math.Clamp(vacuumInterval, 7, 90);
             
-            Properties.Settings.Default.EnableAnimations = EnableAnimationsCheckBox.IsChecked ?? true;
+            SettingsManager.Settings.EnableAnimations = EnableAnimationsCheckBox.IsChecked ?? true;
             
             // Save update channel
             if (StableChannelRadio.IsChecked == true)
-                Properties.Settings.Default.UpdateChannel = "Stable";
+                SettingsManager.Settings.UpdateChannel = UpdateChannel.Stable;
             else if (PrereleaseChannelRadio.IsChecked == true)
-                Properties.Settings.Default.UpdateChannel = "Prerelease";
+                SettingsManager.Settings.UpdateChannel = UpdateChannel.Prerelease;
             
-            Properties.Settings.Default.Save();
+            SettingsManager.SaveSettings();
 
             // Apply theme if changed
             if (_currentTheme != _themeService.CurrentTheme)

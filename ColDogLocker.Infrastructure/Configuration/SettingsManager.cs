@@ -79,7 +79,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             {
                 DebugMode = false,
                 LogRetentionDays = 30, // Keep logs for 30 days by default
-                AutoUpdate = false,  // Will be prompted during first run
+                AutoUpdate = true,  // Enabled by default
                 UpdateChannel = UpdateChannel.Stable  // Default to stable channel
             };
             SaveSettings();
@@ -221,20 +221,26 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
     // Class to hold application settings
     public class ApplicationSettings
     {
+        // General Application Settings
+
         /// <summary>
         /// Gets or sets a value indicating whether debug mode is enabled.
         /// </summary>
         public bool DebugMode { get; set; }
 
-        /// <summary>
-        /// Gets or sets the number of days to retain log files.
-        /// </summary>
-        public int LogRetentionDays { get; set; } = 30;
+        // Update Settings
 
         /// <summary>
         /// Gets or sets a value indicating whether auto updates are enabled.
         /// </summary>
-        public bool AutoUpdate { get; set; }
+        public bool AutoUpdate { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the update channel (Stable or Prerelease).
+        /// </summary>
+        public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
+
+        // Database Maintenance Settings
 
         /// <summary>
         /// Gets or sets the number of days between database vacuum operations (0 = disabled).
@@ -246,9 +252,38 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         /// </summary>
         public DateTime? LastDatabaseVacuum { get; set; }
 
+        // Logging Settings
+
         /// <summary>
-        /// Gets or sets the update channel (Stable or Prerelease).
+        /// Gets or sets the number of days to retain log files.
         /// </summary>
-        public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
+        public int LogRetentionDays { get; set; } = 30;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether logging is enabled in the GUI.
+        /// </summary>
+        public bool EnableLogging { get; set; } = true;
+
+        // GUI Settings
+
+        /// <summary>
+        /// Gets or sets the application theme name.
+        /// </summary>
+        public string AppTheme { get; set; } = "Auto";
+
+        /// <summary>
+        /// Gets or sets a value indicating whether animations are enabled in the GUI.
+        /// </summary>
+        public bool EnableAnimations { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the default location for new lockers.
+        /// </summary>
+        public string DefaultLockerLocation { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the default view is grid (true) or list (false).
+        /// </summary>
+        public bool DefaultViewIsGrid { get; set; } = true;
     }
 }

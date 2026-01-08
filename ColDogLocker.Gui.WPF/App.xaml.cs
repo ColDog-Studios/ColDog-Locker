@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF;
 
@@ -28,14 +30,14 @@ public partial class App : System.Windows.Application
         await themeService.LoadThemeAsync();
 
         // Check for updates on startup if enabled
-        if (ColDogStudios.ColDogLocker.Gui.WPF.Properties.Settings.Default.CheckUpdatesOnStartup)
+        if (SettingsManager.Settings.AutoUpdate)
         {
             // Run update check in background without blocking startup
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    await UpdateManager.CheckForUpdatesAsync(hideUpToDateMessage: true);
+                    await UpdateManager.CheckForUpdatesAsync();
                 }
                 catch
                 {
@@ -43,5 +45,9 @@ public partial class App : System.Windows.Application
                 }
             });
         }
+
+        // Create and show main window
+        var mainWindow = new MainWindow();
+        mainWindow.Show();
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 
@@ -15,7 +16,7 @@ public partial class AboutDialog : Window
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Play scale-in animation if animations are enabled
-        if (Properties.Settings.Default.EnableAnimations)
+        if (SettingsManager.Settings.EnableAnimations)
         {
             try
             {
@@ -96,13 +97,61 @@ public partial class AboutDialog : Window
         OpenUrl("mailto:support@coldogstudios.com?subject=ColDog%20Locker%20Support");
     }
 
-    private void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: Implement actual update check via UpdateManager service
-        MessageDialog.ShowInformation(
-            "You are running the latest version of ColDog Locker.",
-            "No Updates Available",
-            this);
+        try
+        {
+            var result = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.CheckForUpdatesAsync());
+
+            if (result.UpdateAvailable)
+            {
+                var message = $"A new version is available!\n\n" +
+                             $"Current Version: {result.CurrentVersion}\n" +
+                             $"Latest Version: {result.LatestVersion}\n\n" +
+                             "Would you like to download and install it now?";
+
+                if (MessageDialog.ShowQuestion(message, "Update Available", this))
+                {
+                    try
+                    {
+                        var filePath = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.DownloadUpdateAsync(result));
+                        MessageDialog.ShowInformation(
+                            $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
+                            "Download Complete",
+                            this);
+                    }
+                    catch (Exception downloadEx)
+                    {
+                        var errorDialog = new ErrorDialog(
+                            $"Failed to download update: {downloadEx.Message}",
+                            downloadEx,
+                            "Download Failed")
+                        {
+                            Owner = this
+                        };
+                        errorDialog.ShowDialog();
+                    }
+                }
+            }
+            else
+            {
+                var message = $"ColDog Locker is up to date.\n\n" +
+                             $"Current Version: {result.CurrentVersion}\n" +
+                             $"Latest Version: {result.LatestVersion}";
+                MessageDialog.ShowInformation(message, "No Updates Available", this);
+            }
+        }
+        catch (Exception ex)
+        {
+            var errorDialog = new ErrorDialog(
+                $"Failed to check for updates: {ex.Message}",
+                ex,
+                "Update Check Failed")
+            {
+                Owner = this
+            };
+            errorDialog.ShowDialog();
+        }
     }
 
     private void Close_Click(object sender, RoutedEventArgs e)

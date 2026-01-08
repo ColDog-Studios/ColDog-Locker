@@ -52,8 +52,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             if (SettingsManager.Settings.AutoUpdate)
             {
                 Logger.AddEntry("Auto-update is enabled. Checking for updates.", LogLevel.Info);
-                // Hide message if there are no updates available
-                await UpdateManager.CheckForUpdatesAsync(true);
+                try
+                {
+                    await UpdateManager.CheckForUpdatesAsync();
+                }
+                catch
+                {
+                    // Silently ignore update check failures during initialization
+                }
             }
 
             // Log the end of initialization

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Win32;
 using Application = System.Windows.Application;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services;
 
@@ -22,8 +23,8 @@ public class ThemeService : IThemeService
         _currentTheme = theme;
         
         // Save to application settings
-        Properties.Settings.Default.AppTheme = theme.ToString();
-        Properties.Settings.Default.Save();
+        SettingsManager.Settings.AppTheme = theme.ToString();
+        SettingsManager.SaveSettings();
         
         // Apply theme to application
         ApplyTheme(theme);
@@ -34,7 +35,7 @@ public class ThemeService : IThemeService
     public Task LoadThemeAsync()
     {
         // Load from application settings
-        var savedTheme = Properties.Settings.Default.AppTheme;
+        var savedTheme = SettingsManager.Settings.AppTheme;
         
         if (!string.IsNullOrEmpty(savedTheme) && Enum.TryParse<AppTheme>(savedTheme, out var theme))
         {

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Windows;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 
@@ -25,7 +26,7 @@ public partial class ErrorDialog : Window
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Play scale-in animation if animations are enabled
-        if (Properties.Settings.Default.EnableAnimations)
+        if (SettingsManager.Settings.EnableAnimations)
         {
             try
             {

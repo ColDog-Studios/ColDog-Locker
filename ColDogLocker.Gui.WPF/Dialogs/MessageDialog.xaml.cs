@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 
@@ -116,7 +117,7 @@ public partial class MessageDialog : Window
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
         // Play scale-in animation if animations are enabled
-        if (ColDogStudios.ColDogLocker.Gui.WPF.Properties.Settings.Default.EnableAnimations)
+        if (SettingsManager.Settings.EnableAnimations)
         {
             var animation = (Storyboard)TryFindResource("WindowScaleInAnimation");
             animation?.Begin(this);

@@ -48,7 +48,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         AboutHelpDev.ShowHelp();
                         break;
                     case "7":
-                        await UpdateManager.CheckForUpdatesAsync(false);
+                        await CheckForUpdates();
                         break;
                     case "9":
                         SettingsMenu.UpdateSettings();
@@ -97,6 +97,56 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine(line);
             Console.WriteLine(emptyLine);
             Console.ResetColor();
+        }
+
+        private static async Task CheckForUpdates()
+        {
+            MenuTitle("Main Menu > Check for Updates");
+
+            try
+            {
+                var result = await UpdateManager.CheckForUpdatesAsync();
+
+                if (result.UpdateAvailable)
+                {
+                    Console.WriteLine($"\nA newer version is available:\n");
+                    Console.WriteLine($"Current Version: {result.CurrentVersion}");
+                    Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
+                    Console.Write("Do you want to download the latest version? (y/N): ");
+                    
+                    var response = Console.ReadLine()?.ToLower();
+                    if (response == "y")
+                    {
+                        try
+                        {
+                            var filePath = await UpdateManager.DownloadUpdateAsync(result);
+                            Console.WriteLine($"\nDownloaded the latest version to: {filePath}");
+                            Console.WriteLine("Please run the installer to update ColDog Locker.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"\nError downloading update: {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nUpdate cancelled.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"\nColDog Locker is up to date:\n");
+                    Console.WriteLine($"Current Version: {result.CurrentVersion}");
+                    Console.WriteLine($"Latest Version: {result.LatestVersion}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\nAn error occurred while checking for updates: {ex.Message}");
+            }
+
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
         }
     }
 }

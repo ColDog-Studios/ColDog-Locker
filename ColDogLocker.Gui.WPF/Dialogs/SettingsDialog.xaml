@@ -47,18 +47,6 @@
                                         Padding="15,5"/>
                             </Grid>
                         </StackPanel>
-
-                        <!-- Startup -->
-                        <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Startup" 
-                                      FontWeight="SemiBold" 
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,12"/>
-                            <CheckBox x:Name="CheckUpdatesOnStartupCheckBox" 
-                                      Content="Check for updates on startup"
-                                      IsChecked="True"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -123,30 +111,60 @@
                                         Foreground="{DynamicResource TextPrimaryBrush}"
                                         Margin="0,0,0,8"/>
                         </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                        <!-- Show/Hide Elements -->
+            <!-- Updates Tab -->
+            <TabItem Header="Updates">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Interface Elements" 
+                            <CheckBox x:Name="AutoUpdateCheckBox" 
+                                      Content="Enable Auto Update"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,20"/>
+                            
+                            <TextBlock Text="Update Channel" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
-                            <CheckBox x:Name="ShowToolBarCheckBox" 
-                                      Content="Show toolbar"
-                                      IsChecked="True"
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Choose which type of updates you want to receive" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,12"/>
+                            
+                            <RadioButton x:Name="StableChannelRadio" 
+                                        Content="Stable (Recommended)" 
+                                        GroupName="UpdateChannel"
+                                        IsChecked="True"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,4"/>
+                            <TextBlock Text="Receive only stable, tested releases" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="11"
+                                      Margin="20,0,0,12"/>
+                            
+                            <RadioButton x:Name="PrereleaseChannelRadio" 
+                                        Content="Prerelease" 
+                                        GroupName="UpdateChannel"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,4"/>
+                            <TextBlock Text="Get early access to new features before stable release" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="11"
+                                      Margin="20,0,0,8"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
-            <!-- Advanced Tab -->
-            <TabItem Header="Advanced">
+            <!-- Logging Tab -->
+            <TabItem Header="Logging">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
                     <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
-                        <!-- Logging -->
                         <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Logging" 
+                            <TextBlock Text="Logging Options" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
@@ -158,8 +176,16 @@
                             <CheckBox x:Name="DebugModeCheckBox" 
                                       Content="Enable debug mode (verbose logging)"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,12"/>
+                                      Margin="0,0,0,20"/>
                             
+                            <TextBlock Text="Log Retention" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <TextBlock Text="Number of days to keep log files before automatic deletion" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
                             <StackPanel Margin="0,0,0,8">
                                 <TextBlock Text="Log retention (days):" 
                                           Foreground="{DynamicResource TextPrimaryBrush}"
@@ -177,22 +203,36 @@
                                     Padding="15,5"
                                     Margin="0,8,0,0"/>
                         </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                        <!-- Database -->
+            <!-- Database Tab -->
+            <TabItem Header="Database">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Database Maintenance" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
+                            <TextBlock Text="Optimize your database to improve performance and reclaim disk space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,16"/>
                             
-                            <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="Auto-Vacuum Settings" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <TextBlock Text="Automatically optimize database to reclaim disk space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <StackPanel Margin="0,0,0,20">
                                 <TextBlock Text="Auto-vacuum interval (days):" 
                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                           Margin="0,0,0,4"/>
-                                <TextBlock Text="Automatically optimize database to reclaim disk space" 
-                                          Foreground="{DynamicResource TextSecondaryBrush}"
-                                          FontSize="12"
-                                          Margin="0,0,0,8"/>
                                 <TextBox x:Name="DbVacuumIntervalTextBox" 
                                         Text="30"
                                         Width="100"
@@ -200,6 +240,10 @@
                                         TextChanged="NumericTextBox_TextChanged"/>
                             </StackPanel>
 
+                            <TextBlock Text="Manual Optimization" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
                             <Button Content="Vacuum Database Now" 
                                     Click="VacuumDatabase_Click"
                                     HorizontalAlignment="Left"
@@ -210,38 +254,14 @@
                                       FontSize="12"
                                       Margin="0,0,0,0"/>
                         </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                        <!-- Updates -->
-                        <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Updates" 
-                                      FontWeight="SemiBold" 
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,12"/>
-                            <TextBlock Text="Update channel:" 
-                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,8"/>
-                            <RadioButton x:Name="StableChannelRadio" 
-                                        Content="Stable (Recommended)" 
-                                        GroupName="UpdateChannel"
-                                        IsChecked="True"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="Receive only stable, tested releases" 
-                                      Foreground="{DynamicResource TextSecondaryBrush}"
-                                      FontSize="11"
-                                      Margin="20,0,0,8"/>
-                            
-                            <RadioButton x:Name="PrereleaseChannelRadio" 
-                                        Content="Prerelease" 
-                                        GroupName="UpdateChannel"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Margin="0,0,0,4"/>
-                            <TextBlock Text="Get early access to new features before stable release" 
-                                      Foreground="{DynamicResource TextSecondaryBrush}"
-                                      FontSize="11"
-                                      Margin="20,0,0,8"/>
-                        </StackPanel>
-
+            <!-- Advanced Tab -->
+            <TabItem Header="Advanced">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
                         <!-- Performance -->
                         <StackPanel Margin="0,0,0,20">
                             <TextBlock Text="Performance" 
@@ -253,6 +273,10 @@
                                       IsChecked="True"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,8"/>
+                            <TextBlock Text="Disable for better performance on slower systems" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="20,0,0,0"/>
                         </StackPanel>
 
                         <!-- Data Management -->
