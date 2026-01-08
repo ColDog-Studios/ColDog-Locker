@@ -21,51 +21,46 @@
                 <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,998,598"/>
             </Border.Clip>
         <DockPanel>
-            <!-- Custom Title Bar -->
+            <!-- Custom Title Bar with Menu -->
             <Grid DockPanel.Dock="Top" 
-                  Background="{DynamicResource HeaderGradientBrush}"
                   Height="40"
-                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                  Background="{DynamicResource HeaderGradientBrush}">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- App Icon and Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="15,0,0,0" VerticalAlignment="Center">
-                    <Image Source="cdlIcon.ico"
-                           Width="32" 
-                           Height="32"
-                           Margin="0,0,10,0"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="ColDog Locker" 
-                               FontWeight="SemiBold"
-                               FontSize="18"
-                               Foreground="{DynamicResource HeaderTextBrush}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+                <!-- App Icon -->
+                <Image Grid.Column="0" 
+                       Source="cdlIcon.ico"
+                       Width="24" 
+                       Height="24"
+                       Margin="10,0,0,0"
+                       VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
                 
-                <!-- Window Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="MinimizeButton" 
-                            Content="─" 
-                            Width="40" Height="40"
-                            Click="Minimize_Click"
-                            Style="{DynamicResource WindowControlButtonStyle}"
-                            Foreground="{DynamicResource HeaderTextBrush}"
-                            ToolTip="Minimize"/>
-                    <Button x:Name="CloseButton" 
-                            Content="✕" 
-                            Width="40" Height="40"
-                            Click="Close_Click"
-                            Style="{DynamicResource CloseButtonStyle}"
-                            Foreground="{DynamicResource HeaderTextBrush}"
-                            ToolTip="Close"/>
-                </StackPanel>
-            </Grid>
-        <!-- Menu Bar -->
-        <Menu x:Name="MainMenu" DockPanel.Dock="Top">
+                <!-- Draggable Area -->
+                <Border Grid.Column="2" 
+                        Background="Transparent"
+                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
+                
+                <!-- Menu Bar -->
+                <Menu Grid.Column="1" 
+                      x:Name="MainMenu" 
+                      VerticalAlignment="Center"
+                      Height="40"
+                      Background="Transparent">
+                    <Menu.ItemContainerStyle>
+                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                            <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
+                            <Setter Property="Padding" Value="12,4"/>
+                            <Setter Property="Height" Value="40"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        </Style>
+                    </Menu.ItemContainerStyle>
             <!-- File Menu -->
             <MenuItem Header="_File">
                 <MenuItem Header="_New Locker" Click="NewLocker_Click" InputGestureText="Ctrl+N">
@@ -158,6 +153,25 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
+                
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="MinimizeButton" 
+                            Content="─" 
+                            Width="40" Height="40"
+                            Click="Minimize_Click"
+                            Style="{DynamicResource WindowControlButtonStyle}"
+                            Foreground="{DynamicResource HeaderTextBrush}"
+                            ToolTip="Minimize"/>
+                    <Button x:Name="CloseButton" 
+                            Content="✕" 
+                            Width="40" Height="40"
+                            Click="Close_Click"
+                            Style="{DynamicResource CloseButtonStyle}"
+                            Foreground="{DynamicResource HeaderTextBrush}"
+                            ToolTip="Close"/>
+                </StackPanel>
+            </Grid>
 
         <!-- Toolbar -->
         <Border DockPanel.Dock="Top" 
