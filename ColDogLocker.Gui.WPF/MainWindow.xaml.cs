@@ -361,14 +361,14 @@ public partial class MainWindow : Window
             LockersGridView.Visibility = Visibility.Visible;
             LockersListViewContainer.Visibility = Visibility.Collapsed;
             //ViewToggleLabel.Text = "List View";
-            ViewToggleIcon.Text = "\uE8FD"; // Grid icon
+            ViewToggleIcon.Text = "\uf2c7"; // List icon
         }
         else
         {
             LockersGridView.Visibility = Visibility.Collapsed;
             LockersListViewContainer.Visibility = Visibility.Visible;
             //ViewToggleLabel.Text = "Grid View";
-            ViewToggleIcon.Text = "\uE80A"; // List icon
+            ViewToggleIcon.Text = "\uE8A9"; // Grid icon
         }
     }
 

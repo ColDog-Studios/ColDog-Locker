@@ -7,8 +7,7 @@
         Title="ColDog Locker" Height="600" Width="1000"
         WindowStyle="None"
         Background="{DynamicResource AppBackgroundGradientBrush}"
-        ResizeMode="CanResize"
-        MaxHeight="{x:Static SystemParameters.MaximizedPrimaryScreenHeight}"
+        ResizeMode="CanMinimize"
         Loaded="Window_Loaded">
     
     <DockPanel>
@@ -51,6 +50,7 @@
                             Width="40" Height="40"
                             Click="Close_Click"
                             Style="{DynamicResource CloseButtonStyle}"
+                            Foreground="{DynamicResource HeaderTextBrush}"
                             ToolTip="Close"/>
                 </StackPanel>
             </Grid>
@@ -60,139 +60,189 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New Locker" Click="NewLocker_Click" InputGestureText="Ctrl+N">
                     <MenuItem.Icon>
-                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets"/>
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
-                <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4"/>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- Locker Menu -->
             <MenuItem Header="_Locker">
                 <MenuItem x:Name="LockMenuItem" Header="_Lock" Click="Lock_Click">
                     <MenuItem.Icon>
-                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets"/>
+                        <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem x:Name="UnlockMenuItem" Header="_Unlock" Click="Unlock_Click">
                     <MenuItem.Icon>
-                        <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets"/>
+                        <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
                 <MenuItem x:Name="RemoveMenuItem" Header="_Remove" Click="Remove_Click" InputGestureText="Delete">
                     <MenuItem.Icon>
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets"/>
+                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
-                <MenuItem x:Name="PropertiesMenuItem" Header="_Properties" Click="Properties_Click"/>
-                <MenuItem x:Name="OpenLocationMenuItem" Header="Open _Location" Click="OpenLocation_Click"/>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                <MenuItem x:Name="PropertiesMenuItem" Header="_Properties" Click="Properties_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem x:Name="OpenLocationMenuItem" Header="Open _Location" Click="OpenLocation_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xED25;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- View Menu -->
             <MenuItem Header="_View">
-                <MenuItem Header="_Toggle View" Click="ToggleView_Click" InputGestureText="Ctrl+T"/>
-                <Separator/>
+                <MenuItem Header="_Toggle View" Click="ToggleView_Click" InputGestureText="Ctrl+T">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
                 <MenuItem Header="_Refresh" Click="Refresh_Click" InputGestureText="F5">
                     <MenuItem.Icon>
-                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets"/>
+                        <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
 
             <!-- Tools Menu -->
             <MenuItem Header="_Tools">
-                <MenuItem Header="_Settings" Click="Settings_Click"/>
-                <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click"/>
+                <MenuItem Header="_Settings" Click="Settings_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- Help Menu -->
             <MenuItem Header="_Help" Click="MenuItem_Click">
-                <MenuItem Header="_Documentation" Click="Documentation_Click"/>
-                <Separator/>
-                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"/>
-                <Separator/>
-                <MenuItem Header="_About" Click="About_Click"/>
+                <MenuItem Header="_Documentation" Click="Documentation_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"></MenuItem>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                <MenuItem Header="_About" Click="About_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
         <!-- Toolbar -->
-        <ToolBarTray DockPanel.Dock="Top" IsLocked="True">
-            <ToolBar x:Name="MainToolBar">
+        <Border DockPanel.Dock="Top" 
+                BorderBrush="{DynamicResource BorderBrush}" 
+                BorderThickness="0,0,0,1">
+            <ToolBarTray IsLocked="True">
+                <ToolBar x:Name="MainToolBar">
                 <ToolBar.Resources>
                     <Style TargetType="{x:Type ToggleButton}" x:Key="{x:Static ToolBar.ToggleButtonStyleKey}">
                         <Setter Property="Visibility" Value="Collapsed"/>
                     </Style>
                 </ToolBar.Resources>
-            <!-- New Locker -->
-            <Button Click="NewLocker_Click" ToolTip="Create new locker (Ctrl+N)">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
-            
-            <Separator/>
+                
+                <!-- New Locker -->
+                <Button Click="NewLocker_Click" 
+                        ToolTip="Create new locker (Ctrl+N)"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
+                
+                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
 
-            <!-- Lock -->
-            <Button x:Name="LockButton" Click="Lock_Click" ToolTip="Lock selected locker(s)">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
+                <!-- Lock -->
+                <Button x:Name="LockButton" 
+                        Click="Lock_Click" 
+                        ToolTip="Lock selected locker(s)"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
 
-            <!-- Unlock -->
-            <Button x:Name="UnlockButton" Click="Unlock_Click" ToolTip="Unlock selected locker(s)">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE785;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
-            
-            <Separator/>
+                <!-- Unlock -->
+                <Button x:Name="UnlockButton" 
+                        Click="Unlock_Click" 
+                        ToolTip="Unlock selected locker(s)"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
+                
+                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
 
-            <!-- Remove -->
-            <Button x:Name="RemoveButton" Click="Remove_Click" ToolTip="Remove selected locker(s) (Delete)">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
-            
-            <Separator/>
+                <!-- Remove -->
+                <Button x:Name="RemoveButton" 
+                        Click="Remove_Click" 
+                        ToolTip="Remove selected locker(s) (Delete)"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
+                
+                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
 
-            <!-- Select All -->
-            <Button x:Name="SelectAllButton" Click="SelectAllToggle_Click" ToolTip="Select/Deselect all lockers">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8B3;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
+                <!-- Select All -->
+                <Button x:Name="SelectAllButton" 
+                        Click="SelectAllToggle_Click" 
+                        ToolTip="Select/Deselect all lockers"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE8B3;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
 
-            <!-- View Toggle -->
-            <Button x:Name="ViewToggleButton" Click="ToggleView_Click" ToolTip="Toggle View">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock x:Name="ViewToggleIcon" Text="&#xE8FD;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
+                <!-- View Toggle -->
+                <Button x:Name="ViewToggleButton" 
+                        Click="ToggleView_Click" 
+                        ToolTip="Toggle View"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock x:Name="ViewToggleIcon" Text="&#xf2c7;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
 
-            <Separator/>
+                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
 
-            <!-- Refresh -->
-            <Button Click="Refresh_Click" ToolTip="Refresh locker list (F5)">
-                <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center"/>
-                    </StackPanel>
-            </Button>
-        </ToolBar>
+                <!-- Refresh -->
+                <Button Click="Refresh_Click" 
+                        ToolTip="Refresh locker list (F5)"
+                        Style="{StaticResource ToolBarButtonStyle}">
+                    <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
+                </Button>
+            </ToolBar>
         </ToolBarTray>
+        </Border>
 
         <!-- Status Bar -->
-        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom" Background="{DynamicResource SubtleGradientBrush}">
-            <TextBlock x:Name="TotalLockersText" Text="0 lockers" Margin="0,0,20,0"/>
-            <Separator/>
-            <TextBlock x:Name="LockedCountText" Text="0 locked" Margin="0,0,20,0"/>
-            <Separator/>
-            <TextBlock x:Name="UnlockedCountText" Text="0 unlocked" Margin="0,0,20,0"/>
-            <Separator/>
-            <TextBlock x:Name="SelectedCountText" Text="0 selected"/>
+        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
+            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                <TextBlock x:Name="TotalLockersText" Text="0 lockers" Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
+            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                <TextBlock x:Name="LockedCountText" Text="0 locked" Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
+            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                <TextBlock x:Name="UnlockedCountText" Text="0 unlocked" Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
+            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                <TextBlock x:Name="SelectedCountText" Text="0 selected" Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
         </StatusBar>
 
         <!-- Main Content Area -->
@@ -234,7 +284,7 @@
                                 <!-- Icon -->
                                 <TextBlock Grid.Row="0" 
                                           Text="{Binding IconGlyph}" 
-                                          FontFamily="Segoe MDL2 Assets"
+                                          FontFamily="Segoe Fluent Icons"
                                           FontSize="48"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
@@ -343,7 +393,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{Binding IconGlyph}" 
-                                                      FontFamily="Segoe MDL2 Assets" 
+                                                      FontFamily="Segoe Fluent Icons" 
                                                       FontSize="16" 
                                                       Margin="0,0,8,0"
                                                       Foreground="{DynamicResource TextPrimaryBrush}"/>

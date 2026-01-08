@@ -84,14 +84,26 @@ public class ThemeService : IThemeService
             effectiveTheme = DetectWindowsTheme();
         }
 
-        // Clear existing theme dictionaries
+        // Clear existing theme dictionaries (but keep Base.xaml)
         var themeDictionaries = app.Resources.MergedDictionaries
-            .Where(d => d.Source != null && d.Source.OriginalString.Contains("Themes/"))
+            .Where(d => d.Source != null && 
+                   d.Source.OriginalString.Contains("Themes/") &&
+                   !d.Source.OriginalString.Contains("Base.xaml"))
             .ToList();
 
         foreach (var dict in themeDictionaries)
         {
             app.Resources.MergedDictionaries.Remove(dict);
+        }
+
+        // Ensure Base.xaml is loaded
+        var hasBase = app.Resources.MergedDictionaries.Any(d => 
+            d.Source != null && d.Source.OriginalString.Contains("Base.xaml"));
+        
+        if (!hasBase)
+        {
+            app.Resources.MergedDictionaries.Insert(0, 
+                new ResourceDictionary { Source = new Uri("Themes/Base.xaml", UriKind.Relative) });
         }
 
         // Add new theme dictionary
