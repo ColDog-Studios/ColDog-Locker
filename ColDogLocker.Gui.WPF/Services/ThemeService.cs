@@ -2,120 +2,124 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using Microsoft.Win32;
 using Application = System.Windows.Application;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
-namespace ColDogStudios.ColDogLocker.Gui.WPF.Services;
-
-/// <summary>
-/// Service for managing application theme
-/// </summary>
-public class ThemeService : IThemeService
+namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 {
-    private const string ThemeSettingKey = "AppTheme";
-    private AppTheme _currentTheme = AppTheme.ColDogStudios;
-
-    public AppTheme CurrentTheme => _currentTheme;
-
-    public Task SetThemeAsync(AppTheme theme)
+    /// <summary>
+    /// Service for managing application theme
+    /// </summary>
+    public class ThemeService : IThemeService
     {
-        _currentTheme = theme;
-        
-        // Save to application settings
-        SettingsManager.Settings.AppTheme = theme.ToString();
-        SettingsManager.SaveSettings();
-        
-        // Apply theme to application
-        ApplyTheme(theme);
-        
-        return Task.CompletedTask;
-    }
+        private const string ThemeSettingKey = "AppTheme";
+        private AppTheme _currentTheme = AppTheme.ColDogStudios;
 
-    public Task LoadThemeAsync()
-    {
-        // Load from application settings
-        var savedTheme = SettingsManager.Settings.AppTheme;
-        
-        if (!string.IsNullOrEmpty(savedTheme) && Enum.TryParse<AppTheme>(savedTheme, out var theme))
+        public AppTheme CurrentTheme => _currentTheme;
+
+        public Task SetThemeAsync(AppTheme theme)
         {
             _currentTheme = theme;
-        }
-        else
-        {
-            // Default to ColDogStudios theme
-            _currentTheme = AppTheme.ColDogStudios;
-        }
-        
-        ApplyTheme(_currentTheme);
-        
-        return Task.CompletedTask;
-    }
 
-    private AppTheme DetectWindowsTheme()
-    {
-        try
+            // Save to application settings
+            SettingsManager.Settings.AppTheme = theme.ToString();
+            SettingsManager.SaveSettings();
+
+            // Apply theme to application
+            ApplyTheme(theme);
+
+            return Task.CompletedTask;
+        }
+
+        public Task LoadThemeAsync()
         {
-            // Check Windows Registry for light/dark theme preference
-            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            var value = key?.GetValue("AppsUseLightTheme");
-            
-            if (value is int themeValue)
+            // Load from application settings
+            var savedTheme = SettingsManager.Settings.AppTheme;
+
+            if (!string.IsNullOrEmpty(savedTheme) && Enum.TryParse<AppTheme>(savedTheme, out var theme))
             {
-                return themeValue == 1 ? AppTheme.Light : AppTheme.Dark;
+                _currentTheme = theme;
             }
-        }
-        catch
-        {
-            // If detection fails, default to Light theme
-        }
-        
-        return AppTheme.Light;
-    }
+            else
+            {
+                // Default to ColDogStudios theme
+                _currentTheme = AppTheme.ColDogStudios;
+            }
 
-    private void ApplyTheme(AppTheme theme)
-    {
-        var app = System.Windows.Application.Current;
-        if (app == null) return;
+            ApplyTheme(_currentTheme);
 
-        // If Auto theme, detect Windows theme
-        var effectiveTheme = theme;
-        if (theme == AppTheme.Auto)
-        {
-            effectiveTheme = DetectWindowsTheme();
+            return Task.CompletedTask;
         }
 
-        // Clear existing theme dictionaries (but keep Base.xaml)
-        var themeDictionaries = app.Resources.MergedDictionaries
-            .Where(d => d.Source != null && 
-                   d.Source.OriginalString.Contains("Themes/") &&
-                   !d.Source.OriginalString.Contains("Base.xaml"))
-            .ToList();
-
-        foreach (var dict in themeDictionaries)
+        private AppTheme DetectWindowsTheme()
         {
-            app.Resources.MergedDictionaries.Remove(dict);
+            try
+            {
+                // Check Windows Registry for light/dark theme preference
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+                var value = key?.GetValue("AppsUseLightTheme");
+
+                if (value is int themeValue)
+                {
+                    return themeValue == 1 ? AppTheme.Light : AppTheme.Dark;
+                }
+            }
+            catch
+            {
+                // If detection fails, default to Light theme
+            }
+
+            return AppTheme.Light;
         }
 
-        // Ensure Base.xaml is loaded
-        var hasBase = app.Resources.MergedDictionaries.Any(d => 
-            d.Source != null && d.Source.OriginalString.Contains("Base.xaml"));
-        
-        if (!hasBase)
+        private void ApplyTheme(AppTheme theme)
         {
-            app.Resources.MergedDictionaries.Insert(0, 
-                new ResourceDictionary { Source = new Uri("Themes/Base.xaml", UriKind.Relative) });
+            var app = System.Windows.Application.Current;
+            if (app == null)
+            {
+                return;
+            }
+
+            // If Auto theme, detect Windows theme
+            var effectiveTheme = theme;
+            if (theme == AppTheme.Auto)
+            {
+                effectiveTheme = DetectWindowsTheme();
+            }
+
+            // Clear existing theme dictionaries (but keep Base.xaml)
+            var themeDictionaries = app.Resources.MergedDictionaries
+                .Where(d => d.Source != null &&
+                       d.Source.OriginalString.Contains("Themes/") &&
+                       !d.Source.OriginalString.Contains("Base.xaml"))
+                .ToList();
+
+            foreach (var dict in themeDictionaries)
+            {
+                app.Resources.MergedDictionaries.Remove(dict);
+            }
+
+            // Ensure Base.xaml is loaded
+            var hasBase = app.Resources.MergedDictionaries.Any(d =>
+                d.Source != null && d.Source.OriginalString.Contains("Base.xaml"));
+
+            if (!hasBase)
+            {
+                app.Resources.MergedDictionaries.Insert(0,
+                    new ResourceDictionary { Source = new Uri("Themes/Base.xaml", UriKind.Relative) });
+            }
+
+            // Add new theme dictionary
+            var themeUri = effectiveTheme switch
+            {
+                AppTheme.Light => new Uri("Themes/LightTheme.xaml", UriKind.Relative),
+                AppTheme.Dark => new Uri("Themes/DarkTheme.xaml", UriKind.Relative),
+                AppTheme.ColDogStudios => new Uri("Themes/ColDogStudiosTheme.xaml", UriKind.Relative),
+                _ => new Uri("Themes/ColDogStudiosTheme.xaml", UriKind.Relative)
+            };
+
+            app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = themeUri });
         }
-
-        // Add new theme dictionary
-        var themeUri = effectiveTheme switch
-        {
-            AppTheme.Light => new Uri("Themes/LightTheme.xaml", UriKind.Relative),
-            AppTheme.Dark => new Uri("Themes/DarkTheme.xaml", UriKind.Relative),
-            AppTheme.ColDogStudios => new Uri("Themes/ColDogStudiosTheme.xaml", UriKind.Relative),
-            _ => new Uri("Themes/ColDogStudiosTheme.xaml", UriKind.Relative)
-        };
-
-        app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = themeUri });
     }
 }

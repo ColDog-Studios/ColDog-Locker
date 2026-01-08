@@ -35,7 +35,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             client.DefaultRequestHeaders.Add("User-Agent", "request");
 
             // Fetch the latest release information based on configured channel
-            var releaseInfo = await FetchLatestReleaseAsync(client) 
+            var releaseInfo = await FetchLatestReleaseAsync(client)
                 ?? throw new Exception("No releases found. This may be because the repository has no published releases yet, or there is a network connectivity issue.");
 
             // Extract the latest version from the release information

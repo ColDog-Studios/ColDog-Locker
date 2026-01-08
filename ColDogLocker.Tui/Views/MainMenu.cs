@@ -113,7 +113,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
                     Console.Write("Do you want to download the latest version? (y/N): ");
-                    
+
                     var response = Console.ReadLine()?.ToLower();
                     if (response == "y")
                     {

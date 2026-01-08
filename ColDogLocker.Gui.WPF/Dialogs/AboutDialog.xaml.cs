@@ -3,191 +3,193 @@ using System.Diagnostics;
 using System.Windows;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
-namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
-
-public partial class AboutDialog : Window
+namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
-    public AboutDialog()
+    public partial class AboutDialog : Window
     {
-        InitializeComponent();
-        LoadSystemInformation();
-    }
-
-    private void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-        // Play scale-in animation if animations are enabled
-        if (SettingsManager.Settings.EnableAnimations)
+        public AboutDialog()
         {
+            InitializeComponent();
+            LoadSystemInformation();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Play scale-in animation if animations are enabled
+            if (SettingsManager.Settings.EnableAnimations)
+            {
+                try
+                {
+                    if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                    {
+                        storyboard.Begin(this);
+                    }
+                }
+                catch
+                {
+                    // Animation failed, continue without it
+                }
+            }
+        }
+
+        private void LoadSystemInformation()
+        {
+            // Set application version
             try
             {
-                if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
-                {
-                    storyboard.Begin(this);
-                }
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var version = assembly.GetName().Version;
+                VersionText.Text = $"Version {version?.ToString(3) ?? "1.0.0"}";
             }
             catch
             {
-                // Animation failed, continue without it
+                VersionText.Text = "Version 1.0.0";
+            }
+
+            // Set OS information
+            try
+            {
+                OSText.Text = Environment.OSVersion.ToString();
+            }
+            catch
+            {
+                OSText.Text = "Unknown";
+            }
+
+            // Set .NET Runtime version
+            try
+            {
+                RuntimeText.Text = $".NET {Environment.Version}";
+            }
+            catch
+            {
+                RuntimeText.Text = "Unknown";
+            }
+
+            // Set installation path
+            try
+            {
+                InstallPathText.Text = AppContext.BaseDirectory;
+            }
+            catch
+            {
+                InstallPathText.Text = "Unknown";
             }
         }
-    }
 
-    private void LoadSystemInformation()
-    {
-        // Set application version
-        try
+        private void Documentation_Click(object sender, RoutedEventArgs e)
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var version = assembly.GetName().Version;
-            VersionText.Text = $"Version {version?.ToString(3) ?? "1.0.0"}";
-        }
-        catch
-        {
-            VersionText.Text = "Version 1.0.0";
+            OpenUrl("https://github.com/ColDogStudios/ColDog-Locker/wiki");
         }
 
-        // Set OS information
-        try
+        private void GitHub_Click(object sender, RoutedEventArgs e)
         {
-            OSText.Text = Environment.OSVersion.ToString();
-        }
-        catch
-        {
-            OSText.Text = "Unknown";
+            OpenUrl("https://github.com/ColDogStudios/ColDog-Locker");
         }
 
-        // Set .NET Runtime version
-        try
+        private void ReportIssue_Click(object sender, RoutedEventArgs e)
         {
-            RuntimeText.Text = $".NET {Environment.Version}";
-        }
-        catch
-        {
-            RuntimeText.Text = "Unknown";
+            OpenUrl("https://github.com/ColDogStudios/ColDog-Locker/issues/new");
         }
 
-        // Set installation path
-        try
+        private void ContactSupport_Click(object sender, RoutedEventArgs e)
         {
-            InstallPathText.Text = AppContext.BaseDirectory;
+            OpenUrl("mailto:support@coldogstudios.com?subject=ColDog%20Locker%20Support");
         }
-        catch
+
+        private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
         {
-            InstallPathText.Text = "Unknown";
-        }
-    }
-
-    private void Documentation_Click(object sender, RoutedEventArgs e)
-    {
-        OpenUrl("https://github.com/ColDogStudios/ColDog-Locker/wiki");
-    }
-
-    private void GitHub_Click(object sender, RoutedEventArgs e)
-    {
-        OpenUrl("https://github.com/ColDogStudios/ColDog-Locker");
-    }
-
-    private void ReportIssue_Click(object sender, RoutedEventArgs e)
-    {
-        OpenUrl("https://github.com/ColDogStudios/ColDog-Locker/issues/new");
-    }
-
-    private void ContactSupport_Click(object sender, RoutedEventArgs e)
-    {
-        OpenUrl("mailto:support@coldogstudios.com?subject=ColDog%20Locker%20Support");
-    }
-
-    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var result = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.CheckForUpdatesAsync());
-
-            if (result.UpdateAvailable)
+            try
             {
-                var message = $"A new version is available!\n\n" +
-                             $"Current Version: {result.CurrentVersion}\n" +
-                             $"Latest Version: {result.LatestVersion}\n\n" +
-                             "Would you like to download and install it now?";
+                var result = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.CheckForUpdatesAsync());
 
-                if (MessageDialog.ShowQuestion(message, "Update Available", this))
+                if (result.UpdateAvailable)
                 {
-                    try
+                    var message = $"A new version is available!\n\n" +
+                                 $"Current Version: {result.CurrentVersion}\n" +
+                                 $"Latest Version: {result.LatestVersion}\n\n" +
+                                 "Would you like to download and install it now?";
+
+                    if (MessageDialog.ShowQuestion(message, "Update Available", this))
                     {
-                        var filePath = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.DownloadUpdateAsync(result));
-                        MessageDialog.ShowInformation(
-                            $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
-                            "Download Complete",
-                            this);
-                    }
-                    catch (Exception downloadEx)
-                    {
-                        var errorDialog = new ErrorDialog(
-                            $"Failed to download update: {downloadEx.Message}",
-                            downloadEx,
-                            "Download Failed")
+                        try
                         {
-                            Owner = this
-                        };
-                        errorDialog.ShowDialog();
+                            var filePath = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.DownloadUpdateAsync(result));
+                            MessageDialog.ShowInformation(
+                                $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
+                                "Download Complete",
+                                this);
+                        }
+                        catch (Exception downloadEx)
+                        {
+                            var errorDialog = new ErrorDialog(
+                                $"Failed to download update: {downloadEx.Message}",
+                                downloadEx,
+                                "Download Failed")
+                            {
+                                Owner = this
+                            };
+                            errorDialog.ShowDialog();
+                        }
                     }
                 }
+                else
+                {
+                    var message = $"ColDog Locker is up to date.\n\n" +
+                                 $"Current Version: {result.CurrentVersion}\n" +
+                                 $"Latest Version: {result.LatestVersion}";
+                    MessageDialog.ShowInformation(message, "No Updates Available", this);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var message = $"ColDog Locker is up to date.\n\n" +
-                             $"Current Version: {result.CurrentVersion}\n" +
-                             $"Latest Version: {result.LatestVersion}";
-                MessageDialog.ShowInformation(message, "No Updates Available", this);
+                var errorDialog = new ErrorDialog(
+                    $"Failed to check for updates: {ex.Message}",
+                    ex,
+                    "Update Check Failed")
+                {
+                    Owner = this
+                };
+                errorDialog.ShowDialog();
             }
         }
-        catch (Exception ex)
+
+        private void Close_Click(object sender, RoutedEventArgs e)
         {
-            var errorDialog = new ErrorDialog(
-                $"Failed to check for updates: {ex.Message}",
-                ex,
-                "Update Check Failed")
+            Close();
+        }
+
+        private void OpenUrl(string url)
+        {
+            try
             {
-                Owner = this
-            };
-            errorDialog.ShowDialog();
-        }
-    }
-
-    private void Close_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void OpenUrl(string url)
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
             {
-                FileName = url,
-                UseShellExecute = true
-            });
+                MessageDialog.ShowError(
+                    $"Failed to open URL: {ex.Message}",
+                    "Error",
+                    this);
+            }
         }
-        catch (Exception ex)
-        {
-            MessageDialog.ShowError(
-                $"Failed to open URL: {ex.Message}",
-                "Error",
-                this);
-        }
-    }
 
-    /// <summary>
-    /// Convenience method to show the About dialog
-    /// </summary>
-    public static void Show(Window? owner = null)
-    {
-        var dialog = new AboutDialog();
-        if (owner != null)
+        /// <summary>
+        /// Convenience method to show the About dialog
+        /// </summary>
+        public static void Show(Window? owner = null)
         {
-            dialog.Owner = owner;
+            var dialog = new AboutDialog();
+            if (owner != null)
+            {
+                dialog.Owner = owner;
+            }
+
+            dialog.ShowDialog();
         }
-        dialog.ShowDialog();
     }
 }
