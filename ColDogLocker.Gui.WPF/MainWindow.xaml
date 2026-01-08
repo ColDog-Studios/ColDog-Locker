@@ -14,11 +14,11 @@
     <Border CornerRadius="10" 
             BorderBrush="#80000000" 
             BorderThickness="1">
-        <Border CornerRadius="9"
+        <Border CornerRadius="10"
                 Background="{DynamicResource AppBackgroundGradientBrush}"
                 ClipToBounds="True">
             <Border.Clip>
-                <RectangleGeometry RadiusX="9" RadiusY="9" Rect="0,0,998,598"/>
+                <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,998,598"/>
             </Border.Clip>
         <DockPanel>
             <!-- Custom Title Bar -->
