@@ -139,6 +139,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 {
                     LockersGridView.ItemsSource = _viewModel.FilteredLockers;
                 }
+
                 if (LockersListView.ItemsSource == null)
                 {
                     LockersListView.ItemsSource = _viewModel.FilteredLockers;
@@ -414,7 +415,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 LockersListViewContainer.Visibility = Visibility.Visible;
                 //ViewToggleLabel.Text = "Grid View";
                 ViewToggleIcon.Text = "\uE8A9"; // Grid icon
-                
+
                 // Initialize list view columns when first shown
                 if (!_listViewInitialized)
                 {
@@ -709,17 +710,23 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             try
             {
                 if (LockersListView == null || LockersGridViewColumns == null)
+                {
                     return;
+                }
 
                 // Make sure the list view is visible and loaded
                 if (LockersListView.Visibility != Visibility.Visible || !LockersListView.IsLoaded)
+                {
                     return;
+                }
 
                 // Attach thumb drag events for resizing
                 foreach (var column in LockersGridViewColumns.Columns)
                 {
                     if (column.HeaderContainerStyle?.GetType().Name == "CheckboxColumnHeaderStyle")
+                    {
                         continue; // Skip checkbox column
+                    }
 
                     // Find the header container
                     var header = FindColumnHeader(column);
@@ -788,7 +795,10 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 {
                     // Set a reasonable default width if no data
                     if (column != null)
+                    {
                         column.Width = 100;
+                    }
+
                     return;
                 }
 
@@ -825,13 +835,30 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         private void AutoSizeAllColumns()
         {
             if (LockersGridViewColumns == null)
+            {
                 return;
+            }
 
             // Auto-size all columns except checkbox and location
-            if (NameColumn != null) AutoSizeColumn(NameColumn);
-            if (StatusColumn != null) AutoSizeColumn(StatusColumn);
-            if (LastModifiedColumn != null) AutoSizeColumn(LastModifiedColumn);
-            if (SizeColumn != null) AutoSizeColumn(SizeColumn);
+            if (NameColumn != null)
+            {
+                AutoSizeColumn(NameColumn);
+            }
+
+            if (StatusColumn != null)
+            {
+                AutoSizeColumn(StatusColumn);
+            }
+
+            if (LastModifiedColumn != null)
+            {
+                AutoSizeColumn(LastModifiedColumn);
+            }
+
+            if (SizeColumn != null)
+            {
+                AutoSizeColumn(SizeColumn);
+            }
 
             // Calculate remaining width for Location column
             SetLocationColumnWidth();
@@ -843,7 +870,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         private void SetLocationColumnWidth()
         {
             if (LocationColumn == null || LockersListView == null)
+            {
                 return;
+            }
 
             // Calculate total width of other columns
             double otherColumnsWidth = 0;
@@ -868,15 +897,25 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         private string GetColumnValueAsString(LockerViewModel locker, GridViewColumn column)
         {
             if (column == NameColumn)
+            {
                 return locker.Name ?? "";
+            }
             else if (column == StatusColumn)
+            {
                 return locker.IsLocked ? "Locked" : "Unlocked";
+            }
             else if (column == LastModifiedColumn)
+            {
                 return locker.LastModified.ToString("MM/dd/yyyy hh:mm:ss tt");
+            }
             else if (column == SizeColumn)
+            {
                 return locker.SizeText ?? "";
+            }
             else if (column == LocationColumn)
+            {
                 return locker.Location ?? "";
+            }
 
             return "";
         }
@@ -911,7 +950,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         private T? FindVisualChild<T>(DependencyObject? parent, Func<T, bool>? predicate = null) where T : DependencyObject
         {
             if (parent == null)
+            {
                 return null;
+            }
 
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
@@ -938,11 +979,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         private void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine($"ColumnHeader_Click called - sender: {sender?.GetType().Name}");
-            
+
             if (sender is GridViewColumnHeader header && header.Tag is string columnName)
             {
                 System.Diagnostics.Debug.WriteLine($"Sorting by column: {columnName}, Current: {_currentSortColumn}, Ascending: {_currentSortAscending}");
-                
+
                 // Toggle sort direction if clicking the same column
                 if (_currentSortColumn == columnName)
                 {
@@ -976,7 +1017,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             try
             {
                 if (_viewModel.FilteredLockers == null || _viewModel.FilteredLockers.Count == 0)
+                {
                     return;
+                }
 
                 // Create a copy of the collection to sort
                 var items = _viewModel.FilteredLockers.ToArray();
@@ -1012,7 +1055,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 // Also update ViewModel sort properties
                 _viewModel.SortColumn = columnName;
                 _viewModel.SortAscending = ascending;
-                
+
                 System.Diagnostics.Debug.WriteLine($"Sorted by {columnName} {(ascending ? "ascending" : "descending")} - {sortedList.Count} items");
             }
             catch (Exception ex)
