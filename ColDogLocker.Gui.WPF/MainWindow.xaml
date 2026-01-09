@@ -51,7 +51,7 @@
                 <Menu Grid.Column="1" 
                       x:Name="MainMenu" 
                       VerticalAlignment="Center"
-                      Height="40"
+                      Height="32"
                       Background="Transparent">
                     <Menu.ItemContainerStyle>
                         <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
@@ -62,7 +62,7 @@
                         </Style>
                     </Menu.ItemContainerStyle>
             <!-- File Menu -->
-            <MenuItem Header="_File">
+            <MenuItem Header="_File" Height="32">
                 <MenuItem Header="_New Locker" Click="NewLocker_Click" InputGestureText="Ctrl+N">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -77,7 +77,7 @@
             </MenuItem>
 
             <!-- Locker Menu -->
-            <MenuItem Header="_Locker">
+            <MenuItem Header="_Locker" Height="32">
                 <MenuItem x:Name="LockMenuItem" Header="_Lock" Click="Lock_Click">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -108,7 +108,7 @@
             </MenuItem>
 
             <!-- View Menu -->
-            <MenuItem Header="_View">
+            <MenuItem Header="_View" Height="32">
                 <MenuItem Header="_Toggle View" Click="ToggleView_Click" InputGestureText="Ctrl+T">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -123,7 +123,7 @@
             </MenuItem>
 
             <!-- Tools Menu -->
-            <MenuItem Header="_Tools">
+            <MenuItem Header="_Tools" Height="32">
                 <MenuItem Header="_Settings" Click="Settings_Click">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
@@ -137,7 +137,7 @@
             </MenuItem>
 
             <!-- Help Menu -->
-            <MenuItem Header="_Help" Click="MenuItem_Click">
+            <MenuItem Header="_Help" Click="MenuItem_Click" Height="32">
                 <MenuItem Header="_Documentation" Click="Documentation_Click">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
