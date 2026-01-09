@@ -343,115 +343,305 @@
                 </ListBox.ContextMenu>
             </ListBox>
 
-            <!-- List View -->
+            <!-- Modern List View -->
             <Grid x:Name="LockersListViewContainer" Visibility="Collapsed">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <Grid.Resources>
+                    <!-- GridViewColumnHeader Style with Resizing and Sorting -->
+                    <Style x:Key="ModernGridViewColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        <Setter Property="Padding" Value="8,6"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                    <Grid>
+                                        <!-- Main header area -->
+                                        <Border x:Name="HeaderBorder"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Header Content -->
+                                                <ContentPresenter Grid.Column="0"
+                                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                
+                                                <!-- Sort Indicator -->
+                                                <TextBlock x:Name="SortArrow" 
+                                                         Grid.Column="1"
+                                                         FontFamily="Segoe Fluent Icons"
+                                                         FontSize="12"
+                                                         Margin="4,0,4,0"
+                                                         VerticalAlignment="Center"
+                                                         Visibility="Collapsed"
+                                                         Foreground="{DynamicResource AccentBrush}"
+                                                         IsHitTestVisible="False"/>
+                                            </Grid>
+                                        </Border>
+                                        
+                                        <!-- Resize Thumb - overlays the right edge -->
+                                        <Thumb x:Name="PART_HeaderGripper"
+                                               HorizontalAlignment="Right"
+                                               Width="6"
+                                               Margin="0,0,-3,0"
+                                               Cursor="SizeWE"
+                                               Opacity="0">
+                                            <Thumb.Template>
+                                                <ControlTemplate TargetType="{x:Type Thumb}">
+                                                    <Border Background="Transparent"/>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <!-- Hover Effect -->
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                        </Trigger>
+                                        <!-- Pressed Effect -->
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource BorderBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
+                    <!-- Fixed Checkbox Column Header Style (No Resizing) -->
+                    <Style x:Key="CheckboxColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource ModernGridViewColumnHeaderStyle}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <CheckBox x:Name="SelectAllCheckBox"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Click="SelectAllCheckBox_Click"
+                                                  ToolTip="Select/Deselect All"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
+                    <!-- ListView Item Style -->
+                    <Style x:Key="ModernListViewItemStyle" TargetType="{x:Type ListViewItem}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <GridViewRowPresenter Content="{TemplateBinding Content}"
+                                                            Columns="{TemplateBinding GridView.ColumnCollection}"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <!-- Hover Effect -->
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                        </Trigger>
+                                        <!-- Selected Effect -->
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background">
+                                                <Setter.Value>
+                                                    <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.2"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Trigger>
+                                        <!-- Selected + Hover -->
+                                        <MultiTrigger>
+                                            <MultiTrigger.Conditions>
+                                                <Condition Property="IsSelected" Value="True"/>
+                                                <Condition Property="IsMouseOver" Value="True"/>
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="Background">
+                                                <Setter.Value>
+                                                    <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.3"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </MultiTrigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Grid.Resources>
                 
-                <!-- Header Row -->
-                <Grid Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48"/> <!-- Checkbox Column -->
-                        <ColumnDefinition Width="200"/> <!-- Name -->
-                        <ColumnDefinition Width="120"/> <!-- Status -->
-                        <ColumnDefinition Width="150"/> <!-- Last Modified -->
-                        <ColumnDefinition Width="100"/> <!-- Size -->
-                        <ColumnDefinition Width="*"/> <!-- Location -->
-                    </Grid.ColumnDefinitions>
-                    
-                    <!-- Select All Checkbox -->
-                    <CheckBox Grid.Column="0" 
-                              x:Name="SelectAllCheckBox"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"
-                              Margin="12,0,0,0"
-                              Click="SelectAllCheckBox_Click"
-                              ToolTip="Select/Deselect All"/>
-                    
-                    <!-- Column Headers -->
-                    <Button Grid.Column="1" Content="Name" Click="SortByName_Click" 
-                            Background="Transparent" BorderThickness="0" 
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"/>
-                    
-                    <Button Grid.Column="2" Content="Status" Click="SortByStatus_Click" 
-                            Background="Transparent" BorderThickness="0" 
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"/>
-                    
-                    <Button Grid.Column="3" Content="Last Modified" Click="SortByLastModified_Click" 
-                            Background="Transparent" BorderThickness="0" 
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"/>
-                    
-                    <Button Grid.Column="4" Content="Size" Click="SortBySize_Click" 
-                            Background="Transparent" BorderThickness="0" 
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"/>
-                    
-                    <Button Grid.Column="5" Content="Location" Click="SortByLocation_Click" 
-                            Background="Transparent" BorderThickness="0" 
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,4"/>
-                </Grid>
-                
-                <!-- List View -->
-                <ListView x:Name="LockersListView" 
-                          Grid.Row="1"
+                <!-- ListView with GridView -->
+                <ListView x:Name="LockersListView"
                           SelectionMode="Multiple"
                           MouseDoubleClick="LockerItem_DoubleClick"
                           SelectionChanged="LockersView_SelectionChanged"
                           Background="Transparent"
-                          BorderThickness="0">
+                          BorderThickness="0"
+                          ItemContainerStyle="{StaticResource ModernListViewItemStyle}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="False">
                     <ListView.View>
-                        <GridView>
-                            <GridViewColumn Width="200" Header="">
+                        <GridView x:Name="LockersGridViewColumns">
+                            <!-- Checkbox Column (Fixed Width) -->
+                            <GridViewColumn Width="48" HeaderContainerStyle="{StaticResource CheckboxColumnHeaderStyle}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" 
-                                                  TextTrimming="CharacterEllipsis"
-                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Margin="12,0,0,0"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            
-                            <GridViewColumn Width="120" Header="">
+
+                            <!-- Name Column -->
+                            <GridViewColumn x:Name="NameColumn" 
+                                          Width="200"
+                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="Name" 
+                                                        Click="ColumnHeader_Click"
+                                                        Tag="Name"/>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding IconGlyph}" 
-                                                      FontFamily="Segoe Fluent Icons" 
-                                                      FontSize="16" 
-                                                      Margin="0,0,8,0"
-                                                      Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                            <TextBlock Text="{Binding StatusText}"
-                                                      Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding Name}" 
+                                                   Padding="4,4"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Name}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+
+                            <!-- Status Column -->
+                            <GridViewColumn x:Name="StatusColumn"
+                                          Width="120"
+                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="Status" 
+                                                        Click="ColumnHeader_Click"
+                                                        Tag="Status"/>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="4">
+                                            <TextBlock FontFamily="Segoe Fluent Icons" 
+                                                     FontSize="14"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,4,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="&#xE785;"/> <!-- Unlocked -->
+                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsLocked}" Value="True">
+                                                                <Setter Property="Text" Value="&#xE72E;"/> <!-- Locked -->
+                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock VerticalAlignment="Center"
+                                                     Foreground="{DynamicResource TextPrimaryBrush}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Unlocked"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsLocked}" Value="True">
+                                                                <Setter Property="Text" Value="Locked"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            
-                            <GridViewColumn Width="150" Header="">
+
+                            <!-- Last Modified Column -->
+                            <GridViewColumn x:Name="LastModifiedColumn"
+                                          Width="180"
+                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="Last Modified" 
+                                                        Click="ColumnHeader_Click"
+                                                        Tag="LastModified"/>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding LastModified}"
-                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}" 
+                                                   Padding="4,4"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            
-                            <GridViewColumn Width="100" Header="">
+
+                            <!-- Size Column -->
+                            <GridViewColumn x:Name="SizeColumn"
+                                          Width="100"
+                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="Size" 
+                                                        Click="ColumnHeader_Click"
+                                                        Tag="Size"/>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding SizeText}"
-                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <TextBlock Text="{Binding SizeText}" 
+                                                   Padding="4,4"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding SizeText}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            
-                            <GridViewColumn Width="350" Header="">
+
+                            <!-- Location Column -->
+                            <GridViewColumn x:Name="LocationColumn"
+                                          Width="300"
+                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <GridViewColumn.Header>
+                                    <GridViewColumnHeader Content="Location" 
+                                                        Click="ColumnHeader_Click"
+                                                        Tag="Location"/>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Location}" 
-                                                  TextTrimming="CharacterEllipsis"
-                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                   Padding="4,4"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Location}"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -459,11 +649,11 @@
                     </ListView.View>
                     <ListView.ContextMenu>
                         <ContextMenu>
-                            <MenuItem Header="Select All" Click="SelectAll_Click"/>
-                            <MenuItem Header="Deselect All" Click="DeselectAll_Click"/>
+                            <MenuItem Header="Select All" Click="SelectAll_Click" x:Name="ContextSelectAllItem2"/>
+                            <MenuItem Header="Deselect All" Click="DeselectAll_Click" x:Name="ContextDeselectAllItem2"/>
                             <Separator/>
-                            <MenuItem Header="Lock" Click="Lock_Click"/>
-                            <MenuItem Header="Unlock" Click="Unlock_Click"/>
+                            <MenuItem Header="Lock" Click="Lock_Click" x:Name="ContextLockItem2"/>
+                            <MenuItem Header="Unlock" Click="Unlock_Click" x:Name="ContextUnlockItem2"/>
                             <Separator/>
                             <MenuItem Header="Remove" Click="Remove_Click"/>
                             <Separator/>

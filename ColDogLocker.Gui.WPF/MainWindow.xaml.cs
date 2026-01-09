@@ -3,7 +3,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
@@ -19,6 +21,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
     {
         private readonly MainViewModel _viewModel;
         private bool _isGridView = true;
+        private string _currentSortColumn = "";
+        private bool _currentSortAscending = true;
+        private bool _listViewInitialized = false;
 
         public MainWindow()
         {
@@ -74,6 +79,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     // Animation failed, continue without it
                 }
             }
+
+            // Don't initialize list view columns here since the view is not visible yet
+            // It will be initialized when the user switches to list view
         }
 
         #region Window Controls
@@ -118,10 +126,23 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     });
                 }
 
-                // Update filtered list
-                _viewModel.FilteredLockers = new ObservableCollection<LockerViewModel>(_viewModel.Lockers.OrderBy(l => l.Name));
-                LockersGridView.ItemsSource = _viewModel.FilteredLockers;
-                LockersListView.ItemsSource = _viewModel.FilteredLockers;
+                // Update filtered list - don't create new collection, reuse existing one
+                var sortedLockers = _viewModel.Lockers.OrderBy(l => l.Name).ToList();
+                _viewModel.FilteredLockers.Clear();
+                foreach (var locker in sortedLockers)
+                {
+                    _viewModel.FilteredLockers.Add(locker);
+                }
+
+                // Set ItemsSource only if not already set
+                if (LockersGridView.ItemsSource == null)
+                {
+                    LockersGridView.ItemsSource = _viewModel.FilteredLockers;
+                }
+                if (LockersListView.ItemsSource == null)
+                {
+                    LockersListView.ItemsSource = _viewModel.FilteredLockers;
+                }
 
                 UpdateStatusBar();
             }
@@ -393,6 +414,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 LockersListViewContainer.Visibility = Visibility.Visible;
                 //ViewToggleLabel.Text = "Grid View";
                 ViewToggleIcon.Text = "\uE8A9"; // Grid icon
+                
+                // Initialize list view columns when first shown
+                if (!_listViewInitialized)
+                {
+                    // Defer initialization to allow visual tree to be constructed
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        InitializeListViewColumns();
+                        _listViewInitialized = true;
+                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                }
             }
         }
 
@@ -576,44 +608,19 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
 
         private void SelectAllCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectAllCheckBox.IsChecked == true)
+            // Find the actual CheckBox in the header template
+            var checkBox = sender as CheckBox;
+            if (checkBox != null)
             {
-                SelectAll_Click(sender, e);
+                if (checkBox.IsChecked == true)
+                {
+                    SelectAll_Click(sender, e);
+                }
+                else
+                {
+                    DeselectAll_Click(sender, e);
+                }
             }
-            else
-            {
-                DeselectAll_Click(sender, e);
-            }
-        }
-
-        private void SortByName_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.SortColumn = "Name";
-            _viewModel.SortAscending = !_viewModel.SortAscending;
-        }
-
-        private void SortByStatus_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.SortColumn = "Status";
-            _viewModel.SortAscending = !_viewModel.SortAscending;
-        }
-
-        private void SortByLastModified_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.SortColumn = "LastModified";
-            _viewModel.SortAscending = !_viewModel.SortAscending;
-        }
-
-        private void SortBySize_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.SortColumn = "Size";
-            _viewModel.SortAscending = !_viewModel.SortAscending;
-        }
-
-        private void SortByLocation_Click(object sender, RoutedEventArgs e)
-        {
-            _viewModel.SortColumn = "Location";
-            _viewModel.SortAscending = !_viewModel.SortAscending;
         }
 
         #endregion
@@ -688,6 +695,361 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             var settings = SettingsManager.Settings;
 
             // Theme is already applied by the SettingsDialog via ThemeService
+        }
+
+        #endregion
+
+        #region List View Column Management
+
+        /// <summary>
+        /// Initialize column resizing and auto-sizing
+        /// </summary>
+        private void InitializeListViewColumns()
+        {
+            try
+            {
+                if (LockersListView == null || LockersGridViewColumns == null)
+                    return;
+
+                // Make sure the list view is visible and loaded
+                if (LockersListView.Visibility != Visibility.Visible || !LockersListView.IsLoaded)
+                    return;
+
+                // Attach thumb drag events for resizing
+                foreach (var column in LockersGridViewColumns.Columns)
+                {
+                    if (column.HeaderContainerStyle?.GetType().Name == "CheckboxColumnHeaderStyle")
+                        continue; // Skip checkbox column
+
+                    // Find the header container
+                    var header = FindColumnHeader(column);
+                    if (header != null)
+                    {
+                        AttachColumnResizeHandlers(header, column);
+                    }
+                }
+
+                // Auto-size columns on first load
+                AutoSizeAllColumns();
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't crash
+                System.Diagnostics.Debug.WriteLine($"Error initializing list view columns: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Find the GridViewColumnHeader for a column
+        /// </summary>
+        private GridViewColumnHeader? FindColumnHeader(GridViewColumn column)
+        {
+            // Find the header in the visual tree
+            return FindVisualChild<GridViewColumnHeader>(LockersListView, h => h.Column == column);
+        }
+
+        /// <summary>
+        /// Attach resize handlers to column header
+        /// </summary>
+        private void AttachColumnResizeHandlers(GridViewColumnHeader header, GridViewColumn column)
+        {
+            // Find the thumb (gripper) in the header template
+            var thumb = FindVisualChild<Thumb>(header, t => t.Name == "PART_HeaderGripper");
+            if (thumb != null)
+            {
+                // Handle drag for manual resizing
+                thumb.DragDelta += (s, e) => OnColumnResize(column, e.HorizontalChange);
+
+                // Handle double-click for auto-sizing
+                thumb.MouseDoubleClick += (s, e) => AutoSizeColumn(column);
+            }
+        }
+
+        /// <summary>
+        /// Handle column resize via drag
+        /// </summary>
+        private void OnColumnResize(GridViewColumn column, double widthChange)
+        {
+            var newWidth = column.Width + widthChange;
+            if (newWidth >= 20) // Minimum column width
+            {
+                column.Width = newWidth;
+            }
+        }
+
+        /// <summary>
+        /// Auto-size a specific column to fit content
+        /// </summary>
+        private void AutoSizeColumn(GridViewColumn column)
+        {
+            try
+            {
+                if (column == null || _viewModel?.FilteredLockers == null || _viewModel.FilteredLockers.Count == 0)
+                {
+                    // Set a reasonable default width if no data
+                    if (column != null)
+                        column.Width = 100;
+                    return;
+                }
+
+                double maxWidth = 50; // Minimum width
+
+                // Get column header text width
+                var header = FindColumnHeader(column);
+                if (header != null)
+                {
+                    var headerWidth = MeasureString(header.Content?.ToString() ?? "", header);
+                    maxWidth = Math.Max(maxWidth, headerWidth + 40); // Add padding for sort arrow and margins
+                }
+
+                // Measure content width
+                foreach (var locker in _viewModel.FilteredLockers)
+                {
+                    string text = GetColumnValueAsString(locker, column);
+                    double contentWidth = MeasureString(text, LockersListView) + 20; // Add padding
+                    maxWidth = Math.Max(maxWidth, contentWidth);
+                }
+
+                // Set the new width
+                column.Width = Math.Min(maxWidth, 500); // Max width cap
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error auto-sizing column: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Auto-size all columns except Location (which fits to window)
+        /// </summary>
+        private void AutoSizeAllColumns()
+        {
+            if (LockersGridViewColumns == null)
+                return;
+
+            // Auto-size all columns except checkbox and location
+            if (NameColumn != null) AutoSizeColumn(NameColumn);
+            if (StatusColumn != null) AutoSizeColumn(StatusColumn);
+            if (LastModifiedColumn != null) AutoSizeColumn(LastModifiedColumn);
+            if (SizeColumn != null) AutoSizeColumn(SizeColumn);
+
+            // Calculate remaining width for Location column
+            SetLocationColumnWidth();
+        }
+
+        /// <summary>
+        /// Set Location column width to fill remaining space
+        /// </summary>
+        private void SetLocationColumnWidth()
+        {
+            if (LocationColumn == null || LockersListView == null)
+                return;
+
+            // Calculate total width of other columns
+            double otherColumnsWidth = 0;
+            foreach (var column in LockersGridViewColumns.Columns)
+            {
+                if (column != LocationColumn)
+                {
+                    otherColumnsWidth += column.Width;
+                }
+            }
+
+            // Calculate available width (account for scrollbar)
+            double availableWidth = LockersListView.ActualWidth - otherColumnsWidth - 20;
+
+            // Set location column width (minimum 200)
+            LocationColumn.Width = Math.Max(200, availableWidth);
+        }
+
+        /// <summary>
+        /// Get the value for a column as a string
+        /// </summary>
+        private string GetColumnValueAsString(LockerViewModel locker, GridViewColumn column)
+        {
+            if (column == NameColumn)
+                return locker.Name ?? "";
+            else if (column == StatusColumn)
+                return locker.IsLocked ? "Locked" : "Unlocked";
+            else if (column == LastModifiedColumn)
+                return locker.LastModified.ToString("MM/dd/yyyy hh:mm:ss tt");
+            else if (column == SizeColumn)
+                return locker.SizeText ?? "";
+            else if (column == LocationColumn)
+                return locker.Location ?? "";
+
+            return "";
+        }
+
+        /// <summary>
+        /// Measure string width for auto-sizing
+        /// </summary>
+        private double MeasureString(string text, FrameworkElement element)
+        {
+            // Try to get font properties from Control, otherwise use defaults
+            var fontFamily = (element as Control)?.FontFamily ?? new System.Windows.Media.FontFamily("Segoe UI");
+            var fontSize = (element as Control)?.FontSize ?? 12;
+            var fontStyle = (element as Control)?.FontStyle ?? FontStyles.Normal;
+            var fontWeight = (element as Control)?.FontWeight ?? FontWeights.Normal;
+            var fontStretch = (element as Control)?.FontStretch ?? FontStretches.Normal;
+
+            var formattedText = new FormattedText(
+                text,
+                System.Globalization.CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface(fontFamily, fontStyle, fontWeight, fontStretch),
+                fontSize,
+                Brushes.Black,
+                VisualTreeHelper.GetDpi(element).PixelsPerDip);
+
+            return formattedText.Width;
+        }
+
+        /// <summary>
+        /// Find a visual child in the tree with optional predicate
+        /// </summary>
+        private T? FindVisualChild<T>(DependencyObject? parent, Func<T, bool>? predicate = null) where T : DependencyObject
+        {
+            if (parent == null)
+                return null;
+
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is T tChild && (predicate == null || predicate(tChild)))
+                {
+                    return tChild;
+                }
+
+                var result = FindVisualChild(child, predicate);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Handle column header click for sorting
+        /// </summary>
+        private void ColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"ColumnHeader_Click called - sender: {sender?.GetType().Name}");
+            
+            if (sender is GridViewColumnHeader header && header.Tag is string columnName)
+            {
+                System.Diagnostics.Debug.WriteLine($"Sorting by column: {columnName}, Current: {_currentSortColumn}, Ascending: {_currentSortAscending}");
+                
+                // Toggle sort direction if clicking the same column
+                if (_currentSortColumn == columnName)
+                {
+                    _currentSortAscending = !_currentSortAscending;
+                }
+                else
+                {
+                    _currentSortColumn = columnName;
+                    _currentSortAscending = true;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"New sort: {_currentSortColumn} {(_currentSortAscending ? "ASC" : "DESC")}");
+
+                // Apply sort
+                SortLockers(columnName, _currentSortAscending);
+
+                // Update sort indicators
+                UpdateSortIndicators(header);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"Header or Tag is null - Header: {sender is GridViewColumnHeader}, Tag: {(sender as GridViewColumnHeader)?.Tag}");
+            }
+        }
+
+        /// <summary>
+        /// Sort lockers by column
+        /// </summary>
+        private void SortLockers(string columnName, bool ascending)
+        {
+            try
+            {
+                if (_viewModel.FilteredLockers == null || _viewModel.FilteredLockers.Count == 0)
+                    return;
+
+                // Create a copy of the collection to sort
+                var items = _viewModel.FilteredLockers.ToArray();
+
+                IEnumerable<LockerViewModel> sorted = columnName switch
+                {
+                    "Name" => ascending
+                        ? items.OrderBy(l => l.Name)
+                        : items.OrderByDescending(l => l.Name),
+                    "Status" => ascending
+                        ? items.OrderBy(l => l.IsLocked)
+                        : items.OrderByDescending(l => l.IsLocked),
+                    "LastModified" => ascending
+                        ? items.OrderBy(l => l.LastModified)
+                        : items.OrderByDescending(l => l.LastModified),
+                    "Size" => ascending
+                        ? items.OrderBy(l => l.Size)
+                        : items.OrderByDescending(l => l.Size),
+                    "Location" => ascending
+                        ? items.OrderBy(l => l.Location)
+                        : items.OrderByDescending(l => l.Location),
+                    _ => items
+                };
+
+                // Update the collection
+                var sortedList = sorted.ToList();
+                _viewModel.FilteredLockers.Clear();
+                foreach (var locker in sortedList)
+                {
+                    _viewModel.FilteredLockers.Add(locker);
+                }
+
+                // Also update ViewModel sort properties
+                _viewModel.SortColumn = columnName;
+                _viewModel.SortAscending = ascending;
+                
+                System.Diagnostics.Debug.WriteLine($"Sorted by {columnName} {(ascending ? "ascending" : "descending")} - {sortedList.Count} items");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error sorting lockers: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Update sort indicator arrows in column headers
+        /// </summary>
+        private void UpdateSortIndicators(GridViewColumnHeader clickedHeader)
+        {
+            // Find all column headers and update sort arrows
+            foreach (var column in LockersGridViewColumns.Columns)
+            {
+                var header = FindColumnHeader(column);
+                if (header != null)
+                {
+                    // Find the sort arrow TextBlock in the template
+                    var sortArrow = FindVisualChild<TextBlock>(header, t => t.Name == "SortArrow");
+                    if (sortArrow != null)
+                    {
+                        if (header == clickedHeader)
+                        {
+                            // Show arrow for sorted column
+                            sortArrow.Visibility = Visibility.Visible;
+                            sortArrow.Text = _currentSortAscending ? "\uE70E" : "\uE70D"; // Up/Down arrows
+                        }
+                        else
+                        {
+                            // Hide arrow for other columns
+                            sortArrow.Visibility = Visibility.Collapsed;
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
