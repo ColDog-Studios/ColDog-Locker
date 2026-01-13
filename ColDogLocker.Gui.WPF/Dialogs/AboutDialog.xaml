@@ -283,8 +283,8 @@
                         Click="CheckForUpdates_Click"
                         Padding="15,8"
                         Margin="0,0,8,0"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        Foreground="{DynamicResource TextPrimaryBrush}">
+                        Background="{DynamicResource PrimaryBrush}"
+                        Foreground="White">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
