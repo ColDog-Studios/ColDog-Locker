@@ -144,7 +144,7 @@
                           Margin="0,0,0,8"/>
                 <CheckBox x:Name="LockImmediatelyCheckBox" 
                           Content="Lock immediately after creation"
-                          IsChecked="True"
+                          IsChecked="False"
                           Foreground="{DynamicResource TextPrimaryBrush}"/>
             </StackPanel>
         </StackPanel>
