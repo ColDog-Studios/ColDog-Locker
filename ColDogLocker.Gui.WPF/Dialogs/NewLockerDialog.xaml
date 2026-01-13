@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="Create New Locker" 
         Width="450" 
-        Height="500"
+        Height="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -24,29 +24,28 @@
                           FontWeight="SemiBold" 
                           Foreground="{DynamicResource TextPrimaryBrush}"
                           Margin="0,0,0,8"/>
-                <TextBox x:Name="LockerNameTextBox" 
-                         TextChanged="LockerNameTextBox_TextChanged">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Setter Property="Text" Value=""/>
-                            <Style.Triggers>
-                                <Trigger Property="Text" Value="">
-                                    <Setter Property="Background">
-                                        <Setter.Value>
-                                            <VisualBrush Stretch="None" AlignmentX="Left">
-                                                <VisualBrush.Visual>
-                                                    <TextBlock Text="Enter locker name" 
-                                                              Foreground="Gray" 
-                                                              Margin="5,0,0,0"/>
-                                                </VisualBrush.Visual>
-                                            </VisualBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                </TextBox>
+                <Grid>
+                    <TextBox x:Name="LockerNameTextBox" 
+                             Height="40"
+                             TextChanged="LockerNameTextBox_TextChanged"/>
+                    <TextBlock Text="Enter locker name"
+                               IsHitTestVisible="False"
+                               Foreground="Gray"
+                               Margin="16,0,16,0"
+                               VerticalAlignment="Center"
+                               FontSize="14">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=LockerNameTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
                 <TextBlock x:Name="NameErrorText" 
                           Text="Locker name is required" 
                           Foreground="{DynamicResource ErrorBrush}"
@@ -66,35 +65,34 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="LocationTextBox" 
-                             Grid.Column="0"
-                             IsReadOnly="True"
-                             Margin="0,0,8,0">
-                        <TextBox.Style>
-                            <Style TargetType="TextBox">
-                                <Setter Property="Text" Value=""/>
-                                <Style.Triggers>
-                                    <Trigger Property="Text" Value="">
-                                        <Setter Property="Background">
-                                            <Setter.Value>
-                                                <VisualBrush Stretch="None" AlignmentX="Left">
-                                                    <VisualBrush.Visual>
-                                                        <TextBlock Text="Select folder to lock" 
-                                                                  Foreground="Gray" 
-                                                                  Margin="5,0,0,0"/>
-                                                    </VisualBrush.Visual>
-                                                </VisualBrush>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBox.Style>
-                    </TextBox>
+                    <Grid Grid.Column="0" Margin="0,0,8,0">
+                        <TextBox x:Name="LocationTextBox" 
+                                 Height="40"
+                                 IsReadOnly="True"
+                                 ToolTip="{Binding Text, ElementName=LocationTextBox}"/>
+                        <TextBlock Text="Select folder to lock"
+                                   IsHitTestVisible="False"
+                                   Foreground="Gray"
+                                   Margin="16,0,16,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="14">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=LocationTextBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                     <Button Grid.Column="1" 
                             Content="Browse..." 
                             Click="BrowseButton_Click"
-                            Padding="15,5"/>
+                            Height="40"
+                            Padding="15,0"/>
                 </Grid>
                 <TextBlock x:Name="LocationErrorText" 
                           Text="Please select a folder" 
@@ -110,7 +108,8 @@
                           FontWeight="SemiBold" 
                           Foreground="{DynamicResource TextPrimaryBrush}"
                           Margin="0,0,0,8"/>
-                <PasswordBox x:Name="PasswordBox" 
+                <PasswordBox x:Name="PasswordBox"
+                            Height="40"
                             PasswordChanged="PasswordBox_PasswordChanged"/>
                 <TextBlock x:Name="PasswordErrorText" 
                           Text="Password must be at least 8 characters" 
@@ -126,7 +125,8 @@
                           FontWeight="SemiBold" 
                           Foreground="{DynamicResource TextPrimaryBrush}"
                           Margin="0,0,0,8"/>
-                <PasswordBox x:Name="ConfirmPasswordBox" 
+                <PasswordBox x:Name="ConfirmPasswordBox"
+                            Height="40"
                             PasswordChanged="ConfirmPasswordBox_PasswordChanged"/>
                 <TextBlock x:Name="ConfirmPasswordErrorText" 
                           Text="Passwords do not match" 

@@ -59,10 +59,11 @@
 
     <!-- Modern TextBox Style -->
     <Style TargetType="TextBox">
-        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Padding" Value="10,0"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Template">
@@ -73,9 +74,25 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="4">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                    Margin="{TemplateBinding Padding}"
-                                    VerticalAlignment="Center"/>
+                        <Grid VerticalAlignment="Center">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                        Focusable="False"
+                                        HorizontalScrollBarVisibility="Hidden"
+                                        VerticalScrollBarVisibility="Hidden"
+                                        Margin="{TemplateBinding Padding}">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollViewer">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ScrollViewer">
+                                                    <ScrollContentPresenter TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TextBox}}"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ScrollViewer.Resources>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -96,10 +113,11 @@
 
     <!-- Modern PasswordBox Style -->
     <Style TargetType="PasswordBox">
-        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Padding" Value="10,0"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Template">
@@ -110,9 +128,25 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="4">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                    Margin="{TemplateBinding Padding}"
-                                    VerticalAlignment="Center"/>
+                        <Grid VerticalAlignment="Center">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                        Focusable="False"
+                                        HorizontalScrollBarVisibility="Hidden"
+                                        VerticalScrollBarVisibility="Hidden"
+                                        Margin="{TemplateBinding Padding}">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollViewer">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ScrollViewer">
+                                                    <ScrollContentPresenter TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=PasswordBox}}"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ScrollViewer.Resources>
+                            </ScrollViewer>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
