@@ -21,7 +21,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             var logEntry = new LogEntry();
 
             // Assert
-            Assert.Equal(default(DateTime), logEntry.Timestamp);
+            Assert.Null(logEntry.Timestamp);
             Assert.Equal(string.Empty, logEntry.Level);
             Assert.Equal(string.Empty, logEntry.Message);
             Assert.Null(logEntry.SourceFile);
@@ -34,7 +34,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         {
             // Arrange
             var logEntry = new LogEntry();
-            var timestamp = DateTime.Now;
+            var timestamp = "2026-01-13T12:34:56.789Z";
 
             // Act
             logEntry.Timestamp = timestamp;
@@ -117,7 +117,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void LogEntry_AllProperties_CanBeSetTogether()
         {
             // Arrange
-            var timestamp = DateTime.Now;
+            var timestamp = "2026-01-13T12:34:56.789Z";
             var level = "Error";
             var message = "An error occurred";
             var sourceFile = "Program.cs";
@@ -299,33 +299,23 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
     public class LoggerStaticTests
     {
         [Fact]
-        public void Logger_SetDebugMode_ShouldNotThrow()
+        public void Logger_SetDevMode_ShouldNotThrow()
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDebugMode(true));
+            var exception = Record.Exception(() => Logger.SetDevMode(true));
             Assert.Null(exception);
         }
 
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void Logger_SetDebugMode_WithVariousValues_ShouldNotThrow(bool enabled)
+        public void Logger_SetDevMode_WithVariousValues_ShouldNotThrow(bool enabled)
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDebugMode(enabled));
+            var exception = Record.Exception(() => Logger.SetDevMode(enabled));
             Assert.Null(exception);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(7)]
-        [InlineData(30)]
-        [InlineData(90)]
-        public void Logger_SetLogRetentionDays_WithVariousValues_ShouldNotThrow(int days)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetLogRetentionDays(days));
-            Assert.Null(exception);
-        }
+        // Logger_SetLogRetentionDays test removed (obsolete)
     }
 }

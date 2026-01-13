@@ -13,7 +13,6 @@
     <SelfContained>true</SelfContained>
     <PublishTrimmed>true</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon>..\resources\cdlIcon.ico</ApplicationIcon>
     <SignAssembly>False</SignAssembly>
     <EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>

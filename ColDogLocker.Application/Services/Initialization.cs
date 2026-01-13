@@ -45,9 +45,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             FileWatcherManager.InitializeWatchers();
             Logger.AddEntry("File watchers initialized.", LogLevel.Info);
 
-            // Resize logs if needed
-            Logger.TrimLog();
-
             // Check for updates if auto-update is enabled
             if (SettingsManager.Settings.AutoUpdate)
             {

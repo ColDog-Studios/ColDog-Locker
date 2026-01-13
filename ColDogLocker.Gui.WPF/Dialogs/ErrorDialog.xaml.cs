@@ -158,8 +158,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             try
             {
                 var logsPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ColDog Locker", "Logs");
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "ColDog Studios", "ColDog Locker", "logs");
 
                 if (!Directory.Exists(logsPath))
                 {

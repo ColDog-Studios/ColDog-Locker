@@ -61,11 +61,24 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             GridViewRadio.IsChecked = SettingsManager.Settings.DefaultViewIsGrid;
             ListViewRadio.IsChecked = !SettingsManager.Settings.DefaultViewIsGrid;
 
-            EnableLoggingCheckBox.IsChecked = SettingsManager.Settings.EnableLogging;
-            DebugModeCheckBox.IsChecked = SettingsManager.Settings.DebugMode;
-            LogRetentionTextBox.Text = SettingsManager.Settings.LogRetentionDays.ToString();
+            DevModeCheckBox.IsChecked = SettingsManager.Settings.DevMode;
             DbVacuumIntervalTextBox.Text = SettingsManager.Settings.DatabaseVacuumInterval.ToString();
             EnableAnimationsCheckBox.IsChecked = SettingsManager.Settings.EnableAnimations;
+
+            // Load logging options
+            LogLevelComboBox.SelectedItem = LogLevelComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+                .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.LogLevel) ?? LogLevelComboBox.Items[1];
+            LogFormatComboBox.SelectedItem = LogFormatComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+                .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.LogFormat) ?? LogFormatComboBox.Items[0];
+            MaxFileSizeTextBox.Text = SettingsManager.Settings.MaxFileSizeMB.ToString();
+            MaxRetainedFilesTextBox.Text = SettingsManager.Settings.MaxRetainedFiles.ToString();
+            EnableFileLoggingCheckBox.IsChecked = SettingsManager.Settings.EnableFileLogging;
+            EnableCompressionCheckBox.IsChecked = SettingsManager.Settings.EnableCompression;
+            IncludeTimestampsCheckBox.IsChecked = SettingsManager.Settings.IncludeTimestamps;
+            IncludeThreadIdCheckBox.IsChecked = SettingsManager.Settings.IncludeThreadId;
+            DateTimeFormatComboBox.SelectedItem = DateTimeFormatComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+                .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.DateTimeFormat) ?? DateTimeFormatComboBox.Items[0];
+            AsyncLoggingCheckBox.IsChecked = SettingsManager.Settings.AsyncLogging;
 
             // Load update channel
             switch (SettingsManager.Settings.UpdateChannel)
@@ -161,8 +174,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             try
             {
                 var logsPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "ColDog Locker", "Logs");
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "ColDog Studios", "ColDog Locker", "logs");
 
                 if (!Directory.Exists(logsPath))
                 {
@@ -254,18 +267,34 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 SettingsManager.Settings.DefaultLockerLocation = DefaultLocationTextBox.Text;
                 SettingsManager.Settings.AutoUpdate = AutoUpdateCheckBox.IsChecked ?? true;
                 SettingsManager.Settings.DefaultViewIsGrid = GridViewRadio.IsChecked ?? true;
-                SettingsManager.Settings.EnableLogging = EnableLoggingCheckBox.IsChecked ?? true;
-                SettingsManager.Settings.DebugMode = DebugModeCheckBox.IsChecked ?? false;
+                SettingsManager.Settings.DevMode = DevModeCheckBox.IsChecked ?? false;
 
                 // Apply logging settings to Infrastructure.Logging.Logger
-                var debugModeEnabled = DebugModeCheckBox.IsChecked ?? false;
-                ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.SetDebugMode(debugModeEnabled);
+                var devModeEnabled = DevModeCheckBox.IsChecked ?? false;
+                ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.SetDevMode(devModeEnabled);
 
-                // Parse numeric textbox values with validation
-                if (int.TryParse(LogRetentionTextBox.Text, out int logRetention))
+                // Save logging options
+                SettingsManager.Settings.LogLevel = (LogLevelComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Info";
+                SettingsManager.Settings.LogFormat = (LogFormatComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "json";
+                if (int.TryParse(MaxFileSizeTextBox.Text, out int maxFileSize))
                 {
-                    SettingsManager.Settings.LogRetentionDays = Math.Clamp(logRetention, 7, 90);
+                    SettingsManager.Settings.MaxFileSizeMB = maxFileSize;
                 }
+
+                if (int.TryParse(MaxRetainedFilesTextBox.Text, out int maxRetained))
+                {
+                    SettingsManager.Settings.MaxRetainedFiles = maxRetained;
+                }
+
+                SettingsManager.Settings.EnableFileLogging = EnableFileLoggingCheckBox.IsChecked ?? true;
+                SettingsManager.Settings.EnableCompression = EnableCompressionCheckBox.IsChecked ?? false;
+                SettingsManager.Settings.IncludeTimestamps = IncludeTimestampsCheckBox.IsChecked ?? true;
+                SettingsManager.Settings.IncludeThreadId = IncludeThreadIdCheckBox.IsChecked ?? false;
+                SettingsManager.Settings.DateTimeFormat = (DateTimeFormatComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "UTC";
+                SettingsManager.Settings.AsyncLogging = AsyncLoggingCheckBox.IsChecked ?? true;
+
+                // Apply logging settings to logger
+                ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.ReloadConfig();
 
                 if (int.TryParse(DbVacuumIntervalTextBox.Text, out int vacuumInterval))
                 {

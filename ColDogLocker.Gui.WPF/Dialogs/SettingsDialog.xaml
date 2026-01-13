@@ -163,45 +163,151 @@
             <TabItem Header="Logging">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
                     <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <!-- Basic Logging Options -->
                         <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Logging Options" 
+                            <TextBlock Text="Basic Logging Options" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,12"/>
-                            <CheckBox x:Name="EnableLoggingCheckBox" 
-                                      Content="Enable detailed logging"
-                                      IsChecked="True"
+                            <CheckBox x:Name="DevModeCheckBox" 
+                                      Content="Enable dev mode"
+                                      ToolTip="Includes source file name and line number in log entries for debugging"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                       Margin="0,0,0,8"/>
-                            <CheckBox x:Name="DebugModeCheckBox" 
-                                      Content="Enable debug mode (verbose logging)"
+                            <CheckBox x:Name="EnableFileLoggingCheckBox" 
+                                      Content="Enable file logging"
+                                      IsChecked="True"
+                                      ToolTip="Write log entries to disk (disable for console-only logging)"
                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,20"/>
-                            
-                            <TextBlock Text="Log Retention" 
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Log Level -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Minimum Log Level" 
                                       FontWeight="SemiBold" 
                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                      Margin="0,0,0,12"/>
-                            <TextBlock Text="Number of days to keep log files before automatic deletion" 
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Only log messages at or above this level" 
                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                       FontSize="12"
                                       Margin="0,0,0,8"/>
-                            <StackPanel Margin="0,0,0,8">
-                                <TextBlock Text="Log retention (days):" 
-                                          Foreground="{DynamicResource TextPrimaryBrush}"
-                                          Margin="0,0,0,4"/>
-                                <TextBox x:Name="LogRetentionTextBox" 
-                                        Text="30"
-                                        Width="100"
-                                        HorizontalAlignment="Left"
-                                        TextChanged="NumericTextBox_TextChanged"/>
-                            </StackPanel>
+                            <ComboBox x:Name="LogLevelComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="1">
+                                <ComboBoxItem Content="Debug"/>
+                                <ComboBoxItem Content="Info"/>
+                                <ComboBoxItem Content="Success"/>
+                                <ComboBoxItem Content="Warning"/>
+                                <ComboBoxItem Content="Error"/>
+                                <ComboBoxItem Content="Fatal"/>
+                            </ComboBox>
+                        </StackPanel>
 
+                        <!-- Log Format -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Log Format" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Choose how log entries are formatted" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <ComboBox x:Name="LogFormatComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="0">
+                                <ComboBoxItem Content="json"/>
+                                <ComboBoxItem Content="text"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Log Rotation -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Log File Rotation" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Automatically rotate log files based on size" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Max file size (MB):" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,4"/>
+                            <TextBox x:Name="MaxFileSizeTextBox" 
+                                    Text="10"
+                                    Width="100"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,12"
+                                    TextChanged="NumericTextBox_TextChanged"/>
+                            
+                            <TextBlock Text="Max retained files:" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,4"/>
+                            <TextBox x:Name="MaxRetainedFilesTextBox" 
+                                    Text="9"
+                                    Width="100"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,12"
+                                    TextChanged="NumericTextBox_TextChanged"/>
+                            
+                            <CheckBox x:Name="EnableCompressionCheckBox" 
+                                      Content="Compress rotated log files (.gz)"
+                                      ToolTip="Compress old log files with GZip to save disk space"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Advanced Options -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Advanced Options" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="IncludeTimestampsCheckBox" 
+                                      Content="Include timestamps in log entries"
+                                      IsChecked="True"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="IncludeThreadIdCheckBox" 
+                                      Content="Include thread ID in log entries"
+                                      ToolTip="Add thread identification to log entries (useful for debugging multi-threaded issues)"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Date/Time format:" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,8,0,4"/>
+                            <ComboBox x:Name="DateTimeFormatComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="0"
+                                     Margin="0,0,0,12">
+                                <ComboBoxItem Content="UTC"/>
+                                <ComboBoxItem Content="Local"/>
+                            </ComboBox>
+                            
+                            <CheckBox x:Name="AsyncLoggingCheckBox" 
+                                      Content="Enable asynchronous logging"
+                                      IsChecked="True"
+                                      ToolTip="Write logs on a background thread for better performance (recommended)"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Actions -->
+                        <StackPanel Margin="0,0,0,20">
                             <Button Content="Open Logs Folder" 
                                     Click="OpenLogsFolder_Click"
                                     HorizontalAlignment="Left"
                                     Padding="15,5"
-                                    Margin="0,8,0,0"/>
+                                    Margin="0,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

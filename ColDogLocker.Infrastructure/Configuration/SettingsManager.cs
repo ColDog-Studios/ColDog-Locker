@@ -41,7 +41,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                         ValidateSettings();
 
                         // Update logger with settings
-                        Logger.SetDebugMode(Settings.DebugMode);
+                        Logger.SetDevMode(Settings.DevMode);
                     }
                     else
                     {
@@ -77,8 +77,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 
             Settings = new ApplicationSettings
             {
-                DebugMode = false,
-                LogRetentionDays = 30, // Keep logs for 30 days by default
+                DevMode = false,
                 AutoUpdate = true,  // Enabled by default
                 UpdateChannel = UpdateChannel.Stable  // Default to stable channel
             };
@@ -99,13 +98,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 
             var settingsChanged = false;
 
-            // Validate LogRetentionDays with reasonable bounds
-            if (Settings.LogRetentionDays is <= 0 or > 3650) // Max 10 years
-            {
-                Logger.AddEntry($"Invalid LogRetentionDays ({Settings.LogRetentionDays}). Setting to default value (30 days).", LogLevel.Warning);
-                Settings.LogRetentionDays = 30;
-                settingsChanged = true;
-            }
+            // No longer validate LogRetentionDays (removed)
 
             // Additional validation for any string properties that might be added in the future
             // (Currently we don't have any required string properties)
@@ -224,9 +217,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         // General Application Settings
 
         /// <summary>
-        /// Gets or sets a value indicating whether debug mode is enabled.
+        /// Gets or sets a value indicating whether development mode is enabled (includes source file and line numbers in logs).
         /// </summary>
-        public bool DebugMode { get; set; }
+        public bool DevMode { get; set; }
 
         // Update Settings
 
@@ -252,17 +245,57 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         /// </summary>
         public DateTime? LastDatabaseVacuum { get; set; }
 
-        // Logging Settings
+        // Logging Settings (Overhauled)
 
         /// <summary>
-        /// Gets or sets the number of days to retain log files.
+        /// Gets or sets the minimum log level to record (Debug, Info, Warning, Error, Fatal).
         /// </summary>
-        public int LogRetentionDays { get; set; } = 30;
+        public string LogLevel { get; set; } = "Info";
 
         /// <summary>
-        /// Gets or sets a value indicating whether logging is enabled in the GUI.
+        /// Gets or sets the log format ("json" or "text").
         /// </summary>
-        public bool EnableLogging { get; set; } = true;
+        public string LogFormat { get; set; } = "json";
+
+        /// <summary>
+        /// Gets or sets the maximum log file size in MB before rotation.
+        /// </summary>
+        public int MaxFileSizeMB { get; set; } = 10;
+
+        /// <summary>
+        /// Gets or sets the number of rotated log files to keep (not counting current).
+        /// </summary>
+        public int MaxRetainedFiles { get; set; } = 9;
+
+        /// <summary>
+        /// Gets or sets whether file logging is enabled.
+        /// </summary>
+        public bool EnableFileLogging { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to compress rotated log files.
+        /// </summary>
+        public bool EnableCompression { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets whether to include timestamps in log entries.
+        /// </summary>
+        public bool IncludeTimestamps { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether to include thread ID in log entries.
+        /// </summary>
+        public bool IncludeThreadId { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the date/time format for timestamps ("UTC" or "Local").
+        /// </summary>
+        public string DateTimeFormat { get; set; } = "UTC";
+
+        /// <summary>
+        /// Gets or sets whether to enable asynchronous logging.
+        /// </summary>
+        public bool AsyncLogging { get; set; } = true;
 
         // GUI Settings
 
