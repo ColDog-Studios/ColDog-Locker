@@ -67,8 +67,9 @@ jobs:
       run: |
         Write-Output "Testing --version command..."
         $output = & ".\cli-publish\cdlocker.exe" --version
-        Write-Output "Output: $output"
-        if ($output -notmatch "ColDog Locker") {
+        $outputText = $output -join "`n"
+        Write-Output "Output: $outputText"
+        if ($outputText -notmatch "ColDog Locker") {
           throw "Version command failed - expected version info"
         }
         Write-Output "✓ Version command passed"
