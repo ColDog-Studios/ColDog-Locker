@@ -150,6 +150,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         [InlineData("Success")]
         [InlineData("Warning")]
         [InlineData("Error")]
+        [InlineData("Fatal")]
         public void LogEntry_Level_CanBeSetToVariousLogLevels(string level)
         {
             // Arrange
@@ -263,6 +264,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             Assert.Equal("Success", LogLevel.Success.ToString());
             Assert.Equal("Warning", LogLevel.Warning.ToString());
             Assert.Equal("Error", LogLevel.Error.ToString());
+            Assert.Equal("Fatal", LogLevel.Fatal.ToString());
         }
 
         [Theory]
@@ -271,6 +273,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         [InlineData(LogLevel.Success, "Success")]
         [InlineData(LogLevel.Warning, "Warning")]
         [InlineData(LogLevel.Error, "Error")]
+        [InlineData(LogLevel.Fatal, "Fatal")]
         public void LogLevel_ToString_ShouldMatchExpectedValue(LogLevel level, string expected)
         {
             // Act
@@ -287,12 +290,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             var allLevels = Enum.GetValues<LogLevel>();
 
             // Assert
-            Assert.Equal(5, allLevels.Length);
+            Assert.Equal(6, allLevels.Length);
             Assert.Contains(LogLevel.Debug, allLevels);
             Assert.Contains(LogLevel.Info, allLevels);
             Assert.Contains(LogLevel.Success, allLevels);
             Assert.Contains(LogLevel.Warning, allLevels);
             Assert.Contains(LogLevel.Error, allLevels);
+            Assert.Contains(LogLevel.Fatal, allLevels);
         }
     }
 
