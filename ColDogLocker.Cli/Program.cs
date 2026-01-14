@@ -62,6 +62,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 Console.ResetColor();
+                Logger.AddEntry($"Unhandled exception: {ex}", LogLevel.Fatal);
                 Console.WriteLine();
                 return 1;
             }
@@ -136,6 +137,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error launching GUI: {ex.Message}");
                 Console.ResetColor();
+                Logger.AddEntry($"Error launching GUI: {ex}", LogLevel.Error);
                 return 1;
             }
         }
