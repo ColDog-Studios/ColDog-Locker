@@ -3,6 +3,7 @@ using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -115,7 +116,6 @@ namespace ColDogStudios.ColDogLocker.Cli
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Error.WriteLine($"Error: Could not find {guiExeName}");
-                    Console.Error.WriteLine("Please ensure the GUI application is built.");
                     Console.ResetColor();
                     return 1;
                 }
