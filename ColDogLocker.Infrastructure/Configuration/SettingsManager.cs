@@ -7,6 +7,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 {
     public static class SettingsManager
     {
+        // Timestamp of the last time the application wrote the settings file (UTC).
+        // FileWatcherManager uses this to ignore change events caused by our own saves.
+        public static DateTime? LastSaveUtc { get; private set; }
+
         // Path to the settings file
         private static readonly string _settingsFile = Path.Combine(Variables.localConfig, "settings.json");
 
@@ -19,55 +23,100 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             Logger.AddEntry("Loading settings.", LogLevel.Info);
 
-            if (File.Exists(_settingsFile))
-            {
-                try
-                {
-                    // Read and deserialize the settings file
-                    var settingsContent = File.ReadAllText(_settingsFile);
-
-                    // Check if the file is empty or just whitespace
-                    if (string.IsNullOrWhiteSpace(settingsContent))
-                    {
-                        Logger.AddEntry("Settings file is empty. Initializing default settings.", LogLevel.Warning);
-                        InitializeSettings();
-                        return;
-                    }
-
-                    var deserializedSettings = JsonConvert.DeserializeObject<ApplicationSettings>(settingsContent);
-                    if (deserializedSettings != null)
-                    {
-                        Settings = deserializedSettings;
-                        ValidateSettings();
-
-                        // Update logger with settings
-                        Logger.SetDevMode(Settings.DevMode);
-                    }
-                    else
-                    {
-                        Logger.AddEntry("Settings file contains invalid JSON. Initializing default settings.", LogLevel.Warning);
-                        BackupCorruptedSettings();
-                        InitializeSettings();
-                    }
-                }
-                catch (JsonException jsonEx)
-                {
-                    Logger.AddEntry($"Settings file contains malformed JSON: {jsonEx.Message}. Initializing default settings.", LogLevel.Error);
-                    BackupCorruptedSettings();
-                    InitializeSettings();
-                }
-                catch (Exception ex)
-                {
-                    Logger.AddEntry($"Error loading settings: {ex.Message}. Initializing default settings.", LogLevel.Error);
-                    BackupCorruptedSettings();
-                    InitializeSettings();
-                }
-            }
-            else
+            if (!File.Exists(_settingsFile))
             {
                 Logger.AddEntry("Settings file not found. Initializing default settings.", LogLevel.Warning);
                 InitializeSettings();
+                return;
             }
+
+            // Attempt to read the file with retries to handle editor/save race conditions
+            const int maxReadAttempts = 6;
+            const int readDelayMs = 200; // total ~1.2s worst-case
+            string? settingsContent = null;
+
+            for (var attempt = 1; attempt <= maxReadAttempts; attempt++)
+            {
+                try
+                {
+                    // Use a FileStream with shared read access to avoid exclusive locks
+                    using var fs = new FileStream(_settingsFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var sr = new StreamReader(fs);
+                    settingsContent = sr.ReadToEnd();
+                    break; // success
+                }
+                catch (IOException ioEx)
+                {
+                    Logger.AddEntry($"Attempt {attempt}: Unable to read settings file ({ioEx.Message}). Retrying...", LogLevel.Debug);
+                    Thread.Sleep(readDelayMs);
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    Logger.AddEntry($"Unexpected error reading settings file: {ex.Message}", LogLevel.Error);
+                    break;
+                }
+            }
+
+            if (settingsContent == null)
+            {
+                Logger.AddEntry("Failed to read settings after multiple attempts. Skipping reload to avoid data loss.", LogLevel.Error);
+                return;
+            }
+
+            // If file is empty, initialize defaults
+            if (string.IsNullOrWhiteSpace(settingsContent))
+            {
+                Logger.AddEntry("Settings file is empty. Initializing default settings.", LogLevel.Warning);
+                InitializeSettings();
+                return;
+            }
+
+            // Try to parse JSON; if parsing fails, retry a few times because editor may be mid-write
+            const int maxParseAttempts = 4;
+            const int parseDelayMs = 250;
+            ApplicationSettings? deserializedSettings = null;
+
+            for (var attempt = 1; attempt <= maxParseAttempts; attempt++)
+            {
+                try
+                {
+                    deserializedSettings = JsonConvert.DeserializeObject<ApplicationSettings>(settingsContent);
+                    break; // parsed successfully (or null but not throwing)
+                }
+                catch (JsonException jsonEx)
+                {
+                    Logger.AddEntry($"Attempt {attempt}: JSON parse error: {jsonEx.Message}. Retrying...", LogLevel.Debug);
+                    Thread.Sleep(parseDelayMs);
+
+                    // Re-read file in case it has finished writing
+                    try
+                    {
+                        using var fs = new FileStream(_settingsFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                        using var sr = new StreamReader(fs);
+                        settingsContent = sr.ReadToEnd();
+                    }
+                    catch (Exception readEx)
+                    {
+                        Logger.AddEntry($"Attempt {attempt}: Re-read failed: {readEx.Message}", LogLevel.Debug);
+                    }
+                    continue;
+                }
+            }
+
+            if (deserializedSettings != null)
+            {
+                Settings = deserializedSettings;
+                ValidateSettings();
+                Logger.SetDevMode(Settings.DevMode);
+                return;
+            }
+
+            // If we reach here, parsing failed or returned null after retries.
+            // Back up the problematic file but do not overwrite it immediately to avoid clobbering user edits.
+            Logger.AddEntry("Settings file appears malformed after retries. Backing up and initializing defaults.", LogLevel.Error);
+            BackupCorruptedSettings();
+            InitializeSettings();
         }
 
         // Initialize default settings
@@ -116,6 +165,9 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             try
             {
+                // Mark the time we started saving so watchers can ignore the resulting file events.
+                LastSaveUtc = DateTime.UtcNow;
+
                 // Ensure the directory exists
                 var directory = Path.GetDirectoryName(_settingsFile);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))

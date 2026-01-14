@@ -1,5 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
 {
@@ -40,11 +41,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 _settingsWatcher.Error += OnWatcherError;
                 _settingsWatcher.EnableRaisingEvents = true;
 
-                // Initialize lockers file watcher
+                // Initialize lockers DB watcher (lockers.db)
                 _lockersWatcher = new FileSystemWatcher
                 {
                     Path = Variables.localConfig,
-                    Filter = "lockers.json",
+                    Filter = "lockers.db",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                     IncludeSubdirectories = false,
                     InternalBufferSize = 64 * 1024 // 64 KB buffer size
@@ -55,6 +56,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 _lockersWatcher.Renamed += OnLockersChanged;
                 _lockersWatcher.Error += OnWatcherError;
                 _lockersWatcher.EnableRaisingEvents = true;
+                Logger.AddEntry("Lockers DB watcher created and enabled.", LogLevel.Debug);
             }
             catch (Exception ex)
             {
@@ -64,22 +66,45 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
 
         private static void OnSettingsChanged(object sender, FileSystemEventArgs e)
         {
-            // Debounce rapid file changes to prevent infinite reload loops
-            var now = DateTime.Now;
-            if (now - _lastSettingsReload < _reloadCooldown)
-            {
-                return; // Too soon since last reload, skip this one
-            }
+                try
+                {
+                    // If we just saved the settings ourselves, ignore the ensuing file events
+                    var now = DateTime.UtcNow;
+                    if (SettingsManager.LastSaveUtc.HasValue && now - SettingsManager.LastSaveUtc.Value < TimeSpan.FromSeconds(2))
+                    {
+                        Logger.AddEntry($"Settings change ignored because it matches recent own save for '{e.FullPath}' ({e.ChangeType})", LogLevel.Debug);
+                        return;
+                    }
 
-            _lastSettingsReload = now;
-            Logger.AddEntry("Settings file changed. Reloading settings.", LogLevel.Info);
-            OnSettingsFileChanged?.Invoke();
+                    // Debounce rapid file changes to prevent infinite reload loops
+                    var localNow = DateTime.Now;
+                    if (localNow - _lastSettingsReload < _reloadCooldown)
+                    {
+                        Logger.AddEntry($"Settings change ignored due to debounce for '{e.FullPath}' ({e.ChangeType})", LogLevel.Debug);
+                        return; // Too soon since last reload, skip this one
+                    }
+
+                    _lastSettingsReload = localNow;
+                    Logger.AddEntry($"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings.", LogLevel.Info);
+                    OnSettingsFileChanged?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    Logger.AddEntry($"Exception in OnSettingsChanged: {ex.Message}", LogLevel.Error);
+                }
         }
 
         private static void OnLockersChanged(object sender, FileSystemEventArgs e)
         {
-            Logger.AddEntry("Lockers file changed. Reloading lockers.", LogLevel.Info);
-            OnLockersFileChanged?.Invoke();
+            try
+            {
+                Logger.AddEntry($"Lockers DB changed ({e.ChangeType}) for '{e.FullPath}'. Reloading lockers.", LogLevel.Info);
+                OnLockersFileChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Logger.AddEntry($"Exception in OnLockersChanged: {ex.Message}", LogLevel.Error);
+            }
         }
 
         private static void OnWatcherError(object sender, ErrorEventArgs e)
@@ -93,7 +118,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
             {
                 _settingsWatcher?.Dispose();
                 _lockersWatcher?.Dispose();
-                Logger.AddEntry("File watchers disposed successfully.", LogLevel.Info);
+                Logger.AddEntry("File watchers disposed successfully.", LogLevel.Debug);
             }
             catch (Exception ex)
             {
