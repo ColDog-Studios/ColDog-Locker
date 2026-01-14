@@ -66,9 +66,10 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing --version command..."
-        $output = & ".\cli-publish\ColDogLocker.exe" --version
-        Write-Output "Output: $output"
-        if ($output -notmatch "ColDog Locker") {
+        $output = & ".\cli-publish\cdlocker.exe" --version
+        $outputText = $output -join "`n"
+        Write-Output "Output: $outputText"
+        if ($outputText -notmatch "ColDog Locker") {
           throw "Version command failed - expected version info"
         }
         Write-Output "✓ Version command passed"
@@ -78,7 +79,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing help command..."
-        $output = & ".\cli-publish\ColDogLocker.exe" help
+        $output = & ".\cli-publish\cdlocker.exe" help
         $outputText = $output -join "`n"
         Write-Output "Output preview: $($output | Select-Object -First 5)"
         if ($outputText -notmatch "USAGE") {
@@ -91,7 +92,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing list command (before creating lockers)..."
-        $output = & ".\cli-publish\ColDogLocker.exe" list
+        $output = & ".\cli-publish\cdlocker.exe" list
         Write-Output "Output: $output"
         Write-Output "✓ List command passed"
     
@@ -103,7 +104,7 @@ jobs:
         $testDir = Join-Path $env:TEMP "e2e-test-locker-$(New-Guid)"
         Write-Output "Creating locker at: $testDir"
         
-        & ".\cli-publish\ColDogLocker.exe" new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to create locker (exit code: $LASTEXITCODE)"
@@ -144,7 +145,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing list command (after creation)..."
-        $output = & ".\cli-publish\ColDogLocker.exe" list
+        $output = & ".\cli-publish\cdlocker.exe" list
         $outputText = $output -join "`n"
         Write-Output "Output: $output"
         
@@ -158,7 +159,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing lock command..."
-        & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to lock locker (exit code: $LASTEXITCODE)"
@@ -171,7 +172,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Verifying locker is locked..."
-        $output = & ".\cli-publish\ColDogLocker.exe" status E2ETestLocker
+        $output = & ".\cli-publish\cdlocker.exe" status E2ETestLocker
         $outputText = $output -join "`n"
         Write-Output "Status output: $output"
         
@@ -185,7 +186,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing unlock command..."
-        & ".\cli-publish\ColDogLocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to unlock locker (exit code: $LASTEXITCODE)"
@@ -225,7 +226,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing lock with wrong password (should fail)..."
-        & ".\cli-publish\ColDogLocker.exe" lock E2ETestLocker --password "WrongPassword123!" 2>&1 | Out-Null
+        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "WrongPassword123!" 2>&1 | Out-Null
         $exitCode = $LASTEXITCODE
         
         if ($exitCode -eq 0) {
@@ -241,7 +242,7 @@ jobs:
       run: |
         Write-Output "Testing remove command..."
         Write-Output "Command: remove E2ETestLocker --force"
-        $output = & ".\cli-publish\ColDogLocker.exe" remove E2ETestLocker --force
+        $output = & ".\cli-publish\cdlocker.exe" remove E2ETestLocker --force
         Write-Output "Remove output: $output"
         Write-Output "Exit code: $LASTEXITCODE"
         
@@ -256,7 +257,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Verifying locker was removed..."
-        $output = & ".\cli-publish\ColDogLocker.exe" list
+        $output = & ".\cli-publish\cdlocker.exe" list
         $outputText = $output -join "`n"
         Write-Output "Output: $output"
         

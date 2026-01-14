@@ -1,0 +1,120 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Primary Colors (Brand Accent Blue) - More Vibrant -->
+    <Color x:Key="PrimaryColor">#0096DC</Color>
+    <Color x:Key="PrimaryHoverColor">#1AA8E8</Color>
+    <Color x:Key="PrimaryPressedColor">#0077B6</Color>
+
+    <!-- Accent Colors (Brand Primary Dark) -->
+    <Color x:Key="AccentColor">#002E44</Color>
+    <Color x:Key="AccentLightColor">#004A6E</Color>
+    <Color x:Key="AccentDarkColor">#001D2B</Color>
+
+    <!-- Background Colors (Warmer, Cream-tinted) -->
+    <Color x:Key="BackgroundColor">#F5F7FA</Color>
+    <Color x:Key="CardBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceColor">#EEF3F8</Color>
+
+    <!-- Text Colors (Warmer tone) -->
+    <Color x:Key="TextPrimaryColor">#1A2332</Color>
+    <Color x:Key="TextSecondaryColor">#4A5568</Color>
+    <Color x:Key="TextDisabledColor">#A0AEC0</Color>
+    
+    <!-- Header Text Color (White for gradient header) -->
+    <Color x:Key="HeaderTextColor">#FFFFFF</Color>
+
+    <!-- Border & Divider Colors (Subtle blue tint) -->
+    <Color x:Key="BorderColor">#CBD5E0</Color>
+    <Color x:Key="DividerColor">#E2E8F0</Color>
+
+    <!-- Status Colors (Adjusted for brand) -->
+    <Color x:Key="SuccessColor">#38A169</Color>
+    <Color x:Key="WarningColor">#DD6B20</Color>
+    <Color x:Key="ErrorColor">#E53E3E</Color>
+    <Color x:Key="InfoColor">#0096DC</Color>
+
+    <!-- Brushes for Primary Colors -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}"/>
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="{StaticResource PrimaryPressedColor}"/>
+
+    <!-- Brushes for Accent Colors -->
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="AccentLightBrush" Color="{StaticResource AccentLightColor}"/>
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDarkColor}"/>
+
+    <!-- Brushes for Background Colors -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+
+    <!-- Modern Gradient Backgrounds -->
+    <LinearGradientBrush x:Key="AppBackgroundGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8F2F8" Offset="0.0"/>
+        <GradientStop Color="#F5F7FA" Offset="0.4"/>
+        <GradientStop Color="#FFFFFF" Offset="0.7"/>
+        <GradientStop Color="#E0EDF5" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="HeaderGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#001D2B" Offset="0.0"/>
+        <GradientStop Color="#002E44" Offset="0.3"/>
+        <GradientStop Color="#004A6E" Offset="0.7"/>
+        <GradientStop Color="#0096DC" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#0096DC" Offset="0.0"/>
+        <GradientStop Color="#1AA8E8" Offset="0.5"/>
+        <GradientStop Color="#3AB9F0" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="SubtleGradientBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0.0"/>
+        <GradientStop Color="#F5F9FC" Offset="0.5"/>
+        <GradientStop Color="#EEF3F8" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <RadialGradientBrush x:Key="RadialAccentGradientBrush" Center="0.3,0.3" RadiusX="1.2" RadiusY="1.2">
+        <GradientStop Color="#D6ECFA" Offset="0.0"/>
+        <GradientStop Color="#E8F2F8" Offset="0.5"/>
+        <GradientStop Color="#F5F7FA" Offset="1.0"/>
+    </RadialGradientBrush>
+
+    <!-- Card Gradient (Elevated look) -->
+    <LinearGradientBrush x:Key="CardGradientBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="#FFFFFF" Offset="0.0"/>
+        <GradientStop Color="#FAFCFD" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <!-- Brushes for Text Colors -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="{StaticResource TextDisabledColor}"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="{StaticResource HeaderTextColor}"/>
+
+    <!-- Brushes for Border & Divider -->
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}"/>
+
+    <!-- Hover & Pressed State Brushes (Blue-tinted) -->
+    <SolidColorBrush x:Key="HoverBrush" Color="#D6ECFA"/>
+    <SolidColorBrush x:Key="PressedBrush" Color="#B3D9F2"/>
+
+    <!-- Status Brushes -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}"/>
+    <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}"/>
+
+    <!-- ColDog Studios Brand Colors -->
+    <Color x:Key="ColDogBrandBlue">#0096DC</Color>
+    <Color x:Key="ColDogDarkAccent">#002E44</Color>
+    <Color x:Key="ColDogLightBlue">#E8F2F8</Color>
+    <SolidColorBrush x:Key="ColDogBrandBlueBrush" Color="{StaticResource ColDogBrandBlue}"/>
+    <SolidColorBrush x:Key="ColDogDarkAccentBrush" Color="{StaticResource ColDogDarkAccent}"/>
+    <SolidColorBrush x:Key="ColDogLightBlueBrush" Color="{StaticResource ColDogLightBlue}"/>
+
+</ResourceDictionary>

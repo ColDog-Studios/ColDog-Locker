@@ -1,41 +1,67 @@
-# ColDog Locker License
+# ColDog Locker License - Version 2
 
 Copyright (c) 2025 Collin Laney. All Rights Reserved.
 
 "ColDog Locker" is a product of ColDog Studios.
 
+## Scope and Definitions
+For purposes of this license, "Software" means the source code and compiled
+artifacts distributed in this repository and associated documentation files.
+"Artwork and Brand Assets" means logos, icons, images, fonts, illustrations,
+audio assets, and other visual or branding elements. Artwork and Brand Assets
+are expressly excluded from the rights granted by this license and are
+reserved by ColDog Studios.
+
+This Software is source-available only. It is not licensed under any OSI-approved
+open source license; redistribution, commercial distribution, or public hosting
+are restricted as set forth below.
+
 ## Grant of Rights
 
-Permission is granted to any person obtaining a copy of this software and 
-associated documentation files (the "Software") to use, copy, and modify 
-the Software for personal or internal business purposes only, subject to 
-the following conditions:
+Permission is granted to any person obtaining a copy of the Software to use,
+copy, and modify the Software for personal or internal business purposes only,
+subject to the restrictions below.
 
 ## Restrictions
 
-1. **No Public Distribution**: You may not distribute, publish, sublicense, 
-   or make the Software publicly available in any form.
+1. **No Public Distribution**: You may not distribute, publish, sublicense,
+   or otherwise make the Software (source or object code) or derivative works
+   publicly available in any form without prior written permission from
+   ColDog Studios.
 
-2. **No Commercial Distribution**: You may not sell, rent, lease, or offer 
-   the Software or modified versions as a product or service to third parties.
+2. **No Commercial Distribution**: You may not sell, rent, lease, sublicense,
+   or offer the Software or modified versions as a product or service to third
+   parties.
 
-3. **No SaaS**: You may not host or provide the Software as a service 
-   accessible to external users.
+3. **No SaaS / No Hosted Provisioning**: You may not host, run, or provide the
+   Software as a network service, web service, or other hosted offering that
+   makes the Software available to external users.
 
-4. **Trademark Protection**: You may not use "ColDog Locker", "ColDog Studios", 
-   or similar marks in derivative works without express written permission.
+4. **Trademark & Brand Assets**: You may not use the names "ColDog Locker",
+   "ColDog Studios", or any confusingly similar marks, nor use Artwork and
+   Brand Assets in derivative works, without express written permission from
+   ColDog Studios. Trademarks, logos, and other brand elements are not licensed
+   by this document and remain the exclusive property of ColDog Studios.
 
 ## Requirements
 
-The above copyright notice and this permission notice must be included in 
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice must be included in all
+copies or substantial portions of the Software (but not in respect of Artwork
+and Brand Assets, which are separately reserved).
 
 ## Disclaimer
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-AUTHOR OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
-THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR, COPYRIGHT HOLDERS, OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+## Interpretation
+This license reflects ColDog Studios' choice to make the Software source-
+available under the terms above. No other rights are granted by implication
+or estoppel. If you need other permissions (for example, to distribute or
+commercially exploit the Software, or to use Artwork and Brand Assets), you
+may not do so unless ColDog Studios provides express written permission.

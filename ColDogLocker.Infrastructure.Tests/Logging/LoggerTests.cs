@@ -21,7 +21,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             var logEntry = new LogEntry();
 
             // Assert
-            Assert.Equal(default(DateTime), logEntry.Timestamp);
+            Assert.Null(logEntry.Timestamp);
             Assert.Equal(string.Empty, logEntry.Level);
             Assert.Equal(string.Empty, logEntry.Message);
             Assert.Null(logEntry.SourceFile);
@@ -34,7 +34,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         {
             // Arrange
             var logEntry = new LogEntry();
-            var timestamp = DateTime.Now;
+            var timestamp = "2026-01-13T12:34:56.789Z";
 
             // Act
             logEntry.Timestamp = timestamp;
@@ -117,7 +117,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void LogEntry_AllProperties_CanBeSetTogether()
         {
             // Arrange
-            var timestamp = DateTime.Now;
+            var timestamp = "2026-01-13T12:34:56.789Z";
             var level = "Error";
             var message = "An error occurred";
             var sourceFile = "Program.cs";
@@ -150,6 +150,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         [InlineData("Success")]
         [InlineData("Warning")]
         [InlineData("Error")]
+        [InlineData("Fatal")]
         public void LogEntry_Level_CanBeSetToVariousLogLevels(string level)
         {
             // Arrange
@@ -263,6 +264,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             Assert.Equal("Success", LogLevel.Success.ToString());
             Assert.Equal("Warning", LogLevel.Warning.ToString());
             Assert.Equal("Error", LogLevel.Error.ToString());
+            Assert.Equal("Fatal", LogLevel.Fatal.ToString());
         }
 
         [Theory]
@@ -271,6 +273,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         [InlineData(LogLevel.Success, "Success")]
         [InlineData(LogLevel.Warning, "Warning")]
         [InlineData(LogLevel.Error, "Error")]
+        [InlineData(LogLevel.Fatal, "Fatal")]
         public void LogLevel_ToString_ShouldMatchExpectedValue(LogLevel level, string expected)
         {
             // Act
@@ -287,45 +290,36 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             var allLevels = Enum.GetValues<LogLevel>();
 
             // Assert
-            Assert.Equal(5, allLevels.Length);
+            Assert.Equal(6, allLevels.Length);
             Assert.Contains(LogLevel.Debug, allLevels);
             Assert.Contains(LogLevel.Info, allLevels);
             Assert.Contains(LogLevel.Success, allLevels);
             Assert.Contains(LogLevel.Warning, allLevels);
             Assert.Contains(LogLevel.Error, allLevels);
+            Assert.Contains(LogLevel.Fatal, allLevels);
         }
     }
 
     public class LoggerStaticTests
     {
         [Fact]
-        public void Logger_SetDebugMode_ShouldNotThrow()
+        public void Logger_SetDevMode_ShouldNotThrow()
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDebugMode(true));
+            var exception = Record.Exception(() => Logger.SetDevMode(true));
             Assert.Null(exception);
         }
 
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
-        public void Logger_SetDebugMode_WithVariousValues_ShouldNotThrow(bool enabled)
+        public void Logger_SetDevMode_WithVariousValues_ShouldNotThrow(bool enabled)
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDebugMode(enabled));
+            var exception = Record.Exception(() => Logger.SetDevMode(enabled));
             Assert.Null(exception);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(7)]
-        [InlineData(30)]
-        [InlineData(90)]
-        public void Logger_SetLogRetentionDays_WithVariousValues_ShouldNotThrow(int days)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetLogRetentionDays(days));
-            Assert.Null(exception);
-        }
+        // Logger_SetLogRetentionDays test removed (obsolete)
     }
 }
