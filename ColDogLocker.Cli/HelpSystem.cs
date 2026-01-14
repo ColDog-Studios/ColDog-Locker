@@ -7,8 +7,6 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         public static void ShowGeneralHelp()
         {
-            Console.WriteLine("ColDog Locker - Secure File Locker");
-            Console.WriteLine();
             Console.WriteLine("USAGE:");
             Console.WriteLine("  ColDogLocker                           Launch GUI (default)");
             Console.WriteLine("  ColDogLocker gui                       Launch GUI explicitly");

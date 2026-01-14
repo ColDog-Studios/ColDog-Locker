@@ -165,7 +165,9 @@ namespace ColDogStudios.ColDogLocker.Cli
         private static int HandleVersionCommand()
         {
             var version = typeof(Program).Assembly.GetName().Version;
-            Console.WriteLine($"ColDog Locker v{version}");
+            Console.WriteLine($"ColDog Locker {BuildInfo.Version}");
+            Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
+            Console.WriteLine($"Assembly Version: {version}");
             return 0;
         }
 

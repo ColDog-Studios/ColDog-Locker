@@ -40,41 +40,6 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         }
 
         [Fact]
-        public void RoamingConfig_ShouldNotBeNull()
-        {
-            // Act
-            var roamingConfig = Variables.roamingConfig;
-
-            // Assert
-            Assert.NotNull(roamingConfig);
-            Assert.NotEmpty(roamingConfig);
-        }
-
-        [Fact]
-        public void RoamingConfig_ShouldContainExpectedPathComponents()
-        {
-            // Act
-            var roamingConfig = Variables.roamingConfig;
-
-            // Assert
-            Assert.Contains("ColDog Studios", roamingConfig);
-            Assert.Contains("ColDog Locker", roamingConfig);
-        }
-
-        [Fact]
-        public void RoamingConfig_ShouldBeInApplicationData()
-        {
-            // Arrange
-            var expectedBasePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-            // Act
-            var roamingConfig = Variables.roamingConfig;
-
-            // Assert
-            Assert.StartsWith(expectedBasePath, roamingConfig);
-        }
-
-        [Fact]
         public void CdlDir_ShouldNotBeNull()
         {
             // Act
@@ -109,17 +74,6 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         }
 
         [Fact]
-        public void LocalConfig_AndRoamingConfig_ShouldBeDifferent()
-        {
-            // Act
-            var localConfig = Variables.localConfig;
-            var roamingConfig = Variables.roamingConfig;
-
-            // Assert
-            Assert.NotEqual(localConfig, roamingConfig);
-        }
-
-        [Fact]
         public void LocalConfig_AndCdlDir_ShouldBeDifferent()
         {
             // Act
@@ -135,7 +89,6 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         {
             // Act & Assert
             Assert.True(Path.IsPathRooted(Variables.localConfig), "localConfig should be an absolute path");
-            Assert.True(Path.IsPathRooted(Variables.roamingConfig), "roamingConfig should be an absolute path");
             Assert.True(Path.IsPathRooted(Variables.cdlDir), "cdlDir should be an absolute path");
         }
 
@@ -145,14 +98,12 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
             // Act - Access the properties multiple times
             var localConfig1 = Variables.localConfig;
             var localConfig2 = Variables.localConfig;
-            var roamingConfig1 = Variables.roamingConfig;
-            var roamingConfig2 = Variables.roamingConfig;
             var cdlDir1 = Variables.cdlDir;
             var cdlDir2 = Variables.cdlDir;
 
             // Assert - Should return the same values
             Assert.Equal(localConfig1, localConfig2);
-            Assert.Equal(roamingConfig1, roamingConfig2);
+            Assert.Equal(cdlDir1, cdlDir2);
             Assert.Equal(cdlDir1, cdlDir2);
         }
 
@@ -164,16 +115,6 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
 
             // Assert
             Assert.EndsWith(Path.Combine("ColDog Studios", "ColDog Locker"), localConfig);
-        }
-
-        [Fact]
-        public void RoamingConfig_ShouldEndWithCorrectFolderStructure()
-        {
-            // Act
-            var roamingConfig = Variables.roamingConfig;
-
-            // Assert
-            Assert.EndsWith(Path.Combine("ColDog Studios", "ColDog Locker"), roamingConfig);
         }
 
         [Fact]
