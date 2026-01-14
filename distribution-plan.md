@@ -7,12 +7,12 @@
   - **Minimum:** Windows 10 (version determined by .NET 10 support)
   - **Recommended:** Windows 11
 - **Runtime:** .NET 10 Runtime (detected and prompted by installer if missing)
-- **Architecture:** x64 or ARM64 (no 32-bit support)
+- **Architecture:** x64 ~~or ARM64~~ (no 32-bit support)
 - **Permissions:** Administrator required for installation (Program Files installation)
 
 ### Target Architectures
 - **x64** (Windows 10/11 on Intel/AMD)
-- **ARM64** (Windows on ARM devices - Surface, Qualcomm)
+- ~~**ARM64** (Windows on ARM devices - Surface, Qualcomm)~~ Not a priority
 - ~~x86 (32-bit)~~ - Not a priority, most systems are 64-bit
 
 ### Build Configuration
@@ -51,7 +51,7 @@
 ### Prerequisites Check
 - Detect if .NET 10 Runtime is installed
 - If missing, prompt user to install or download automatically
-- Support both x64 and ARM64 runtime installations
+- Support both x64 ~~and ARM64~~ runtime installations
 
 ### Installation Directory Structure
 ```
@@ -187,7 +187,7 @@ dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-arm64 
 ### Phase 1: Build Configuration
 - [ ] Add Release configuration properties to WPF project
 - [ ] Add Release configuration properties to CLI project
-- [ ] Test Release builds for both x64 and ARM64
+- [ ] Test Release builds for both x64 ~~and ARM64~~
 - [ ] Verify memory usage improvements in Release mode
 
 ### Phase 2: Installer Creation
@@ -220,7 +220,7 @@ dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-arm64 
 
 ### Installers
 - `ColDogLocker-0.2.0-x64.msi`
-- `ColDogLocker-0.2.0-ARM64.msi`
+- ~~`ColDogLocker-0.2.0-ARM64.msi`~~
 
 
 ---
@@ -236,4 +236,4 @@ dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-arm64 
 - User data in %LOCALAPPDATA% avoids permission issues and supports multi-user
 - Optional user data removal on uninstall protects against accidental data loss
 - Application-level migrations provide more control than installer-based upgrades
-- ARM64 support included but untested due to hardware limitations
+- ~~ARM64 support included but untested due to hardware limitations~~
