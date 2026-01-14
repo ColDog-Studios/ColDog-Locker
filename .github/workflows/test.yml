@@ -1,8 +1,8 @@
 name: Tests
 
 on:
-  push:
-    branches: [ main, test ]
+  #push:
+  #  branches: [ main, test ]
   pull_request:
     branches: [ main, test, dev ]
   workflow_dispatch:
