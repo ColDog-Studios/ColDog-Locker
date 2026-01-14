@@ -1,4 +1,3 @@
-using System;
 using ColDogStudios.ColDogLocker.Gui.WPF.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,8 +1,8 @@
+using System.Diagnostics;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using System.Diagnostics;
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -91,7 +91,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 // Find the GUI executable in the same directory or nearby
                 var cliDirectory = AppContext.BaseDirectory;
                 var guiExeName = "ColDogLocker.exe";
-                
+
                 // Check common locations relative to CLI executable
                 var possiblePaths = new[]
                 {

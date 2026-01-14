@@ -1,6 +1,5 @@
 using System.Windows;
 using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using Microsoft.Extensions.DependencyInjection;

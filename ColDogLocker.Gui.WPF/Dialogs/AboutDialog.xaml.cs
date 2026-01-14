@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Windows;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;

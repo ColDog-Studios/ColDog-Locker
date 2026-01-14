@@ -1,10 +1,6 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using Microsoft.Win32;
-using Application = System.Windows.Application;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 {

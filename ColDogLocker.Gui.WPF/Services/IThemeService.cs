@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 {
     /// <summary>
