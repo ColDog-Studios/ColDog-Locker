@@ -69,11 +69,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         public static void MenuTitle(string subMenu)
         {
             Console.Clear();
-            int width = Console.WindowWidth;
-            string title = $"ColDog Locker {BuildInfo.Version}";
-            string copyright = "Copyright (c) ColDog Studios. All Rights Reserved.";
+            var width = Console.WindowWidth;
+            var title = $"ColDog Locker {BuildInfo.Version}";
+            var copyright = "Copyright (c) ColDog Studios. All Rights Reserved.";
             string line = new('#', width);
-            int separatorLength = width / 2;
+            var separatorLength = width / 2;
             string separator = new('-', separatorLength);
             string emptyLine = new(' ', width);
 

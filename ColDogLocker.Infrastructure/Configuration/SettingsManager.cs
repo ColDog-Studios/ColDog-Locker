@@ -25,17 +25,17 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 
             if (!File.Exists(_settingsFile))
             {
-                Logger.AddEntry("Settings file not found. Initializing default settings.", LogLevel.Warning);
+                Logger.AddEntry("Settings file not found.", LogLevel.Warning);
                 InitializeSettings();
                 return;
             }
 
             // Attempt to read the file with retries to handle editor/save race conditions
-            const int maxReadAttempts = 6;
-            const int readDelayMs = 200; // total ~1.2s worst-case
+            const int MaxReadAttempts = 6;
+            const int ReadDelayMs = 200; // total ~1.2s worst-case
             string? settingsContent = null;
 
-            for (var attempt = 1; attempt <= maxReadAttempts; attempt++)
+            for (var attempt = 1; attempt <= MaxReadAttempts; attempt++)
             {
                 try
                 {
@@ -48,7 +48,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 catch (IOException ioEx)
                 {
                     Logger.AddEntry($"Attempt {attempt}: Unable to read settings file ({ioEx.Message}). Retrying...", LogLevel.Debug);
-                    Thread.Sleep(readDelayMs);
+                    Thread.Sleep(ReadDelayMs);
                     continue;
                 }
                 catch (Exception ex)
@@ -67,17 +67,17 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             // If file is empty, initialize defaults
             if (string.IsNullOrWhiteSpace(settingsContent))
             {
-                Logger.AddEntry("Settings file is empty. Initializing default settings.", LogLevel.Warning);
+                Logger.AddEntry("Settings file is empty.", LogLevel.Warning);
                 InitializeSettings();
                 return;
             }
 
             // Try to parse JSON; if parsing fails, retry a few times because editor may be mid-write
-            const int maxParseAttempts = 4;
-            const int parseDelayMs = 250;
+            const int MaxParseAttempts = 4;
+            const int ParseDelayMs = 250;
             ApplicationSettings? deserializedSettings = null;
 
-            for (var attempt = 1; attempt <= maxParseAttempts; attempt++)
+            for (var attempt = 1; attempt <= MaxParseAttempts; attempt++)
             {
                 try
                 {
@@ -87,7 +87,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 catch (JsonException jsonEx)
                 {
                     Logger.AddEntry($"Attempt {attempt}: JSON parse error: {jsonEx.Message}. Retrying...", LogLevel.Debug);
-                    Thread.Sleep(parseDelayMs);
+                    Thread.Sleep(ParseDelayMs);
 
                     // Re-read file in case it has finished writing
                     try
@@ -100,6 +100,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     {
                         Logger.AddEntry($"Attempt {attempt}: Re-read failed: {readEx.Message}", LogLevel.Debug);
                     }
+
                     continue;
                 }
             }
@@ -109,6 +110,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 Settings = deserializedSettings;
                 ValidateSettings();
                 Logger.SetDevMode(Settings.DevMode);
+                Logger.AddEntry("Settings loaded successfully.", LogLevel.Success);
                 return;
             }
 
@@ -127,8 +129,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             Settings = new ApplicationSettings
             {
                 DevMode = false,
-                AutoUpdate = true,  // Enabled by default
-                UpdateChannel = UpdateChannel.Stable  // Default to stable channel
+                AutoUpdate = true,
+                UpdateChannel = UpdateChannel.Stable
             };
             SaveSettings();
         }
@@ -147,8 +149,6 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 
             var settingsChanged = false;
 
-            // No longer validate LogRetentionDays (removed)
-
             // Additional validation for any string properties that might be added in the future
             // (Currently we don't have any required string properties)
 
@@ -157,6 +157,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             {
                 SaveSettings();
             }
+
+            Logger.AddEntry("Settings validated.", LogLevel.Success);
         }
 
         // Save settings to the configuration file
@@ -228,11 +230,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 if (File.Exists(tempFile))
                 {
                     File.Delete(tempFile);
+                    Logger.AddEntry("Temporary settings file cleaned up.", LogLevel.Debug);
                 }
             }
             catch
             {
                 // If we can't clean up the temp file, it's not critical
+                Logger.AddEntry("Failed to clean up temporary settings file.", LogLevel.Debug);
             }
         }
 
@@ -261,6 +265,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
     {
         Stable,
         Prerelease
+    }
+
+    // Enum for GUI view mode
+    public enum GuiViewMode
+    {
+        Grid,
+        List
     }
 
     // Class to hold application settings
@@ -364,11 +375,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         /// <summary>
         /// Gets or sets the default location for new lockers.
         /// </summary>
-        public string DefaultLockerLocation { get; set; } = string.Empty;
+        public string DefaultLockerLocation { get; set; } = Variables.cdlDir;
 
         /// <summary>
         /// Gets or sets a value indicating whether the default view is grid (true) or list (false).
         /// </summary>
-        public bool DefaultViewIsGrid { get; set; } = true;
+        public GuiViewMode DefaultGuiViewMode { get; set; } = GuiViewMode.Grid;
     }
 }

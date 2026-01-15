@@ -14,6 +14,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         {
             try
             {
+                Logger.AddEntry("Loading lockers.", LogLevel.Debug);
                 Lockers.Clear();
                 Lockers.AddRange(LockerRepository.GetAllLockers());
             }
@@ -50,7 +51,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             // Create locker directory if it does not exist
             if (Directory.Exists(locker.LockerLocation))
             {
-                Logger.AddEntry($"{locker.LockerName} already exists. Skipping directory creation.", LogLevel.Info);
+                Logger.AddEntry($"{locker.LockerName} already exists. Skipping directory creation.", LogLevel.Debug);
             }
             else
             {

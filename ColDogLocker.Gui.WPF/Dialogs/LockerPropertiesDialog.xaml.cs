@@ -80,7 +80,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             {
                 if (Directory.Exists(_locker.LockerLocation))
                 {
-                    long totalSize = CalculateDirectorySize(new DirectoryInfo(_locker.LockerLocation));
+                    var totalSize = CalculateDirectorySize(new DirectoryInfo(_locker.LockerLocation));
                     SizeText.Text = FormatFileSize(totalSize);
                 }
                 else
@@ -94,7 +94,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             }
         }
 
-        private long CalculateDirectorySize(DirectoryInfo directory)
+        private static long CalculateDirectorySize(DirectoryInfo directory)
         {
             long size = 0;
             try
@@ -119,15 +119,15 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             return size;
         }
 
-        private string FormatFileSize(long bytes)
+        private static string FormatFileSize(long bytes)
         {
-            string[] sizes = { "bytes", "KB", "MB", "GB", "TB" };
+            string[] sizes = ["bytes", "KB", "MB", "GB", "TB"];
             double len = bytes;
-            int order = 0;
+            var order = 0;
             while (len >= 1024 && order < sizes.Length - 1)
             {
                 order++;
-                len = len / 1024;
+                len /= 1024;
             }
 
             return $"{len:0.##} {sizes[order]}";

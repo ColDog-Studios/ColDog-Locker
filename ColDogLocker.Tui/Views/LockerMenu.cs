@@ -39,7 +39,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.WriteLine("\nLocker name cannot be empty. Please try again.");
             }
 
-            string passwordSecurityMessage =
+            var passwordSecurityMessage =
                 "\nPassword Requirements:\n" +
                 " - At least 10 characters long\n" +
                 " - At least an upper-case letter\n" +
@@ -89,7 +89,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             // Hash the password and create locker
-            string passwordHash = EncryptionHelper.HashPassword(password);
+            var passwordHash = EncryptionHelper.HashPassword(password);
             var locker = new LockerModel(lockerName, passwordHash, Path.Combine(Variables.cdlDir, lockerName));
             LockerService.AddLocker(locker);
         }
@@ -115,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                 // Get locker index from user
                 Console.Write("\nEnter the number of the locker to remove (or 0 to return): ");
-                string? input = Console.ReadLine();
+                var input = Console.ReadLine();
 
                 // Check if user wants to return to main menu
                 if (input == "0")
@@ -123,7 +123,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     return;
                 }
 
-                if (int.TryParse(input, out int index) && index > 0 && index <= unlockedLockers.Count)
+                if (int.TryParse(input, out var index) && index > 0 && index <= unlockedLockers.Count)
                 {
                     var locker = unlockedLockers[index - 1];
 
@@ -162,7 +162,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to lock (or 0 to return): ");
-            string? input = Console.ReadLine();
+            var input = Console.ReadLine();
 
             // Check if user wants to return to main menu
             if (input == "0")
@@ -170,7 +170,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 return;
             }
 
-            if (!int.TryParse(input, out int index) || index <= 0 || index > unlockedLockers.Count)
+            if (!int.TryParse(input, out var index) || index <= 0 || index > unlockedLockers.Count)
             {
                 Console.Write("\nInvalid selection. Press Enter to continue...");
                 Console.ReadLine();
@@ -181,7 +181,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker password from user
             Console.Write("\nEnter Locker Password: ");
-            string? password = ConsoleHelper.ReadPassword();
+            var password = ConsoleHelper.ReadPassword();
 
             // Validate password
             if (string.IsNullOrEmpty(password))
@@ -224,7 +224,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to unlock (or 0 to return): ");
-            string? input = Console.ReadLine();
+            var input = Console.ReadLine();
 
             // Check if user wants to return to main menu
             if (input == "0")
@@ -232,7 +232,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 return;
             }
 
-            if (!int.TryParse(input, out int index) || index <= 0 || index > lockedLockers.Count)
+            if (!int.TryParse(input, out var index) || index <= 0 || index > lockedLockers.Count)
             {
                 Console.WriteLine("\nInvalid selection. Press Enter to continue...");
                 Console.ReadLine();
@@ -243,7 +243,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Get locker password from user
             Console.Write("\nEnter Locker Password: ");
-            string? password = ConsoleHelper.ReadPassword();
+            var password = ConsoleHelper.ReadPassword();
 
             // Validate password
             if (string.IsNullOrEmpty(password))

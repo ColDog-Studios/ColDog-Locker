@@ -107,7 +107,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             button.Click += (s, e) =>
             {
                 Result = result;
-                DialogResult = result == MessageResult.OK || result == MessageResult.Yes;
+                DialogResult = result is MessageResult.OK or MessageResult.Yes;
                 Close();
             };
 

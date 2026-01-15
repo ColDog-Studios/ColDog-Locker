@@ -8,10 +8,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
     /// </summary>
     public class ServiceLocator
     {
-        private static ServiceLocator? _instance;
         private readonly IServiceProvider _serviceProvider;
 
-        public static ServiceLocator Instance => _instance ?? throw new InvalidOperationException("ServiceLocator not initialized");
+        public static ServiceLocator Instance { get => field ?? throw new InvalidOperationException("ServiceLocator not initialized"); private set; }
 
         private ServiceLocator(IServiceProvider serviceProvider)
         {
@@ -20,7 +19,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 
         public static void Initialize(IServiceProvider serviceProvider)
         {
-            _instance = new ServiceLocator(serviceProvider);
+            Instance = new ServiceLocator(serviceProvider);
         }
 
         public static void ConfigureServices(IServiceCollection services)

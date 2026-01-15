@@ -154,10 +154,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void LogEntry_Level_CanBeSetToVariousLogLevels(string level)
         {
             // Arrange
-            var logEntry = new LogEntry();
-
-            // Act
-            logEntry.Level = level;
+            var logEntry = new LogEntry
+            {
+                // Act
+                Level = level
+            };
 
             // Assert
             Assert.Equal(level, logEntry.Level);
@@ -194,10 +195,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         {
             // Arrange
             var message = "Error: File not found! @#$%^&*()";
-            var logEntry = new LogEntry();
-
-            // Act
-            logEntry.Message = message;
+            var logEntry = new LogEntry
+            {
+                // Act
+                Message = message
+            };
 
             // Assert
             Assert.Equal(message, logEntry.Message);
@@ -208,10 +210,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         {
             // Arrange
             var message = "Line 1\nLine 2\nLine 3";
-            var logEntry = new LogEntry();
-
-            // Act
-            logEntry.Message = message;
+            var logEntry = new LogEntry
+            {
+                // Act
+                Message = message
+            };
 
             // Assert
             Assert.Equal(message, logEntry.Message);

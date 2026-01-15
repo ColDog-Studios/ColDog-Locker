@@ -10,13 +10,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
     public class ThemeService : IThemeService
     {
         private const string ThemeSettingKey = "AppTheme";
-        private AppTheme _currentTheme = AppTheme.ColDogStudios;
 
-        public AppTheme CurrentTheme => _currentTheme;
+        public AppTheme CurrentTheme { get; private set; } = AppTheme.ColDogStudios;
 
         public Task SetThemeAsync(AppTheme theme)
         {
-            _currentTheme = theme;
+            CurrentTheme = theme;
 
             // Save to application settings
             SettingsManager.Settings.AppTheme = theme.ToString();
@@ -35,20 +34,20 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 
             if (!string.IsNullOrEmpty(savedTheme) && Enum.TryParse<AppTheme>(savedTheme, out var theme))
             {
-                _currentTheme = theme;
+                CurrentTheme = theme;
             }
             else
             {
                 // Default to ColDogStudios theme
-                _currentTheme = AppTheme.ColDogStudios;
+                CurrentTheme = AppTheme.ColDogStudios;
             }
 
-            ApplyTheme(_currentTheme);
+            ApplyTheme(CurrentTheme);
 
             return Task.CompletedTask;
         }
 
-        private AppTheme DetectWindowsTheme()
+        private static AppTheme DetectWindowsTheme()
         {
             try
             {

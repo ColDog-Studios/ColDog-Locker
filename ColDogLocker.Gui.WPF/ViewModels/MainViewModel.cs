@@ -11,13 +11,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _lockers = new();
+        private ObservableCollection<LockerViewModel> _lockers = [];
 
         [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _filteredLockers = new();
+        private ObservableCollection<LockerViewModel> _filteredLockers = [];
 
         [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _selectedLockers = new();
+        private ObservableCollection<LockerViewModel> _selectedLockers = [];
 
         [ObservableProperty]
         private string _searchText = string.Empty;
@@ -58,7 +58,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
         }
 
         [RelayCommand]
-        private async Task CreateNewLockerAsync()
+        private static async Task CreateNewLockerAsync()
         {
             // Will be implemented when we create the dialog
             await Task.CompletedTask;
@@ -101,14 +101,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
         }
 
         [RelayCommand]
-        private async Task RefreshAsync()
+        private static async Task RefreshAsync()
         {
             // Will be implemented to reload lockers
             await Task.CompletedTask;
         }
 
         [RelayCommand]
-        private async Task ShowSettingsAsync()
+        private static async Task ShowSettingsAsync()
         {
             // Will be implemented when we create settings dialog
             await Task.CompletedTask;

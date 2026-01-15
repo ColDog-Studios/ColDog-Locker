@@ -17,6 +17,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         {
             try
             {
+                Logger.AddEntry("Initializing database.", LogLevel.Debug);
+
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
@@ -33,7 +35,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     )";
                 command.ExecuteNonQuery();
 
-                Logger.AddEntry("Database initialized successfully.", LogLevel.Info);
+                Logger.AddEntry("Database initialized successfully.", LogLevel.Debug);
             }
             catch (Exception ex)
             {
@@ -180,7 +182,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
 
                 command.ExecuteNonQuery();
 
-                Logger.AddEntry($"Inserted locker '{locker.LockerName}' into database.", LogLevel.Info);
+                Logger.AddEntry($"Inserted locker '{locker.LockerName}' into database.", LogLevel.Debug);
             }
             catch (SqliteException ex) when (ex.SqliteErrorCode == 19) // SQLITE_CONSTRAINT
             {
@@ -228,7 +230,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     throw new InvalidOperationException($"Locker with GUID '{locker.Guid}' not found.");
                 }
 
-                Logger.AddEntry($"Updated locker '{locker.LockerName}' in database.", LogLevel.Info);
+                Logger.AddEntry($"Updated locker '{locker.LockerName}' in database.", LogLevel.Debug);
             }
             catch (Exception ex)
             {
@@ -373,7 +375,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                 var integrityResult = integrityCommand.ExecuteScalar()?.ToString();
                 info.IntegrityOk = integrityResult?.Equals("ok", StringComparison.OrdinalIgnoreCase) ?? false;
 
-                Logger.AddEntry("Database info retrieved successfully.", LogLevel.Info);
+                Logger.AddEntry("Database info retrieved successfully.", LogLevel.Debug);
                 return info;
             }
             catch (Exception ex)

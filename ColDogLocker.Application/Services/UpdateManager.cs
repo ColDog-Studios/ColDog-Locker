@@ -63,7 +63,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     }
                 }
 
-                Logger.AddEntry($"Update available: {currentVersion} -> {latestVersion}", LogLevel.Info);
+                Logger.AddEntry($"Update available: {currentVersion} -> {latestVersion}", LogLevel.Debug);
 
                 return new UpdateCheckResult
                 {
@@ -77,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
             else
             {
-                Logger.AddEntry($"Application is up to date: {currentVersion}", LogLevel.Success);
+                Logger.AddEntry($"Application is up to date: {currentVersion}", LogLevel.Debug);
 
                 return new UpdateCheckResult
                 {
@@ -122,7 +122,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             var downloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
             var fileName = Path.Combine(downloadDirectory, updateInfo.InstallerFileName);
 
-            Logger.AddEntry($"Downloading update to: {fileName}", LogLevel.Info);
+            Logger.AddEntry($"Downloading update to: {fileName}", LogLevel.Debug);
 
             var fileBytes = await client.GetByteArrayAsync(updateInfo.DownloadUrl);
             await File.WriteAllBytesAsync(fileName, fileBytes);

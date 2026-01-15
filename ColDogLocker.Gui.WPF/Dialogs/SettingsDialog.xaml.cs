@@ -55,8 +55,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             // Load other settings from SettingsManager
             AutoUpdateCheckBox.IsChecked = SettingsManager.Settings.AutoUpdate;
 
-            GridViewRadio.IsChecked = SettingsManager.Settings.DefaultViewIsGrid;
-            ListViewRadio.IsChecked = !SettingsManager.Settings.DefaultViewIsGrid;
+            GridViewRadio.IsChecked = SettingsManager.Settings.DefaultGuiViewMode == GuiViewMode.Grid;
+            ListViewRadio.IsChecked = SettingsManager.Settings.DefaultGuiViewMode == GuiViewMode.List;
 
             DevModeCheckBox.IsChecked = SettingsManager.Settings.DevMode;
             DbVacuumIntervalTextBox.Text = SettingsManager.Settings.DatabaseVacuumInterval.ToString();
@@ -137,7 +137,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             if (sender is System.Windows.Controls.TextBox textBox && IsLoaded)
             {
                 // Allow only numeric input between 7 and 90
-                if (int.TryParse(textBox.Text, out int value))
+                if (int.TryParse(textBox.Text, out var value))
                 {
                     if (value < 7)
                     {
@@ -155,7 +155,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 else if (!string.IsNullOrEmpty(textBox.Text))
                 {
                     // Remove non-numeric characters
-                    var numericOnly = new string(textBox.Text.Where(char.IsDigit).ToArray());
+                    var numericOnly = new string([.. textBox.Text.Where(char.IsDigit)]);
                     if (numericOnly != textBox.Text)
                     {
                         var selectionStart = textBox.SelectionStart;
@@ -249,7 +249,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             _hasChanges = true;
         }
 
-        private void RestoreDefaultSettings()
+        private static void RestoreDefaultSettings()
         {
             // Reset to default settings
             SettingsManager.Settings = new ApplicationSettings();
@@ -263,7 +263,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 // Save all settings
                 SettingsManager.Settings.DefaultLockerLocation = DefaultLocationTextBox.Text;
                 SettingsManager.Settings.AutoUpdate = AutoUpdateCheckBox.IsChecked ?? true;
-                SettingsManager.Settings.DefaultViewIsGrid = GridViewRadio.IsChecked ?? true;
+                SettingsManager.Settings.DefaultGuiViewMode = GridViewRadio.IsChecked == true
+                    ? GuiViewMode.Grid
+                    : GuiViewMode.List;
                 SettingsManager.Settings.DevMode = DevModeCheckBox.IsChecked ?? false;
 
                 // Apply logging settings to Infrastructure.Logging.Logger
@@ -273,12 +275,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 // Save logging options
                 SettingsManager.Settings.LogLevel = (LogLevelComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Info";
                 SettingsManager.Settings.LogFormat = (LogFormatComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "json";
-                if (int.TryParse(MaxFileSizeTextBox.Text, out int maxFileSize))
+                if (int.TryParse(MaxFileSizeTextBox.Text, out var maxFileSize))
                 {
                     SettingsManager.Settings.MaxFileSizeMB = maxFileSize;
                 }
 
-                if (int.TryParse(MaxRetainedFilesTextBox.Text, out int maxRetained))
+                if (int.TryParse(MaxRetainedFilesTextBox.Text, out var maxRetained))
                 {
                     SettingsManager.Settings.MaxRetainedFiles = maxRetained;
                 }
@@ -293,7 +295,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 // Apply logging settings to logger
                 ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.ReloadConfig();
 
-                if (int.TryParse(DbVacuumIntervalTextBox.Text, out int vacuumInterval))
+                if (int.TryParse(DbVacuumIntervalTextBox.Text, out var vacuumInterval))
                 {
                     SettingsManager.Settings.DatabaseVacuumInterval = Math.Clamp(vacuumInterval, 7, 90);
                 }

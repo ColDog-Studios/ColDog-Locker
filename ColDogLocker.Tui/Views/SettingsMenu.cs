@@ -22,51 +22,51 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine("\nLogging Settings:");
             Console.Write($"Minimum Log Level (Debug/Info/Success/Warning/Error/Fatal) [Current: {SettingsManager.Settings.LogLevel}]: ");
             var logLevelInput = Console.ReadLine();
-            string logLevel = string.IsNullOrWhiteSpace(logLevelInput) ? SettingsManager.Settings.LogLevel : logLevelInput;
+            var logLevel = string.IsNullOrWhiteSpace(logLevelInput) ? SettingsManager.Settings.LogLevel : logLevelInput;
 
             Console.Write($"Log Format (json/text) [Current: {SettingsManager.Settings.LogFormat}]: ");
             var logFormatInput = Console.ReadLine();
-            string logFormat = string.IsNullOrWhiteSpace(logFormatInput) ? SettingsManager.Settings.LogFormat : logFormatInput;
+            var logFormat = string.IsNullOrWhiteSpace(logFormatInput) ? SettingsManager.Settings.LogFormat : logFormatInput;
 
             Console.Write($"Max Log File Size (MB) [Current: {SettingsManager.Settings.MaxFileSizeMB}]: ");
             var maxFileSizeInput = Console.ReadLine();
-            int maxFileSizeMB = SettingsManager.Settings.MaxFileSizeMB;
-            if (!string.IsNullOrWhiteSpace(maxFileSizeInput) && int.TryParse(maxFileSizeInput, out int parsedSize) && parsedSize > 0)
+            var maxFileSizeMB = SettingsManager.Settings.MaxFileSizeMB;
+            if (!string.IsNullOrWhiteSpace(maxFileSizeInput) && int.TryParse(maxFileSizeInput, out var parsedSize) && parsedSize > 0)
             {
                 maxFileSizeMB = parsedSize;
             }
 
             Console.Write($"Max Retained Log Files [Current: {SettingsManager.Settings.MaxRetainedFiles}]: ");
             var maxRetainedInput = Console.ReadLine();
-            int maxRetainedFiles = SettingsManager.Settings.MaxRetainedFiles;
-            if (!string.IsNullOrWhiteSpace(maxRetainedInput) && int.TryParse(maxRetainedInput, out int parsedRetained) && parsedRetained > 0)
+            var maxRetainedFiles = SettingsManager.Settings.MaxRetainedFiles;
+            if (!string.IsNullOrWhiteSpace(maxRetainedInput) && int.TryParse(maxRetainedInput, out var parsedRetained) && parsedRetained > 0)
             {
                 maxRetainedFiles = parsedRetained;
             }
 
             Console.Write($"Enable File Logging? (y/N) [Current: {(SettingsManager.Settings.EnableFileLogging ? "Yes" : "No")}] ");
             var enableFileLoggingInput = Console.ReadLine();
-            bool enableFileLogging = string.IsNullOrWhiteSpace(enableFileLoggingInput) ? SettingsManager.Settings.EnableFileLogging : enableFileLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var enableFileLogging = string.IsNullOrWhiteSpace(enableFileLoggingInput) ? SettingsManager.Settings.EnableFileLogging : enableFileLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Enable Compression? (y/N) [Current: {(SettingsManager.Settings.EnableCompression ? "Yes" : "No")}] ");
             var enableCompressionInput = Console.ReadLine();
-            bool enableCompression = string.IsNullOrWhiteSpace(enableCompressionInput) ? SettingsManager.Settings.EnableCompression : enableCompressionInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var enableCompression = string.IsNullOrWhiteSpace(enableCompressionInput) ? SettingsManager.Settings.EnableCompression : enableCompressionInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Include Timestamps? (y/N) [Current: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}] ");
             var includeTimestampsInput = Console.ReadLine();
-            bool includeTimestamps = string.IsNullOrWhiteSpace(includeTimestampsInput) ? SettingsManager.Settings.IncludeTimestamps : includeTimestampsInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var includeTimestamps = string.IsNullOrWhiteSpace(includeTimestampsInput) ? SettingsManager.Settings.IncludeTimestamps : includeTimestampsInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Include Thread ID? (y/N) [Current: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}] ");
             var includeThreadIdInput = Console.ReadLine();
-            bool includeThreadId = string.IsNullOrWhiteSpace(includeThreadIdInput) ? SettingsManager.Settings.IncludeThreadId : includeThreadIdInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var includeThreadId = string.IsNullOrWhiteSpace(includeThreadIdInput) ? SettingsManager.Settings.IncludeThreadId : includeThreadIdInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Date/Time Format (UTC/Local) [Current: {SettingsManager.Settings.DateTimeFormat}]: ");
             var dateTimeFormatInput = Console.ReadLine();
-            string dateTimeFormat = string.IsNullOrWhiteSpace(dateTimeFormatInput) ? SettingsManager.Settings.DateTimeFormat : dateTimeFormatInput;
+            var dateTimeFormat = string.IsNullOrWhiteSpace(dateTimeFormatInput) ? SettingsManager.Settings.DateTimeFormat : dateTimeFormatInput;
 
             Console.Write($"Enable Async Logging? (y/N) [Current: {(SettingsManager.Settings.AsyncLogging ? "Yes" : "No")}] ");
             var asyncLoggingInput = Console.ReadLine();
-            bool asyncLogging = string.IsNullOrWhiteSpace(asyncLoggingInput) ? SettingsManager.Settings.AsyncLogging : asyncLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var asyncLogging = string.IsNullOrWhiteSpace(asyncLoggingInput) ? SettingsManager.Settings.AsyncLogging : asyncLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             // Prompt the user to enable or disable auto updates
             Console.Write($"Enable Auto Update? (y/N) [Current: {(SettingsManager.Settings.AutoUpdate ? "Yes" : "No")}]: ");
@@ -80,11 +80,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             var updateChannel = SettingsManager.Settings.UpdateChannel;
             if (!string.IsNullOrEmpty(channelInput))
             {
-                if (channelInput == "stable" || channelInput == "s")
+                if (channelInput is "stable" or "s")
                 {
                     updateChannel = UpdateChannel.Stable;
                 }
-                else if (channelInput == "prerelease" || channelInput == "pre" || channelInput == "p")
+                else if (channelInput is "prerelease" or "pre" or "p")
                 {
                     updateChannel = UpdateChannel.Prerelease;
                 }

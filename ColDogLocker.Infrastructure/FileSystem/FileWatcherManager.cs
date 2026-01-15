@@ -19,6 +19,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
         {
             try
             {
+                Logger.AddEntry("Initializing file watchers", LogLevel.Debug);
+
                 // Ensure the directory exists before creating watchers
                 if (!Directory.Exists(Variables.localConfig))
                 {
@@ -40,6 +42,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 _settingsWatcher.Renamed += OnSettingsChanged;
                 _settingsWatcher.Error += OnWatcherError;
                 _settingsWatcher.EnableRaisingEvents = true;
+                Logger.AddEntry("Settings file watcher created and enabled.", LogLevel.Debug);
 
                 // Initialize lockers DB watcher (lockers.db)
                 _lockersWatcher = new FileSystemWatcher
@@ -85,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                     }
 
                     _lastSettingsReload = localNow;
-                    Logger.AddEntry($"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings.", LogLevel.Info);
+                    Logger.AddEntry($"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings.", LogLevel.Debug);
                     OnSettingsFileChanged?.Invoke();
                 }
                 catch (Exception ex)
@@ -98,7 +101,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
         {
             try
             {
-                Logger.AddEntry($"Lockers DB changed ({e.ChangeType}) for '{e.FullPath}'. Reloading lockers.", LogLevel.Info);
+                Logger.AddEntry($"Lockers DB changed ({e.ChangeType}) for '{e.FullPath}'. Reloading lockers.", LogLevel.Debug);
                 OnLockersFileChanged?.Invoke();
             }
             catch (Exception ex)

@@ -5,16 +5,15 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class ProgressDialog : Window
     {
-        private bool _isCancelled;
         private readonly StringBuilder _statusLog = new();
 
-        public bool IsCancelled => _isCancelled;
+        public bool IsCancelled { get; private set; }
 
         public ProgressDialog(string operationTitle)
         {
             InitializeComponent();
             OperationText.Text = operationTitle;
-            _isCancelled = false;
+            IsCancelled = false;
         }
 
         public void UpdateProgress(int current, int total, string currentItem)
@@ -70,7 +69,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             }
             else
             {
-                _isCancelled = true;
+                IsCancelled = true;
                 CancelButton.IsEnabled = false;
                 CurrentItemText.Text = "Cancelling operation...";
             }
@@ -78,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            if (!_isCancelled && CancelButton.Content.ToString() != "Close")
+            if (!IsCancelled && CancelButton.Content.ToString() != "Close")
             {
                 if (!MessageDialog.ShowQuestion(
                     "Are you sure you want to cancel the operation?",
@@ -89,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 }
                 else
                 {
-                    _isCancelled = true;
+                    IsCancelled = true;
                 }
             }
 

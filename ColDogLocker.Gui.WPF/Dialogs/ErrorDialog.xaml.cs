@@ -125,7 +125,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             FullErrorTextBox.Text = errorDetails.ToString();
         }
 
-        private string GetApplicationVersion()
+        private static string GetApplicationVersion()
         {
             try
             {

@@ -50,7 +50,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static readonly string _logDirectory = Path.Combine(Variables.localConfig, "logs");
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         private static readonly string _logFilePath = Path.Combine(_logDirectory, $"cdl.log");
-        private static readonly object _lockObject = new object();
+        private static readonly Lock _lockObject = new();
 
         private static LogLevel _minLogLevel = LogLevel.Info;
         private static string _logFormat = "json";
@@ -69,7 +69,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static readonly string _environment = GetEnvironmentInfo();
 
         // Async logging support
-        private static readonly Queue<LogEntry> _logQueue = new Queue<LogEntry>();
+        private static readonly Queue<LogEntry> _logQueue = new();
         private static Thread? _logWorkerThread = null;
         private static bool _workerRunning = false;
 
@@ -166,7 +166,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             };
             if (_includeTimestamps)
             {
-                var now = _dateTimeFormat.ToUpperInvariant() == "LOCAL" ? DateTime.Now : DateTime.UtcNow;
+                var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase) ? DateTime.Now : DateTime.UtcNow;
                 logEntry.Timestamp = now.ToString("o");
             }
 
@@ -206,7 +206,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
                 RotateLogFileIfNeeded();
 
-                string line = _logFormat.ToLowerInvariant() == "json"
+                var line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
                     ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                     : FormatPlainText(logEntry);
 
@@ -284,7 +284,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             // Delete old logs if exceeding max retained
             var logFiles = Directory.GetFiles(_logDirectory, "app_*.log*")
                 .OrderByDescending(f => File.GetCreationTimeUtc(f)).ToList();
-            for (int i = _maxRetainedFiles; i < logFiles.Count; i++)
+            for (var i = _maxRetainedFiles; i < logFiles.Count; i++)
             {
                 try
                 {
@@ -323,7 +323,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                 };
                 if (_includeTimestamps)
                 {
-                    var now = _dateTimeFormat.ToUpperInvariant() == "LOCAL" ? DateTime.Now : DateTime.UtcNow;
+                    var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase) ? DateTime.Now : DateTime.UtcNow;
                     logEntry.Timestamp = now.ToString("o");
                 }
 
@@ -334,7 +334,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
                 lock (_lockObject)
                 {
-                    string line = _logFormat.ToLowerInvariant() == "json"
+                    var line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
                         ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                         : FormatPlainText(logEntry);
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
