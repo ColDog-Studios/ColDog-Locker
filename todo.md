@@ -1,0 +1,6 @@
+- [ ] Disallowed Locker Paths
+  - Comprehensive list of disallowed paths
+  - Prevent use for ransomware
+  - Prevent accidental encryption of required system files/directories
+  - Consistantly check stored/saved locker path(s) in `lockers.db` to ensure there has been no tampering with stored paths
+    - If a path is disallowed, do we prevent those lockers from being locked? Do we clear the path? Do we set the path to a default?
