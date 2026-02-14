@@ -2,7 +2,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
 {
     public class PasswordFilter
     {
-        private static readonly List<Func<string, bool>> SecurityRules =
+        private static readonly List<Func<string, bool>> _securityRules =
         [
             password => password.Length >= 10,
             password => password.Any(char.IsUpper),
@@ -11,7 +11,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             password => password.Any(ch => !char.IsLetterOrDigit(ch))
         ];
 
-        private static readonly List<string> SecurityMessages =
+        private static readonly List<string> _securityMessages =
         [
             "Password must be at least 10 characters long.",
             "Password must contain at least one uppercase letter.",
@@ -23,13 +23,15 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         public static void SecurityCheck(string password)
         {
             if (string.IsNullOrEmpty(password))
-                throw new ArgumentException("Password cannot be null or empty.");
-
-            for (int i = 0; i < SecurityRules.Count; i++)
             {
-                if (!SecurityRules[i](password))
+                throw new ArgumentException("Password cannot be null or empty.");
+            }
+
+            for (var i = 0; i < _securityRules.Count; i++)
+            {
+                if (!_securityRules[i](password))
                 {
-                    throw new Exception(SecurityMessages[i]);
+                    throw new Exception(_securityMessages[i]);
                 }
             }
         }
@@ -37,7 +39,9 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         public static void IllegalWordCheck(string password)
         {
             if (string.IsNullOrEmpty(password))
+            {
                 throw new ArgumentException("Password cannot be null or empty.");
+            }
 
             // List of illegal words
             string[] illegalWords =
@@ -60,7 +64,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             ];
 
             // Check if password contains any illegal words (case-insensitive)
-            foreach (string illegalWord in illegalWords)
+            foreach (var illegalWord in illegalWords)
             {
                 if (password.Contains(illegalWord, StringComparison.OrdinalIgnoreCase))
                 {

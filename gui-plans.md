@@ -1,0 +1,1 @@
+Replace Segoe icons with redistributable icons so they are not limited to win 10+ or win 11 +. Can also use with Linux gui when I get there.

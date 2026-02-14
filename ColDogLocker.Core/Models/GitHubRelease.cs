@@ -14,7 +14,7 @@ namespace ColDogStudios.ColDogLocker.Core.Models
         public bool Prerelease { get; set; }
 
         [JsonPropertyName("assets")]
-        public List<GitHubAsset> Assets { get; set; } = new();
+        public List<GitHubAsset> Assets { get; set; } = [];
     }
 
     public class GitHubAsset

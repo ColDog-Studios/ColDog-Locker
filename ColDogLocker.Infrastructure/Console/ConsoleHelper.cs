@@ -1,39 +1,40 @@
 using System.Text;
 
-namespace ColDogStudios.ColDogLocker.Infrastructure.Console;
-
-/// <summary>
-/// Provides console-related utility methods for secure password input and other console operations.
-/// </summary>
-public static class ConsoleHelper
+namespace ColDogStudios.ColDogLocker.Infrastructure.Console
 {
     /// <summary>
-    /// Reads a password from the console with masked input (asterisks).
-    /// Supports backspace for correction.
+    /// Provides console-related utility methods for secure password input and other console operations.
     /// </summary>
-    /// <returns>The password entered by the user.</returns>
-    public static string ReadPassword()
+    public static class ConsoleHelper
     {
-        var password = new StringBuilder();
-        ConsoleKeyInfo key;
-
-        do
+        /// <summary>
+        /// Reads a password from the console with masked input (asterisks).
+        /// Supports backspace for correction.
+        /// </summary>
+        /// <returns>The password entered by the user.</returns>
+        public static string ReadPassword()
         {
-            key = System.Console.ReadKey(intercept: true);
+            var password = new StringBuilder();
+            ConsoleKeyInfo key;
 
-            if (key.Key != ConsoleKey.Backspace && key.Key != ConsoleKey.Enter)
+            do
             {
-                password.Append(key.KeyChar);
-                System.Console.Write("*");
-            }
-            else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
-            {
-                password.Remove(password.Length - 1, 1);
-                System.Console.Write("\b \b");
-            }
-        } while (key.Key != ConsoleKey.Enter);
+                key = System.Console.ReadKey(intercept: true);
 
-        System.Console.WriteLine();
-        return password.ToString();
+                if (key.Key is not ConsoleKey.Backspace or ConsoleKey.Enter)
+                {
+                    password.Append(key.KeyChar);
+                    System.Console.Write("*");
+                }
+                else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
+                {
+                    password.Remove(password.Length - 1, 1);
+                    System.Console.Write("\b \b");
+                }
+            } while (key.Key != ConsoleKey.Enter);
+
+            System.Console.WriteLine();
+            return password.ToString();
+        }
     }
 }

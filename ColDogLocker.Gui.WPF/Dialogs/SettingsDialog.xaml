@@ -1,0 +1,443 @@
+<Window x:Class="ColDogStudios.ColDogLocker.Gui.WPF.Dialogs.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Settings" 
+        Width="600" 
+        Height="550"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource BackgroundBrush}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Content with Tabs -->
+        <TabControl Grid.Row="0" x:Name="SettingsTabs">
+            <!-- General Settings Tab -->
+            <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <!-- Default Locker Location -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Default Locker Location" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="New lockers will be created in this folder by default" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="DefaultLocationTextBox" 
+                                         Grid.Column="0"
+                                         IsReadOnly="True"
+                                         Margin="0,0,8,0"/>
+                                <Button Grid.Column="1" 
+                                        Content="Browse..." 
+                                        Click="BrowseDefaultLocation_Click"
+                                        Padding="15,5"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Appearance Tab -->
+            <TabItem Header="Appearance">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <!-- Theme Selection -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Theme" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Choose the application color theme" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,12"/>
+                            
+                            <RadioButton x:Name="AutoThemeRadio" 
+                                        Content="Auto (Follow Windows)" 
+                                        GroupName="Theme"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"
+                                        Checked="ThemeRadio_Checked"/>
+                            <RadioButton x:Name="LightThemeRadio" 
+                                        Content="Light" 
+                                        GroupName="Theme"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"
+                                        Checked="ThemeRadio_Checked"/>
+                            <RadioButton x:Name="DarkThemeRadio" 
+                                        Content="Dark" 
+                                        GroupName="Theme"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"
+                                        Checked="ThemeRadio_Checked"/>
+                            <RadioButton x:Name="ColDogThemeRadio" 
+                                        Content="ColDog Studios (Blue/Navy)" 
+                                        GroupName="Theme"
+                                        IsChecked="True"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"
+                                        Checked="ThemeRadio_Checked"/>
+                        </StackPanel>
+
+                        <!-- View Preferences -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Default View" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <RadioButton x:Name="GridViewRadio" 
+                                        Content="Grid View (Tiles)" 
+                                        GroupName="View"
+                                        IsChecked="True"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"/>
+                            <RadioButton x:Name="ListViewRadio" 
+                                        Content="List View (Details)" 
+                                        GroupName="View"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Updates Tab -->
+            <TabItem Header="Updates">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <StackPanel Margin="0,0,0,20">
+                            <CheckBox x:Name="AutoUpdateCheckBox" 
+                                      Content="Enable Auto Update"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,20"/>
+                            
+                            <TextBlock Text="Update Channel" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <TextBlock Text="Choose which type of updates you want to receive" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,12"/>
+                            
+                            <RadioButton x:Name="StableChannelRadio" 
+                                        Content="Stable (Recommended)" 
+                                        GroupName="UpdateChannel"
+                                        IsChecked="True"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,4"/>
+                            <TextBlock Text="Receive only stable, tested releases" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="11"
+                                      Margin="20,0,0,12"/>
+                            
+                            <RadioButton x:Name="PrereleaseChannelRadio" 
+                                        Content="Prerelease" 
+                                        GroupName="UpdateChannel"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Margin="0,0,0,4"/>
+                            <TextBlock Text="Get early access to new features before stable release" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="11"
+                                      Margin="20,0,0,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Logging Tab -->
+            <TabItem Header="Logging">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <!-- Basic Logging Options -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Basic Logging Options" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <CheckBox x:Name="DevModeCheckBox" 
+                                      Content="Enable dev mode"
+                                      ToolTip="Includes source file name and line number in log entries for debugging"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <CheckBox x:Name="EnableFileLoggingCheckBox" 
+                                      Content="Enable file logging"
+                                      IsChecked="True"
+                                      ToolTip="Write log entries to disk (disable for console-only logging)"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Log Level -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Minimum Log Level" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Only log messages at or above this level" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <ComboBox x:Name="LogLevelComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="1">
+                                <ComboBoxItem Content="Debug"/>
+                                <ComboBoxItem Content="Info"/>
+                                <ComboBoxItem Content="Success"/>
+                                <ComboBoxItem Content="Warning"/>
+                                <ComboBoxItem Content="Error"/>
+                                <ComboBoxItem Content="Fatal"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Log Format -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Log Format" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Choose how log entries are formatted" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <ComboBox x:Name="LogFormatComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="0">
+                                <ComboBoxItem Content="json"/>
+                                <ComboBoxItem Content="text"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Log Rotation -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Log File Rotation" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Automatically rotate log files based on size" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Max file size (MB):" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,4"/>
+                            <TextBox x:Name="MaxFileSizeTextBox" 
+                                    Text="10"
+                                    Width="100"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,12"
+                                    TextChanged="NumericTextBox_TextChanged"/>
+                            
+                            <TextBlock Text="Max retained files:" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,4"/>
+                            <TextBox x:Name="MaxRetainedFilesTextBox" 
+                                    Text="9"
+                                    Width="100"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,12"
+                                    TextChanged="NumericTextBox_TextChanged"/>
+                            
+                            <CheckBox x:Name="EnableCompressionCheckBox" 
+                                      Content="Compress rotated log files (.gz)"
+                                      ToolTip="Compress old log files with GZip to save disk space"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Advanced Options -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Advanced Options" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="IncludeTimestampsCheckBox" 
+                                      Content="Include timestamps in log entries"
+                                      IsChecked="True"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <CheckBox x:Name="IncludeThreadIdCheckBox" 
+                                      Content="Include thread ID in log entries"
+                                      ToolTip="Add thread identification to log entries (useful for debugging multi-threaded issues)"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            
+                            <TextBlock Text="Date/Time format:" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,8,0,4"/>
+                            <ComboBox x:Name="DateTimeFormatComboBox" 
+                                     Width="150"
+                                     HorizontalAlignment="Left"
+                                     SelectedIndex="0"
+                                     Margin="0,0,0,12">
+                                <ComboBoxItem Content="UTC"/>
+                                <ComboBoxItem Content="Local"/>
+                            </ComboBox>
+                            
+                            <CheckBox x:Name="AsyncLoggingCheckBox" 
+                                      Content="Enable asynchronous logging"
+                                      IsChecked="True"
+                                      ToolTip="Write logs on a background thread for better performance (recommended)"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Actions -->
+                        <StackPanel Margin="0,0,0,20">
+                            <Button Content="Open Logs Folder" 
+                                    Click="OpenLogsFolder_Click"
+                                    HorizontalAlignment="Left"
+                                    Padding="15,5"
+                                    Margin="0,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Database Tab -->
+            <TabItem Header="Database">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Database Maintenance" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <TextBlock Text="Optimize your database to improve performance and reclaim disk space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,16"/>
+                            
+                            <TextBlock Text="Auto-Vacuum Settings" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <TextBlock Text="Automatically optimize database to reclaim disk space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,8"/>
+                            <StackPanel Margin="0,0,0,20">
+                                <TextBlock Text="Auto-vacuum interval (days):" 
+                                          Foreground="{DynamicResource TextPrimaryBrush}"
+                                          Margin="0,0,0,4"/>
+                                <TextBox x:Name="DbVacuumIntervalTextBox" 
+                                        Text="30"
+                                        Width="100"
+                                        HorizontalAlignment="Left"
+                                        TextChanged="NumericTextBox_TextChanged"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Manual Optimization" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <Button Content="Vacuum Database Now" 
+                                    Click="VacuumDatabase_Click"
+                                    HorizontalAlignment="Left"
+                                    Padding="15,5"
+                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Manually optimize database and reclaim unused space" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Advanced Tab -->
+            <TabItem Header="Advanced">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource BackgroundBrush}">
+                    <StackPanel Margin="20" Background="{DynamicResource BackgroundBrush}">
+                        <!-- Performance -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Performance" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <CheckBox x:Name="EnableAnimationsCheckBox" 
+                                      Content="Enable UI animations"
+                                      IsChecked="True"
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,8"/>
+                            <TextBlock Text="Disable for better performance on slower systems" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="20,0,0,0"/>
+                        </StackPanel>
+
+                        <!-- Data Management -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Data Management" 
+                                      FontWeight="SemiBold" 
+                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                      Margin="0,0,0,12"/>
+                            <Button Content="Clear Application Cache" 
+                                    Click="ClearCache_Click"
+                                    HorizontalAlignment="Left"
+                                    Padding="15,5"
+                                    Margin="0,0,0,8"/>
+                            <TextBlock Text="Removes temporary files and cached data" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,0,0,16"/>
+                            
+                            <Button Content="Reset All Settings" 
+                                    Click="ResetSettings_Click"
+                                    HorizontalAlignment="Left"
+                                    Padding="15,5"
+                                    Background="{DynamicResource ErrorBrush}"
+                                    Foreground="White"/>
+                            <TextBlock Text="Restores all settings to their default values" 
+                                      Foreground="{DynamicResource TextSecondaryBrush}"
+                                      FontSize="12"
+                                      Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right"
+                    Margin="0,20,0,0">
+            <Button Content="Restore Defaults" 
+                    Click="RestoreDefaults_Click" 
+                    Padding="15,5"
+                    Margin="0,0,8,0"/>
+            <Button x:Name="SaveButton"
+                    Content="Save" 
+                    Click="SaveButton_Click" 
+                    IsDefault="True"
+                    Padding="20,5"
+                    Margin="0,0,8,0"
+                    Background="{DynamicResource PrimaryBrush}"
+                    Foreground="White"/>
+            <Button Content="Cancel" 
+                    Click="CancelButton_Click" 
+                    IsCancel="True"
+                    Padding="20,5"/>
+        </StackPanel>
+    </Grid>
+</Window>
