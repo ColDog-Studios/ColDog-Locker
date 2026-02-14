@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="Locker Properties" 
         Width="500" 
-        Height="450"
+        Height="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
