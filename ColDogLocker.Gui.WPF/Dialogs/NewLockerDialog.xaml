@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Create New Locker" 
-        Width="450" 
+        Width="600" 
         Height="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"

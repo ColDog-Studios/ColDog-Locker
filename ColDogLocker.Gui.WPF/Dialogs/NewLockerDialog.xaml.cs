@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
@@ -12,15 +13,43 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         public bool LockImmediately { get; private set; } = true;
         public bool Success { get; private set; }
 
+        private bool _isCustomPath = false;
+        private readonly string _defaultBasePath;
+
         public NewLockerDialog()
         {
             InitializeComponent();
+            
+            // Get default locker location from settings
+            _defaultBasePath = SettingsManager.Settings.DefaultLockerLocation;
+            
+            // Ensure the default directory exists
+            if (!Directory.Exists(_defaultBasePath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(_defaultBasePath);
+                }
+                catch
+                {
+                    // If we can't create it, fall back to Documents
+                    _defaultBasePath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                }
+            }
+            
             UpdateCreateButtonState();
         }
 
         private void LockerNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ValidateLockerName();
+            
+            // Auto-update path if not using a custom path
+            if (!_isCustomPath)
+            {
+                UpdateDefaultPath();
+            }
+            
             UpdateCreateButtonState();
         }
 
@@ -42,7 +71,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             var dialog = new Microsoft.Win32.OpenFolderDialog
             {
                 Title = "Select folder to lock",
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                InitialDirectory = _defaultBasePath
             };
 
             if (dialog.ShowDialog() == true)
@@ -50,8 +79,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 LocationTextBox.Text = dialog.FolderName;
                 Location = dialog.FolderName;
                 LocationErrorText.Visibility = Visibility.Collapsed;
+                
+                // Mark as custom path since user browsed
+                _isCustomPath = true;
 
-                // Auto-fill locker name if empty
+                // Auto-fill locker name if empty (only when browsing)
                 if (string.IsNullOrWhiteSpace(LockerNameTextBox.Text))
                 {
                     LockerNameTextBox.Text = Path.GetFileName(dialog.FolderName);
@@ -169,6 +201,26 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 !string.IsNullOrWhiteSpace(LocationTextBox.Text) &&
                 PasswordBox.Password.Length >= 8 &&
                 PasswordBox.Password == ConfirmPasswordBox.Password;
+        }
+
+        private void UpdateDefaultPath()
+        {
+            var lockerName = LockerNameTextBox.Text.Trim();
+            
+            if (!string.IsNullOrWhiteSpace(lockerName))
+            {
+                // Construct the default path: basePath\LockerName
+                var defaultPath = Path.Combine(_defaultBasePath, lockerName);
+                LocationTextBox.Text = defaultPath;
+                Location = defaultPath;
+                LocationErrorText.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // Clear the path if locker name is empty
+                LocationTextBox.Text = string.Empty;
+                Location = string.Empty;
+            }
         }
     }
 }
