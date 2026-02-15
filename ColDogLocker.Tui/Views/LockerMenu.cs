@@ -79,8 +79,20 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             // Hash the password and create locker
+            var lockerLocation = Path.Combine(Variables.cdlDir, lockerName);
+            
+            // Validate path is not protected
+            var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
+            if (pathValidationError != null)
+            {
+                Console.WriteLine($"\nError: {pathValidationError}");
+                Console.Write("Press Enter to continue...");
+                Console.ReadLine();
+                return;
+            }
+            
             var passwordHash = EncryptionHelper.HashPassword(password);
-            var locker = new LockerModel(lockerName, passwordHash, Path.Combine(Variables.cdlDir, lockerName));
+            var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
             LockerService.AddLocker(locker);
         }
 

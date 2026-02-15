@@ -49,7 +49,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
             var result = PasswordFilter.ValidatePassword(password);
 
             // Assert
-            Assert.Equal("At least 10 characters", result);
+            Assert.Equal("At least 12 characters", result);
         }
 
         [Theory]
@@ -115,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         }
 
         [Theory]
-        [InlineData("Abcdefgh1!")]  // 10 chars
+        [InlineData("Abcdefghij12!")]  // 13 chars
         [InlineData("Abcdefghij1!")]  // 12 chars
         public void ValidatePassword_WithMinimumAndAboveLength_ShouldReturnNull(string password)
         {
@@ -127,13 +127,13 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         }
 
         [Theory]
-        [InlineData("Valid!Pass1")]  // ! is special
-        [InlineData("Valid@Pass1")]  // @ is special
-        [InlineData("Valid#Pass1")]  // # is special
-        [InlineData("Valid$Pass1")]  // $ is special
-        [InlineData("Valid%Pass1")]  // % is special
-        [InlineData("Valid&Pass1")]  // & is special
-        [InlineData("Valid*Pass1")]  // * is special
+        [InlineData("Valid!Pass123")]  // ! is special, 13 chars
+        [InlineData("Valid@Pass123")]  // @ is special, 13 chars
+        [InlineData("Valid#Pass123")]  // # is special, 13 chars
+        [InlineData("Valid$Pass123")]  // $ is special, 13 chars
+        [InlineData("Valid%Pass123")]  // % is special, 13 chars
+        [InlineData("Valid&Pass123")]  // & is special, 13 chars
+        [InlineData("Valid*Pass123")]  // * is special, 13 chars
         public void ValidatePassword_WithVariousSpecialCharacters_ShouldReturnNull(string password)
         {
             // Act
@@ -176,11 +176,11 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
 
         [Theory]
         [InlineData("Admin123!Admin")]
-        [InlineData("MyLocker1!")]
-        [InlineData("Root123!Root")]
+        [InlineData("MyLocker1234!")]
+        [InlineData("Root123!Root12")]
         [InlineData("Secret1!Secret")]
-        [InlineData("Qwerty123!")]
-        [InlineData("Welcome123!")]
+        [InlineData("Qwerty123456!")]
+        [InlineData("Welcome12345!")]
         public void ValidatePassword_WithCommonWords_ShouldReturnError(string password)
         {
             // Act
@@ -192,9 +192,9 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         }
 
         [Theory]
-        [InlineData("MyUnique!Pass1")]
+        [InlineData("MyUnique!Pass123")]
         [InlineData("Str0ng#Encrypt3d")]
-        [InlineData("C0mpl3x!Phrase")]
+        [InlineData("C0mpl3x!Phrase99")]
         [InlineData("Secure$Vault99")]
         public void ValidatePassword_WithoutCommonWords_ShouldReturnNull(string password)
         {
@@ -270,7 +270,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
             var requirements = PasswordFilter.GetPasswordRequirements(password);
 
             // Assert
-            var lengthRequirement = requirements.First(r => r.Description.Contains("10 characters"));
+            var lengthRequirement = requirements.First(r => r.Description.Contains("12 characters"));
             Assert.False(lengthRequirement.IsMet);
         }
 

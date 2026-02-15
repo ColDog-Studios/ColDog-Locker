@@ -87,6 +87,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 throw new ArgumentException("Password cannot be null or empty.", nameof(password));
             }
 
+            // Safety check: Validate path is not protected (in case database was tampered with)
+            var pathValidationError = Validation.LockerPathValidator.ValidatePath(locker.LockerLocation);
+            if (pathValidationError != null)
+            {
+                Logger.AddEntry($"Security violation: Attempted to lock protected directory {locker.LockerLocation}", LogLevel.Fatal);
+                throw new UnauthorizedAccessException($"Cannot lock this directory for security reasons: {pathValidationError}");
+            }
+
             // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {

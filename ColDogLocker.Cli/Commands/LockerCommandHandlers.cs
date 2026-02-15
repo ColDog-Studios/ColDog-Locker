@@ -49,6 +49,14 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 ? Path.Combine(customPath, lockerName)
                 : Path.Combine(Variables.cdlDir, lockerName);
 
+            // Validate path is not protected
+            var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
+            if (pathValidationError != null)
+            {
+                Console.Error.WriteLine($"Error: {pathValidationError}");
+                return 1;
+            }
+
             // Check if locker already exists
             if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
             {

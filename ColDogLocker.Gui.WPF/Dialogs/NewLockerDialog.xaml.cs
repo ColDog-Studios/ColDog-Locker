@@ -180,6 +180,15 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 return false;
             }
 
+            // Validate path is not protected
+            var pathValidationError = LockerPathValidator.ValidatePath(LocationTextBox.Text);
+            if (pathValidationError != null)
+            {
+                LocationErrorText.Text = pathValidationError;
+                LocationErrorText.Visibility = Visibility.Visible;
+                return false;
+            }
+
             // For new lockers, the folder doesn't need to exist yet - we'll create it
             // Just validate that the path is valid
             try
