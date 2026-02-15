@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using ColDogStudios.ColDogLocker.Application.Validation;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -37,6 +38,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 }
             }
             
+            // Initialize password requirements display
+            UpdatePasswordRequirements(string.Empty);
+            
             UpdateCreateButtonState();
         }
 
@@ -55,6 +59,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            UpdatePasswordRequirements(PasswordBox.Password);
             ValidatePassword();
             ValidateConfirmPassword();
             UpdateCreateButtonState();
@@ -142,8 +147,10 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             var password = PasswordBox.Password;
 
-            if (password.Length < 8)
+            var validationError = PasswordFilter.ValidatePassword(password);
+            if (validationError != null)
             {
+                PasswordErrorText.Text = validationError;
                 PasswordErrorText.Visibility = Visibility.Visible;
                 return false;
             }
@@ -173,9 +180,27 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 return false;
             }
 
-            if (!Directory.Exists(LocationTextBox.Text))
+            // For new lockers, the folder doesn't need to exist yet - we'll create it
+            // Just validate that the path is valid
+            try
             {
-                LocationErrorText.Text = "Selected folder does not exist";
+                var path = LocationTextBox.Text;
+                
+                // Check if parent directory exists or can be accessed
+                var parentDir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
+                {
+                    LocationErrorText.Text = "Parent directory does not exist";
+                    LocationErrorText.Visibility = Visibility.Visible;
+                    return false;
+                }
+
+                // Validate path format
+                _ = Path.GetFullPath(path); // This will throw if path is invalid
+            }
+            catch (Exception)
+            {
+                LocationErrorText.Text = "Invalid path";
                 LocationErrorText.Visibility = Visibility.Visible;
                 return false;
             }
@@ -199,7 +224,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             CreateButton.IsEnabled =
                 !string.IsNullOrWhiteSpace(LockerNameTextBox.Text) &&
                 !string.IsNullOrWhiteSpace(LocationTextBox.Text) &&
-                PasswordBox.Password.Length >= 8 &&
+                PasswordFilter.ValidatePassword(PasswordBox.Password) == null &&
                 PasswordBox.Password == ConfirmPasswordBox.Password;
         }
 
@@ -220,6 +245,61 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 // Clear the path if locker name is empty
                 LocationTextBox.Text = string.Empty;
                 Location = string.Empty;
+            }
+        }
+
+        private void UpdatePasswordRequirements(string password)
+        {
+            PasswordRequirementsPanel.Children.Clear();
+
+            var requirements = PasswordFilter.GetPasswordRequirements(password);
+
+            foreach (var requirement in requirements)
+            {
+                var stackPanel = new System.Windows.Controls.StackPanel
+                {
+                    Orientation = System.Windows.Controls.Orientation.Horizontal,
+                    Margin = new Thickness(0, 2, 0, 2)
+                };
+
+                // Checkbox icon
+                var icon = new System.Windows.Controls.TextBlock
+                {
+                    Text = requirement.IsMet ? "✓" : "○",
+                    FontSize = 14,
+                    Margin = new Thickness(0, 0, 8, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                if (requirement.IsMet)
+                {
+                    icon.Foreground = System.Windows.Media.Brushes.Green;
+                }
+                else
+                {
+                    icon.Foreground = System.Windows.Media.Brushes.Gray;
+                }
+
+                // Requirement text
+                var text = new System.Windows.Controls.TextBlock
+                {
+                    Text = requirement.Description,
+                    FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                if (requirement.IsMet)
+                {
+                    text.Foreground = System.Windows.Media.Brushes.Green;
+                }
+                else
+                {
+                    text.Foreground = System.Windows.Media.Brushes.Gray;
+                }
+
+                stackPanel.Children.Add(icon);
+                stackPanel.Children.Add(text);
+                PasswordRequirementsPanel.Children.Add(stackPanel);
             }
         }
     }

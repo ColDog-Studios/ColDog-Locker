@@ -1,10 +1,35 @@
 namespace ColDogStudios.ColDogLocker.Application.Validation
 {
+    public class PasswordRequirement
+    {
+        public string Description { get; set; } = string.Empty;
+        public bool IsMet { get; set; }
+    }
+
     public class PasswordFilter
     {
+        private static readonly string[] _commonWords =
+        [
+            "password",
+            "admin",
+            "locker",
+            "root",
+            "secret",
+            "123456",
+            "qwerty",
+            "letmein",
+            "monkey",
+            "abc123",
+            "football",
+            "baseball",
+            "basketball",
+            "iloveyou",
+            "welcome"
+        ];
+
         private static readonly List<Func<string, bool>> _securityRules =
         [
-            password => password.Length >= 10,
+            password => password.Length >= 12,
             password => password.Any(char.IsUpper),
             password => password.Any(char.IsLower),
             password => password.Any(char.IsDigit),
@@ -13,64 +38,86 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
 
         private static readonly List<string> _securityMessages =
         [
-            "Password must be at least 10 characters long.",
-            "Password must contain at least one uppercase letter.",
-            "Password must contain at least one lowercase letter.",
-            "Password must contain at least one digit.",
-            "Password must contain at least one special character."
+            "At least 12 characters",
+            "At least one uppercase letter",
+            "At least one lowercase letter",
+            "At least one digit",
+            "At least one special character"
         ];
 
-        public static void SecurityCheck(string password)
+        /// <summary>
+        /// Gets a list of all password requirements with their current status.
+        /// Useful for displaying dynamic password requirement indicators in UI.
+        /// </summary>
+        public static List<PasswordRequirement> GetPasswordRequirements(string password)
+        {
+            var requirements = new List<PasswordRequirement>();
+
+            if (string.IsNullOrEmpty(password))
+            {
+                password = string.Empty;
+            }
+
+            // Check each security rule
+            for (var i = 0; i < _securityRules.Count; i++)
+            {
+                requirements.Add(new PasswordRequirement
+                {
+                    Description = _securityMessages[i],
+                    IsMet = _securityRules[i](password)
+                });
+            }
+
+            // Check common words
+            var hasCommonWord = false;
+            foreach (var commonWord in _commonWords)
+            {
+                if (password.Contains(commonWord, StringComparison.OrdinalIgnoreCase))
+                {
+                    hasCommonWord = true;
+                    break;
+                }
+            }
+
+            requirements.Add(new PasswordRequirement
+            {
+                Description = "No common words",
+                IsMet = !hasCommonWord
+            });
+
+            return requirements;
+        }
+
+        /// <summary>
+        /// Validates a password against all security and common word checks.
+        /// Returns null if valid, otherwise returns the first validation error message.
+        /// </summary>
+        public static string? ValidatePassword(string password)
         {
             if (string.IsNullOrEmpty(password))
             {
-                throw new ArgumentException("Password cannot be null or empty.");
+                return "Password cannot be null or empty.";
             }
 
+            // Check security rules
             for (var i = 0; i < _securityRules.Count; i++)
             {
                 if (!_securityRules[i](password))
                 {
-                    throw new Exception(_securityMessages[i]);
+                    return _securityMessages[i];
                 }
             }
-        }
 
-        public static void IllegalWordCheck(string password)
-        {
-            if (string.IsNullOrEmpty(password))
+            // Check common words
+            foreach (var commonWord in _commonWords)
             {
-                throw new ArgumentException("Password cannot be null or empty.");
-            }
-
-            // List of illegal words
-            string[] illegalWords =
-            [
-                "password",
-                "admin",
-                "locker",
-                "root",
-                "secret",
-                "123456",
-                "qwerty",
-                "letmein",
-                "monkey",
-                "abc123",
-                "football",
-                "baseball",
-                "basketball",
-                "iloveyou",
-                "welcome"
-            ];
-
-            // Check if password contains any illegal words (case-insensitive)
-            foreach (var illegalWord in illegalWords)
-            {
-                if (password.Contains(illegalWord, StringComparison.OrdinalIgnoreCase))
+                if (password.Contains(commonWord, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new Exception($"'{illegalWord}' is considered a common word. Please enter a new password.");
+                    return $"'{commonWord}' is considered a common word. Please enter a new password.";
                 }
             }
+
+            return null; // Valid password
         }
     }
 }

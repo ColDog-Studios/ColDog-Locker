@@ -57,21 +57,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 password = ConsoleHelper.ReadPassword();
 
                 // Validate password
-                try
+                var validationError = PasswordFilter.ValidatePassword(password);
+                if (validationError != null)
                 {
-                    if (string.IsNullOrEmpty(password))
-                    {
-                        throw new Exception("Password cannot be empty");
-                    }
-
-                    // Check password security
-                    PasswordFilter.SecurityCheck(password);
-                    PasswordFilter.IllegalWordCheck(password);
-                }
-                catch (Exception ex)
-                {
-                    Logger.AddEntry($"Password not validated: {ex.Message}", LogLevel.Error);
-                    Console.WriteLine($"\nPassword not validated: {ex.Message}. Please try again.");
+                    Logger.AddEntry($"Password not validated: {validationError}", LogLevel.Error);
+                    Console.WriteLine($"\nPassword not validated: {validationError}. Please try again.");
                     continue;
                 }
 

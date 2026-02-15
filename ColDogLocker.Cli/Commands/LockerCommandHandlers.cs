@@ -64,14 +64,10 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 password = providedPassword;
 
                 // Still validate it
-                try
+                var validationError = PasswordFilter.ValidatePassword(password);
+                if (validationError != null)
                 {
-                    PasswordFilter.SecurityCheck(password);
-                    PasswordFilter.IllegalWordCheck(password);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error: Password validation failed: {ex.Message}");
+                    Console.Error.WriteLine($"Error: Password validation failed: {validationError}");
                     return 1;
                 }
             }
@@ -97,16 +93,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         continue;
                     }
 
-                    try
+                    var validationError = PasswordFilter.ValidatePassword(password);
+                    if (validationError == null)
                     {
-                        PasswordFilter.SecurityCheck(password);
-                        PasswordFilter.IllegalWordCheck(password);
                         break;
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Password validation failed: {ex.Message}");
-                    }
+                    
+                    Console.WriteLine($"Password validation failed: {validationError}");
                 }
 
                 Console.Write("Confirm password: ");
@@ -549,16 +542,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     continue;
                 }
 
-                try
+                var validationError = PasswordFilter.ValidatePassword(newPassword);
+                if (validationError == null)
                 {
-                    PasswordFilter.SecurityCheck(newPassword);
-                    PasswordFilter.IllegalWordCheck(newPassword);
                     break;
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Password validation failed: {ex.Message}");
-                }
+                
+                Console.WriteLine($"Password validation failed: {validationError}");
             }
 
             Console.Write("Confirm new password: ");

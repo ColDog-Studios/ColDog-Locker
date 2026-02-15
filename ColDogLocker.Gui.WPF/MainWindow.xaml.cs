@@ -108,8 +108,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 // Clear existing lockers
                 _viewModel.Lockers.Clear();
 
+                // Create a snapshot of the lockers collection to avoid modification during enumeration
+                var lockerSnapshot = LockerService.Lockers.ToList();
+
                 // Load lockers from database via LockerService
-                foreach (var locker in LockerService.Lockers)
+                foreach (var locker in lockerSnapshot)
                 {
                     _viewModel.Lockers.Add(new LockerViewModel
                     {

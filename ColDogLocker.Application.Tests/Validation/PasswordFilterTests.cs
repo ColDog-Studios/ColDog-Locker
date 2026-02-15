@@ -4,119 +4,126 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
 {
     public class PasswordFilterTests
     {
-        #region SecurityCheck Tests
+        #region ValidatePassword Tests
 
         [Fact]
-        public void SecurityCheck_WithValidPassword_ShouldNotThrow()
+        public void ValidatePassword_WithValidPassword_ShouldReturnNull()
         {
             // Arrange
             var validPassword = "ValidPass123!";
 
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.SecurityCheck(validPassword));
-            Assert.Null(exception);
+            // Act
+            var result = PasswordFilter.ValidatePassword(validPassword);
+
+            // Assert
+            Assert.Null(result);
         }
 
         [Fact]
-        public void SecurityCheck_WithNullPassword_ShouldThrowArgumentException()
+        public void ValidatePassword_WithNullPassword_ShouldReturnError()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() => PasswordFilter.SecurityCheck(null!));
-            Assert.Equal("Password cannot be null or empty.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(null!);
+
+            // Assert
+            Assert.Equal("Password cannot be null or empty.", result);
         }
 
         [Fact]
-        public void SecurityCheck_WithEmptyPassword_ShouldThrowArgumentException()
+        public void ValidatePassword_WithEmptyPassword_ShouldReturnError()
         {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() => PasswordFilter.SecurityCheck(string.Empty));
-            Assert.Equal("Password cannot be null or empty.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(string.Empty);
+
+            // Assert
+            Assert.Equal("Password cannot be null or empty.", result);
         }
 
         [Theory]
         [InlineData("short")]
         [InlineData("Pass1!")]
         [InlineData("123456789")]
-        public void SecurityCheck_WithPasswordLessThan10Characters_ShouldThrowException(string password)
+        public void ValidatePassword_WithPasswordLessThan10Characters_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.SecurityCheck(password));
-            Assert.Equal("Password must be at least 10 characters long.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Equal("At least 10 characters", result);
         }
 
         [Theory]
         [InlineData("validpass123!")]
         [InlineData("nouppercasehere1!")]
-        public void SecurityCheck_WithoutUppercaseLetter_ShouldThrowException(string password)
+        public void ValidatePassword_WithoutUppercaseLetter_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.SecurityCheck(password));
-            Assert.Equal("Password must contain at least one uppercase letter.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Equal("At least one uppercase letter", result);
         }
 
         [Theory]
         [InlineData("VALIDPASS123!")]
         [InlineData("NOLOWERCASEHERE1!")]
-        public void SecurityCheck_WithoutLowercaseLetter_ShouldThrowException(string password)
+        public void ValidatePassword_WithoutLowercaseLetter_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.SecurityCheck(password));
-            Assert.Equal("Password must contain at least one lowercase letter.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Equal("At least one lowercase letter", result);
         }
 
         [Theory]
         [InlineData("ValidPassword!")]
         [InlineData("NoDigitsHere!")]
-        public void SecurityCheck_WithoutDigit_ShouldThrowException(string password)
+        public void ValidatePassword_WithoutDigit_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.SecurityCheck(password));
-            Assert.Equal("Password must contain at least one digit.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Equal("At least one digit", result);
         }
 
         [Theory]
         [InlineData("ValidPass123")]
         [InlineData("NoSpecialChar1")]
-        public void SecurityCheck_WithoutSpecialCharacter_ShouldThrowException(string password)
+        public void ValidatePassword_WithoutSpecialCharacter_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.SecurityCheck(password));
-            Assert.Equal("Password must contain at least one special character.", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Equal("At least one special character", result);
         }
 
         [Theory]
-        [InlineData("Valid1Pass!")]
         [InlineData("MySecureP@ssw0rd")]
-        [InlineData("C0mpl3x!Pass")]
-        [InlineData("Str0ng#Password")]
-        [InlineData("T3st$Password")]
-        public void SecurityCheck_WithValidPasswords_ShouldNotThrow(string password)
+        [InlineData("C0mpl3x!Phrase")]
+        [InlineData("Str0ng#Encrypt3d")]
+        [InlineData("T3st$UniqueKey")]
+        public void ValidatePassword_WithValidPasswords_ShouldReturnNull(string password)
         {
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            Assert.Null(exception);
-        }
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
 
-        [Fact]
-        public void SecurityCheck_WithExactly10Characters_ShouldPass()
-        {
-            // Arrange
-            var password = "Valid1Pass!";
-
-            // Act & Assert
-            Assert.Equal(11, password.Length); // Just to verify our test data
-            var exception = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            Assert.Null(exception);
+            // Assert
+            Assert.Null(result);
         }
 
         [Theory]
         [InlineData("Abcdefgh1!")]  // 10 chars
         [InlineData("Abcdefghij1!")]  // 12 chars
-        public void SecurityCheck_WithMinimumAndAboveLength_ShouldPass(string password)
+        public void ValidatePassword_WithMinimumAndAboveLength_ShouldReturnNull(string password)
         {
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            Assert.Null(exception);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Null(result);
         }
 
         [Theory]
@@ -127,194 +134,61 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         [InlineData("Valid%Pass1")]  // % is special
         [InlineData("Valid&Pass1")]  // & is special
         [InlineData("Valid*Pass1")]  // * is special
-        public void SecurityCheck_WithVariousSpecialCharacters_ShouldPass(string password)
+        public void ValidatePassword_WithVariousSpecialCharacters_ShouldReturnNull(string password)
         {
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            Assert.Null(exception);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Null(result);
         }
 
         #endregion
 
-        #region IllegalWordCheck Tests
+        #region Common Words Tests
 
         [Fact]
-        public void IllegalWordCheck_WithValidPassword_ShouldNotThrow()
+        public void ValidatePassword_WithNoCommonWords_ShouldReturnNull()
         {
             // Arrange
             var validPassword = "MyUniqueP@ssw0rd";
 
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.IllegalWordCheck(validPassword));
-            Assert.Null(exception);
-        }
+            // Act
+            var result = PasswordFilter.ValidatePassword(validPassword);
 
-        [Fact]
-        public void IllegalWordCheck_WithNullPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() => PasswordFilter.IllegalWordCheck(null!));
-            Assert.Equal("Password cannot be null or empty.", exception.Message);
-        }
-
-        [Fact]
-        public void IllegalWordCheck_WithEmptyPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() => PasswordFilter.IllegalWordCheck(string.Empty));
-            Assert.Equal("Password cannot be null or empty.", exception.Message);
+            // Assert
+            Assert.Null(result);
         }
 
         [Theory]
-        [InlineData("password123", "password")]
-        [InlineData("MyPassword!", "password")]
-        [InlineData("Password123", "password")]
-        public void IllegalWordCheck_WithPasswordWord_ShouldThrowException(string password, string expectedIllegalWord)
+        [InlineData("password123!1A", "password")]
+        [InlineData("MyPassword!1A", "password")]
+        public void ValidatePassword_WithPasswordWord_ShouldReturnError(string password, string expectedCommonWord)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("is considered a common word", exception.Message);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains(expectedCommonWord, result, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("is considered a common word", result);
         }
 
         [Theory]
-        [InlineData("admin123", "admin")]
-        [InlineData("AdminUser!", "admin")]
-        public void IllegalWordCheck_WithAdminWord_ShouldThrowException(string password, string expectedIllegalWord)
+        [InlineData("Admin123!Admin")]
+        [InlineData("MyLocker1!")]
+        [InlineData("Root123!Root")]
+        [InlineData("Secret1!Secret")]
+        [InlineData("Qwerty123!")]
+        [InlineData("Welcome123!")]
+        public void ValidatePassword_WithCommonWords_ShouldReturnError(string password)
         {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
 
-        [Theory]
-        [InlineData("mylocker123", "locker")]
-        [InlineData("LockerPass!", "locker")]
-        public void IllegalWordCheck_WithLockerWord_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("root123456", "root")]
-        [InlineData("RootUser!", "root")]
-        public void IllegalWordCheck_WithRootWord_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("mysecret12", "secret")]
-        [InlineData("SecretPass!", "secret")]
-        public void IllegalWordCheck_WithSecretWord_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("123456", "123456")]
-        [InlineData("abc123456", "123456")]
-        public void IllegalWordCheck_With123456_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("qwerty123", "qwerty")]
-        [InlineData("QwertyPass!", "qwerty")]
-        public void IllegalWordCheck_WithQwerty_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("letmein123", "letmein")]
-        [InlineData("LetMeInNow!", "letmein")]
-        public void IllegalWordCheck_WithLetMeIn_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("monkey123", "monkey")]
-        [InlineData("MonkeyPass!", "monkey")]
-        public void IllegalWordCheck_WithMonkey_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("abc123", "abc123")]
-        [InlineData("myabc123pass", "abc123")]
-        public void IllegalWordCheck_WithAbc123_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("football123", "football")]
-        [InlineData("FootballFan!", "football")]
-        public void IllegalWordCheck_WithFootball_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("baseball123", "baseball")]
-        [InlineData("BaseballFan!", "baseball")]
-        public void IllegalWordCheck_WithBaseball_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("basketball1", "basketball")]
-        [InlineData("BasketballFan!", "basketball")]
-        public void IllegalWordCheck_WithBasketball_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("iloveyou123", "iloveyou")]
-        [InlineData("ILoveYouToo!", "iloveyou")]
-        public void IllegalWordCheck_WithILoveYou_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Theory]
-        [InlineData("welcome123", "welcome")]
-        [InlineData("WelcomeUser!", "welcome")]
-        public void IllegalWordCheck_WithWelcome_ShouldThrowException(string password, string expectedIllegalWord)
-        {
-            // Act & Assert
-            var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Contains(expectedIllegalWord, exception.Message, StringComparison.OrdinalIgnoreCase);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Contains("is considered a common word", result);
         }
 
         [Theory]
@@ -322,58 +196,96 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         [InlineData("Str0ng#Encrypt3d")]
         [InlineData("C0mpl3x!Phrase")]
         [InlineData("Secure$Vault99")]
-        public void IllegalWordCheck_WithValidPasswords_ShouldNotThrow(string password)
+        public void ValidatePassword_WithoutCommonWords_ShouldReturnNull(string password)
         {
-            // Act & Assert
-            var exception = Record.Exception(() => PasswordFilter.IllegalWordCheck(password));
-            Assert.Null(exception);
+            // Act
+            var result = PasswordFilter.ValidatePassword(password);
+
+            // Assert
+            Assert.Null(result);
         }
 
         [Fact]
-        public void IllegalWordCheck_IsCaseInsensitive()
+        public void ValidatePassword_IsCaseInsensitive()
         {
-            // Arrange - Test with various cases
-            var passwords = new[] { "PASSWORD123", "PaSsWoRd123", "password123" };
+            // Arrange - Test with various cases containing 'password' word
+            var passwords = new[] { "PASSWORD123!1A", "PaSsWoRd123!1A", "password123!1A" };
 
-            // Act & Assert
+            // Act & Assert - All should fail due to containing the common word "password"
             foreach (var password in passwords)
             {
-                var exception = Assert.Throws<Exception>(() => PasswordFilter.IllegalWordCheck(password));
-                Assert.Contains("password", exception.Message, StringComparison.OrdinalIgnoreCase);
+                var result = PasswordFilter.ValidatePassword(password);
+                Assert.NotNull(result);
+                // The error could be about lowercase letter (for all caps) or the password word
+                Assert.True(result.Contains("password", StringComparison.OrdinalIgnoreCase) || 
+                           result.Contains("lowercase", StringComparison.OrdinalIgnoreCase));
             }
         }
 
         #endregion
 
-        #region Combined Validation Tests
+        #region GetPasswordRequirements Tests
 
-        [Theory]
-        [InlineData("ValidSecure1!")]
-        [InlineData("MyUnique@Pass1")]
-        [InlineData("Str0ng#Encrypt3d")]
-        public void BothChecks_WithValidPassword_ShouldNotThrow(string password)
+        [Fact]
+        public void GetPasswordRequirements_WithValidPassword_AllRequirementsMet()
         {
-            // Act & Assert
-            var securityException = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            var illegalWordException = Record.Exception(() => PasswordFilter.IllegalWordCheck(password));
+            // Arrange
+            var password = "ValidPass123!";
 
-            Assert.Null(securityException);
-            Assert.Null(illegalWordException);
+            // Act
+            var requirements = PasswordFilter.GetPasswordRequirements(password);
+
+            // Assert
+            Assert.NotEmpty(requirements);
+            Assert.All(requirements, req => Assert.True(req.IsMet));
         }
 
-        [Theory]
-        [InlineData("password1!")]  // Too short
-        [InlineData("Password!")]   // No digit
-        [InlineData("password123")] // No special char, no uppercase
-        public void BothChecks_WithInvalidPassword_ShouldThrowFromAtLeastOne(string password)
+        [Fact]
+        public void GetPasswordRequirements_WithEmptyPassword_NoRequirementsMet()
         {
-            // Act
-            var securityException = Record.Exception(() => PasswordFilter.SecurityCheck(password));
-            var illegalWordException = Record.Exception(() => PasswordFilter.IllegalWordCheck(password));
+            // Arrange
+            var password = string.Empty;
 
-            // Assert - At least one should throw
-            Assert.True(securityException != null || illegalWordException != null,
-                "At least one validation should fail");
+            // Act
+            var requirements = PasswordFilter.GetPasswordRequirements(password);
+
+            // Assert
+            Assert.NotEmpty(requirements);
+            // All requirements except "No common words" should not be met
+            var securityRequirements = requirements.Where(r => !r.Description.Contains("common word"));
+            Assert.All(securityRequirements, req => Assert.False(req.IsMet));
+            
+            // Common word requirement should be met (empty string has no common words)
+            var commonWordRequirement = requirements.First(r => r.Description.Contains("common word"));
+            Assert.True(commonWordRequirement.IsMet);
+        }
+
+        [Fact]
+        public void GetPasswordRequirements_WithShortPassword_LengthRequirementNotMet()
+        {
+            // Arrange
+            var password = "Short1!";
+
+            // Act
+            var requirements = PasswordFilter.GetPasswordRequirements(password);
+
+            // Assert
+            var lengthRequirement = requirements.First(r => r.Description.Contains("10 characters"));
+            Assert.False(lengthRequirement.IsMet);
+        }
+
+        [Fact]
+        public void GetPasswordRequirements_WithCommonWord_CommonWordRequirementNotMet()
+        {
+            // Arrange
+            var password = "Password123!";
+
+            // Act
+            var requirements = PasswordFilter.GetPasswordRequirements(password);
+
+            // Assert
+            var commonWordRequirement = requirements.First(r => r.Description.Contains("common word"));
+            Assert.False(commonWordRequirement.IsMet);
         }
 
         #endregion

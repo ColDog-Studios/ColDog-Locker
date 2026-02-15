@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="Create New Locker" 
         Width="600" 
-        Height="600"
+        Height="700"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -111,12 +111,20 @@
                 <PasswordBox x:Name="PasswordBox"
                             Height="40"
                             PasswordChanged="PasswordBox_PasswordChanged"/>
+                
+                <!-- Dynamic Password Requirements -->
+                <StackPanel x:Name="PasswordRequirementsPanel" 
+                           Margin="0,8,0,0">
+                    <!-- Requirements will be dynamically added here -->
+                </StackPanel>
+                
                 <TextBlock x:Name="PasswordErrorText" 
-                          Text="Password must be at least 8 characters" 
+                          Text="Password validation error" 
                           Foreground="{DynamicResource ErrorBrush}"
                           Visibility="Collapsed"
                           FontSize="12"
-                          Margin="0,4,0,0"/>
+                          Margin="0,4,0,0"
+                          TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- Confirm Password -->
