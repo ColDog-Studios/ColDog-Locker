@@ -11,7 +11,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             var filteredLockers = LockerService.Lockers.Where(l => l.IsLocked == isLocked).ToList();
 
             // Print lockers to the console
-            for (int i = 0; i < filteredLockers.Count; i++)
+            for (var i = 0; i < filteredLockers.Count; i++)
             {
                 Console.WriteLine($"{i + 1}) {filteredLockers[i].LockerName}");
             }

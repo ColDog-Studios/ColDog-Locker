@@ -10,53 +10,51 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     {
         public static async Task InitializeAsync()
         {
-            // Log the start of initialization
-            Logger.AddEntry("ColDog Locker initialization started.", LogLevel.Info);
+            Logger.AddEntry("ColDog Locker initialization started.", LogLevel.Debug);
 
             // Create CDL directories if they do not already exist
             if (!Directory.Exists(Variables.localConfig))
             {
                 Directory.CreateDirectory(Variables.localConfig);
-                Logger.AddEntry($"Created directory: {Variables.localConfig}", LogLevel.Info);
+                Logger.AddEntry($"Created directory: {Variables.localConfig}", LogLevel.Debug);
             }
+
+            // Create logs directory if it does not already exist
             if (!Directory.Exists(Path.Combine(Variables.localConfig, "logs")))
             {
                 Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));
-                Logger.AddEntry($"Created directory: {Path.Combine(Variables.localConfig, "logs")}", LogLevel.Info);
+                Logger.AddEntry($"Created directory: {Path.Combine(Variables.localConfig, "logs")}", LogLevel.Debug);
             }
 
             // Initialize database
             LockerRepository.InitializeDatabase();
-            Logger.AddEntry("Database initialized.", LogLevel.Info);
-
-            // Migrate from JSON if needed
-            Logger.AddEntry("Migration check completed.", LogLevel.Info);
 
             // Load settings and lockers
             SettingsManager.LoadSettings();
-            Logger.AddEntry("Settings loaded.", LogLevel.Info);
             LockerService.LoadLockers();
-            Logger.AddEntry("Lockers loaded.", LogLevel.Info);
 
             // Initialize file watchers
             FileWatcherManager.OnSettingsFileChanged = SettingsManager.LoadSettings;
             FileWatcherManager.OnLockersFileChanged = LockerService.LoadLockers;
             FileWatcherManager.InitializeWatchers();
-            Logger.AddEntry("File watchers initialized.", LogLevel.Info);
-
-            // Resize logs if needed
-            Logger.TrimLog();
 
             // Check for updates if auto-update is enabled
             if (SettingsManager.Settings.AutoUpdate)
             {
-                Logger.AddEntry("Auto-update is enabled. Checking for updates.", LogLevel.Info);
-                // Hide message if there are no updates available
-                await UpdateManager.CheckForUpdatesAsync(true);
+                Logger.AddEntry("Auto-update is enabled. Checking for updates.", LogLevel.Debug);
+                try
+                {
+                    await UpdateManager.CheckForUpdatesAsync();
+                }
+                catch
+                {
+                    // Silently ignore update check failures during initialization
+                    Logger.AddEntry("Update check failed during initialization.", LogLevel.Debug);
+                }
             }
 
             // Log the end of initialization
-            Logger.AddEntry("Initialization completed.", LogLevel.Info);
+            Logger.AddEntry("Initialization completed.", LogLevel.Debug);
         }
     }
 }

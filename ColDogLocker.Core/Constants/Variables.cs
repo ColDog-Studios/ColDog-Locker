@@ -17,14 +17,7 @@ namespace ColDogStudios.ColDogLocker.Core.Constants
             "ColDog Locker"
         );
 
-        // Roaming configuration directory (to be phased out)
-        public static readonly string roamingConfig = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "ColDog Studios",
-            "ColDog Locker"
-        );
-
-        // ColDog Locker Directory
+        // Default ColDog Locker Directory
         public static readonly string cdlDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             "ColDog Locker"

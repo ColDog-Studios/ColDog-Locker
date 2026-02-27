@@ -4,48 +4,48 @@ This project follows Clean Architecture principles, organizing code into distinc
 
 ## Unified Entry Point
 
-ColDogLocker provides a single executable (`ColDogLocker.exe`) that acts as a unified entry point to all interfaces:
+ColDogLocker provides a single executable (`cdlocker.exe`) that acts as a unified entry point to all interfaces:
 
 **Default Behavior** (no parameters):
 ```bash
-ColDogLocker.exe
+cdlocker.exe
 # Launches the GUI
 ```
 
 **Interface Selection**:
 ```bash
-ColDogLocker.exe gui                                    # Launch GUI explicitly
-ColDogLocker.exe terminal                               # Launch Terminal User Interface
+cdlocker.exe gui                                      # Launch GUI explicitly
+cdlocker.exe tui                                      # Launch Terminal User Interface
 ```
 
 **Command-Line Operations** (subcommand-based for cross-platform compatibility):
 ```bash
-ColDogLocker.exe new <Locker Name>                      # Create new locker
-ColDogLocker.exe new <Locker Name> --path "D:\Lockers"  # Create with custom path
+cdlocker.exe new <Locker Name>                        # Create new locker
+cdlocker.exe new <Locker Name> --path "D:\Lockers"    # Create with custom path
 
-ColDogLocker.exe remove <Locker Name>                   # Remove locker (prompts for confirmation)
-ColDogLocker.exe remove <Locker Name> --force           # Remove without confirmation
+cdlocker.exe remove <Locker Name>                     # Remove locker (prompts for confirmation)
+cdlocker.exe remove <Locker Name> --force             # Remove without confirmation
 
-ColDogLocker.exe lock <Locker Name>                     # Lock a locker (prompts for password)
-ColDogLocker.exe lock <Locker Name> --password <pass>   # Lock with password (scripting)
+cdlocker.exe lock <Locker Name>                       # Lock a locker (prompts for password)
+cdlocker.exe lock <Locker Name> --password <pass>     # Lock with password (scripting)
 
-ColDogLocker.exe unlock <Locker Name>                   # Unlock a locker (prompts for password)
-ColDogLocker.exe unlock <Locker Name> --password <pass> # Unlock with password (scripting)
+cdlocker.exe unlock <Locker Name>                     # Unlock a locker (prompts for password)
+cdlocker.exe unlock <Locker Name> --password <pass>   # Unlock with password (scripting)
 
-ColDogLocker.exe list                                   # List all lockers and their status
-ColDogLocker.exe status <Locker Name>                   # Show detailed status of a locker
+cdlocker.exe list                                     # List all lockers and their status
+cdlocker.exe status <Locker Name>                     # Show detailed status of a locker
 
-ColDogLocker.exe help                                   # Show help information
-ColDogLocker.exe help new                               # Show help for specific command
-ColDogLocker.exe --version                              # Show version information
+cdlocker.exe help                                     # Show help information
+cdlocker.exe help new                                 # Show help for specific command
+cdlocker.exe --version                                # Show version information
 ```
 
 **PATH Integration**:
-When added to the system PATH, the application can be invoked with shorter aliases:
+When added to the system PATH, the application can be invoked from any working directory:
 ```bash
-cdl list
-cdl lock <Locker Name>
-coldoglocker terminal
+cdlocker list
+cdlocker lock <Locker Name>
+cdlocker terminal
 ```
 
 **Notes**:
@@ -162,7 +162,7 @@ The project follows **Semantic Versioning (SemVer)** with build metadata:
 
 ### Windows Properties Display
 
-When you right-click on `ColDogLocker.exe` → Properties → Details:
+When you right-click on `cdlocker.exe` or `ColDogLocker.exe` → Properties → Details:
 - **File Version**: `0.1.0.20251230` (Numeric only, as required by Windows)
 - **Product Version**: `0.1.0-pre+20251230.1445` (Full SemVer with build metadata)
 
@@ -234,21 +234,15 @@ Each layer has a corresponding test project:
         │Infrastructure│ ← External concerns
         └──────────────┘
               ↑
-        ┌─────┴──────┐
-        │            │
-   ┌────┴───┐    ┌───┴────┐
-   │  GUI   │    │  TUI   │ ← UI implementations
-   └────────┘    └────────┘
-        │            │
-        └─────┬──────┘
-              ↓
-        ┌─────────────┐
-        │     CLI     │ ← Unified entry point & router
-        └─────────────┘
+      ┌───────┴───┬──────────┐
+      ↓           ↓          ↓
+  ┌───────┐   ┌───────┐  ┌───────┐
+  │  TUI  │───│  CLI  │  │  GUI  │ ← Interfaces
+  └───────┘   └───────┘  └───────┘
 ```
 
 **Architecture Notes**:
-- **CLI Project** is the main entry point that builds into `ColDogLocker.exe`
+- **CLI Project** is the main entry point that builds into `cdlocker.exe`
 - CLI routes to GUI (default), TUI (with `tui` command), or executes commands directly
 - Uses subcommand pattern for clarity and cross-platform compatibility
 - GUI and TUI remain independent UI implementations that CLI can launch
