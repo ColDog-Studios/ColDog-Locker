@@ -1,6 +1,16 @@
 name: Auto Merge Back
 
 on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Source branch to merge from'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - test
   pull_request:
     types: [closed]
     branches:
@@ -9,7 +19,7 @@ on:
 
 jobs:
   merge-back:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
@@ -25,26 +35,26 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Merge main back to test and dev
-        if: github.base_ref == 'main'
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.source_branch == 'main') || github.base_ref == 'main'
         run: |
           git fetch origin
           
           # Merge main to test
           git checkout test
-          git merge origin/main --no-ff -m "Auto-merge main back to test"
+          git merge origin/main -m "Auto-merge main back to test"
           git push origin test
           
           # Merge main to dev
           git checkout dev
-          git merge origin/main --no-ff -m "Auto-merge main back to dev"
+          git merge origin/main -m "Auto-merge main back to dev"
           git push origin dev
 
       - name: Merge test back to dev
-        if: github.base_ref == 'test'
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.source_branch == 'test') || github.base_ref == 'test'
         run: |
           git fetch origin
           git checkout dev
-          git merge origin/test --no-ff -m "Auto-merge test back to dev"
+          git merge origin/test -m "Auto-merge test back to dev"
           git push origin dev
 
       - name: Handle merge conflicts
