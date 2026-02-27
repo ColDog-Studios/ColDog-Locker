@@ -1,0 +1,54 @@
+name: Auto Merge Back
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+      - test
+
+jobs:
+  merge-back:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge main back to test and dev
+        if: github.base_ref == 'main'
+        run: |
+          git fetch origin
+          
+          # Merge main to test
+          git checkout test
+          git merge origin/main --no-ff -m "Auto-merge main back to test"
+          git push origin test
+          
+          # Merge main to dev
+          git checkout dev
+          git merge origin/main --no-ff -m "Auto-merge main back to dev"
+          git push origin dev
+
+      - name: Merge test back to dev
+        if: github.base_ref == 'test'
+        run: |
+          git fetch origin
+          git checkout dev
+          git merge origin/test --no-ff -m "Auto-merge test back to dev"
+          git push origin dev
+
+      - name: Handle merge conflicts
+        if: failure()
+        run: |
+          echo "::warning::Automatic merge failed due to conflicts. Manual intervention required."
+          exit 1
