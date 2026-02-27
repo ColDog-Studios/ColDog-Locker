@@ -44,9 +44,9 @@ jobs:
           git merge origin/main -m "Auto-merge main back to test"
           git push origin test
           
-          # Merge main to dev
+          # Merge test to dev (cascade from test, not main)
           git checkout dev
-          git merge origin/main -m "Auto-merge main back to dev"
+          git merge origin/test -m "Auto-merge test back to dev"
           git push origin dev
 
       - name: Merge test back to dev
