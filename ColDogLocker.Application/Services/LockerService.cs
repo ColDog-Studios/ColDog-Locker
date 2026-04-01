@@ -74,8 +74,6 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Lockers.Remove(locker);
 
             Logger.AddEntry($"{locker.LockerName} removed successfully.", LogLevel.Success);
-            Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
-            Console.ReadLine();
         }
 
         // Method to lock the locker
