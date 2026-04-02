@@ -43,6 +43,7 @@
     <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj" />
     <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" />
     <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
+    <ProjectReference Include="..\ColDogLocker.Gui\ColDogLocker.Gui.csproj" />
     <ProjectReference Include="..\ColDogLocker.Tui\ColDogLocker.Tui.csproj" />
   </ItemGroup>
 
