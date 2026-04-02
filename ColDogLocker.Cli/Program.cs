@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
@@ -90,47 +89,16 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             try
             {
-                // Find the GUI executable in the same directory or nearby
-                var cliDirectory = AppContext.BaseDirectory;
-                var guiExeName = "ColDogLocker.exe";
-
-                // Check common locations relative to CLI executable
-                var possiblePaths = new[]
-                {
-                    Path.Combine(cliDirectory, guiExeName),
-                    Path.Combine(cliDirectory, "..", "ColDogLocker.Gui.WPF", "bin", "Debug", "net10.0-windows", guiExeName),
-                    Path.Combine(cliDirectory, "..", "ColDogLocker.Gui.WPF", "bin", "Release", "net10.0-windows", guiExeName)
-                };
-
-                string? guiPath = null;
-                foreach (var path in possiblePaths)
-                {
-                    var normalizedPath = Path.GetFullPath(path);
-                    if (File.Exists(normalizedPath))
-                    {
-                        guiPath = normalizedPath;
-                        break;
-                    }
-                }
-
-                if (guiPath == null)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Error.WriteLine($"Error: Could not find {guiExeName}");
-                    Console.ResetColor();
-                    return 1;
-                }
-
-                // Launch the GUI application as a separate process
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = guiPath,
-                    UseShellExecute = true
-                };
-
-                Process.Start(startInfo);
-                Console.WriteLine($"Launching GUI: {guiExeName}");
-                return 0;
+                var launcher = Gui.GuiLauncherFactory.CreateLauncher();
+                return launcher.Launch(Array.Empty<string>());
+            }
+            catch (PlatformNotSupportedException ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Error.WriteLine($"GUI not available: {ex.Message}");
+                Console.ResetColor();
+                Logger.AddEntry($"GUI not available: {ex.Message}", LogLevel.Warning);
+                return 1;
             }
             catch (Exception ex)
             {
