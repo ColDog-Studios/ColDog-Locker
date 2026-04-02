@@ -115,6 +115,9 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     return;
                 }
 
+                // Display the lockers
+                DisplayLockers(unlockedLockers);
+
                 // Get locker index from user
                 Console.Write("\nEnter the number of the locker to remove (or 0 to return): ");
                 var input = Console.ReadLine();
@@ -135,6 +138,8 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     {
                         // Remove locker from the metadata
                         LockerService.RemoveLocker(locker);
+                        Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
+                        Console.ReadLine();
                     }
 
                     return;
@@ -161,6 +166,9 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.ReadLine();
                 return;
             }
+
+            // Display the lockers
+            DisplayLockers(unlockedLockers);
 
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to lock (or 0 to return): ");
@@ -224,6 +232,9 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 return;
             }
 
+            // Display the lockers
+            DisplayLockers(lockedLockers);
+
             // Get locker index from user
             Console.Write("\nEnter the number of the locker to unlock (or 0 to return): ");
             var input = Console.ReadLine();
@@ -267,6 +278,16 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
                 return;
+            }
+        }
+
+        // Helper method to display lockers with numbering
+        private static void DisplayLockers(List<LockerModel> lockers)
+        {
+            Console.WriteLine();
+            for (var i = 0; i < lockers.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}) {lockers[i].LockerName}");
             }
         }
     }

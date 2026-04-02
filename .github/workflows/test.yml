@@ -101,8 +101,12 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing locker creation..."
-        $testDir = Join-Path $env:TEMP "e2e-test-locker-$(New-Guid)"
+        $baseDir = Join-Path $env:USERPROFILE "Documents\ColDog Locker"
+        $testDir = Join-Path $baseDir "e2e-test-locker-$(New-Guid)"
         Write-Output "Creating locker at: $testDir"
+        
+        # Ensure base directory exists
+        New-Item -ItemType Directory -Path $baseDir -Force | Out-Null
         
         & ".\cli-publish\cdlocker.exe" new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
         

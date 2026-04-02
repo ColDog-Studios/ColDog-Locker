@@ -21,7 +21,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Console
             {
                 key = System.Console.ReadKey(intercept: true);
 
-                if (key.Key is not ConsoleKey.Backspace or ConsoleKey.Enter)
+                if (key.Key is not (ConsoleKey.Backspace or ConsoleKey.Enter))
                 {
                     password.Append(key.KeyChar);
                     System.Console.Write("*");
