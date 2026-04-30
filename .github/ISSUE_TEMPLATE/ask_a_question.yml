@@ -30,6 +30,8 @@ body:
           label: Version
           description: What version of ColDog Locker are you running?
           options:
+              - v0.3.0-Beta
+              - v0.2.0-Beta
               - v0.1.0-Beta
               - v0.0.4-Alpha
       validations:
@@ -40,9 +42,13 @@ body:
           label: OS
           description: What OS are you using?
           options:
+              - Arch Linux
+              - CentOS/RHEL
+              - Debian
+              - Fedora
+              - Ubuntu
               - Windows 11
-              - Windows 10
-              - Server 2022
+              - Windows Server
               - Other (put OS in description)
       validations:
           required: false
