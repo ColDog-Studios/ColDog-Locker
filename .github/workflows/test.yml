@@ -502,7 +502,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "Testing locker creation..."
-        baseDir="$HOME/.local/share/ColDog Locker"
+        baseDir="$HOME/Documents/ColDog Locker"
         testDir="$baseDir/e2e-test-locker-$(date +%s%N)"
         echo "Creating locker at: $testDir"
         
