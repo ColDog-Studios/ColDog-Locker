@@ -689,8 +689,24 @@ jobs:
         failed=0
         
         # Check each test result
-        for step in test-version test-help test-list-empty test-create-locker test-create-files test-list-lockers test-lock test-verify-locked test-unlock test-verify-files test-wrong-password test-remove test-verify-removal; do
-          result=$(eval "echo \${{ steps.$step.outcome }}")
+        declare -A results=(
+          [test-version]="${{ steps.test-version.outcome }}"
+          [test-help]="${{ steps.test-help.outcome }}"
+          [test-list-empty]="${{ steps.test-list-empty.outcome }}"
+          [test-create-locker]="${{ steps.test-create-locker.outcome }}"
+          [test-create-files]="${{ steps.test-create-files.outcome }}"
+          [test-list-lockers]="${{ steps.test-list-lockers.outcome }}"
+          [test-lock]="${{ steps.test-lock.outcome }}"
+          [test-verify-locked]="${{ steps.test-verify-locked.outcome }}"
+          [test-unlock]="${{ steps.test-unlock.outcome }}"
+          [test-verify-files]="${{ steps.test-verify-files.outcome }}"
+          [test-wrong-password]="${{ steps.test-wrong-password.outcome }}"
+          [test-remove]="${{ steps.test-remove.outcome }}"
+          [test-verify-removal]="${{ steps.test-verify-removal.outcome }}"
+        )
+        
+        for step in "${!results[@]}"; do
+          result="${results[$step]}"
           if [ "$result" = "success" ]; then
             echo "✓ $step"
             ((passed++))
