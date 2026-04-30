@@ -737,6 +737,9 @@ jobs:
           [test-verify-removal]="${{ steps.test-verify-removal.outcome }}"
         )
         
+        # Disable exit-on-error for this section
+        set +e
+        
         # Iterate in order using the indexed array
         for step in "${tests[@]}"; do
           result="${outcomes[$step]}"
@@ -746,8 +749,12 @@ jobs:
           elif [ "$result" = "failure" ]; then
             echo "✗ $step"
             ((failed++))
+          else
+            echo "? $step (outcome: '$result')"
           fi
         done
+        
+        set -e
         
         echo ""
         echo "Summary: $passed passed, $failed failed"
