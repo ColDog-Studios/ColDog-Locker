@@ -60,6 +60,9 @@ namespace ColDogStudios.ColDogLocker.Cli
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
+            #if DEBUG
+                Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
+            #endif
                 Console.ResetColor();
                 Logger.AddEntry($"Unhandled exception: {ex}", LogLevel.Fatal);
                 Console.WriteLine();
@@ -121,7 +124,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int HandleHelpCommand(string[] args)
         {
-            if (args.Length == 1)
+            if (args.Length <= 1)
             {
                 HelpSystem.ShowGeneralHelp();
                 return 0;
