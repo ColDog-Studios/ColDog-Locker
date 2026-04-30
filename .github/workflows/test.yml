@@ -425,6 +425,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests-linux, build-cli-linux]
     if: always()
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -636,7 +639,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "Testing lock with wrong password (should fail)..."
-        ./cli-publish/cdlocker lock E2ETestLocker --password "WrongPassword123!" 2>&1 > /dev/null
+        ./cli-publish/cdlocker lock E2ETestLocker --password "WrongPassword123!" > /dev/null 2>&1
         exitCode=$?
         
         if [ $exitCode -eq 0 ]; then
