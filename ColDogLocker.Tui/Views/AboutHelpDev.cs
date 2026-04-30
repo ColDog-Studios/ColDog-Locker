@@ -24,8 +24,8 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine("To remove a directory from ColDog Locker management, select the 'Remove Locker' option from the main menu and follow the prompts.");
             Console.WriteLine("To check for updates, select the 'Check for Updates' option from the main menu.\n");
             Console.WriteLine("Help! I get stuck in loops and I dont know how to get out!\n");
-            Console.WriteLine("To get out of any loops, press (CTRL + C), or click the 'X' in the top right of the window to close the program, then relaunch. " +
-                              "Report any bugs to ColDog Studios.");
+            Console.WriteLine("To get out of any loops, press (CTRL + C), or click the 'X' in the top right of the window to close the program, then relaunch.");
+            Console.WriteLine("Report any bugs to ColDog Studios.");
             Console.ReadLine();
         }
 
