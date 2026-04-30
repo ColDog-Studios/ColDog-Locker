@@ -639,14 +639,14 @@ jobs:
       continue-on-error: true
       run: |
         echo "Testing lock with wrong password (should fail)..."
-        ./cli-publish/cdlocker lock E2ETestLocker --password "WrongPassword123!" > /dev/null 2>&1
-        exitCode=$?
-        
+        ./cli-publish/cdlocker lock E2ETestLocker --password "WrongPassword123!" 2>&1 || exitCode=$?
+        exitCode=${exitCode:-0}
+
         if [ $exitCode -eq 0 ]; then
           echo "Lock succeeded with wrong password - this should have failed!"
           exit 1
         fi
-        
+
         echo "✓ Wrong password correctly rejected (exit code: $exitCode)"
         exit 0
     
@@ -703,8 +703,25 @@ jobs:
         passed=0
         failed=0
         
-        # Check each test result
-        declare -A results=(
+        # Define test steps in order
+        tests=(
+          "test-version"
+          "test-help"
+          "test-list-empty"
+          "test-create-locker"
+          "test-create-files"
+          "test-list-lockers"
+          "test-lock"
+          "test-verify-locked"
+          "test-unlock"
+          "test-verify-files"
+          "test-wrong-password"
+          "test-remove"
+          "test-verify-removal"
+        )
+        
+        # Map step names to their outcomes (hardcoded from GitHub Actions context)
+        declare -A outcomes=(
           [test-version]="${{ steps.test-version.outcome }}"
           [test-help]="${{ steps.test-help.outcome }}"
           [test-list-empty]="${{ steps.test-list-empty.outcome }}"
@@ -720,8 +737,9 @@ jobs:
           [test-verify-removal]="${{ steps.test-verify-removal.outcome }}"
         )
         
-        for step in "${!results[@]}"; do
-          result="${results[$step]}"
+        # Iterate in order using the indexed array
+        for step in "${tests[@]}"; do
+          result="${outcomes[$step]}"
           if [ "$result" = "success" ]; then
             echo "✓ $step"
             ((passed++))
