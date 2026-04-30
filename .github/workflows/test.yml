@@ -114,7 +114,7 @@ jobs:
       if: matrix.distro == 'ubuntu'
       run: |
         apt-get update
-        apt-get install -y wget
+        apt-get install -y wget libicu-dev
         wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
         chmod +x dotnet-install.sh
         ./dotnet-install.sh --channel 10.0
@@ -503,7 +503,7 @@ jobs:
       run: |
         echo "Testing locker creation..."
         baseDir="$HOME/.local/share/ColDog Locker"
-        testDir="$baseDir/e2e-test-locker-$(uuidgen)"
+        testDir="$baseDir/e2e-test-locker-$(date +%s%N)"
         echo "Creating locker at: $testDir"
         
         mkdir -p "$baseDir"
