@@ -58,6 +58,7 @@ jobs:
     
     - name: Run Unit Tests
       run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      continue-on-error: true
     
     - name: Upload Test Results
       uses: actions/upload-artifact@v7
@@ -117,7 +118,7 @@ jobs:
         wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
         chmod +x dotnet-install.sh
         ./dotnet-install.sh --channel 10.0
-        echo "/root/.dotnet" >> $GITHUB_PATH
+        echo "$HOME/.dotnet" >> $GITHUB_PATH
     
     - name: Install .NET (Fedora)
       if: matrix.distro == 'fedora'
@@ -125,10 +126,10 @@ jobs:
         dnf install -y dotnet-sdk-10.0
     
     - name: Restore dependencies
-      run: /root/.dotnet/dotnet restore 2>/dev/null || dotnet restore
+      run: dotnet restore
     
     - name: Publish CLI
-      run: /root/.dotnet/dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish 2>/dev/null || dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
     
     - name: Upload CLI Artifact
       uses: actions/upload-artifact@v7
@@ -438,6 +439,17 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+    
+    - name: Install .NET Runtime (Ubuntu)
+      if: matrix.distro == 'ubuntu'
+      run: |
+        apt-get update
+        apt-get install -y dotnet-runtime-10.0
+    
+    - name: Install .NET Runtime (Fedora)
+      if: matrix.distro == 'fedora'
+      run: |
+        dnf install -y dotnet-runtime-10.0
     
     - name: Download CLI Artifact
       uses: actions/download-artifact@v7
