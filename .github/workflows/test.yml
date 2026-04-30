@@ -9,7 +9,7 @@ on:
 
 jobs:
   unit-tests:
-    name: Unit Tests
+    name: Unit Tests (Windows)
     runs-on: windows-latest
     
     steps:
@@ -34,20 +34,12 @@ jobs:
       uses: actions/upload-artifact@v7
       if: always()
       with:
-        name: unit-test-results
+        name: unit-test-results-windows
         path: '**/test-results.trx'
-    
-    - name: Test Summary
-      if: always()
-      run: |
-        Write-Output "Unit Tests Completed"
-        Write-Output "Check the test results artifact for details"
 
-  cli-e2e-tests:
-    name: CLI End-to-End Tests
-    runs-on: windows-latest
-    needs: unit-tests
-    if: always()
+  unit-tests-linux:
+    name: Unit Tests (Linux)
+    runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
@@ -58,8 +50,108 @@ jobs:
       with:
         dotnet-version: '10.0.x'
     
-    - name: Build CLI
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run Unit Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      continue-on-error: true
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: unit-test-results-linux
+        path: '**/test-results.trx'
+
+  build-cli-windows:
+    name: Build CLI (Windows)
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Publish CLI
       run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
+    
+    - name: Upload CLI Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: cli-windows
+        path: ./cli-publish/
+
+  build-cli-linux:
+    name: Build CLI (Linux - ${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: ubuntu
+            container: ubuntu:latest
+          - distro: fedora
+            container: fedora:latest
+    
+    container: ${{ matrix.container }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Install .NET (Ubuntu)
+      if: matrix.distro == 'ubuntu'
+      run: |
+        apt-get update
+        apt-get install -y wget libicu-dev
+        wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+        chmod +x dotnet-install.sh
+        ./dotnet-install.sh --channel 10.0
+        echo "$HOME/.dotnet" >> $GITHUB_PATH
+    
+    - name: Install .NET (Fedora)
+      if: matrix.distro == 'fedora'
+      run: |
+        dnf install -y dotnet-sdk-10.0
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Publish CLI
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
+    
+    - name: Upload CLI Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: cli-linux-${{ matrix.distro }}
+        path: ./cli-publish/
+
+  cli-e2e-tests-windows:
+    name: CLI E2E Tests (Windows)
+    runs-on: windows-latest
+    needs: [unit-tests, build-cli-windows]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Download CLI Artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: cli-windows
+        path: ./cli-publish/
     
     - name: Test - Version Command
       id: test-version
@@ -328,35 +420,385 @@ jobs:
           exit 1
         }
 
+  cli-e2e-tests-linux:
+    name: CLI E2E Tests (Linux - ${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    needs: [unit-tests-linux, build-cli-linux]
+    if: always()
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distro: ubuntu
+            container: ubuntu:latest
+          - distro: fedora
+            container: fedora:latest
+    
+    container: ${{ matrix.container }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+    
+    - name: Install .NET Runtime (Ubuntu)
+      if: matrix.distro == 'ubuntu'
+      run: |
+        apt-get update
+        apt-get install -y dotnet-runtime-10.0
+    
+    - name: Install .NET Runtime (Fedora)
+      if: matrix.distro == 'fedora'
+      run: |
+        dnf install -y dotnet-runtime-10.0
+    
+    - name: Download CLI Artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: cli-linux-${{ matrix.distro }}
+        path: ./cli-publish/
+    
+    - name: Make CLI Executable
+      run: chmod +x ./cli-publish/cdlocker
+    
+    - name: Test - Version Command
+      id: test-version
+      continue-on-error: true
+      run: |
+        echo "Testing --version command..."
+        output=$(./cli-publish/cdlocker --version 2>&1)
+        echo "Output: $output"
+        if echo "$output" | grep -q "ColDog Locker"; then
+          echo "✓ Version command passed"
+        else
+          echo "Version command failed - expected version info"
+          exit 1
+        fi
+    
+    - name: Test - Help Command
+      id: test-help
+      continue-on-error: true
+      run: |
+        echo "Testing help command..."
+        output=$(./cli-publish/cdlocker help 2>&1)
+        echo "Output preview: $(echo "$output" | head -5)"
+        if echo "$output" | grep -q "USAGE"; then
+          echo "✓ Help command passed"
+        else
+          echo "Help command failed - expected usage information"
+          exit 1
+        fi
+    
+    - name: Test - List Empty Lockers
+      id: test-list-empty
+      continue-on-error: true
+      run: |
+        echo "Testing list command (before creating lockers)..."
+        output=$(./cli-publish/cdlocker list 2>&1)
+        echo "Output: $output"
+        echo "✓ List command passed"
+    
+    - name: Test - Create Locker
+      id: test-create-locker
+      continue-on-error: true
+      run: |
+        echo "Testing locker creation..."
+        baseDir="$HOME/Documents/ColDog Locker"
+        testDir="$baseDir/e2e-test-locker-$(date +%s%N)"
+        echo "Creating locker at: $testDir"
+        
+        mkdir -p "$baseDir"
+        
+        ./cli-publish/cdlocker new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
+        
+        if [ $? -ne 0 ]; then
+          echo "Failed to create locker (exit code: $?)"
+          exit 1
+        fi
+        
+        if [ ! -d "$testDir" ]; then
+          echo "Locker directory was not created"
+          exit 1
+        fi
+        
+        echo "✓ Locker creation passed"
+        echo "$testDir" > test-locker-path.txt
+    
+    - name: Test - Create Test Files
+      id: test-create-files
+      continue-on-error: true
+      run: |
+        echo "Creating test files in locker..."
+        if [ ! -f test-locker-path.txt ]; then
+          echo "⚠ Cannot create test files - locker path not found"
+          exit 1
+        fi
+        
+        testDir=$(cat test-locker-path.txt)
+        
+        echo "Secret Content 1" > "$testDir/file1.txt"
+        echo "Secret Content 2" > "$testDir/file2.txt"
+        mkdir -p "$testDir/subfolder"
+        echo "Secret Content 3" > "$testDir/subfolder/file3.txt"
+        
+        echo "✓ Test files created"
+    
+    - name: Test - List Lockers
+      id: test-list-lockers
+      continue-on-error: true
+      run: |
+        echo "Testing list command (after creation)..."
+        output=$(./cli-publish/cdlocker list 2>&1)
+        echo "Output: $output"
+        
+        if echo "$output" | grep -q "E2ETestLocker"; then
+          echo "✓ List command shows created locker"
+        else
+          echo "Created locker not found in list"
+          exit 1
+        fi
+    
+    - name: Test - Lock Locker
+      id: test-lock
+      continue-on-error: true
+      run: |
+        echo "Testing lock command..."
+        ./cli-publish/cdlocker lock E2ETestLocker --password "AutomatedTest123!"
+        
+        if [ $? -ne 0 ]; then
+          echo "Failed to lock locker"
+          exit 1
+        fi
+        
+        echo "✓ Lock command passed"
+    
+    - name: Test - Verify Locker is Locked
+      id: test-verify-locked
+      continue-on-error: true
+      run: |
+        echo "Verifying locker is locked..."
+        output=$(./cli-publish/cdlocker status E2ETestLocker 2>&1)
+        echo "Status output: $output"
+        
+        if echo "$output" | grep -qiE "locked"; then
+          echo "✓ Locker is locked"
+        else
+          echo "Locker status does not show as locked"
+          exit 1
+        fi
+    
+    - name: Test - Unlock Locker
+      id: test-unlock
+      continue-on-error: true
+      run: |
+        echo "Testing unlock command..."
+        ./cli-publish/cdlocker unlock E2ETestLocker --password "AutomatedTest123!"
+        
+        if [ $? -ne 0 ]; then
+          echo "Failed to unlock locker"
+          exit 1
+        fi
+        
+        echo "✓ Unlock command passed"
+    
+    - name: Test - Verify Files Intact
+      id: test-verify-files
+      continue-on-error: true
+      run: |
+        echo "Verifying files are intact after unlock..."
+        if [ ! -f test-locker-path.txt ]; then
+          echo "⚠ Cannot verify files - locker path not found"
+          exit 1
+        fi
+        
+        testDir=$(cat test-locker-path.txt)
+        
+        content1=$(cat "$testDir/file1.txt")
+        content2=$(cat "$testDir/file2.txt")
+        content3=$(cat "$testDir/subfolder/file3.txt")
+        
+        if ! echo "$content1" | grep -q "Secret Content 1"; then
+          echo "File1 content was corrupted"
+          exit 1
+        fi
+        if ! echo "$content2" | grep -q "Secret Content 2"; then
+          echo "File2 content was corrupted"
+          exit 1
+        fi
+        if ! echo "$content3" | grep -q "Secret Content 3"; then
+          echo "File3 content was corrupted"
+          exit 1
+        fi
+        
+        echo "✓ All files intact after lock/unlock cycle"
+    
+    - name: Test - Wrong Password
+      id: test-wrong-password
+      continue-on-error: true
+      run: |
+        echo "Testing lock with wrong password (should fail)..."
+        ./cli-publish/cdlocker lock E2ETestLocker --password "WrongPassword123!" 2>&1 || exitCode=$?
+        exitCode=${exitCode:-0}
+
+        if [ $exitCode -eq 0 ]; then
+          echo "Lock succeeded with wrong password - this should have failed!"
+          exit 1
+        fi
+
+        echo "✓ Wrong password correctly rejected (exit code: $exitCode)"
+        exit 0
+    
+    - name: Test - Remove Locker
+      id: test-remove
+      continue-on-error: true
+      run: |
+        echo "Testing remove command..."
+        echo "Command: remove E2ETestLocker --force"
+        output=$(./cli-publish/cdlocker remove E2ETestLocker --force 2>&1)
+        echo "Remove output: $output"
+        
+        if [ $? -ne 0 ]; then
+          echo "Failed to remove locker"
+          exit 1
+        fi
+        
+        echo "✓ Remove command passed"
+    
+    - name: Test - Verify Removal
+      id: test-verify-removal
+      continue-on-error: true
+      run: |
+        echo "Verifying locker was removed..."
+        output=$(./cli-publish/cdlocker list 2>&1)
+        echo "Output: $output"
+        
+        if echo "$output" | grep -q "E2ETestLocker"; then
+          echo "Locker still appears in list after removal"
+          exit 1
+        fi
+        echo "✓ Locker successfully removed"
+    
+    - name: Cleanup Test Directory
+      if: always()
+      run: |
+        if [ -f test-locker-path.txt ]; then
+          testDir=$(cat test-locker-path.txt)
+          if [ -d "$testDir" ]; then
+            rm -rf "$testDir"
+            echo "Cleaned up test directory: $testDir"
+          fi
+        fi
+    
+    - name: E2E Test Summary
+      if: always()
+      run: |
+        echo ""
+        echo "═══════════════════════════════════════════════════════"
+        echo "      CLI E2E Test Results - ${{ matrix.distro }}"
+        echo "═══════════════════════════════════════════════════════"
+        echo ""
+        
+        passed=0
+        failed=0
+        
+        # Define test steps in order
+        tests=(
+          "test-version"
+          "test-help"
+          "test-list-empty"
+          "test-create-locker"
+          "test-create-files"
+          "test-list-lockers"
+          "test-lock"
+          "test-verify-locked"
+          "test-unlock"
+          "test-verify-files"
+          "test-wrong-password"
+          "test-remove"
+          "test-verify-removal"
+        )
+        
+        # Map step names to their outcomes (hardcoded from GitHub Actions context)
+        declare -A outcomes=(
+          [test-version]="${{ steps.test-version.outcome }}"
+          [test-help]="${{ steps.test-help.outcome }}"
+          [test-list-empty]="${{ steps.test-list-empty.outcome }}"
+          [test-create-locker]="${{ steps.test-create-locker.outcome }}"
+          [test-create-files]="${{ steps.test-create-files.outcome }}"
+          [test-list-lockers]="${{ steps.test-list-lockers.outcome }}"
+          [test-lock]="${{ steps.test-lock.outcome }}"
+          [test-verify-locked]="${{ steps.test-verify-locked.outcome }}"
+          [test-unlock]="${{ steps.test-unlock.outcome }}"
+          [test-verify-files]="${{ steps.test-verify-files.outcome }}"
+          [test-wrong-password]="${{ steps.test-wrong-password.outcome }}"
+          [test-remove]="${{ steps.test-remove.outcome }}"
+          [test-verify-removal]="${{ steps.test-verify-removal.outcome }}"
+        )
+        
+        # Disable exit-on-error for this section
+        set +e
+        
+        # Iterate in order using the indexed array
+        for step in "${tests[@]}"; do
+          result="${outcomes[$step]}"
+          if [ "$result" = "success" ]; then
+            echo "✓ $step"
+            ((passed++))
+          elif [ "$result" = "failure" ]; then
+            echo "✗ $step"
+            ((failed++))
+          else
+            echo "? $step (outcome: '$result')"
+          fi
+        done
+        
+        set -e
+        
+        echo ""
+        echo "Summary: $passed passed, $failed failed"
+        echo ""
+        
+        if [ $failed -gt 0 ]; then
+          exit 1
+        fi
+
   test-summary:
     name: Test Summary
-    runs-on: windows-latest
-    needs: [unit-tests, cli-e2e-tests]
+    runs-on: ubuntu-latest
+    needs: [unit-tests, unit-tests-linux, cli-e2e-tests-windows, cli-e2e-tests-linux]
     if: always()
     
     steps:
     - name: Overall Summary
       run: |
-        Write-Output ""
-        Write-Output "╔════════════════════════════════════════╗"
-        Write-Output "║      ColDog Locker - Test Summary      ║"
-        Write-Output "╚════════════════════════════════════════╝"
-        Write-Output ""
+        echo ""
+        echo "╔════════════════════════════════════════╗"
+        echo "║      ColDog Locker - Test Summary      ║"
+        echo "╚════════════════════════════════════════╝"
+        echo ""
         
-        $unitResult = "${{ needs.unit-tests.result }}"
-        $e2eResult = "${{ needs.cli-e2e-tests.result }}"
+        unitWin="${{ needs.unit-tests.result }}"
+        unitLinux="${{ needs.unit-tests-linux.result }}"
+        e2eWin="${{ needs.cli-e2e-tests-windows.result }}"
+        e2eLinux="${{ needs.cli-e2e-tests-linux.result }}"
         
-        $unitIcon = if ($unitResult -eq "success") { "✓" } else { "✗" }
-        $e2eIcon = if ($e2eResult -eq "success") { "✓" } else { "✗" }
+        unitWinIcon="$([ "$unitWin" = "success" ] && echo "✓" || echo "✗")"
+        unitLinuxIcon="$([ "$unitLinux" = "success" ] && echo "✓" || echo "✗")"
+        e2eWinIcon="$([ "$e2eWin" = "success" ] && echo "✓" || echo "✗")"
+        e2eLinuxIcon="$([ "$e2eLinux" = "success" ] && echo "✓" || echo "✗")"
         
-        Write-Output "Unit Tests:        $unitIcon $unitResult"
-        Write-Output "CLI E2E Tests:     $e2eIcon $e2eResult"
-        Write-Output ""
+        echo "Unit Tests (Windows):      $unitWinIcon $unitWin"
+        echo "Unit Tests (Linux):        $unitLinuxIcon $unitLinux"
+        echo "CLI E2E Tests (Windows):   $e2eWinIcon $e2eWin"
+        echo "CLI E2E Tests (Linux):     $e2eLinuxIcon $e2eLinux"
+        echo ""
         
-        if ($unitResult -eq "success" -and $e2eResult -eq "success") {
-          Write-Output "✓ All tests passed!"
+        if [ "$unitWin" = "success" ] && [ "$unitLinux" = "success" ] && [ "$e2eWin" = "success" ] && [ "$e2eLinux" = "success" ]; then
+          echo "✓ All tests passed!"
           exit 0
-        } else {
-          Write-Output "✗ Some tests failed"
+        else
+          echo "✗ Some tests failed"
           exit 1
-        }
+        fi
