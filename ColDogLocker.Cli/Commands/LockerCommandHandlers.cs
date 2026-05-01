@@ -81,9 +81,10 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             else
             {
+                //TODO: Get this messsage from ColDogLocker.Application.Validation.PasswordFilter
                 // Prompt for password
                 Console.WriteLine("Password Requirements:");
-                Console.WriteLine("  - At least 10 characters");
+                Console.WriteLine("  - At least 12 characters");
                 Console.WriteLine("  - At least one uppercase letter");
                 Console.WriteLine("  - At least one lowercase letter");
                 Console.WriteLine("  - At least one digit");

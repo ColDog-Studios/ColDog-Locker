@@ -39,9 +39,10 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.WriteLine("\nLocker name cannot be empty. Please try again.");
             }
 
+            //TODO: Get this messsage from ColDogLocker.Application.Validation.PasswordFilter
             var passwordSecurityMessage =
                 "\nPassword Requirements:\n" +
-                " - At least 10 characters long\n" +
+                " - At least 12 characters long\n" +
                 " - At least an upper-case letter\n" +
                 " - At least a lower-case letter\n" +
                 " - At least a number\n" +
