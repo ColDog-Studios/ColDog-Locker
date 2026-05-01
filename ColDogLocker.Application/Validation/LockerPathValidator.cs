@@ -267,6 +267,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
                 {
                     return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%USERPROFILE%" : "$HOME";
                 }
+
                 var envVar = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%USERPROFILE%" : "$HOME";
                 return $"{envVar}{Path.DirectorySeparatorChar}{relativePath}";
             }
