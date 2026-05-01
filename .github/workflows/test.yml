@@ -317,8 +317,34 @@ jobs:
         
         Write-Output "✓ All files intact after lock/unlock cycle"
     
-    - name: Test - Wrong Password
-      id: test-wrong-password
+    - name: Test - Unlock with Wrong Password
+      id: test-unlock-wrong-password
+      continue-on-error: true
+      run: |
+        Write-Output "Testing unlock with wrong password (should fail)..."
+        
+        # Lock the locker first
+        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
+        
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to lock locker for wrong password test"
+        }
+        
+        # Attempt to unlock with wrong password
+        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "WrongPassword123!" 2>&1 | Out-Null
+        $exitCode = $LASTEXITCODE
+        
+        if ($exitCode -eq 0) {
+          throw "Unlock succeeded with wrong password - this should have failed!"
+        }
+        
+        # Unlock with correct password to restore state
+        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
+        
+        Write-Output "✓ Wrong password correctly rejected on unlock (exit code: $exitCode)"
+    
+    - name: Test - Lock with Wrong Password
+      id: test-lock-wrong-password
       continue-on-error: true
       run: |
         Write-Output "Testing lock with wrong password (should fail)..."
@@ -393,7 +419,8 @@ jobs:
           @{Name="Verify Locked"; Result="${{ steps.test-verify-locked.outcome }}"},
           @{Name="Unlock Locker"; Result="${{ steps.test-unlock.outcome }}"},
           @{Name="Verify Files Intact"; Result="${{ steps.test-verify-files.outcome }}"},
-          @{Name="Wrong Password Validation"; Result="${{ steps.test-wrong-password.outcome }}"},
+          @{Name="Unlock with Wrong Password"; Result="${{ steps.test-unlock-wrong-password.outcome }}"},
+          @{Name="Lock with Wrong Password"; Result="${{ steps.test-lock-wrong-password.outcome }}"},
           @{Name="Remove Locker"; Result="${{ steps.test-remove.outcome }}"},
           @{Name="Verify Removal"; Result="${{ steps.test-verify-removal.outcome }}"}
         )
@@ -634,8 +661,36 @@ jobs:
         
         echo "✓ All files intact after lock/unlock cycle"
     
-    - name: Test - Wrong Password
-      id: test-wrong-password
+    - name: Test - Unlock with Wrong Password
+      id: test-unlock-wrong-password
+      continue-on-error: true
+      run: |
+        echo "Testing unlock with wrong password (should fail)..."
+        
+        # Lock the locker first
+        ./cli-publish/cdlocker lock E2ETestLocker --password "AutomatedTest123!"
+        
+        if [ $? -ne 0 ]; then
+          echo "Failed to lock locker for wrong password test"
+          exit 1
+        fi
+        
+        # Attempt to unlock with wrong password
+        ./cli-publish/cdlocker unlock E2ETestLocker --password "WrongPassword123!" 2>&1 || exitCode=$?
+        exitCode=${exitCode:-0}
+        
+        if [ $exitCode -eq 0 ]; then
+          echo "Unlock succeeded with wrong password - this should have failed!"
+          exit 1
+        fi
+        
+        # Unlock with correct password to restore state
+        ./cli-publish/cdlocker unlock E2ETestLocker --password "AutomatedTest123!"
+        
+        echo "✓ Wrong password correctly rejected on unlock (exit code: $exitCode)"
+    
+    - name: Test - Lock with Wrong Password
+      id: test-lock-wrong-password
       continue-on-error: true
       run: |
         echo "Testing lock with wrong password (should fail)..."
@@ -715,7 +770,8 @@ jobs:
           "test-verify-locked"
           "test-unlock"
           "test-verify-files"
-          "test-wrong-password"
+          "test-unlock-wrong-password"
+          "test-lock-wrong-password"
           "test-remove"
           "test-verify-removal"
         )
@@ -732,7 +788,8 @@ jobs:
           [test-verify-locked]="${{ steps.test-verify-locked.outcome }}"
           [test-unlock]="${{ steps.test-unlock.outcome }}"
           [test-verify-files]="${{ steps.test-verify-files.outcome }}"
-          [test-wrong-password]="${{ steps.test-wrong-password.outcome }}"
+          [test-unlock-wrong-password]="${{ steps.test-unlock-wrong-password.outcome }}"
+          [test-lock-wrong-password]="${{ steps.test-lock-wrong-password.outcome }}"
           [test-remove]="${{ steps.test-remove.outcome }}"
           [test-verify-removal]="${{ steps.test-verify-removal.outcome }}"
         )
