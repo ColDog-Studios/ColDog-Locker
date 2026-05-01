@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace ColDogStudios.ColDogLocker.Application.Validation
 {
     /// <summary>
@@ -67,10 +69,18 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             var appDataRoaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-            if (!string.IsNullOrEmpty(appDataRoaming)) systemPaths.Add(appDataRoaming);
-            if (!string.IsNullOrEmpty(appDataLocal)) systemPaths.Add(appDataLocal);
+            if (!string.IsNullOrEmpty(appDataRoaming))
+            {
+                systemPaths.Add(appDataRoaming);
+            }
+
+            if (!string.IsNullOrEmpty(appDataLocal))
+            {
+                systemPaths.Add(appDataLocal);
+            }
 
             // Temp directories
+
             var tempPath = Path.GetTempPath();
             if (!string.IsNullOrEmpty(tempPath))
             {
@@ -81,17 +91,29 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             var startup = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
             var commonStartup = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup);
 
-            if (!string.IsNullOrEmpty(startup)) systemPaths.Add(startup);
-            if (!string.IsNullOrEmpty(commonStartup)) systemPaths.Add(commonStartup);
+            if (!string.IsNullOrEmpty(startup))
+            {
+                systemPaths.Add(startup);
+            }
 
-            // Additional critical system directories
-            systemPaths.Add(@"C:\PerfLogs");
-            systemPaths.Add(@"C:\Recovery");
-            systemPaths.Add(@"C:\System Volume Information");
-            systemPaths.Add(@"C:\$Recycle.Bin");
-            systemPaths.Add(@"C:\Boot");
-            systemPaths.Add(@"C:\bootmgr");
-            systemPaths.Add(@"C:\EFI");
+            if (!string.IsNullOrEmpty(commonStartup))
+            {
+                systemPaths.Add(commonStartup);
+            }
+
+            // Additional critical system directories (Windows-specific)
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var systemDrive = Path.GetPathRoot(Environment.SystemDirectory)?.TrimEnd(Path.DirectorySeparatorChar) ?? "C:";
+                systemPaths.Add(Path.Combine(systemDrive, "PerfLogs"));
+                systemPaths.Add(Path.Combine(systemDrive, "Recovery"));
+                systemPaths.Add(Path.Combine(systemDrive, "System Volume Information"));
+                systemPaths.Add(Path.Combine(systemDrive, "$Recycle.Bin"));
+                systemPaths.Add(Path.Combine(systemDrive, "Boot"));
+                systemPaths.Add(Path.Combine(systemDrive, "bootmgr"));
+                systemPaths.Add(Path.Combine(systemDrive, "EFI"));
+            }
 
             // === USER FOLDER PATHS: Block ONLY the exact folder, allow subdirectories ===
             
@@ -116,14 +138,38 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             var downloads = Path.Combine(userProfile, "Downloads");
 
-            if (!string.IsNullOrEmpty(documents)) userFolderPaths.Add(documents);
-            if (!string.IsNullOrEmpty(pictures)) userFolderPaths.Add(pictures);
-            if (!string.IsNullOrEmpty(videos)) userFolderPaths.Add(videos);
-            if (!string.IsNullOrEmpty(music)) userFolderPaths.Add(music);
-            if (!string.IsNullOrEmpty(desktop)) userFolderPaths.Add(desktop);
-            if (!string.IsNullOrEmpty(downloads)) userFolderPaths.Add(downloads);
+            if (!string.IsNullOrEmpty(documents))
+            {
+                userFolderPaths.Add(documents);
+            }
+
+            if (!string.IsNullOrEmpty(pictures))
+            {
+                userFolderPaths.Add(pictures);
+            }
+
+            if (!string.IsNullOrEmpty(videos))
+            {
+                userFolderPaths.Add(videos);
+            }
+
+            if (!string.IsNullOrEmpty(music))
+            {
+                userFolderPaths.Add(music);
+            }
+
+            if (!string.IsNullOrEmpty(desktop))
+            {
+                userFolderPaths.Add(desktop);
+            }
+
+            if (!string.IsNullOrEmpty(downloads))
+            {
+                userFolderPaths.Add(downloads);
+            }
 
             // Normalize all paths
+
             _systemProtectedPaths = systemPaths
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .Select(p => Path.GetFullPath(p).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant())
@@ -210,38 +256,37 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         {
             // Try to map back to environment variables for better readability
             var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToLowerInvariant();
+            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant();
+            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
+            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData).ToLowerInvariant();
             
             if (path.StartsWith(userProfile))
             {
                 var relativePath = path.Substring(userProfile.Length).TrimStart(Path.DirectorySeparatorChar);
                 if (string.IsNullOrEmpty(relativePath))
                 {
-                    return "%USERPROFILE%";
+                    return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%USERPROFILE%" : "$HOME";
                 }
-                return $"%USERPROFILE%\\{relativePath}";
+                var envVar = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "%USERPROFILE%" : "$HOME";
+                return $"{envVar}{Path.DirectorySeparatorChar}{relativePath}";
             }
 
-            if (path.StartsWith(@"c:\windows"))
+            if (!string.IsNullOrEmpty(windows) && path.StartsWith(windows))
             {
-                return path.Replace(@"c:\windows", @"C:\Windows");
+                return path;
             }
 
-            if (path.StartsWith(@"c:\program files"))
+            if (!string.IsNullOrEmpty(programFiles) && path.StartsWith(programFiles))
             {
-                return path.Replace(@"c:\program files", @"C:\Program Files");
+                return path;
             }
 
-            if (path.StartsWith(@"c:\programdata"))
+            if (!string.IsNullOrEmpty(programData) && path.StartsWith(programData))
             {
-                return @"C:\ProgramData";
+                return path;
             }
 
-            // Return the path with proper casing for drive letter
-            if (path.Length >= 2 && path[1] == ':')
-            {
-                return path[0].ToString().ToUpper() + path.Substring(1);
-            }
-
+            // Return the path as-is (already normalized and cross-platform)
             return path;
         }
 
