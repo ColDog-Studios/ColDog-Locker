@@ -122,9 +122,13 @@ dotnet run --project ColDogLocker.Cli
 
 ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password.
 
+> [!NOTE]
+> `dotnet run --project ColDogLocker.Cli` and `cdlocker` can be used interchangeably.
+> On Windows, the compiled executable is `cdlocker.exe`, Linux is `cdlocker`.
+
 ### Interactive Modes
-- **GUI (Graphical User Interface)**: Run `dotnet run --project ColDogLocker.Cli gui` for a graphical interface (in development)
-- **TUI (Terminal User Interface)**: Run `dotnet run --project ColDogLocker.Cli terminal` for an interactive terminal menu
+- **GUI (Graphical User Interface)**: Run `cdlocker gui` for a graphical interface (in development)
+- **TUI (Terminal User Interface)**: Run `cdlocker tui` for an interactive terminal menu
 
 ### Command-Line Interface
 
@@ -133,78 +137,78 @@ For scripting, automation, and quick operations, use the CLI commands:
 #### Locker Commands
 ```bash
 # Create a new locker
-dotnet run --project ColDogLocker.Cli new <name> [--path <path>] [--password <pass>]
+cdlocker new <name> [--path <path>] [--password <pass>]
 
 # Lock a locker (encrypt and hide)
-dotnet run --project ColDogLocker.Cli lock <name> [--password <pass>]
+cdlocker lock <name> [--password <pass>]
 
 # Unlock a locker (decrypt and unhide)
-dotnet run --project ColDogLocker.Cli unlock <name> [--password <pass>]
+cdlocker unlock <name> [--password <pass>]
 
 # List all lockers
-dotnet run --project ColDogLocker.Cli list [--locked | --unlocked]
+cdlocker list [--locked | --unlocked]
 
 # Show locker status
-dotnet run --project ColDogLocker.Cli status <name>
+cdlocker status <name>
 
 # Remove a locker
-dotnet run --project ColDogLocker.Cli remove <name> [--force] [--delete]
+cdlocker remove <name> [--force] [--delete]
 ```
 
 #### Locker Management
 ```bash
 # Change locker password
-dotnet run --project ColDogLocker.Cli change-password <name>
+cdlocker change-password <name>
 
 # Verify locker integrity
-dotnet run --project ColDogLocker.Cli verify <name>
+cdlocker verify <name>
 ```
 
 #### Settings & Database
 ```bash
 # View or modify settings
-dotnet run --project ColDogLocker.Cli settings [set <key> <value>]
+cdlocker settings [set <key> <value>]
 
 # Optimize database
-dotnet run --project ColDogLocker.Cli db-vacuum
+cdlocker db-vacuum
 
 # Show database information
-dotnet run --project ColDogLocker.Cli db-info
+cdlocker db-info
 ```
 
 #### Help & Version
 ```bash
 # Display help
-dotnet run --project ColDogLocker.Cli help [command]
+cdlocker help [command]
 
 # Show version
-dotnet run --project ColDogLocker.Cli --version
+cdlocker --version
 ```
 
 ### Quick Examples
 
 ```bash
 # Create a locker with automatic password prompt
-dotnet run --project ColDogLocker.Cli new MySecrets
+cdlocker new MySecrets
 
 # Create a locker at specific path
-dotnet run --project ColDogLocker.Cli new Docs --path "C:\Sensitive\Documents"
+cdlocker new Docs --path "C:\Sensitive\Documents"
 
 # Lock a locker
-dotnet run --project ColDogLocker.Cli lock MySecrets
+cdlocker lock MySecrets
 
 # List only locked lockers
-dotnet run --project ColDogLocker.Cli list --locked
+cdlocker list --locked
 
 # Remove locker and delete its contents
-dotnet run --project ColDogLocker.Cli remove OldLocker --force --delete
+cdlocker remove OldLocker --force --delete
 
 # Check locker integrity
-dotnet run --project ColDogLocker.Cli verify MySecrets
+cdlocker verify MySecrets
 ```
 
 > [!TIP]
-> For detailed command documentation, use `dotnet run --project ColDogLocker.Cli help <command>` or check the `/docs` folder (coming soon).
+> For detailed command documentation, use `cdlocker help <command>` or check the `/docs` folder (coming soon).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
