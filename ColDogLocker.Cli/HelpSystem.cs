@@ -8,9 +8,9 @@ namespace ColDogStudios.ColDogLocker.Cli
         public static void ShowGeneralHelp()
         {
             Console.WriteLine("USAGE:");
-            Console.WriteLine("  ColDogLocker                           Launch GUI (default)");
-            Console.WriteLine("  ColDogLocker gui                       Launch GUI explicitly");
-            Console.WriteLine("  ColDogLocker terminal                  Launch Terminal UI");
+            Console.WriteLine("  cdlocker                           Launch GUI (default)");
+            Console.WriteLine("  cdlocker gui                       Launch GUI explicitly");
+            Console.WriteLine("  cdlocker terminal                  Launch Terminal UI");
             Console.WriteLine();
 
             Console.WriteLine("LOCKER COMMANDS:");
@@ -42,7 +42,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine("  --version, -v                          Show version information");
             Console.WriteLine();
             Console.WriteLine("For more information on a specific command, use:");
-            Console.WriteLine("  ColDogLocker help <command>");
+            Console.WriteLine("  cdlocker help <command>");
         }
 
         public static void ShowCommandHelp(string command)
@@ -54,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             {
                 case "new":
                     Console.WriteLine("CREATE NEW LOCKER:");
-                    Console.WriteLine("  ColDogLocker new <Locker Name> [--path <path>]");
+                    Console.WriteLine("  cdlocker new <Locker Name> [--path <path>]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Creates a new locker with the specified name.");
@@ -63,13 +63,13 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  --path <path>    Specify a custom path for the locker");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker new MyLocker");
-                    Console.WriteLine("  ColDogLocker new MyLocker --path \"D:\\Lockers\"");
+                    Console.WriteLine("  cdlocker new MyLocker");
+                    Console.WriteLine("  cdlocker new MyLocker --path \"D:\\Lockers\"");
                     break;
 
                 case "remove":
                     Console.WriteLine("REMOVE LOCKER:");
-                    Console.WriteLine("  ColDogLocker remove <Locker Name> [--force]");
+                    Console.WriteLine("  cdlocker remove <Locker Name> [--force]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Removes the specified locker. Prompts for confirmation unless --force is used.");
@@ -78,13 +78,13 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  --force    Skip confirmation prompt");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker remove MyLocker");
-                    Console.WriteLine("  ColDogLocker remove MyLocker --force");
+                    Console.WriteLine("  cdlocker remove MyLocker");
+                    Console.WriteLine("  cdlocker remove MyLocker --force");
                     break;
 
                 case "lock":
                     Console.WriteLine("LOCK LOCKER:");
-                    Console.WriteLine("  ColDogLocker lock <Locker Name> [--password <password>]");
+                    Console.WriteLine("  cdlocker lock <Locker Name> [--password <password>]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Locks the specified locker. Prompts for password unless provided.");
@@ -93,13 +93,13 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  --password <password>    Provide password (for automation, use cautiously)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker lock MyLocker");
-                    Console.WriteLine("  ColDogLocker lock MyLocker --password MySecurePass123");
+                    Console.WriteLine("  cdlocker lock MyLocker");
+                    Console.WriteLine("  cdlocker lock MyLocker --password MySecurePass123");
                     break;
 
                 case "unlock":
                     Console.WriteLine("UNLOCK LOCKER:");
-                    Console.WriteLine("  ColDogLocker unlock <Locker Name> [--password <password>]");
+                    Console.WriteLine("  cdlocker unlock <Locker Name> [--password <password>]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Unlocks the specified locker. Prompts for password unless provided.");
@@ -108,13 +108,13 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  --password <password>    Provide password (for automation, use cautiously)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker unlock MyLocker");
-                    Console.WriteLine("  ColDogLocker unlock MyLocker --password MySecurePass123");
+                    Console.WriteLine("  cdlocker unlock MyLocker");
+                    Console.WriteLine("  cdlocker unlock MyLocker --password MySecurePass123");
                     break;
 
                 case "list":
                     Console.WriteLine("LIST LOCKERS:");
-                    Console.WriteLine("  ColDogLocker list [--locked | --unlocked]");
+                    Console.WriteLine("  cdlocker list [--locked | --unlocked]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Lists all lockers and their current status.");
@@ -124,14 +124,14 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  --unlocked    Show only unlocked lockers");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker list");
-                    Console.WriteLine("  ColDogLocker list --locked");
-                    Console.WriteLine("  ColDogLocker list --unlocked");
+                    Console.WriteLine("  cdlocker list");
+                    Console.WriteLine("  cdlocker list --locked");
+                    Console.WriteLine("  cdlocker list --unlocked");
                     break;
 
                 case "change-password":
                     Console.WriteLine("CHANGE LOCKER PASSWORD:");
-                    Console.WriteLine("  ColDogLocker change-password <Locker Name>");
+                    Console.WriteLine("  cdlocker change-password <Locker Name>");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Changes the password for an existing locker. The locker must be unlocked");
@@ -144,12 +144,12 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  - New password must meet requirements (8+ characters, uppercase, lowercase, digit, special char)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker change-password MyLocker");
+                    Console.WriteLine("  cdlocker change-password MyLocker");
                     break;
 
                 case "verify":
                     Console.WriteLine("VERIFY LOCKER:");
-                    Console.WriteLine("  ColDogLocker verify <Locker Name>");
+                    Console.WriteLine("  cdlocker verify <Locker Name>");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Verifies the integrity and consistency of a locker by performing");
@@ -167,12 +167,12 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  [!]    - Warning or inconsistency detected");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker verify MyLocker");
+                    Console.WriteLine("  cdlocker verify MyLocker");
                     break;
 
                 case "settings":
                     Console.WriteLine("MANAGE SETTINGS:");
-                    Console.WriteLine("  ColDogLocker settings [<key> [<value>]]");
+                    Console.WriteLine("  cdlocker settings [<key> [<value>]]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  View or modify application settings. Call without arguments to view all");
@@ -187,17 +187,17 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  db-vacuum-interval    Days between database optimizations (0=disabled, 1-365)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker settings");
-                    Console.WriteLine("  ColDogLocker settings debug true");
-                    Console.WriteLine("  ColDogLocker settings log-retention 60");
-                    Console.WriteLine("  ColDogLocker settings auto-update true");
-                    Console.WriteLine("  ColDogLocker settings update-channel stable");
-                    Console.WriteLine("  ColDogLocker settings db-vacuum-interval 30");
+                    Console.WriteLine("  cdlocker settings");
+                    Console.WriteLine("  cdlocker settings debug true");
+                    Console.WriteLine("  cdlocker settings log-retention 60");
+                    Console.WriteLine("  cdlocker settings auto-update true");
+                    Console.WriteLine("  cdlocker settings update-channel stable");
+                    Console.WriteLine("  cdlocker settings db-vacuum-interval 30");
                     break;
 
                 case "db-vacuum":
                     Console.WriteLine("VACUUM DATABASE:");
-                    Console.WriteLine("  ColDogLocker db-vacuum");
+                    Console.WriteLine("  cdlocker db-vacuum");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Optimizes the database by reclaiming unused space and rebuilding");
@@ -210,12 +210,12 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  - Reports bytes reclaimed after completion");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker db-vacuum");
+                    Console.WriteLine("  cdlocker db-vacuum");
                     break;
 
                 case "db-info":
                     Console.WriteLine("DATABASE INFORMATION:");
-                    Console.WriteLine("  ColDogLocker db-info");
+                    Console.WriteLine("  cdlocker db-info");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Displays detailed information about the SQLite database including");
@@ -229,23 +229,23 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  - Database integrity check status");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker db-info");
+                    Console.WriteLine("  cdlocker db-info");
                     break;
 
                 case "status":
                     Console.WriteLine("SHOW LOCKER STATUS:");
-                    Console.WriteLine("  ColDogLocker status <Locker Name>");
+                    Console.WriteLine("  cdlocker status <Locker Name>");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Shows detailed status information for the specified locker.");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
-                    Console.WriteLine("  ColDogLocker status MyLocker");
+                    Console.WriteLine("  cdlocker status MyLocker");
                     break;
 
                 case "gui":
                     Console.WriteLine("LAUNCH GUI:");
-                    Console.WriteLine("  ColDogLocker gui");
+                    Console.WriteLine("  cdlocker gui");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Launches the graphical user interface.");
@@ -254,7 +254,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 case "terminal":
                 case "tui":
                     Console.WriteLine("LAUNCH TERMINAL UI:");
-                    Console.WriteLine("  ColDogLocker terminal");
+                    Console.WriteLine("  cdlocker terminal");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Launches the terminal-based user interface.");

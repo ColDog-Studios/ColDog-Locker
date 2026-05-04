@@ -292,7 +292,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 }
             }
 
-            Console.Error.WriteLine("Usage: ColDogLocker settings [<key> [<value>]]");
+            Console.Error.WriteLine("Usage: cdlocker settings [<key> [<value>]]");
             return 1;
         }
     }

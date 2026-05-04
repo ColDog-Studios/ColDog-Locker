@@ -21,7 +21,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker new <Locker Name> [--path <path>] [--password <password>]");
+                Console.WriteLine("Usage: cdlocker new <Locker Name> [--path <path>] [--password <password>]");
                 return 1;
             }
 
@@ -148,7 +148,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker remove <Locker Name> [--force] [--delete]");
+                Console.WriteLine("Usage: cdlocker remove <Locker Name> [--force] [--delete]");
                 return 1;
             }
 
@@ -234,7 +234,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker lock <Locker Name> [--password <password>]");
+                Console.WriteLine("Usage: cdlocker lock <Locker Name> [--password <password>]");
                 return 1;
             }
 
@@ -310,7 +310,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker unlock <Locker Name> [--password <password>]");
+                Console.WriteLine("Usage: cdlocker unlock <Locker Name> [--password <password>]");
                 return 1;
             }
 
@@ -421,7 +421,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     Console.WriteLine("No lockers found.");
                 }
 
-                Console.WriteLine($"Create a new locker with: ColDogLocker new <name>");
+                Console.WriteLine($"Create a new locker with: cdlocker new <name>");
                 return 0;
             }
 
@@ -446,7 +446,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker status <Locker Name>");
+                Console.WriteLine("Usage: cdlocker status <Locker Name>");
                 return 1;
             }
 
@@ -497,7 +497,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker change-password <Locker Name>");
+                Console.WriteLine("Usage: cdlocker change-password <Locker Name>");
                 return 1;
             }
 
@@ -530,6 +530,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
+            //TODO: Use Application.Validation.PasswordFilter for requirements
             // Get new password
             Console.WriteLine("\nPassword Requirements:");
             Console.WriteLine("  - At least 10 characters");
@@ -599,7 +600,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: ColDogLocker verify <Locker Name>");
+                Console.WriteLine("Usage: cdlocker verify <Locker Name>");
                 return 1;
             }
 
