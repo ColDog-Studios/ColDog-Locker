@@ -148,7 +148,7 @@ jobs:
       uses: actions/checkout@v6
     
     - name: Download CLI Artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: cli-windows
         path: ./cli-publish/
@@ -482,7 +482,7 @@ jobs:
         dnf install -y dotnet-runtime-10.0
     
     - name: Download CLI Artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: cli-linux-${{ matrix.distro }}
         path: ./cli-publish/
