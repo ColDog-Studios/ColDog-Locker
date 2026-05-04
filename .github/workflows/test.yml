@@ -200,7 +200,7 @@ jobs:
         # Ensure base directory exists
         New-Item -ItemType Directory -Path $baseDir -Force | Out-Null
         
-        & ".\cli-publish\cdlocker.exe" new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" new E2ETestLocker --path "$testDir" --password "E2E-tst@5044$!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to create locker (exit code: $LASTEXITCODE)"
@@ -255,7 +255,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing lock command..."
-        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "E2E-tst@5044$!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to lock locker (exit code: $LASTEXITCODE)"
@@ -282,7 +282,7 @@ jobs:
       continue-on-error: true
       run: |
         Write-Output "Testing unlock command..."
-        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "E2E-tst@5044$!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to unlock locker (exit code: $LASTEXITCODE)"
@@ -324,7 +324,7 @@ jobs:
         Write-Output "Testing unlock with wrong password (should fail)..."
         
         # Lock the locker first
-        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" lock E2ETestLocker --password "E2E-tst@5044$!"
         
         if ($LASTEXITCODE -ne 0) {
           throw "Failed to lock locker for wrong password test"
@@ -339,7 +339,7 @@ jobs:
         }
         
         # Unlock with correct password to restore state
-        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "AutomatedTest123!"
+        & ".\cli-publish\cdlocker.exe" unlock E2ETestLocker --password "E2E-tst@5044$!"
         
         Write-Output "✓ Wrong password correctly rejected on unlock (exit code: $exitCode)"
     
@@ -538,7 +538,7 @@ jobs:
         
         mkdir -p "$baseDir"
         
-        ./cli-publish/cdlocker new E2ETestLocker --path "$testDir" --password "AutomatedTest123!"
+        ./cli-publish/cdlocker new E2ETestLocker --path "$testDir" --password "E2E-tst@5044$!"
         
         if [ $? -ne 0 ]; then
           echo "Failed to create locker (exit code: $?)"
@@ -592,7 +592,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "Testing lock command..."
-        ./cli-publish/cdlocker lock E2ETestLocker --password "AutomatedTest123!"
+        ./cli-publish/cdlocker lock E2ETestLocker --password "E2E-tst@5044$!"
         
         if [ $? -ne 0 ]; then
           echo "Failed to lock locker"
@@ -621,7 +621,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "Testing unlock command..."
-        ./cli-publish/cdlocker unlock E2ETestLocker --password "AutomatedTest123!"
+        ./cli-publish/cdlocker unlock E2ETestLocker --password "E2E-tst@5044$!"
         
         if [ $? -ne 0 ]; then
           echo "Failed to unlock locker"
@@ -668,7 +668,7 @@ jobs:
         echo "Testing unlock with wrong password (should fail)..."
         
         # Lock the locker first
-        ./cli-publish/cdlocker lock E2ETestLocker --password "AutomatedTest123!"
+        ./cli-publish/cdlocker lock E2ETestLocker --password "E2E-tst@5044$!"
         
         if [ $? -ne 0 ]; then
           echo "Failed to lock locker for wrong password test"
@@ -685,7 +685,7 @@ jobs:
         fi
         
         # Unlock with correct password to restore state
-        ./cli-publish/cdlocker unlock E2ETestLocker --password "AutomatedTest123!"
+        ./cli-publish/cdlocker unlock E2ETestLocker --password "E2E-tst@5044$!"
         
         echo "✓ Wrong password correctly rejected on unlock (exit code: $exitCode)"
     
