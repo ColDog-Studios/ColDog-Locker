@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Shared Version Information - Edit version here only -->
-    <Version>0.3.0-pre</Version>
+    <Version>0.3.0-beta</Version>
     <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
     <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
     <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
@@ -21,18 +21,6 @@
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     
     <!-- Output all projects to root bin directory -->
-    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
-    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
-    
-    <!-- Alternative: Completely flat structure (all DLLs/EXEs in one folder) -->
-    <!-- Uncomment below and comment above if you want everything in bin\Debug or bin\Release -->
     <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
-  </PropertyGroup>
-
-  <!-- Exclude test projects from root bin (optional) -->
-  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
-    <!-- Test projects use their local bin folder -->
-    <BaseOutputPath>bin\</BaseOutputPath>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
 </Project>
