@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 namespace ColDogStudios.ColDogLocker.Gui
 {
     /// <summary>
@@ -25,6 +25,8 @@ namespace ColDogStudios.ColDogLocker.Gui
         {
             try
             {
+                Logger.AddEntry("Launching Windows GUI", LogLevel.Debug);
+
                 // Find the WPF GUI executable in the same directory or nearby
                 var cliDirectory = AppContext.BaseDirectory;
                 var guiExeName = "ColDogLocker.exe";
@@ -44,12 +46,14 @@ namespace ColDogStudios.ColDogLocker.Gui
                     if (File.Exists(normalizedPath))
                     {
                         guiPath = normalizedPath;
+                        Logger.AddEntry($"Found GUI executable at: {guiPath}", LogLevel.Debug);
                         break;
                     }
                 }
 
                 if (guiPath == null)
                 {
+                    Logger.AddEntry($"Could not find {guiExeName} in expected locations", LogLevel.Error);
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Error.WriteLine($"Error: Could not find {guiExeName}");
                     Console.ResetColor();
@@ -66,9 +70,11 @@ namespace ColDogStudios.ColDogLocker.Gui
                 var process = Process.Start(startInfo);
                 if (process == null)
                 {
+                    Logger.AddEntry($"Failed to start GUI process for {guiExeName}", LogLevel.Error);
                     return 1;
                 }
 
+                Logger.AddEntry($"Launched GUI process with ID: {process.Id}", LogLevel.Debug);
                 Console.WriteLine($"Launching GUI: {guiExeName}");
                 process.WaitForExit();
                 return process.ExitCode;
@@ -86,7 +92,7 @@ namespace ColDogStudios.ColDogLocker.Gui
     /// <summary>
     /// Factory for creating GUI launcher instances based on platform.
     /// </summary>
-    public static class GuiLauncherFactory
+    public static class GuiLauncher
     {
         /// <summary>
         /// Creates a GUI launcher appropriate for the current platform.

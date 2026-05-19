@@ -18,7 +18,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 // Initialize application for CLI commands (except for UI launchers)
                 if (args.Length > 0 && args[0].ToLowerInvariant() is not "gui" and not "terminal" and not "tui")
                 {
-                    InitializeForCli();
+                    InitializeCli();
                 }
 
                 int result;
@@ -32,6 +32,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 {
                     // Parse the first argument as the command/subcommand
                     var command = args[0].ToLowerInvariant();
+                    Logger.AddEntry($"Received command: {command}", LogLevel.Debug);
 
                     result = command switch
                     {
@@ -72,8 +73,10 @@ namespace ColDogStudios.ColDogLocker.Cli
             }
         }
 
-        private static void InitializeForCli()
+        private static void InitializeCli()
         {
+            Logger.AddEntry("Initializing ColDog Locker CLI", LogLevel.Debug);
+
             // Create directories if needed
             if (!Directory.Exists(Variables.localConfig))
             {
@@ -94,7 +97,7 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             try
             {
-                var launcher = Gui.GuiLauncherFactory.CreateLauncher();
+                var launcher = Gui.GuiLauncher.CreateLauncher();
                 return launcher.Launch(Array.Empty<string>());
             }
             catch (PlatformNotSupportedException ex)
@@ -177,6 +180,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int HandleUnknownCommand(string command)
         {
+            Logger.AddEntry($"Unknown command: {command}", LogLevel.Debug);
             Console.Error.WriteLine($"Error: Unknown command '{command}'");
             Console.WriteLine();
             HelpSystem.ShowGeneralHelp();
