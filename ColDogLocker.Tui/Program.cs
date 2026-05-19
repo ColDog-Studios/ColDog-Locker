@@ -18,7 +18,7 @@ namespace ColDogStudios.ColDogLocker.Tui
         {
             try
             {
-                Logger.AddEntry("Launching ColDog Locker TUI...", LogLevel.Info);
+                Logger.AddEntry("Launching ColDog Locker TUI", LogLevel.Debug);
 
                 // Initialize the application
                 Initialization.InitializeAsync().GetAwaiter().GetResult();
