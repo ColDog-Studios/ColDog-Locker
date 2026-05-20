@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text;
 using System.Windows;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -53,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             errorDetails.AppendLine("=== ERROR DETAILS ===");
             errorDetails.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             errorDetails.AppendLine($"Application: ColDog Locker");
-            errorDetails.AppendLine($"Version: {GetApplicationVersion()}");
+            errorDetails.AppendLine($"Version: {BuildInfo.Version ?? "Unknown version"}");
             errorDetails.AppendLine();
             errorDetails.AppendLine("Error Message:");
             errorDetails.AppendLine(_errorMessage);
