@@ -1,15 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>ColDogStudios.ColDogLocker.Gui.Avalonia</RootNamespace>
+    <AssemblyName>ColDogLocker</AssemblyName>
+    <ApplicationIcon>Assets\cdlIcon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Remove="Assets\cdlIcon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,4 +31,9 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\cdlIcon.ico" />
+  </ItemGroup>
+
 </Project>
