@@ -8,7 +8,7 @@
         Width="600" 
         Height="700"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="CanResize"
+        ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}"
         Loaded="Window_Loaded">
     
@@ -206,19 +206,22 @@
                 <Button Content="Copy to Clipboard" 
                         Click="CopyToClipboard_Click"
                         Padding="15,10"
-                        Background="{DynamicResource AccentBrush}"
-                        Foreground="{DynamicResource AccentTextBrush}"
-                        FontSize="12"
-                        Cursor="Hand"
-                        Margin="0,0,10,0"/>
+                        Margin="0,0,10,0"
+                        Background="{DynamicResource PrimaryBrush}"
+                        Foreground="White">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="Close" 
                         Click="Close_Click"
+                        IsDefault="True"
                         Padding="15,10"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        FontSize="12"
-                        Cursor="Hand"/>
+                        Background="{DynamicResource PrimaryBrush}"
+                        Foreground="White"/>
             </StackPanel>
         </Border>
     </Grid>
