@@ -5,16 +5,22 @@ using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 {
+    /// <summary>
+    /// Defines the severity level of a log entry.
+    /// </summary>
     public enum LogLevel
     {
-        Debug = 0,
-        Info = 1,
-        Success = 2,
-        Warning = 3,
-        Error = 4,
-        Fatal = 5
+        Debug   = 0, // Verbose diagnostic info for development; suppressed in production
+        Info    = 1, // General application flow and successful operations (lock, unlock, create, etc.)
+        Warning = 2, // Something unexpected but recoverable; worth investigating
+        Error   = 3, // A failure occurred that affected an operation but did not crash the app
+        Fatal   = 4  // A critical failure that requires the application to stop or cannot recover
     }
 
+    /// <summary>
+    /// Represents a single structured log entry. Used for both JSON serialization
+    /// and plain text formatting. All fields are optional depending on config.
+    /// </summary>
     public class LogEntry
     {
         [JsonProperty("timestamp")]
@@ -26,11 +32,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         [JsonProperty("message")]
         public string Message { get; set; } = string.Empty;
 
-        [JsonProperty("source_file")]
-        public string? SourceFile { get; set; }
+        [JsonProperty("caller")]
+        public CallerInfo? Caller { get; set; }
 
-        [JsonProperty("line_number")]
-        public int? LineNumber { get; set; }
+        [JsonProperty("exception")]
+        public ExceptionInfo? Exception { get; set; }
 
         [JsonProperty("thread_id")]
         public int? ThreadId { get; set; }
@@ -45,11 +51,67 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         public string Environment { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Structured caller information captured automatically by the compiler.
+    /// Only populated when DevMode is enabled.
+    /// </summary>
+    public class CallerInfo
+    {
+        [JsonProperty("method")]
+        public string Method { get; set; } = string.Empty;
+
+        [JsonProperty("file")]
+        public string File { get; set; } = string.Empty;
+
+        [JsonProperty("line")]
+        public int Line { get; set; }
+    }
+
+    /// <summary>
+    /// Structured exception information captured from a caught Exception object.
+    /// Separates type, message, and stack trace for clean SIEM ingestion.
+    /// </summary>
+    public class ExceptionInfo
+    {
+        [JsonProperty("type")]
+        public string Type { get; set; } = string.Empty;
+
+        [JsonProperty("message")]
+        public string Message { get; set; } = string.Empty;
+
+        [JsonProperty("stack_trace")]
+        public string? StackTrace { get; set; }
+    }
+
+    /// <summary>
+    /// Static logger for ColDog Locker. Writes structured log entries to disk in either
+    /// JSON (NDJSON) or plain text format. Supports async buffered writing, log rotation,
+    /// optional compression, and runtime configuration reloading.
+    ///
+    /// USAGE:
+    ///
+    ///   Basic info entry:
+    ///     Logger.Log(LogLevel.Info, "Locker unlocked successfully.");
+    ///
+    ///   With a caught exception:
+    ///     try
+    ///     {
+    ///         File.ReadAllText("config.json");
+    ///     }
+    ///     catch (Exception ex)
+    ///     {
+    ///         Logger.Log(LogLevel.Error, "Failed to read config file.", ex);
+    ///     }
+    ///
+    ///   The caller's method name, file, and line number are captured automatically
+    ///   by the compiler via [Caller...] attributes — you never need to pass them.
+    ///   Caller info only appears in the log when DevMode is enabled in settings.
+    /// </summary>
     public static class Logger
     {
         private static readonly string _logDirectory = Path.Combine(Variables.localConfig, "logs");
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        private static readonly string _logFilePath = Path.Combine(_logDirectory, $"cdl.log");
+        private static readonly string _logFilePath = Path.Combine(_logDirectory, "cdl.log");
         private static readonly Lock _lockObject = new();
 
         private static LogLevel _minLogLevel = LogLevel.Info;
@@ -64,8 +126,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static bool _asyncLogging = false;
         private static bool _devMode = false;
 
-        // Custom fields - automatically populated
-        private static readonly string _appVersion = GetAppVersion();
+        private static readonly string _appVersion = BuildInfo.Version;
         private static readonly string _environment = GetEnvironmentInfo();
 
         // Async logging support
@@ -82,6 +143,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             }
         }
 
+        /// <summary>
+        /// Reloads logger configuration from the current settings. Call this after
+        /// the user changes any logging-related settings at runtime.
+        /// </summary>
         public static void ReloadConfig()
         {
             LoadConfigFromSettings();
@@ -138,13 +203,30 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                 }
                 else
                 {
-                    Thread.Sleep(50); // Tune as needed
+                    Thread.Sleep(50);
                 }
             }
         }
 
+        /// <summary>
+        /// Writes a log entry with the specified level and message.
+        /// Caller information (method, file, line) is captured automatically by the
+        /// compiler when DevMode is enabled — do not pass these manually.
+        /// </summary>
+        /// <param name="level">The severity level of this entry.</param>
+        /// <param name="message">A human-readable description of the event.</param>
+        /// <param name="exception">Optional. The caught exception to capture type, message, and stack trace.</param>
+        /// <param name="memberName">Auto-populated by the compiler. Do not pass manually.</param>
+        /// <param name="filePath">Auto-populated by the compiler. Do not pass manually.</param>
+        /// <param name="lineNumber">Auto-populated by the compiler. Do not pass manually.</param>
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for log entries")]
-        public static void AddEntry(string message, LogLevel level, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+        public static void Log(
+            LogLevel level,
+            string message,
+            Exception? exception = null,
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
             if (level < _minLogLevel)
             {
@@ -158,27 +240,44 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
             var logEntry = new LogEntry
             {
-                Level = level.ToString(),
-                Message = message,
-                SessionId = _sessionId,
+                Level      = level.ToString().ToUpperInvariant(),
+                Message    = message,
+                SessionId  = _sessionId,
                 AppVersion = _appVersion,
                 Environment = _environment
             };
+
             if (_includeTimestamps)
             {
-                var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase) ? DateTime.Now : DateTime.UtcNow;
+                var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase)
+                    ? DateTime.Now
+                    : DateTime.UtcNow;
                 logEntry.Timestamp = now.ToString("o");
             }
 
             if (_includeThreadId)
             {
-                logEntry.ThreadId = Environment.CurrentManagedThreadId;
+                logEntry.ThreadId = System.Environment.CurrentManagedThreadId;
             }
 
             if (_devMode)
             {
-                logEntry.SourceFile = Path.GetFileName(filePath);
-                logEntry.LineNumber = lineNumber;
+                logEntry.Caller = new CallerInfo
+                {
+                    Method = memberName,
+                    File   = Path.GetFileName(filePath),
+                    Line   = lineNumber
+                };
+            }
+
+            if (exception != null)
+            {
+                logEntry.Exception = new ExceptionInfo
+                {
+                    Type       = exception.GetType().FullName ?? exception.GetType().Name,
+                    Message    = exception.Message,
+                    StackTrace = exception.StackTrace
+                };
             }
 
             if (_asyncLogging)
@@ -198,7 +297,6 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         {
             try
             {
-                // Ensure the log directory exists
                 if (!Directory.Exists(_logDirectory))
                 {
                     Directory.CreateDirectory(_logDirectory);
@@ -206,22 +304,40 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
                 RotateLogFileIfNeeded();
 
-                var line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
-                    ? JsonConvert.SerializeObject(logEntry, Formatting.None)
-                    : FormatPlainText(logEntry);
+                string line;
+                if (_logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    line = JsonConvert.SerializeObject(logEntry, Formatting.None);
+                }
+                else
+                {
+                    // Plain text: write session marker on first entry of a new session
+                    line = FormatPlainText(logEntry);
+                }
 
                 lock (_lockObject)
                 {
-                    File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                    // Write session start marker in plain text mode
+                    if (!_logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
+                        && !File.Exists(_logFilePath))
+                    {
+                        var separator = new string('=', 60);
+                        var header = $"{separator}{System.Environment.NewLine}"
+                                   + $"  SESSION START  {_sessionId}  v{_appVersion}{System.Environment.NewLine}"
+                                   + $"{separator}{System.Environment.NewLine}";
+                        File.AppendAllText(_logFilePath, header);
+                    }
+
+                    File.AppendAllText(_logFilePath, line + System.Environment.NewLine);
                 }
             }
             catch (Exception ex)
             {
-                // Fallback: try to write to a fallback file
                 try
                 {
                     var fallbackPath = Path.Combine(_logDirectory, $"fallback_{_sessionId}.txt");
-                    File.AppendAllText(fallbackPath, $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {ex.Message})\n");
+                    File.AppendAllText(fallbackPath,
+                        $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {ex.Message}){System.Environment.NewLine}");
                 }
                 catch { }
             }
@@ -230,26 +346,35 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static string FormatPlainText(LogEntry entry)
         {
             var parts = new List<string>();
+
             if (_includeTimestamps && entry.Timestamp != null)
             {
                 parts.Add($"[{entry.Timestamp}]");
             }
 
-            parts.Add(entry.Level);
+            parts.Add($"[{entry.Level}]");
+
             if (_includeThreadId && entry.ThreadId.HasValue)
             {
                 parts.Add($"[Thread:{entry.ThreadId}]");
             }
 
-            if (!string.IsNullOrEmpty(entry.SourceFile))
+            if (entry.Caller != null)
             {
-                parts.Add($"[{entry.SourceFile}:{entry.LineNumber}]");
+                parts.Add($"[{entry.Caller.File} | {entry.Caller.Method}() | Line {entry.Caller.Line}]");
             }
 
             parts.Add(entry.Message);
-            parts.Add($"(Session:{entry.SessionId})");
-            parts.Add($"(Version:{entry.AppVersion})");
-            parts.Add($"(Env:{entry.Environment})");
+
+            if (entry.Exception != null)
+            {
+                parts.Add($"| Exception: {entry.Exception.Type}: {entry.Exception.Message}");
+                if (!string.IsNullOrWhiteSpace(entry.Exception.StackTrace))
+                {
+                    parts.Add($"{System.Environment.NewLine}{entry.Exception.StackTrace}");
+                }
+            }
+
             return string.Join(" ", parts);
         }
 
@@ -261,17 +386,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             }
 
             var fileInfo = new FileInfo(_logFilePath);
-            if (fileInfo.Length < _maxFileSizeMB * 1024 * 1024)
+            if (fileInfo.Length < _maxFileSizeMB * 1024L * 1024L)
             {
                 return;
             }
 
-            // Rotate: rename current log file
             var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-            var rotatedName = Path.Combine(_logDirectory, $"app_{timestamp}.log");
+            var rotatedName = Path.Combine(_logDirectory, $"cdl_{timestamp}.log");
             File.Move(_logFilePath, rotatedName);
 
-            // Optionally compress
             if (_enableCompression)
             {
                 try
@@ -281,9 +404,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                 catch { }
             }
 
-            // Delete old logs if exceeding max retained
-            var logFiles = Directory.GetFiles(_logDirectory, "app_*.log*")
-                .OrderByDescending(f => File.GetCreationTimeUtc(f)).ToList();
+            // Delete oldest files beyond the retained limit
+            var pattern = _enableCompression ? "cdl_*.log.gz" : "cdl_*.log";
+            var logFiles = Directory.GetFiles(_logDirectory, pattern)
+                .OrderByDescending(f => File.GetCreationTimeUtc(f))
+                .ToList();
+
             for (var i = _maxRetainedFiles; i < logFiles.Count; i++)
             {
                 try
@@ -297,17 +423,17 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static void CompressFile(string filePath)
         {
             var compressedPath = filePath + ".gz";
-            using (var originalFileStream = File.OpenRead(filePath))
-            using (var compressedFileStream = File.Create(compressedPath))
-            using (var compressionStream = new System.IO.Compression.GZipStream(compressedFileStream, System.IO.Compression.CompressionLevel.Optimal))
-            {
-                originalFileStream.CopyTo(compressionStream);
-            }
-
+            using var originalStream   = File.OpenRead(filePath);
+            using var compressedStream = File.Create(compressedPath);
+            using var gzip             = new System.IO.Compression.GZipStream(
+                compressedStream, System.IO.Compression.CompressionLevel.Optimal);
+            originalStream.CopyTo(gzip);
+            // Dispose order: gzip must flush before we delete
+            gzip.Dispose();
             File.Delete(filePath);
         }
 
-        // Direct logging method to avoid recursion during maintenance operations
+        // Direct write used internally to avoid re-entering the public Log() method
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for log entries")]
         private static void LogDirectly(string message, string level)
         {
@@ -315,21 +441,24 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             {
                 var logEntry = new LogEntry
                 {
-                    Level = level,
-                    Message = message,
-                    SessionId = _sessionId,
-                    AppVersion = _appVersion,
+                    Level       = level,
+                    Message     = message,
+                    SessionId   = _sessionId,
+                    AppVersion  = _appVersion,
                     Environment = _environment
                 };
+
                 if (_includeTimestamps)
                 {
-                    var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase) ? DateTime.Now : DateTime.UtcNow;
+                    var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase)
+                        ? DateTime.Now
+                        : DateTime.UtcNow;
                     logEntry.Timestamp = now.ToString("o");
                 }
 
                 if (_includeThreadId)
                 {
-                    logEntry.ThreadId = Environment.CurrentManagedThreadId;
+                    logEntry.ThreadId = System.Environment.CurrentManagedThreadId;
                 }
 
                 lock (_lockObject)
@@ -337,42 +466,43 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
                     var line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
                         ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                         : FormatPlainText(logEntry);
-                    File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                    File.AppendAllText(_logFilePath, line + System.Environment.NewLine);
                 }
             }
             catch { }
         }
 
-        // Helper method to get session information
-        public static string GetCurrentSessionId() => _sessionId;
-        public static string GetCurrentLogFilePath() => _logFilePath;
-
-        // Methods to get app information
-        private static string GetAppVersion()
-        {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var version = assembly.GetName().Version;
-            return version?.ToString() ?? "0.0.0.0";
-        }
-
         private static string GetEnvironmentInfo()
         {
-            var os = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+            var os   = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
             var arch = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture;
             return $"{os} ({arch})";
         }
 
-        // Methods to update logger config at runtime
-        public static void SetDevMode(bool enabled) { _devMode = enabled; }
-        public static void SetLogLevel(LogLevel level) { _minLogLevel = level; }
-        public static void SetLogFormat(string format) { _logFormat = format; }
-        public static void SetMaxFileSizeMB(int mb) { _maxFileSizeMB = mb; }
-        public static void SetMaxRetainedFiles(int count) { _maxRetainedFiles = count; }
-        public static void SetEnableFileLogging(bool enabled) { _enableFileLogging = enabled; }
-        public static void SetEnableCompression(bool enabled) { _enableCompression = enabled; }
-        public static void SetIncludeTimestamps(bool enabled) { _includeTimestamps = enabled; }
-        public static void SetIncludeThreadId(bool enabled) { _includeThreadId = enabled; }
-        public static void SetDateTimeFormat(string format) { _dateTimeFormat = format; }
+        // -------------------------------------------------------------------------
+        // Public helpers
+        // -------------------------------------------------------------------------
+
+        /// <summary>Returns the session ID for the current application run.</summary>
+        public static string GetCurrentSessionId() => _sessionId;
+
+        /// <summary>Returns the full path to the active log file.</summary>
+        public static string GetCurrentLogFilePath() => _logFilePath;
+
+        // -------------------------------------------------------------------------
+        // Runtime config setters — use ReloadConfig() when possible
+        // -------------------------------------------------------------------------
+
+        public static void SetDevMode(bool enabled)            { _devMode = enabled; }
+        public static void SetLogLevel(LogLevel level)         { _minLogLevel = level; }
+        public static void SetLogFormat(string format)         { _logFormat = format; }
+        public static void SetMaxFileSizeMB(int mb)            { _maxFileSizeMB = mb; }
+        public static void SetMaxRetainedFiles(int count)      { _maxRetainedFiles = count; }
+        public static void SetEnableFileLogging(bool enabled)  { _enableFileLogging = enabled; }
+        public static void SetEnableCompression(bool enabled)  { _enableCompression = enabled; }
+        public static void SetIncludeTimestamps(bool enabled)  { _includeTimestamps = enabled; }
+        public static void SetIncludeThreadId(bool enabled)    { _includeThreadId = enabled; }
+        public static void SetDateTimeFormat(string format)    { _dateTimeFormat = format; }
         public static void SetAsyncLogging(bool enabled)
         {
             _asyncLogging = enabled;

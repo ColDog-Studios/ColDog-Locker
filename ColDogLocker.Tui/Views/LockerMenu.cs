@@ -58,11 +58,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 password = ConsoleHelper.ReadPassword();
 
                 // Validate password
-                Logger.AddEntry("Validating locker password", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Validating locker password");
                 var validationError = PasswordFilter.ValidatePassword(password);
                 if (validationError != null)
                 {
-                    Logger.AddEntry($"Password not validated: {validationError}", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, $"Password not validated: {validationError}");
                     Console.WriteLine($"\nPassword not validated: {validationError}. Please try again.");
                     continue;
                 }
@@ -72,13 +72,13 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 confirmPassword = ConsoleHelper.ReadPassword();
 
                 // Validate password confirmation
-                Logger.AddEntry("Validating locker password confirmation", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Validating locker password confirmation");
                 if (password == confirmPassword)
                 {
                     break;
                 }
 
-                Logger.AddEntry("Passwords do not match", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Passwords do not match");
                 Console.WriteLine("\nPasswords do not match. Please try again.");
             }
 
@@ -86,11 +86,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             var lockerLocation = Path.Combine(Variables.cdlDir, lockerName);
             
             // Validate locker path is not protected
-            Logger.AddEntry($"Validating locker path: {lockerLocation}", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");
             var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
             if (pathValidationError != null)
             {
-                Logger.AddEntry($"Locker path validation failed: {pathValidationError}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Locker path validation failed: {pathValidationError}");
                 Console.WriteLine($"\nError: {pathValidationError}");
                 Console.Write("Press Enter to continue...");
                 Console.ReadLine();
@@ -100,15 +100,15 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             //TODO: Ensure hashing and creation is validated properly
             
             // Hash the password
-            Logger.AddEntry("Hashing locker password", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, "Hashing locker password");
             var passwordHash = EncryptionHelper.HashPassword(password);
-            Logger.AddEntry("Locker password hashed successfully", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, "Locker password hashed successfully");
 
             // Create the locker
-            Logger.AddEntry($"Creating locker: {lockerName} at {lockerLocation}", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, $"Creating locker: {lockerName} at {lockerLocation}");
             var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
             LockerService.AddLocker(locker);
-            Logger.AddEntry($"Locker created successfully: {lockerName}", LogLevel.Info);
+            Logger.Log(LogLevel.Info, $"Locker created successfully: {lockerName}");
         }
 
         // Remove an existing locker /////////////////////////////////////////////////////////////////////////////

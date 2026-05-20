@@ -18,7 +18,7 @@ namespace ColDogStudios.ColDogLocker.Tui
         {
             try
             {
-                Logger.AddEntry("Launching ColDog Locker TUI", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Launching ColDog Locker TUI");
 
                 // Initialize the application
                 Initialization.InitializeAsync().GetAwaiter().GetResult();
@@ -36,7 +36,7 @@ namespace ColDogStudios.ColDogLocker.Tui
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 Console.ResetColor();
-                Logger.AddEntry($"Unhandled exception in TUI: {ex}", LogLevel.Fatal);
+                Logger.Log(LogLevel.Fatal, $"Unhandled exception in TUI", ex);
                 return 1;
             }
         }

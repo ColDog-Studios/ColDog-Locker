@@ -26,13 +26,14 @@ namespace ColDogStudios.ColDogLocker.Cli
                 // No arguments - show help
                 if (args.Length == 0)
                 {
+                    Logger.Log(LogLevel.Debug, "No CLI command provided");
                     result = HandleHelpCommand(args);
                 }
                 else
                 {
                     // Parse the first argument as the command/subcommand
                     var command = args[0].ToLowerInvariant();
-                    Logger.AddEntry($"Received command: {command}", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, $"Received CLI command: {command}");
 
                     result = command switch
                     {
@@ -67,7 +68,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
             #endif
                 Console.ResetColor();
-                Logger.AddEntry($"Unhandled exception: {ex}", LogLevel.Fatal);
+                Logger.Log(LogLevel.Fatal, $"Unhandled exception", ex);
                 Console.WriteLine();
                 return 1;
             }
@@ -75,7 +76,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static void InitializeCli()
         {
-            Logger.AddEntry("Initializing ColDog Locker CLI", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, "Initializing ColDog Locker CLI");
 
             // Create directories if needed
             if (!Directory.Exists(Variables.localConfig))
@@ -105,7 +106,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Error.WriteLine($"GUI not available: {ex.Message}");
                 Console.ResetColor();
-                Logger.AddEntry($"GUI not available: {ex.Message}", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, $"GUI not available: {ex.Message}");
                 return 1;
             }
             catch (Exception ex)
@@ -113,7 +114,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error launching GUI: {ex.Message}");
                 Console.ResetColor();
-                Logger.AddEntry($"Error launching GUI: {ex}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Error launching GUI {ex}");
                 return 1;
             }
         }
@@ -180,7 +181,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int HandleUnknownCommand(string command)
         {
-            Logger.AddEntry($"Unknown command: {command}", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, $"Unknown command: {command}");
             Console.Error.WriteLine($"Error: Unknown command '{command}'");
             Console.WriteLine();
             HelpSystem.ShowGeneralHelp();

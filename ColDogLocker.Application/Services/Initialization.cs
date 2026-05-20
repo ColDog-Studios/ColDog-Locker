@@ -10,20 +10,20 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     {
         public static async Task InitializeAsync()
         {
-            Logger.AddEntry("ColDog Locker initialization started.", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, "ColDog Locker initialization started.");
 
             // Create CDL directories if they do not already exist
             if (!Directory.Exists(Variables.localConfig))
             {
                 Directory.CreateDirectory(Variables.localConfig);
-                Logger.AddEntry($"Created directory: {Variables.localConfig}", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, $"Created directory: {Variables.localConfig}");
             }
 
             // Create logs directory if it does not already exist
             if (!Directory.Exists(Path.Combine(Variables.localConfig, "logs")))
             {
                 Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));
-                Logger.AddEntry($"Created directory: {Path.Combine(Variables.localConfig, "logs")}", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, $"Created directory: {Path.Combine(Variables.localConfig, "logs")}");
             }
 
             // Initialize database
@@ -41,7 +41,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             // Check for updates if auto-update is enabled
             if (SettingsManager.Settings.AutoUpdate)
             {
-                Logger.AddEntry("Auto-update is enabled. Checking for updates.", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Auto-update is enabled. Checking for updates.");
                 try
                 {
                     await UpdateManager.CheckForUpdatesAsync();
@@ -49,12 +49,12 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 catch
                 {
                     // Silently ignore update check failures during initialization
-                    Logger.AddEntry("Update check failed during initialization.", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.");
                 }
             }
 
             // Log the end of initialization
-            Logger.AddEntry("Initialization completed.", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, "Initialization completed.");
         }
     }
 }

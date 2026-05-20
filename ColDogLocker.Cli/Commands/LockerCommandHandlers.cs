@@ -200,7 +200,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 // Note: RemoveLocker has a Console.ReadLine() which we need to avoid in CLI
                 LockerRepository.DeleteLocker(locker.Guid);
                 LockerService.Lockers.Remove(locker);
-                Logger.AddEntry($"{lockerName} removed successfully.", LogLevel.Success);
+                Logger.Log(LogLevel.Info, $"{lockerName} removed successfully.");
 
                 // Delete directory if requested
                 if (deleteDirectory && Directory.Exists(locker.LockerLocation))

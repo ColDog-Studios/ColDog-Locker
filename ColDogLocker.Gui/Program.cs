@@ -25,7 +25,7 @@ namespace ColDogStudios.ColDogLocker.Gui
         {
             try
             {
-                Logger.AddEntry("Launching Windows GUI", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Launching Windows GUI");
 
                 // Find the WPF GUI executable in the same directory or nearby
                 var cliDirectory = AppContext.BaseDirectory;
@@ -46,14 +46,14 @@ namespace ColDogStudios.ColDogLocker.Gui
                     if (File.Exists(normalizedPath))
                     {
                         guiPath = normalizedPath;
-                        Logger.AddEntry($"Found GUI executable at: {guiPath}", LogLevel.Debug);
+                        Logger.Log(LogLevel.Debug, $"Found GUI executable at: {guiPath}");
                         break;
                     }
                 }
 
                 if (guiPath == null)
                 {
-                    Logger.AddEntry($"Could not find {guiExeName} in expected locations", LogLevel.Error);
+                    Logger.Log(LogLevel.Error, $"Could not find {guiExeName} in expected locations");
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Error.WriteLine($"Error: Could not find {guiExeName}");
                     Console.ResetColor();
@@ -70,11 +70,11 @@ namespace ColDogStudios.ColDogLocker.Gui
                 var process = Process.Start(startInfo);
                 if (process == null)
                 {
-                    Logger.AddEntry($"Failed to start GUI process for {guiExeName}", LogLevel.Error);
+                    Logger.Log(LogLevel.Error, $"Failed to start GUI process for {guiExeName}");
                     return 1;
                 }
 
-                Logger.AddEntry($"Launched GUI process with ID: {process.Id}", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, $"Launched GUI process with ID: {process.Id}");
                 Console.WriteLine($"Launching GUI: {guiExeName}");
                 process.WaitForExit();
                 return process.ExitCode;
