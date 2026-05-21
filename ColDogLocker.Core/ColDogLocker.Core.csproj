@@ -1,11 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
-    
-    <!-- Version is inherited from Directory.Build.props -->
   </PropertyGroup>
 
   <!-- Auto-generate BuildInfo.cs at build time -->

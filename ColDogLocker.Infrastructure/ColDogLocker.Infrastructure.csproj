@@ -11,8 +11,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>ColDogStudios.ColDogLocker.Infrastructure</RootNamespace>
   </PropertyGroup>
 
