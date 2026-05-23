@@ -28,7 +28,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             ShowMenuTitle?.Invoke("Main Menu > Check for Updates");
 
             // Log the start of the update check
-            Logger.AddEntry("Starting update check.", LogLevel.Info);
+            Logger.Log(LogLevel.Info, "Starting update check");
 
             // Create an HttpClient instance
             using HttpClient client = new();
@@ -63,7 +63,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     }
                 }
 
-                Logger.AddEntry($"Update available: {currentVersion} -> {latestVersion}", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, $"Update available: {currentVersion} -> {latestVersion}");
 
                 return new UpdateCheckResult
                 {
@@ -77,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
             else
             {
-                Logger.AddEntry($"Application is up to date: {currentVersion}", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, $"Application is up to date: {currentVersion}");
 
                 return new UpdateCheckResult
                 {
@@ -122,7 +122,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             var downloadDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
             var fileName = Path.Combine(downloadDirectory, updateInfo.InstallerFileName);
 
-            Logger.AddEntry($"Downloading update to: {fileName}", LogLevel.Debug);
+            Logger.Log(LogLevel.Debug, $"Downloading update to: {fileName}");
 
             var fileBytes = await client.GetByteArrayAsync(updateInfo.DownloadUrl);
             await File.WriteAllBytesAsync(fileName, fileBytes);
@@ -138,7 +138,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                 throw new Exception("Downloaded file hash does not match the expected hash. The file has been deleted for security reasons.");
             }
 
-            Logger.AddEntry($"Successfully downloaded and verified update: {fileName}", LogLevel.Success);
+            Logger.Log(LogLevel.Info, $"Successfully downloaded and verified update: {fileName}");
             return fileName;
         }
 
@@ -156,7 +156,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             {
                 // Use /releases/latest for stable releases only
                 var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
-                Logger.AddEntry("Checking for updates on Stable channel.", LogLevel.Info);
+                Logger.Log(LogLevel.Info, "Checking for updates on Stable channel.");
                 var json = await client.GetStringAsync(uri);
                 return JsonSerializer.Deserialize<GitHubRelease>(json, options);
             }
@@ -164,7 +164,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             {
                 // Use /releases and get the first item (most recent, including prereleases)
                 var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
-                Logger.AddEntry("Checking for updates on Prerelease channel.", LogLevel.Info);
+                Logger.Log(LogLevel.Info, "Checking for updates on Prerelease channel.");
                 var json = await client.GetStringAsync(uri);
                 var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, options);
 

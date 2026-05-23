@@ -55,6 +55,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             // Initialize UI state
             UpdateStatusBar();
             UpdateCommandStates();
+            UpdateDeveloperMenuVisibility();
 
             // Load lockers from database
             LoadLockers();
@@ -526,22 +527,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
         }
 
-        private void Documentation_Click(object sender, RoutedEventArgs e)
+        private void DevInfo_Click(object sender, RoutedEventArgs e)
         {
-            try
+            var devDialog = new Dialogs.DevDialog
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://github.com/ColDog-Studios/ColDog-Locker",
-                    UseShellExecute = true
-                });
-            }
-            catch { }
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-            Dialogs.AboutDialog.Show(this);
+                Owner = this
+            };
+            devDialog.ShowDialog();
         }
 
         private void TestErrorDialog_Click(object sender, RoutedEventArgs e)
@@ -560,6 +552,24 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     "Test Error Dialog",
                     this);
             }
+        }
+
+        private void Documentation_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/ColDog-Studios/ColDog-Locker",
+                    UseShellExecute = true
+                });
+            }
+            catch { }
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            Dialogs.AboutDialog.Show(this);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -697,6 +707,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             var settings = SettingsManager.Settings;
 
             // Theme is already applied by the SettingsDialog via ThemeService
+
+            // Update developer menu visibility if DevMode changed
+            UpdateDeveloperMenuVisibility();
+        }
+
+        private void UpdateDeveloperMenuVisibility()
+        {
+            if (DeveloperMenu != null)
+            {
+                DeveloperMenu.Visibility = SettingsManager.Settings.DevMode ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
 
         #endregion

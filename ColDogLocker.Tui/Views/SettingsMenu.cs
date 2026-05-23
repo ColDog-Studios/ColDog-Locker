@@ -116,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             SettingsManager.SaveSettings();
 
             // Log the successful update of settings
-            Logger.AddEntry("Settings updated successfully.", LogLevel.Success);
+            Logger.Log(LogLevel.Info, "Settings updated successfully.");
 
             Console.WriteLine("\nSettings updated successfully!");
             Console.WriteLine("\nNew Configuration:");

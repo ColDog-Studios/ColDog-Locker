@@ -136,6 +136,17 @@
                 </MenuItem>
             </MenuItem>
 
+            <!-- Developer Menu (Only visible in Dev Mode) -->
+            <MenuItem x:Name="DeveloperMenu" Header="De_veloper" Height="32">
+                <MenuItem Header="_Dev Info" Click="DevInfo_Click">
+                    <MenuItem.Icon>
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
+                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"></MenuItem>
+            </MenuItem>
+
             <!-- Help Menu -->
             <MenuItem Header="_Help" Click="MenuItem_Click" Height="32">
                 <MenuItem Header="_Documentation" Click="Documentation_Click">
@@ -143,9 +154,6 @@
                         <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"></MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
                 <MenuItem Header="_About" Click="About_Click">
                     <MenuItem.Icon>
                         <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>

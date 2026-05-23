@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -34,16 +35,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void LoadSystemInformation()
         {
             // Set application version
-            try
-            {
-                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                var version = assembly.GetName().Version;
-                VersionText.Text = $"Version {version?.ToString(3) ?? "1.0.0"}";
-            }
-            catch
-            {
-                VersionText.Text = "Version 1.0.0";
-            }
+            VersionText.Text = $"Version {BuildInfo.Version ?? "Version unknown"}";
 
             // Set OS information
             try

@@ -21,11 +21,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for settings persistence")]
         public static void LoadSettings()
         {
-            Logger.AddEntry("Loading settings.", LogLevel.Info);
+            Logger.Log(LogLevel.Info, "Loading settings");
 
             if (!File.Exists(_settingsFile))
             {
-                Logger.AddEntry("Settings file not found.", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, "Settings file not found.");
                 InitializeSettings();
                 return;
             }
@@ -47,27 +47,27 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 }
                 catch (IOException ioEx)
                 {
-                    Logger.AddEntry($"Attempt {attempt}: Unable to read settings file ({ioEx.Message}). Retrying...", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})");
                     Thread.Sleep(ReadDelayMs);
                     continue;
                 }
                 catch (Exception ex)
                 {
-                    Logger.AddEntry($"Unexpected error reading settings file: {ex.Message}", LogLevel.Error);
+                    Logger.Log(LogLevel.Error, $"Unexpected error reading settings file", ex);
                     break;
                 }
             }
 
             if (settingsContent == null)
             {
-                Logger.AddEntry("Failed to read settings after multiple attempts. Skipping reload to avoid data loss.", LogLevel.Error);
+                Logger.Log(LogLevel.Error, "Failed to read settings after multiple attempts. Skipping reload to avoid data loss");
                 return;
             }
 
             // If file is empty, initialize defaults
             if (string.IsNullOrWhiteSpace(settingsContent))
             {
-                Logger.AddEntry("Settings file is empty.", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, "Settings file is empty.");
                 InitializeSettings();
                 return;
             }
@@ -86,7 +86,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 }
                 catch (JsonException jsonEx)
                 {
-                    Logger.AddEntry($"Attempt {attempt}: JSON parse error: {jsonEx.Message}. Retrying...", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, $"Attempt {attempt}: JSON parse error: {jsonEx.Message}");
                     Thread.Sleep(ParseDelayMs);
 
                     // Re-read file in case it has finished writing
@@ -98,7 +98,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     }
                     catch (Exception readEx)
                     {
-                        Logger.AddEntry($"Attempt {attempt}: Re-read failed: {readEx.Message}", LogLevel.Debug);
+                        Logger.Log(LogLevel.Debug, $"Attempt {attempt}: Re-read failed: {readEx.Message}");
                     }
 
                     continue;
@@ -110,13 +110,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 Settings = deserializedSettings;
                 ValidateSettings();
                 Logger.SetDevMode(Settings.DevMode);
-                Logger.AddEntry("Settings loaded successfully.", LogLevel.Success);
+                Logger.Log(LogLevel.Info, "Settings loaded successfully");
                 return;
             }
 
             // If we reach here, parsing failed or returned null after retries.
             // Back up the problematic file but do not overwrite it immediately to avoid clobbering user edits.
-            Logger.AddEntry("Settings file appears malformed after retries. Backing up and initializing defaults.", LogLevel.Error);
+            Logger.Log(LogLevel.Error, "Settings file appears malformed after retries. Backing up and initializing defaults");
             BackupCorruptedSettings();
             InitializeSettings();
         }
@@ -124,7 +124,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         // Initialize default settings
         private static void InitializeSettings()
         {
-            Logger.AddEntry("Initializing default settings.", LogLevel.Info);
+            Logger.Log(LogLevel.Info, "Initializing default settings");
 
             Settings = new ApplicationSettings
             {
@@ -138,11 +138,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         // Validate settings and replace null or illegal values with defaults
         private static void ValidateSettings()
         {
-            Logger.AddEntry("Validating settings.", LogLevel.Info);
+            Logger.Log(LogLevel.Debug, "Validating settings");
 
             if (Settings == null)
             {
-                Logger.AddEntry("Settings are null. Initializing default settings.", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, "Settings are null. Initializing default settings");
                 InitializeSettings();
                 return;
             }
@@ -158,7 +158,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 SaveSettings();
             }
 
-            Logger.AddEntry("Settings validated.", LogLevel.Success);
+            Logger.Log(LogLevel.Debug, "Settings validated");
         }
 
         // Save settings to the configuration file
@@ -197,26 +197,26 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     File.Move(tempFile, _settingsFile);
                 }
 
-                Logger.AddEntry("Settings saved successfully.", LogLevel.Success);
+                Logger.Log(LogLevel.Info, "Settings saved successfully.");
             }
             catch (UnauthorizedAccessException ex)
             {
-                Logger.AddEntry($"Access denied when saving settings: {ex.Message}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Access denied when saving settings", ex);
                 CleanupTempFile();
             }
             catch (DirectoryNotFoundException ex)
             {
-                Logger.AddEntry($"Settings directory not found: {ex.Message}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Settings directory not found", ex);
                 CleanupTempFile();
             }
             catch (JsonException ex)
             {
-                Logger.AddEntry($"Failed to serialize settings to JSON: {ex.Message}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Failed to serialize settings to JSON", ex);
                 CleanupTempFile();
             }
             catch (Exception ex)
             {
-                Logger.AddEntry($"Error saving settings: {ex.Message}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
                 CleanupTempFile();
             }
         }
@@ -230,13 +230,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 if (File.Exists(tempFile))
                 {
                     File.Delete(tempFile);
-                    Logger.AddEntry("Temporary settings file cleaned up.", LogLevel.Debug);
+                    Logger.Log(LogLevel.Debug, "Temporary settings file cleaned up.");
                 }
             }
             catch
             {
                 // If we can't clean up the temp file, it's not critical
-                Logger.AddEntry("Failed to clean up temporary settings file.", LogLevel.Debug);
+                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.");
             }
         }
 
@@ -250,12 +250,12 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                     var backupFile = Path.Combine(Variables.localConfig, $"settings_corrupted_{timestamp}.json.bak");
                     File.Copy(_settingsFile, backupFile, true);
-                    Logger.AddEntry($"Corrupted settings file backed up to: {backupFile}", LogLevel.Info);
+                    Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
             }
             catch (Exception ex)
             {
-                Logger.AddEntry($"Failed to backup corrupted settings file: {ex.Message}", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
             }
         }
     }

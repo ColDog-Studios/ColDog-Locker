@@ -1,10 +1,18 @@
 <Project>
   <PropertyGroup>
     <!-- Shared Version Information - Edit version here only -->
-    <Version>0.3.0-pre</Version>
+    <Version>0.3.0-alpha</Version>
     <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
     <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
     <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
+
+    <!-- Language & Compiler Settings -->
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64</RuntimeIdentifiers>
+    <TargetFramework>net10.0</TargetFramework>
     
     <!-- Product Information -->
     <Product>ColDog Locker</Product>
@@ -19,20 +27,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    
-    <!-- Output all projects to root bin directory -->
-    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
-    <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
-    
-    <!-- Alternative: Completely flat structure (all DLLs/EXEs in one folder) -->
-    <!-- Uncomment below and comment above if you want everything in bin\Debug or bin\Release -->
-    <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
-  </PropertyGroup>
 
-  <!-- Exclude test projects from root bin (optional) -->
-  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
-    <!-- Test projects use their local bin folder -->
-    <BaseOutputPath>bin\</BaseOutputPath>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <!-- Output all projects to root bin directory -->
+    <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
 </Project>

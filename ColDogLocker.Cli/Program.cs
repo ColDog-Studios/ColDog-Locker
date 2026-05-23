@@ -3,6 +3,7 @@ using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using System.Runtime.InteropServices;
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -17,7 +18,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 // Initialize application for CLI commands (except for UI launchers)
                 if (args.Length > 0 && args[0].ToLowerInvariant() is not "gui" and not "terminal" and not "tui")
                 {
-                    InitializeForCli();
+                    InitializeCli();
                 }
 
                 int result;
@@ -25,12 +26,14 @@ namespace ColDogStudios.ColDogLocker.Cli
                 // No arguments - show help
                 if (args.Length == 0)
                 {
+                    Logger.Log(LogLevel.Debug, "No CLI command provided");
                     result = HandleHelpCommand(args);
                 }
                 else
                 {
                     // Parse the first argument as the command/subcommand
                     var command = args[0].ToLowerInvariant();
+                    Logger.Log(LogLevel.Debug, $"Received CLI command: {command}");
 
                     result = command switch
                     {
@@ -48,6 +51,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                         "db-vacuum" => DatabaseCommandHandlers.HandleDbVacuum(args),
                         "db-info" => DatabaseCommandHandlers.HandleDbInfo(args),
                         "help" => HandleHelpCommand(args),
+                        "dev" => HandleDevCommand(),
                         "--version" or "-v" => HandleVersionCommand(),
                         _ => HandleUnknownCommand(command)
                     };
@@ -64,14 +68,16 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
             #endif
                 Console.ResetColor();
-                Logger.AddEntry($"Unhandled exception: {ex}", LogLevel.Fatal);
+                Logger.Log(LogLevel.Fatal, $"Unhandled exception", ex);
                 Console.WriteLine();
                 return 1;
             }
         }
 
-        private static void InitializeForCli()
+        private static void InitializeCli()
         {
+            Logger.Log(LogLevel.Debug, "Initializing ColDog Locker CLI");
+
             // Create directories if needed
             if (!Directory.Exists(Variables.localConfig))
             {
@@ -92,7 +98,7 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             try
             {
-                var launcher = Gui.GuiLauncherFactory.CreateLauncher();
+                var launcher = Gui.GuiLauncher.CreateLauncher();
                 return launcher.Launch(Array.Empty<string>());
             }
             catch (PlatformNotSupportedException ex)
@@ -100,7 +106,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.Error.WriteLine($"GUI not available: {ex.Message}");
                 Console.ResetColor();
-                Logger.AddEntry($"GUI not available: {ex.Message}", LogLevel.Warning);
+                Logger.Log(LogLevel.Warning, $"GUI not available: {ex.Message}");
                 return 1;
             }
             catch (Exception ex)
@@ -108,7 +114,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error launching GUI: {ex.Message}");
                 Console.ResetColor();
-                Logger.AddEntry($"Error launching GUI: {ex}", LogLevel.Error);
+                Logger.Log(LogLevel.Error, $"Error launching GUI {ex}");
                 return 1;
             }
         }
@@ -135,17 +141,47 @@ namespace ColDogStudios.ColDogLocker.Cli
             return 0;
         }
 
+        private static int HandleDevCommand()
+        {
+            Console.WriteLine($"Environment: {Environment.OSVersion.Platform}");
+            Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}");
+            Console.WriteLine($"Runtime Identifier: {RuntimeInformation.RuntimeIdentifier}");
+            Console.WriteLine($"Framework: {RuntimeInformation.FrameworkDescription}");
+        #if DEBUG
+            Console.WriteLine("Build: DEBUG");
+        #else
+            Console.WriteLine("Build: RELEASE");
+        #endif
+        
+            Console.WriteLine($"\nUser: {Environment.UserName}");
+        
+            Console.WriteLine($"\nLocal Config Location: {Variables.localConfig}");
+            Console.WriteLine($"Current Directory: {Variables.cdlDir}");
+            var logPath = Path.Combine(Variables.localConfig, "logs");
+            Console.WriteLine($"Log Directory: {logPath}");
+            Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
+        
+            var configDrive = new DriveInfo(new DirectoryInfo(Variables.localConfig).Root.Name);
+            Console.WriteLine($"\nAvailable Disk Space: {configDrive.AvailableFreeSpace / (1024 * 1024 * 1024)} GB");
+            Console.WriteLine($"Process Memory: {GC.GetTotalMemory(false) / 1024} KB");
+        
+            return 0;
+        }
+
         private static int HandleVersionCommand()
         {
             var version = typeof(Program).Assembly.GetName().Version;
             Console.WriteLine($"ColDog Locker {BuildInfo.Version}");
             Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
             Console.WriteLine($"Assembly Version: {version}");
+            Console.WriteLine($"Build Date: {BuildInfo.BuildDate}");
+            Console.WriteLine($"Build Time: {BuildInfo.BuildTime}");
             return 0;
         }
 
         private static int HandleUnknownCommand(string command)
         {
+            Logger.Log(LogLevel.Debug, $"Unknown command: {command}");
             Console.Error.WriteLine($"Error: Unknown command '{command}'");
             Console.WriteLine();
             HelpSystem.ShowGeneralHelp();

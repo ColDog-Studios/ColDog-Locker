@@ -58,10 +58,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 password = ConsoleHelper.ReadPassword();
 
                 // Validate password
+                Logger.Log(LogLevel.Debug, "Validating locker password");
                 var validationError = PasswordFilter.ValidatePassword(password);
                 if (validationError != null)
                 {
-                    Logger.AddEntry($"Password not validated: {validationError}", LogLevel.Error);
+                    Logger.Log(LogLevel.Debug, $"Password not validated: {validationError}");
                     Console.WriteLine($"\nPassword not validated: {validationError}. Please try again.");
                     continue;
                 }
@@ -71,30 +72,43 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 confirmPassword = ConsoleHelper.ReadPassword();
 
                 // Validate password confirmation
+                Logger.Log(LogLevel.Debug, "Validating locker password confirmation");
                 if (password == confirmPassword)
                 {
                     break;
                 }
 
+                Logger.Log(LogLevel.Debug, "Passwords do not match");
                 Console.WriteLine("\nPasswords do not match. Please try again.");
             }
 
-            // Hash the password and create locker
+            // Get locker location
             var lockerLocation = Path.Combine(Variables.cdlDir, lockerName);
             
-            // Validate path is not protected
+            // Validate locker path is not protected
+            Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");
             var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
             if (pathValidationError != null)
             {
+                Logger.Log(LogLevel.Error, $"Locker path validation failed: {pathValidationError}");
                 Console.WriteLine($"\nError: {pathValidationError}");
                 Console.Write("Press Enter to continue...");
                 Console.ReadLine();
                 return;
             }
+
+            //TODO: Ensure hashing and creation is validated properly
             
+            // Hash the password
+            Logger.Log(LogLevel.Debug, "Hashing locker password");
             var passwordHash = EncryptionHelper.HashPassword(password);
+            Logger.Log(LogLevel.Debug, "Locker password hashed successfully");
+
+            // Create the locker
+            Logger.Log(LogLevel.Debug, $"Creating locker: {lockerName} at {lockerLocation}");
             var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
             LockerService.AddLocker(locker);
+            Logger.Log(LogLevel.Info, $"Locker created successfully: {lockerName}");
         }
 
         // Remove an existing locker /////////////////////////////////////////////////////////////////////////////
