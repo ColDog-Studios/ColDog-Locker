@@ -304,16 +304,10 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
                 RotateLogFileIfNeeded();
 
-                string line;
-                if (_logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    line = JsonConvert.SerializeObject(logEntry, Formatting.None);
-                }
-                else
-                {
+                string line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
+                    ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                     // Plain text: write session marker on first entry of a new session
-                    line = FormatPlainText(logEntry);
-                }
+                    : FormatPlainText(logEntry);
 
                 lock (_lockObject)
                 {
