@@ -17,6 +17,58 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <DockPanel>
+
+        <!-- App shell: header + sidebar + content -->
+        <Menu DockPanel.Dock="Top"
+              Background="#002e44">
+            <!-- File Menu -->
+            <MenuItem Header="_File" />
+                <MenuItem Header="_New Locker" Click="New_Click" InputGesture="Ctrl+N" />
+                <Separator />
+                <MenuItem Header="E_xit" Click="Exit_Click" InputGesture="Alt+F4" />
+            <!-- Locker Menu -->
+            <MenuItem Header="_Locker" />
+                <MenuItem Header="_Lock" Click="Lock_Click" InputGesture="Ctrl+L" />
+                <MenuItem Header="_Unlock" Click="Unlock_Click" InputGesture="Ctrl+U" />
+                <Separator />
+                <MenuItem Header="_Remove" Click="Remove_Click" InputGesture="Delete" />
+                <Separator />
+                <MenuItem Header="_Properties" Click="Properties_Click" />
+                <MenuItem Header="_Open Location" Click="OpenLocation_Click" />
+            <!-- View Menu -->
+            <MenuItem Header="_View" />
+                <MenuItem Header="_Toggle View" Click="ToggleView_Click" />
+                <MenuItem Header="_Refresh" Click="Refresh_Click" InputGesture="F5" />
+            <!-- Tools Menu -->
+            <MenuItem Header="Tools" />
+                <MenuItem Header="_Settings" Click="Settings_Click" />
+                <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click" />
+#DEBUG
+            <!-- Developer Menu (Only visible in Dev Mode)-->
+            <MenuItem Header="_Developer" />
+                <MenuItem Header="_Dev Info" Click="DevInfo_Click" />
+                <Separator />
+                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click" />
+#ENDDEBUG
+            <MenuItem Header="_Help" />
+                <MenuItem Header="_Documentation" Click="Documentation_Click" />
+                <Separator />
+                <MenuItem Header="_About" Click="About_Click" />
+        </Menu>
+
+        <!-- TODO: Toolbar -->
+
+        <!-- TODO: Status Bar -->
+
+        <!-- TODO: Main Content -->
+
+        <Grid RowDefinitions="*,Auto">
+            <!-- Content area: main content + status bar -->
+            <ContentControl Grid.Row="0" />
+            <TextBlock Grid.Row="1" Background="Gray" Text="Ready" />
+        </Grid>
+
+    </DockPanel>
 
 </Window>

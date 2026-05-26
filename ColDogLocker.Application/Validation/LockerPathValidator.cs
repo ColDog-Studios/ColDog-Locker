@@ -6,7 +6,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
     /// Validates locker paths to prevent malicious use for ransomware or system damage.
     /// Ensures critical system directories and user data folders cannot be locked.
     /// </summary>
-    public static class LockerPathValidator
+    public static class LockerPathValidator // TODO: Rename to LockerPathFilter to be consistent with PasswordFilter
     {
         // Paths that block the exact folder AND all subdirectories (system paths)
         private static readonly string[] _systemProtectedPaths;
@@ -245,8 +245,8 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         {
             // Check if path is in format "c:" or matches a drive root
             return normalizedPath.Length == 2 && normalizedPath[1] == ':' ||
-                   DriveInfo.GetDrives().Any(d => 
-                       d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant() == normalizedPath);
+                DriveInfo.GetDrives().Any(d => 
+                    d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant() == normalizedPath);
         }
 
         /// <summary>

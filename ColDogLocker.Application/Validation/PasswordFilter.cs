@@ -8,6 +8,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
 
     public class PasswordFilter
     {
+        // TODO: Probably change this to use a short list and use pattern matching to catch more variations
         private static readonly string[] _commonWords =
         [
             "password",
@@ -23,43 +24,22 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             "football",
             "baseball",
             "basketball",
-            "iloveyou",
-            "welcome",
-            "dragon",
-            "sunshine",
-            "princess",
             "master",
-            "hello",
-            "freedom",
-            "whatever",
-            "trustno1",
             "123456789",
             "12345678",
             "12345",
             "1234",
             "1234567",
             "1234567890",
-            "password1",
-            "password123",
-            "admin123",
-            "admin2024",
-            "locker123",
-            "root123",
             "user",
             "test",
             "guest",
-            "qwerty123",
-            "letmein123",
             "adfghjk",
             "zxcvbnm",
             "asdfghjkl",
             "qazwsx",
             "1q2w3e4r",
-            "1qaz2wsx",
-            "password!",
-            "admin!",
-            "locker!",
-            "root!"
+            "1qaz2wsx"
         ];
 
         private static readonly List<Func<string, bool>> _securityRules =
@@ -84,7 +64,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         /// Gets a list of all password requirements with their current status.
         /// Useful for displaying dynamic password requirement indicators in UI.
         /// </summary>
-        public static List<PasswordRequirement> GetPasswordRequirements(string password)
+        public static List<PasswordRequirement> GetPasswordRequirements(string password) // TODO: change function name to Validate so calling is PasswordFilter.Validate(password)
         {
             var requirements = new List<PasswordRequirement>();
 
