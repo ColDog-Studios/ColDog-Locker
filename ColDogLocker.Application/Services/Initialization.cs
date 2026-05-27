@@ -10,6 +10,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     {
         public static async Task InitializeAsync()
         {
+            // Load settings immediately to ensure logging is configured correctly from the start
+            SettingsManager.LoadSettings();
+
             Logger.Log(LogLevel.Debug, "ColDog Locker initialization started.");
 
             // Create CDL directories if they do not already exist
@@ -29,8 +32,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             // Initialize database
             LockerRepository.InitializeDatabase();
 
-            // Load settings and lockers
-            SettingsManager.LoadSettings();
+            // Load lockers
             LockerService.LoadLockers();
 
             // Initialize file watchers

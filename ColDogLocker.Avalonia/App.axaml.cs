@@ -13,6 +13,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia
     {
         public override void Initialize()
         {
+            // Initialize ColDog Locker (database, settings, logging)
+            //await Initialization.InitializeAsync();
+
             AvaloniaXamlLoader.Load(this);
         }
 

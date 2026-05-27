@@ -20,9 +20,6 @@ namespace ColDogStudios.ColDogLocker.Tui
             {
                 Logger.Log(LogLevel.Debug, "Launching ColDog Locker TUI");
 
-                // Initialize the application
-                Initialization.InitializeAsync().GetAwaiter().GetResult();
-
                 // Set up the UpdateManager menu title delegate
                 UpdateManager.ShowMenuTitle = MainMenu.MenuTitle;
 

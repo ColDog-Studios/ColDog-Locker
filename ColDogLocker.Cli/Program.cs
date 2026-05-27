@@ -11,19 +11,14 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         private static int Main(string[] args)
         {
+            // Initialize the application
+            Initialization.InitializeAsync().GetAwaiter().GetResult();
+
+            // New line for better readability in console output
             Console.WriteLine();
-            // DELETE LOG CALLS UNDERNEATH - DEBUGGING ONLY
-            Logger.Log(LogLevel.Info, $"Starting ColDog Locker CLI - Version {BuildInfo.Version} (Build {BuildInfo.BuildVersion})");
-            Logger.Log(LogLevel.Debug, $"Runtime: {RuntimeInformation.FrameworkDescription}, OS: {RuntimeInformation.OSDescription}, Arch: {RuntimeInformation.ProcessArchitecture}");
 
             try
             {
-                // Initialize application for CLI commands (except for UI launchers)
-                if (args.Length > 0 && args[0].ToLowerInvariant() is not "gui" and not "terminal" and not "tui")
-                {
-                    InitializeCli();
-                }
-
                 int result;
 
                 // No arguments - show help
@@ -75,24 +70,6 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.WriteLine();
                 return 1;
             }
-        }
-
-        private static void InitializeCli()
-        {
-            Logger.Log(LogLevel.Debug, "Initializing ColDog Locker CLI");
-
-            // Create directories if needed
-            if (!Directory.Exists(Variables.localConfig))
-            {
-                Directory.CreateDirectory(Variables.localConfig);
-            }
-
-            // Initialize database and migrate from JSON if needed
-            Infrastructure.Data.LockerRepository.InitializeDatabase();
-
-            // Load settings and lockers (minimal initialization for CLI)
-            SettingsManager.LoadSettings();
-            LockerService.LoadLockers();
         }
 
         #region UI Launchers

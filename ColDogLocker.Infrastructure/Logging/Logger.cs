@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
@@ -136,7 +137,6 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
         static Logger()
         {
-            LoadConfigFromSettings();
             if (_asyncLogging)
             {
                 StartLogWorker();
@@ -158,8 +158,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
 
         private static void LoadConfigFromSettings()
         {
-            var s = ColDogStudios.ColDogLocker.Infrastructure.Configuration.SettingsManager.Settings;
-            Enum.TryParse(s.LogLevel, true, out _minLogLevel);
+            var s = SettingsManager.Settings;
+            //Enum.TryParse(s.LogLevel, true, out _minLogLevel);
+            if (!Enum.TryParse(s.LogLevel, true, out LogLevel parsedLevel))
+            {
+                // Fallback if the setting is missing or invalid
+                parsedLevel = LogLevel.Info;
+                LogDirectly($"Invalid log level in settings: '{s.LogLevel}'. Defaulting to 'Info'.", "WARNING");
+            }
+            _minLogLevel = parsedLevel;
             _logFormat = s.LogFormat ?? "json";
             _maxFileSizeMB = s.MaxFileSizeMB > 0 ? s.MaxFileSizeMB : 10;
             _maxRetainedFiles = s.MaxRetainedFiles > 0 ? s.MaxRetainedFiles : 9;
@@ -170,6 +177,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
             _dateTimeFormat = s.DateTimeFormat ?? "UTC";
             _asyncLogging = s.AsyncLogging;
             _devMode = s.DevMode;
+
+            Log(LogLevel.Debug, $"Logger initialized. Level={_minLogLevel}, Format={_logFormat}, MaxSizeMB={_maxFileSizeMB}, " +
+                       $"MaxRetained={_maxRetainedFiles}, FileLogging={_enableFileLogging}, Compression={_enableCompression}, " +
+                       $"Timestamps={_includeTimestamps}, ThreadId={_includeThreadId}, DateTimeFormat={_dateTimeFormat}, " +
+                       $"Async={_asyncLogging}, DevMode={_devMode}");
         }
 
         private static void StartLogWorker()

@@ -21,75 +21,75 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for settings persistence")]
         public static void LoadSettings()
         {
-            Logger.Log(LogLevel.Info, "Loading settings");
-
+            var pendingLogs = new List<(LogLevel level, string message)>();
+        
             if (!File.Exists(_settingsFile))
             {
-                Logger.Log(LogLevel.Warning, "Settings file not found.");
+                pendingLogs.Add((LogLevel.Warning, "Settings file not found."));
                 InitializeSettings();
+                Logger.ReloadConfig();
+                foreach (var (level, message) in pendingLogs)
+                    Logger.Log(level, message);
                 return;
             }
-
-            // Attempt to read the file with retries to handle editor/save race conditions
+        
             const int MaxReadAttempts = 6;
-            const int ReadDelayMs = 200; // total ~1.2s worst-case
+            const int ReadDelayMs = 200;
             string? settingsContent = null;
-
+        
             for (var attempt = 1; attempt <= MaxReadAttempts; attempt++)
             {
                 try
                 {
-                    // Use a FileStream with shared read access to avoid exclusive locks
                     using var fs = new FileStream(_settingsFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     using var sr = new StreamReader(fs);
                     settingsContent = sr.ReadToEnd();
-                    break; // success
+                    break;
                 }
                 catch (IOException ioEx)
                 {
-                    Logger.Log(LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})");
+                    pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})"));
                     Thread.Sleep(ReadDelayMs);
                     continue;
                 }
                 catch (Exception ex)
                 {
                     Logger.Log(LogLevel.Error, $"Unexpected error reading settings file", ex);
-                    break;
+                    return;
                 }
             }
-
+        
             if (settingsContent == null)
             {
                 Logger.Log(LogLevel.Error, "Failed to read settings after multiple attempts. Skipping reload to avoid data loss");
                 return;
             }
-
-            // If file is empty, initialize defaults
+        
             if (string.IsNullOrWhiteSpace(settingsContent))
             {
-                Logger.Log(LogLevel.Warning, "Settings file is empty.");
+                pendingLogs.Add((LogLevel.Warning, "Settings file is empty."));
                 InitializeSettings();
+                Logger.ReloadConfig();
+                foreach (var (level, message) in pendingLogs)
+                    Logger.Log(level, message);
                 return;
             }
-
-            // Try to parse JSON; if parsing fails, retry a few times because editor may be mid-write
+        
             const int MaxParseAttempts = 4;
             const int ParseDelayMs = 250;
             ApplicationSettings? deserializedSettings = null;
-
+        
             for (var attempt = 1; attempt <= MaxParseAttempts; attempt++)
             {
                 try
                 {
                     deserializedSettings = JsonConvert.DeserializeObject<ApplicationSettings>(settingsContent);
-                    break; // parsed successfully (or null but not throwing)
+                    break;
                 }
                 catch (JsonException jsonEx)
                 {
-                    Logger.Log(LogLevel.Debug, $"Attempt {attempt}: JSON parse error: {jsonEx.Message}");
+                    pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: JSON parse error: {jsonEx.Message}"));
                     Thread.Sleep(ParseDelayMs);
-
-                    // Re-read file in case it has finished writing
                     try
                     {
                         using var fs = new FileStream(_settingsFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -98,24 +98,23 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     }
                     catch (Exception readEx)
                     {
-                        Logger.Log(LogLevel.Debug, $"Attempt {attempt}: Re-read failed: {readEx.Message}");
+                        pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Re-read failed: {readEx.Message}"));
                     }
-
                     continue;
                 }
             }
-
+        
             if (deserializedSettings != null)
             {
                 Settings = deserializedSettings;
                 ValidateSettings();
-                Logger.SetDevMode(Settings.DevMode);
+                Logger.ReloadConfig();
+                foreach (var (level, message) in pendingLogs)
+                    Logger.Log(level, message);
                 Logger.Log(LogLevel.Info, "Settings loaded successfully");
                 return;
             }
-
-            // If we reach here, parsing failed or returned null after retries.
-            // Back up the problematic file but do not overwrite it immediately to avoid clobbering user edits.
+        
             Logger.Log(LogLevel.Error, "Settings file appears malformed after retries. Backing up and initializing defaults");
             BackupCorruptedSettings();
             InitializeSettings();
