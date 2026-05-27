@@ -40,11 +40,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void LoadInformation()
         {
             // Load Build Information
-            VersionText.Text = BuildInfo.Version ?? "Unknown";
-            BuildNumberText.Text = BuildInfo.BuildNumber ?? "Unknown";
-            BuildDateText.Text = BuildInfo.BuildDate ?? "Unknown";
-            BuildTimeText.Text = BuildInfo.BuildTime ?? "Unknown";
-            FullVersionText.Text = BuildInfo.BuildVersion ?? "Unknown";
+            VersionText.Text = AppInfo.SemanticVersion ?? "Unknown";
+            BuildNumberText.Text = AppInfo.BuildNumber ?? "Unknown";
+            BuildDateText.Text = AppInfo.BuildDate ?? "Unknown";
+            BuildTimeText.Text = AppInfo.BuildTime ?? "Unknown";
+            FullVersionText.Text = AppInfo.BuildVersion ?? "Unknown";
 
             // Load System Information
             try

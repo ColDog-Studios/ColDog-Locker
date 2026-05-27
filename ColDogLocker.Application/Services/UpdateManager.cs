@@ -40,7 +40,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
             // Extract the latest version from the release information
             var latestVersion = releaseInfo.TagName;
-            var currentVersion = BuildInfo.Version;
+            var currentVersion = AppInfo.SemanticVersion;
 
             // Compare the latest version with the current version
             if (new Version(latestVersion) > new Version(currentVersion))

@@ -54,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             errorDetails.AppendLine("=== ERROR DETAILS ===");
             errorDetails.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             errorDetails.AppendLine($"Application: ColDog Locker");
-            errorDetails.AppendLine($"Version: {BuildInfo.Version ?? "Unknown version"}");
+            errorDetails.AppendLine($"Version: {AppInfo.SemanticVersion ?? "Unknown version"}");
             errorDetails.AppendLine();
             errorDetails.AppendLine("Error Message:");
             errorDetails.AppendLine(_errorMessage);

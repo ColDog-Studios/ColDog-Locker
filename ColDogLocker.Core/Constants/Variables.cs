@@ -2,7 +2,7 @@ namespace ColDogStudios.ColDogLocker.Core.Constants
 {
     /// <summary>
     /// Application-wide path configuration and constants.
-    /// Build version information is available in BuildInfo (auto-generated at compile time).
+    /// Application Build version information is available in AppInfo (auto-generated at compile time).
     /// </summary>
     public static class Variables
     {

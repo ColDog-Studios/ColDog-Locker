@@ -127,7 +127,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Logging
         private static bool _asyncLogging = false;
         private static bool _devMode = false;
 
-        private static readonly string _appVersion = BuildInfo.Version;
+        private static readonly string _appVersion = AppInfo.SemanticVersion;
         private static readonly string _environment = GetEnvironmentInfo();
 
         // Async logging support

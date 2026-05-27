@@ -70,7 +70,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         {
             Console.Clear();
             var width = Console.WindowWidth;
-            var title = $"ColDog Locker {BuildInfo.Version}";
+            var title = $"ColDog Locker {AppInfo.SemanticVersion}";
             var copyright = "Copyright (c) ColDog Studios. All Rights Reserved.";
             string line = new('#', width);
             var separatorLength = width / 2;

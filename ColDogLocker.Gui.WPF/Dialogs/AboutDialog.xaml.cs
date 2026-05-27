@@ -35,7 +35,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void LoadSystemInformation()
         {
             // Set application version
-            VersionText.Text = $"Version {BuildInfo.Version ?? "Version unknown"}";
+            VersionText.Text = $"Version {AppInfo.SemanticVersion ?? "Version unknown"}";
 
             // Set OS information
             try

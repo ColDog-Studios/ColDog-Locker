@@ -34,10 +34,10 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         {
             MainMenu.MenuTitle("Main Menu > Dev");
 
-            Console.WriteLine($"ColDog Locker {BuildInfo.Version}");
-            Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
-            Console.WriteLine($"Build Date: {BuildInfo.BuildDate}");
-            Console.WriteLine($"Build Time: {BuildInfo.BuildTime}");
+            Console.WriteLine($"ColDog Locker {AppInfo.SemanticVersion}");
+            Console.WriteLine($"Build Version: {AppInfo.BuildVersion}");
+            Console.WriteLine($"Build Date: {AppInfo.BuildDate}");
+            Console.WriteLine($"Build Time: {AppInfo.BuildTime}");
 
             Console.WriteLine($"\nEnvironment: {Environment.OSVersion.Platform}");
             Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}");

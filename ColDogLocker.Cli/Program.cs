@@ -151,11 +151,11 @@ namespace ColDogStudios.ColDogLocker.Cli
         private static int VersionCommand()
         {
             var version = typeof(Program).Assembly.GetName().Version;
-            Console.WriteLine($"ColDog Locker {BuildInfo.Version}");
-            Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
+            Console.WriteLine($"ColDog Locker {AppInfo.SemanticVersion}");
+            Console.WriteLine($"Build Version: {AppInfo.BuildVersion}");
             Console.WriteLine($"Assembly Version: {version}");
-            Console.WriteLine($"Build Date: {BuildInfo.BuildDate}");
-            Console.WriteLine($"Build Time: {BuildInfo.BuildTime}");
+            Console.WriteLine($"Build Date: {AppInfo.BuildDate}");
+            Console.WriteLine($"Build Time: {AppInfo.BuildTime}");
             return 0;
         }
 
