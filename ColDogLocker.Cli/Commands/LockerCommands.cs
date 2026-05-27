@@ -12,11 +12,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
     /// <summary>
     /// Handlers for locker-related CLI commands (new, remove, lock, unlock, list, status, change-password, verify).
     /// </summary>
-    public static class LockerCommandHandlers
+    public static class LockerCommands
     {
-        public static int HandleNew(string[] args)
+        #region New Locker
+        public static int New(string[] args)
         {
-            // Usage: ColDogLocker.exe new <Locker Name> [--path "D:\Lockers"] [--password <password>]
+            // Usage: cdlocker new <Locker Name> [--path "D:\Lockers"] [--password <password>]
 
             if (args.Length < 2)
             {
@@ -140,10 +141,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+        #endregion
 
-        public static int HandleRemove(string[] args)
+        #region Remove Locker
+        public static int Remove(string[] args)
         {
-            // Usage: ColDogLocker.exe remove <Locker Name> [--force] [--delete]
+            // Usage: cdlocker remove <Locker Name> [--force] [--delete]
 
             if (args.Length < 2)
             {
@@ -226,10 +229,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+        #endregion
 
-        public static int HandleLock(string[] args)
+        #region Lock Locker
+        public static int Lock(string[] args)
         {
-            // Usage: ColDogLocker.exe lock <Locker Name> [--password <pass>]
+            // Usage: cdlocker lock <Locker Name> [--password <pass>]
 
             if (args.Length < 2)
             {
@@ -302,10 +307,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+        #endregion
 
-        public static int HandleUnlock(string[] args)
+        #region Unlock Locker
+        public static int Unlock(string[] args)
         {
-            // Usage: ColDogLocker.exe unlock <Locker Name> [--password <pass>]
+            // Usage: cdlocker unlock <Locker Name> [--password <pass>]
 
             if (args.Length < 2)
             {
@@ -378,10 +385,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+        #endregion
 
-        public static int HandleList(string[] args)
+        #region List Lockers
+        public static int List(string[] args)
         {
-            // Usage: ColDogLocker.exe list [--locked|--unlocked]
+            // Usage: cdlocker list [--locked|--unlocked]
 
             // Reload from database to get fresh data
             LockerService.LoadLockers();
@@ -438,10 +447,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             Console.WriteLine($"Total: {lockerList.Count} locker(s)");
             return 0;
         }
+        #endregion
 
-        public static int HandleStatus(string[] args)
+        # region Locker Status
+        public static int Status(string[] args)
         {
-            // Usage: ColDogLocker.exe status <Locker Name>
+            // Usage: cdlocker status <Locker Name>
 
             if (args.Length < 2)
             {
@@ -489,10 +500,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             return 0;
         }
+        #endregion
 
-        public static int HandleChangePassword(string[] args)
+        #region Change Locker Password
+        public static int ChangePassword(string[] args)
         {
-            // Usage: ColDogLocker.exe change-password <Locker Name>
+            // Usage: cdlocker change-password <Locker Name>
 
             if (args.Length < 2)
             {
@@ -592,10 +605,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+        #endregion
 
-        public static int HandleVerify(string[] args)
+        #region Verify Locker
+        public static int Verify(string[] args)
         {
-            // Usage: ColDogLocker.exe verify <Locker Name>
+            // Usage: cdlocker verify <Locker Name>
 
             if (args.Length < 2)
             {
@@ -683,5 +698,6 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 0;
             }
         }
+        #endregion
     }
 }

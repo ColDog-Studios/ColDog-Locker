@@ -6,11 +6,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
     /// <summary>
     /// Handlers for database-related CLI commands (db-vacuum, db-info).
     /// </summary>
-    public static class DatabaseCommandHandlers
+    public static class DatabaseCommands
     {
-        public static int HandleDbVacuum(string[] args)
+        public static int DbVacuum(string[] args)
         {
-            // Usage: ColDogLocker.exe db-vacuum
+            // Usage: cdlocker db-vacuum
 
             try
             {
@@ -34,9 +34,9 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
         }
 
-        public static int HandleDbInfo(string[] args)
+        public static int DbInfo(string[] args)
         {
-            // Usage: ColDogLocker.exe db-info
+            // Usage: cdlocker db-info
 
             try
             {

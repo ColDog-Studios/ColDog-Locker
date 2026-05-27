@@ -6,12 +6,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
     /// <summary>
     /// Handlers for settings-related CLI commands.
     /// </summary>
-    public static class SettingsCommandHandlers
+    public static class SettingsCommands
     {
-        public static int HandleSettings(string[] args)
+        public static int Settings(string[] args)
         {
-            // Usage: ColDogLocker.exe settings [<key> [<value>]]
+            // Usage: cdlocker settings [<key> [<value>]]
 
+            // No arguments - show all settings
             if (args.Length == 1)
             {
                 // Show current settings
@@ -34,6 +35,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 0;
             }
 
+            // Show specific setting or update setting
             if (args.Length == 2)
             {
                 // Show specific setting
