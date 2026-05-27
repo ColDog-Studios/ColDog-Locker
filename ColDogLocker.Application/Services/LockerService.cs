@@ -9,7 +9,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     {
         public static readonly List<LockerModel> Lockers = [];
 
-        // Load locker metadata from the database
+        /// <summary>
+        /// Load locker metadata from the database
+        /// </summary>
         public static void LoadLockers()
         {
             try
@@ -25,7 +27,9 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
         }
 
-        // Save locker metadata to the database (updates existing locker)
+        /// <summary>
+        /// Save locker metadata to the database (updates existing locker)
+        /// </summary>
         public static void SaveLockers()
         {
             // This method is now primarily for backwards compatibility
@@ -45,7 +49,10 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
         }
 
-        // Add a new locker to the metadata
+        /// <summary>
+        /// Add a new locker to the metadata
+        /// </summary>
+        /// <param name="locker"></param>
         public static void AddLocker(LockerModel locker)
         {
             // Create locker directory if it does not exist
@@ -66,7 +73,10 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Info, $"{locker.LockerName} created successfully");
         }
 
-        // Remove a locker from the metadata
+        /// <summary>
+        /// Remove a locker from the metadata
+        /// </summary>
+        /// <param name="locker"></param>
         public static void RemoveLocker(LockerModel locker)
         {
             // Remove the locker from the database and in-memory list
@@ -76,7 +86,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Info, $"{locker.LockerName} removed successfully");
         }
 
-        // Method to lock the locker
+        /// <summary>
+        /// Method to lock the locker
+        /// </summary>
+        /// <param name="locker"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static void Lock(LockerModel locker, string password)
         {
             ArgumentNullException.ThrowIfNull(locker);
@@ -128,7 +145,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Info, $"Locker {locker.LockerName} locked successfully");
         }
 
-        // Method to unlock the locker
+        /// <summary>
+        /// Method to unlock the locker
+        /// </summary>
+        /// <param name="locker"></param>
+        /// <param name="password"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public static void Unlock(LockerModel locker, string password)
         {
             ArgumentNullException.ThrowIfNull(locker);
@@ -172,7 +196,16 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Info, $"{locker.LockerName} unlocked successfully");
         }
 
-        // Method to change a locker's password
+        /// <summary>
+        /// Method to change a locker's password
+        /// </summary>
+        /// <param name="locker"></param>
+        /// <param name="oldPassword"></param>
+        /// <param name="newPassword"></param>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="UnauthorizedAccessException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="DirectoryNotFoundException"></exception>
         public static void ChangePassword(LockerModel locker, string oldPassword, string newPassword)
         {
             ArgumentNullException.ThrowIfNull(locker);
@@ -217,7 +250,11 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Info, $"Password changed successfully for {locker.LockerName}");
         }
 
-        // Method to verify locker integrity and status
+        /// <summary>
+        /// Method to verify locker integrity and status
+        /// </summary>
+        /// <param name="locker"></param>
+        /// <returns></returns>
         public static LockerVerificationResult Verify(LockerModel locker)
         {
             ArgumentNullException.ThrowIfNull(locker);
