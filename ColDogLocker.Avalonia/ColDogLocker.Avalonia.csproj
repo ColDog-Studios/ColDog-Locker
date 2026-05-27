@@ -25,6 +25,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj" />
+        <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
+        <!-- <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" /> -->
+    </ItemGroup>
+
+    <ItemGroup>
         <Resource Include="Assets\cdlIcon.ico" />
     </ItemGroup>
 </Project>

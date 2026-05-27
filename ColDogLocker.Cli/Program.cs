@@ -68,7 +68,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
             #endif
                 Console.ResetColor();
-                Logger.Log(LogLevel.Fatal, $"Unhandled exception", ex);
+                Logger.Log(LogLevel.Fatal, "Unhandled exception", ex);
                 Console.WriteLine();
                 return 1;
             }
