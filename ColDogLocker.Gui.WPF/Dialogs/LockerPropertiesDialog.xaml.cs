@@ -1,15 +1,17 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using Microsoft.Win32;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class LockerPropertiesDialog : Window
     {
         private readonly LockerModel _locker;
-        private bool _hasChanges = false;
+        private bool _hasChanges;
 
         public LockerPropertiesDialog(LockerModel locker)
         {
@@ -30,9 +32,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             if (_locker.IsLocked)
             {
                 StatusIcon.Text = "\uE72E"; // Lock icon
-                StatusIcon.Foreground = System.Windows.Media.Brushes.Red;
+                StatusIcon.Foreground = Brushes.Red;
                 StatusText.Text = "Locked";
-                StatusText.Foreground = System.Windows.Media.Brushes.Red;
+                StatusText.Foreground = Brushes.Red;
 
                 // Disable location browsing when locked
                 LocationWarningText.Visibility = Visibility.Visible;
@@ -40,12 +42,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             else
             {
                 StatusIcon.Text = "\uE785"; // Unlock icon
-                StatusIcon.Foreground = System.Windows.Media.Brushes.Green;
+                StatusIcon.Foreground = Brushes.Green;
                 StatusText.Text = "Unlocked";
-                StatusText.Foreground = System.Windows.Media.Brushes.Green;
+                StatusText.Foreground = Brushes.Green;
 
                 // Enable location browsing when unlocked
-                var browseButton = (System.Windows.Controls.Button)((Grid)LocationTextBox.Parent).Children[1];
+                var browseButton = (Button)((Grid)LocationTextBox.Parent).Children[1];
                 browseButton.IsEnabled = true;
             }
 
@@ -142,11 +144,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog
-            {
-                Title = "Select new location for locker",
-                InitialDirectory = _locker.LockerLocation
-            };
+            var dialog = new OpenFolderDialog { Title = "Select new location for locker", InitialDirectory = _locker.LockerLocation };
 
             if (dialog.ShowDialog() == true)
             {
@@ -198,9 +196,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             if (_hasChanges)
             {
                 if (!MessageDialog.ShowQuestion(
-                    "You have unsaved changes. Are you sure you want to close?",
-                    "Unsaved Changes",
-                    this))
+                        "You have unsaved changes. Are you sure you want to close?",
+                        "Unsaved Changes",
+                        this))
                 {
                     return;
                 }
@@ -212,10 +210,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         public static void Show(LockerModel locker, Window owner)
         {
-            var dialog = new LockerPropertiesDialog(locker)
-            {
-                Owner = owner
-            };
+            var dialog = new LockerPropertiesDialog(locker) { Owner = owner };
             dialog.ShowDialog();
         }
     }

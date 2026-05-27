@@ -14,7 +14,7 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
     <DockPanel>
@@ -64,7 +64,7 @@
         <!-- TODO: Toolbar -->
 
         <!-- TODO: Status Bar -->
-        
+
         <!-- TODO: Main Content -->
         <Grid x:Name="ContentArea"
               Background="Transparent">
@@ -75,8 +75,7 @@
                      Padding="10"
                      Background="Transparent"
                      BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            </ListBox>
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
         </Grid>
 
     </DockPanel>

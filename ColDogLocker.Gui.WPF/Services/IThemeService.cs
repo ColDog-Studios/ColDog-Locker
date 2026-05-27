@@ -1,7 +1,7 @@
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 {
     /// <summary>
-    /// Available application themes
+    ///     Available application themes
     /// </summary>
     public enum AppTheme
     {
@@ -12,23 +12,23 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
     }
 
     /// <summary>
-    /// Service for managing application theme
+    ///     Service for managing application theme
     /// </summary>
     public interface IThemeService
     {
         /// <summary>
-        /// Gets the current theme
+        ///     Gets the current theme
         /// </summary>
         AppTheme CurrentTheme { get; }
 
         /// <summary>
-        /// Sets the application theme
+        ///     Sets the application theme
         /// </summary>
         /// <param name="theme">The theme to set</param>
         Task SetThemeAsync(AppTheme theme);
 
         /// <summary>
-        /// Loads the saved theme from settings
+        ///     Loads the saved theme from settings
         /// </summary>
         Task LoadThemeAsync();
     }

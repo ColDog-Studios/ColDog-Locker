@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
@@ -7,14 +8,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class MessageDialog : Window
     {
-        public enum MessageType
-        {
-            Information,
-            Warning,
-            Error,
-            Question
-        }
-
         public enum MessageButtons
         {
             OK,
@@ -32,7 +25,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             No
         }
 
-        public MessageResult Result { get; private set; } = MessageResult.None;
+        public enum MessageType
+        {
+            Information,
+            Warning,
+            Error,
+            Question
+        }
 
         public MessageDialog(string message, string title = "Message", MessageType type = MessageType.Information, MessageButtons buttons = MessageButtons.OK)
         {
@@ -45,25 +44,27 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             SetupButtons(buttons);
         }
 
+        public MessageResult Result { get; private set; } = MessageResult.None;
+
         private void SetupIcon(MessageType type)
         {
             switch (type)
             {
                 case MessageType.Information:
                     IconText.Text = "\uE946"; // Info icon
-                    IconText.Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0078D4"));
+                    IconText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0078D4"));
                     break;
                 case MessageType.Warning:
                     IconText.Text = "\uE7BA"; // Warning icon
-                    IconText.Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFA500"));
+                    IconText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFA500"));
                     break;
                 case MessageType.Error:
                     IconText.Text = "\uE783"; // Error icon
-                    IconText.Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#E81123"));
+                    IconText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E81123"));
                     break;
                 case MessageType.Question:
                     IconText.Text = "\uE897"; // Help icon
-                    IconText.Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0078D4"));
+                    IconText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0078D4"));
                     break;
             }
         }
@@ -75,18 +76,18 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             switch (buttons)
             {
                 case MessageButtons.OK:
-                    AddButton("OK", MessageResult.OK, isDefault: true);
+                    AddButton("OK", MessageResult.OK, true);
                     break;
                 case MessageButtons.OKCancel:
-                    AddButton("OK", MessageResult.OK, isDefault: true);
+                    AddButton("OK", MessageResult.OK, true);
                     AddButton("Cancel", MessageResult.Cancel, isCancel: true);
                     break;
                 case MessageButtons.YesNo:
-                    AddButton("Yes", MessageResult.Yes, isDefault: true);
+                    AddButton("Yes", MessageResult.Yes, true);
                     AddButton("No", MessageResult.No);
                     break;
                 case MessageButtons.YesNoCancel:
-                    AddButton("Yes", MessageResult.Yes, isDefault: true);
+                    AddButton("Yes", MessageResult.Yes, true);
                     AddButton("No", MessageResult.No);
                     AddButton("Cancel", MessageResult.Cancel, isCancel: true);
                     break;
@@ -95,7 +96,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void AddButton(string content, MessageResult result, bool isDefault = false, bool isCancel = false)
         {
-            var button = new System.Windows.Controls.Button
+            var button = new Button
             {
                 Content = content,
                 MinWidth = 80,
@@ -125,7 +126,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         }
 
         // Static helper methods for easy usage
-        public static MessageResult Show(string message, string title = "Message", MessageType type = MessageType.Information, MessageButtons buttons = MessageButtons.OK, Window? owner = null)
+        public static MessageResult Show(string message, string title = "Message", MessageType type = MessageType.Information,
+            MessageButtons buttons = MessageButtons.OK, Window? owner = null)
         {
             var dialog = new MessageDialog(message, title, type, buttons);
             if (owner != null)

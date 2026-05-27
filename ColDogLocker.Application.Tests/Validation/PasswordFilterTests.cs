@@ -115,8 +115,8 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         }
 
         [Theory]
-        [InlineData("Abcdefghij12!")]  // 13 chars
-        [InlineData("Abcdefghij1!")]  // 12 chars
+        [InlineData("Abcdefghij12!")] // 13 chars
+        [InlineData("Abcdefghij1!")] // 12 chars
         public void ValidatePassword_WithMinimumAndAboveLength_ShouldReturnNull(string password)
         {
             // Act
@@ -127,13 +127,13 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
         }
 
         [Theory]
-        [InlineData("Valid!Pass123")]  // ! is special, 13 chars
-        [InlineData("Valid@Pass123")]  // @ is special, 13 chars
-        [InlineData("Valid#Pass123")]  // # is special, 13 chars
-        [InlineData("Valid$Pass123")]  // $ is special, 13 chars
-        [InlineData("Valid%Pass123")]  // % is special, 13 chars
-        [InlineData("Valid&Pass123")]  // & is special, 13 chars
-        [InlineData("Valid*Pass123")]  // * is special, 13 chars
+        [InlineData("Valid!Pass123")] // ! is special, 13 chars
+        [InlineData("Valid@Pass123")] // @ is special, 13 chars
+        [InlineData("Valid#Pass123")] // # is special, 13 chars
+        [InlineData("Valid$Pass123")] // $ is special, 13 chars
+        [InlineData("Valid%Pass123")] // % is special, 13 chars
+        [InlineData("Valid&Pass123")] // & is special, 13 chars
+        [InlineData("Valid*Pass123")] // * is special, 13 chars
         public void ValidatePassword_WithVariousSpecialCharacters_ShouldReturnNull(string password)
         {
             // Act
@@ -217,8 +217,8 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
                 var result = PasswordFilter.ValidatePassword(password);
                 Assert.NotNull(result);
                 // The error could be about lowercase letter (for all caps) or the password word
-                Assert.True(result.Contains("password", StringComparison.OrdinalIgnoreCase) || 
-                           result.Contains("lowercase", StringComparison.OrdinalIgnoreCase));
+                Assert.True(result.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+                            result.Contains("lowercase", StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -254,7 +254,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Validation
             // All requirements except "No common words" should not be met
             var securityRequirements = requirements.Where(r => !r.Description.Contains("common word"));
             Assert.All(securityRequirements, req => Assert.False(req.IsMet));
-            
+
             // Common word requirement should be met (empty string has no common words)
             var commonWordRequirement = requirements.First(r => r.Description.Contains("common word"));
             Assert.True(commonWordRequirement.IsMet);

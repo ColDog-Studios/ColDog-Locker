@@ -4,7 +4,7 @@ using ColDogStudios.ColDogLocker.Infrastructure.Data;
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
     /// <summary>
-    /// Handlers for database-related CLI commands (db-vacuum, db-info).
+    ///     Handlers for database-related CLI commands (db-vacuum, db-info).
     /// </summary>
     public static class DatabaseCommands
     {
@@ -22,7 +22,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 SettingsManager.SaveSettings();
 
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Database vacuumed successfully.");
+                Console.WriteLine("Database vacuumed successfully.");
                 Console.ResetColor();
                 Console.WriteLine($"Reclaimed: {reclaimed:N0} bytes ({reclaimed / 1024.0:F2} KB)");
                 return 0;

@@ -7,36 +7,39 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
 {
     public static class SettingsManager
     {
+        // Path to the settings file
+        private static readonly string _settingsFile = Path.Combine(Variables.LocalConfig, "settings.json");
+
         // Timestamp of the last time the application wrote the settings file (UTC).
         // FileWatcherManager uses this to ignore change events caused by our own saves.
         public static DateTime? LastSaveUtc { get; private set; }
 
-        // Path to the settings file
-        private static readonly string _settingsFile = Path.Combine(Variables.localConfig, "settings.json");
-
         // Property to hold the application settings
-        public static ApplicationSettings Settings { get; set; } = new ApplicationSettings();
+        public static ApplicationSettings Settings { get; set; } = new();
 
         // Load settings from the configuration file
         [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "JSON serialization needed for settings persistence")]
         public static void LoadSettings()
         {
             var pendingLogs = new List<(LogLevel level, string message)>();
-        
+
             if (!File.Exists(_settingsFile))
             {
                 pendingLogs.Add((LogLevel.Warning, "Settings file not found."));
                 InitializeSettings();
                 Logger.ReloadConfig();
                 foreach (var (level, message) in pendingLogs)
+                {
                     Logger.Log(level, message);
+                }
+
                 return;
             }
-        
+
             const int MaxReadAttempts = 6;
             const int ReadDelayMs = 200;
             string? settingsContent = null;
-        
+
             for (var attempt = 1; attempt <= MaxReadAttempts; attempt++)
             {
                 try
@@ -50,35 +53,37 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 {
                     pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})"));
                     Thread.Sleep(ReadDelayMs);
-                    continue;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(LogLevel.Error, $"Unexpected error reading settings file", ex);
+                    Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
                     return;
                 }
             }
-        
+
             if (settingsContent == null)
             {
                 Logger.Log(LogLevel.Error, "Failed to read settings after multiple attempts. Skipping reload to avoid data loss");
                 return;
             }
-        
+
             if (string.IsNullOrWhiteSpace(settingsContent))
             {
                 pendingLogs.Add((LogLevel.Warning, "Settings file is empty."));
                 InitializeSettings();
                 Logger.ReloadConfig();
                 foreach (var (level, message) in pendingLogs)
+                {
                     Logger.Log(level, message);
+                }
+
                 return;
             }
-        
+
             const int MaxParseAttempts = 4;
             const int ParseDelayMs = 250;
             ApplicationSettings? deserializedSettings = null;
-        
+
             for (var attempt = 1; attempt <= MaxParseAttempts; attempt++)
             {
                 try
@@ -100,21 +105,23 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                     {
                         pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Re-read failed: {readEx.Message}"));
                     }
-                    continue;
                 }
             }
-        
+
             if (deserializedSettings != null)
             {
                 Settings = deserializedSettings;
                 ValidateSettings();
                 Logger.ReloadConfig();
                 foreach (var (level, message) in pendingLogs)
+                {
                     Logger.Log(level, message);
+                }
+
                 Logger.Log(LogLevel.Info, "Settings loaded successfully");
                 return;
             }
-        
+
             Logger.Log(LogLevel.Error, "Settings file appears malformed after retries. Backing up and initializing defaults");
             BackupCorruptedSettings();
             InitializeSettings();
@@ -125,12 +132,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         {
             Logger.Log(LogLevel.Info, "Initializing default settings");
 
-            Settings = new ApplicationSettings
-            {
-                DevMode = false,
-                AutoUpdate = true,
-                UpdateChannel = UpdateChannel.Stable
-            };
+            Settings = new ApplicationSettings { DevMode = false, AutoUpdate = true, UpdateChannel = UpdateChannel.Stable };
             SaveSettings();
         }
 
@@ -200,17 +202,17 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
             }
             catch (UnauthorizedAccessException ex)
             {
-                Logger.Log(LogLevel.Error, $"Access denied when saving settings", ex);
+                Logger.Log(LogLevel.Error, "Access denied when saving settings", ex);
                 CleanupTempFile();
             }
             catch (DirectoryNotFoundException ex)
             {
-                Logger.Log(LogLevel.Error, $"Settings directory not found", ex);
+                Logger.Log(LogLevel.Error, "Settings directory not found", ex);
                 CleanupTempFile();
             }
             catch (JsonException ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to serialize settings to JSON", ex);
+                Logger.Log(LogLevel.Error, "Failed to serialize settings to JSON", ex);
                 CleanupTempFile();
             }
             catch (Exception ex)
@@ -247,7 +249,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
                 if (File.Exists(_settingsFile))
                 {
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    var backupFile = Path.Combine(Variables.localConfig, $"settings_corrupted_{timestamp}.json.bak");
+                    var backupFile = Path.Combine(Variables.LocalConfig, $"settings_corrupted_{timestamp}.json.bak");
                     File.Copy(_settingsFile, backupFile, true);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
@@ -279,105 +281,105 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Configuration
         // General Application Settings
 
         /// <summary>
-        /// Gets or sets a value indicating whether development mode is enabled (includes source file and line numbers in logs).
+        ///     Gets or sets a value indicating whether development mode is enabled (includes source file and line numbers in logs).
         /// </summary>
         public bool DevMode { get; set; }
 
         // Update Settings
 
         /// <summary>
-        /// Gets or sets a value indicating whether auto updates are enabled.
+        ///     Gets or sets a value indicating whether auto updates are enabled.
         /// </summary>
         public bool AutoUpdate { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the update channel (Stable or Prerelease).
+        ///     Gets or sets the update channel (Stable or Prerelease).
         /// </summary>
         public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
 
         // Database Maintenance Settings
 
         /// <summary>
-        /// Gets or sets the number of days between database vacuum operations (0 = disabled).
+        ///     Gets or sets the number of days between database vacuum operations (0 = disabled).
         /// </summary>
         public int DatabaseVacuumInterval { get; set; } = 30;
 
         /// <summary>
-        /// Gets or sets the last time the database was vacuumed.
+        ///     Gets or sets the last time the database was vacuumed.
         /// </summary>
         public DateTime? LastDatabaseVacuum { get; set; }
 
         // Logging Settings (Overhauled)
 
         /// <summary>
-        /// Gets or sets the minimum log level to record (Debug, Info, Warning, Error, Fatal).
+        ///     Gets or sets the minimum log level to record (Debug, Info, Warning, Error, Fatal).
         /// </summary>
         public string LogLevel { get; set; } = "Info";
 
         /// <summary>
-        /// Gets or sets the log format ("json" or "text").
+        ///     Gets or sets the log format ("json" or "text").
         /// </summary>
         public string LogFormat { get; set; } = "json";
 
         /// <summary>
-        /// Gets or sets the maximum log file size in MB before rotation.
+        ///     Gets or sets the maximum log file size in MB before rotation.
         /// </summary>
-        public int MaxFileSizeMB { get; set; } = 10;
+        public int MaxFileSizeMb { get; set; } = 10;
 
         /// <summary>
-        /// Gets or sets the number of rotated log files to keep (not counting current).
+        ///     Gets or sets the number of rotated log files to keep (not counting current).
         /// </summary>
         public int MaxRetainedFiles { get; set; } = 9;
 
         /// <summary>
-        /// Gets or sets whether file logging is enabled.
+        ///     Gets or sets whether file logging is enabled.
         /// </summary>
         public bool EnableFileLogging { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets whether to compress rotated log files.
+        ///     Gets or sets whether to compress rotated log files.
         /// </summary>
         public bool EnableCompression { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets whether to include timestamps in log entries.
+        ///     Gets or sets whether to include timestamps in log entries.
         /// </summary>
         public bool IncludeTimestamps { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets whether to include thread ID in log entries.
+        ///     Gets or sets whether to include thread ID in log entries.
         /// </summary>
         public bool IncludeThreadId { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets the date/time format for timestamps ("UTC" or "Local").
+        ///     Gets or sets the date/time format for timestamps ("UTC" or "Local").
         /// </summary>
         public string DateTimeFormat { get; set; } = "UTC";
 
         /// <summary>
-        /// Gets or sets whether to enable asynchronous logging.
+        ///     Gets or sets whether to enable asynchronous logging.
         /// </summary>
         public bool AsyncLogging { get; set; } = true;
 
         // GUI Settings
 
         /// <summary>
-        /// Gets or sets the application theme name.
+        ///     Gets or sets the application theme name.
         /// </summary>
         public string AppTheme { get; set; } = "Auto";
 
         /// <summary>
-        /// Gets or sets a value indicating whether animations are enabled in the GUI.
+        ///     Gets or sets a value indicating whether animations are enabled in the GUI.
         /// </summary>
         public bool EnableAnimations { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the default location for new lockers.
+        ///     Gets or sets the default location for new lockers.
         /// </summary>
-        public string DefaultLockerLocation { get; set; } = Variables.cdlDir;
+        public string DefaultLockerLocation { get; set; } = Variables.CdlDir;
 
         /// <summary>
-        /// Gets or sets a value indicating whether the default view is grid (true) or list (false).
+        ///     Gets or sets a value indicating whether the default view is grid (true) or list (false).
         /// </summary>
         public GuiViewMode DefaultGuiViewMode { get; set; } = GuiViewMode.Grid;
     }

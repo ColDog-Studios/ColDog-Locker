@@ -3,13 +3,13 @@ using System.Text;
 namespace ColDogStudios.ColDogLocker.Infrastructure.Console
 {
     /// <summary>
-    /// Provides console-related utility methods for secure password input and other console operations.
+    ///     Provides console-related utility methods for secure password input and other console operations.
     /// </summary>
     public static class ConsoleHelper
     {
         /// <summary>
-        /// Reads a password from the console with masked input (asterisks).
-        /// Supports backspace for correction.
+        ///     Reads a password from the console with masked input (asterisks).
+        ///     Supports backspace for correction.
         /// </summary>
         /// <returns>The password entered by the user.</returns>
         public static string ReadPassword()
@@ -19,7 +19,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Console
 
             do
             {
-                key = System.Console.ReadKey(intercept: true);
+                key = System.Console.ReadKey(true);
 
                 if (key.Key is not (ConsoleKey.Backspace or ConsoleKey.Enter))
                 {

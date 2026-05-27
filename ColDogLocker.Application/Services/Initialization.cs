@@ -16,17 +16,17 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             Logger.Log(LogLevel.Debug, "ColDog Locker initialization started.");
 
             // Create CDL directories if they do not already exist
-            if (!Directory.Exists(Variables.localConfig))
+            if (!Directory.Exists(Variables.LocalConfig))
             {
-                Directory.CreateDirectory(Variables.localConfig);
-                Logger.Log(LogLevel.Debug, $"Created directory: {Variables.localConfig}");
+                Directory.CreateDirectory(Variables.LocalConfig);
+                Logger.Log(LogLevel.Debug, $"Created directory: {Variables.LocalConfig}");
             }
 
             // Create logs directory if it does not already exist
-            if (!Directory.Exists(Path.Combine(Variables.localConfig, "logs")))
+            if (!Directory.Exists(Path.Combine(Variables.LocalConfig, "logs")))
             {
-                Directory.CreateDirectory(Path.Combine(Variables.localConfig, "logs"));
-                Logger.Log(LogLevel.Debug, $"Created directory: {Path.Combine(Variables.localConfig, "logs")}");
+                Directory.CreateDirectory(Path.Combine(Variables.LocalConfig, "logs"));
+                Logger.Log(LogLevel.Debug, $"Created directory: {Path.Combine(Variables.LocalConfig, "logs")}");
             }
 
             // Initialize database

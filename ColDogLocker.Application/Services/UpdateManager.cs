@@ -1,7 +1,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Application.Services
@@ -36,7 +37,8 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
             // Fetch the latest release information based on configured channel
             var releaseInfo = await FetchLatestReleaseAsync(client)
-                ?? throw new Exception("No releases found. This may be because the repository has no published releases yet, or there is a network connectivity issue.");
+                              ?? throw new Exception(
+                                  "No releases found. This may be because the repository has no published releases yet, or there is a network connectivity issue.");
 
             // Extract the latest version from the release information
             var latestVersion = releaseInfo.TagName;
@@ -75,17 +77,10 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     HashUrl = hashUrl
                 };
             }
-            else
-            {
-                Logger.Log(LogLevel.Debug, $"Application is up to date: {currentVersion}");
 
-                return new UpdateCheckResult
-                {
-                    UpdateAvailable = false,
-                    CurrentVersion = currentVersion,
-                    LatestVersion = latestVersion
-                };
-            }
+            Logger.Log(LogLevel.Debug, $"Application is up to date: {currentVersion}");
+
+            return new UpdateCheckResult { UpdateAvailable = false, CurrentVersion = currentVersion, LatestVersion = latestVersion };
         }
 
         // Download and install update
@@ -145,14 +140,11 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         // Fetch the latest release based on the configured update channel
         private static async Task<GitHubRelease?> FetchLatestReleaseAsync(HttpClient client)
         {
-            var channel = Infrastructure.Configuration.SettingsManager.Settings.UpdateChannel;
+            var channel = SettingsManager.Settings.UpdateChannel;
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-            if (channel == Infrastructure.Configuration.UpdateChannel.Stable)
+            if (channel == UpdateChannel.Stable)
             {
                 // Use /releases/latest for stable releases only
                 var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";

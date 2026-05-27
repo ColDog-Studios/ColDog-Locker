@@ -1,15 +1,10 @@
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class PasswordDialog : Window
     {
-        public string Password { get; private set; } = string.Empty;
-        public bool RememberPassword { get; private set; }
-        public bool Success { get; private set; }
-
         public PasswordDialog(string lockerName)
         {
             InitializeComponent();
@@ -20,13 +15,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             Loaded += (s, e) => PasswordBox.Focus();
         }
 
+        public string Password { get; private set; } = string.Empty;
+        public bool RememberPassword { get; private set; }
+        public bool Success { get; private set; }
+
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             OkButton.IsEnabled = !string.IsNullOrWhiteSpace(PasswordBox.Password);
             ErrorText.Visibility = Visibility.Collapsed;
         }
 
-        private void PasswordBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && OkButton.IsEnabled)
             {

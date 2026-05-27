@@ -10,11 +10,12 @@ using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
     /// <summary>
-    /// Handlers for locker-related CLI commands (new, remove, lock, unlock, list, status, change-password, verify).
+    ///     Handlers for locker-related CLI commands (new, remove, lock, unlock, list, status, change-password, verify).
     /// </summary>
     public static class LockerCommands
     {
         #region New Locker
+
         public static int New(string[] args)
         {
             // Usage: cdlocker new <Locker Name> [--path "D:\Lockers"] [--password <password>]
@@ -48,7 +49,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Determine locker location
             var lockerLocation = customPath is not null
                 ? Path.Combine(customPath, lockerName)
-                : Path.Combine(Variables.cdlDir, lockerName);
+                : Path.Combine(Variables.CdlDir, lockerName);
 
             // Validate path is not protected
             var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
@@ -108,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     {
                         break;
                     }
-                    
+
                     Console.WriteLine($"Password validation failed: {validationError}");
                 }
 
@@ -141,9 +142,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+
         #endregion
 
         #region Remove Locker
+
         public static int Remove(string[] args)
         {
             // Usage: cdlocker remove <Locker Name> [--force] [--delete]
@@ -208,7 +211,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 // Delete directory if requested
                 if (deleteDirectory && Directory.Exists(locker.LockerLocation))
                 {
-                    Directory.Delete(locker.LockerLocation, recursive: true);
+                    Directory.Delete(locker.LockerLocation, true);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
                     Console.ResetColor();
@@ -229,9 +232,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+
         #endregion
 
         #region Lock Locker
+
         public static int Lock(string[] args)
         {
             // Usage: cdlocker lock <Locker Name> [--password <pass>]
@@ -307,9 +312,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+
         #endregion
 
         #region Unlock Locker
+
         public static int Unlock(string[] args)
         {
             // Usage: cdlocker unlock <Locker Name> [--password <pass>]
@@ -385,9 +392,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+
         #endregion
 
         #region List Lockers
+
         public static int List(string[] args)
         {
             // Usage: cdlocker list [--locked|--unlocked]
@@ -430,11 +439,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     Console.WriteLine("No lockers found.");
                 }
 
-                Console.WriteLine($"Create a new locker with: cdlocker new <name>");
+                Console.WriteLine("Create a new locker with: cdlocker new <name>");
                 return 0;
             }
 
-            Console.WriteLine($"{"Name",-20} {"Status",-10} {"Location"}");
+            Console.WriteLine($"{"Name",-20} {"Status",-10} Location");
             Console.WriteLine(new string('-', 80));
 
             foreach (var locker in lockerList)
@@ -447,9 +456,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             Console.WriteLine($"Total: {lockerList.Count} locker(s)");
             return 0;
         }
+
         #endregion
 
         # region Locker Status
+
         public static int Status(string[] args)
         {
             // Usage: cdlocker status <Locker Name>
@@ -500,9 +511,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             return 0;
         }
+
         #endregion
 
         #region Change Locker Password
+
         public static int ChangePassword(string[] args)
         {
             // Usage: cdlocker change-password <Locker Name>
@@ -570,7 +583,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 {
                     break;
                 }
-                
+
                 Console.WriteLine($"Password validation failed: {validationError}");
             }
 
@@ -605,9 +618,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
         }
+
         #endregion
 
         #region Verify Locker
+
         public static int Verify(string[] args)
         {
             // Usage: cdlocker verify <Locker Name>
@@ -683,21 +698,21 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.ResetColor();
                 return 0;
             }
-            else if (result.Errors.Count > 0)
+
+            if (result.Errors.Count > 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Overall: INVALID");
                 Console.ResetColor();
                 return 1;
             }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Overall: WARNING");
-                Console.ResetColor();
-                return 0;
-            }
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Overall: WARNING");
+            Console.ResetColor();
+            return 0;
         }
+
         #endregion
     }
 }

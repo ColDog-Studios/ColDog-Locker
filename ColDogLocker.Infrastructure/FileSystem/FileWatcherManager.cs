@@ -1,6 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 
 namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
 {
@@ -22,15 +22,15 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 Logger.Log(LogLevel.Debug, "Initializing file watchers");
 
                 // Ensure the directory exists before creating watchers
-                if (!Directory.Exists(Variables.localConfig))
+                if (!Directory.Exists(Variables.LocalConfig))
                 {
-                    Directory.CreateDirectory(Variables.localConfig);
+                    Directory.CreateDirectory(Variables.LocalConfig);
                 }
 
                 // Initialize settings file watcher
                 _settingsWatcher = new FileSystemWatcher
                 {
-                    Path = Variables.localConfig,
+                    Path = Variables.LocalConfig,
                     Filter = "settings.json",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                     IncludeSubdirectories = false,
@@ -47,7 +47,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
                 // Initialize lockers DB watcher (lockers.db)
                 _lockersWatcher = new FileSystemWatcher
                 {
-                    Path = Variables.localConfig,
+                    Path = Variables.LocalConfig,
                     Filter = "lockers.db",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                     IncludeSubdirectories = false,
@@ -63,38 +63,38 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to initialize file watchers", ex);
+                Logger.Log(LogLevel.Error, "Failed to initialize file watchers", ex);
             }
         }
 
         private static void OnSettingsChanged(object sender, FileSystemEventArgs e)
         {
-                try
+            try
+            {
+                // If we just saved the settings ourselves, ignore the ensuing file events
+                var now = DateTime.UtcNow;
+                if (SettingsManager.LastSaveUtc.HasValue && now - SettingsManager.LastSaveUtc.Value < TimeSpan.FromSeconds(2))
                 {
-                    // If we just saved the settings ourselves, ignore the ensuing file events
-                    var now = DateTime.UtcNow;
-                    if (SettingsManager.LastSaveUtc.HasValue && now - SettingsManager.LastSaveUtc.Value < TimeSpan.FromSeconds(2))
-                    {
-                        Logger.Log(LogLevel.Debug, $"Settings change ignored because it matches recent own save for '{e.FullPath}' ({e.ChangeType})");
-                        return;
-                    }
-
-                    // Debounce rapid file changes to prevent infinite reload loops
-                    var localNow = DateTime.Now;
-                    if (localNow - _lastSettingsReload < _reloadCooldown)
-                    {
-                        Logger.Log(LogLevel.Debug, $"Settings change ignored due to debounce for '{e.FullPath}' ({e.ChangeType})");
-                        return; // Too soon since last reload, skip this one
-                    }
-
-                    _lastSettingsReload = localNow;
-                    Logger.Log(LogLevel.Debug, $"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings");
-                    OnSettingsFileChanged?.Invoke();
+                    Logger.Log(LogLevel.Debug, $"Settings change ignored because it matches recent own save for '{e.FullPath}' ({e.ChangeType})");
+                    return;
                 }
-                catch (Exception ex)
+
+                // Debounce rapid file changes to prevent infinite reload loops
+                var localNow = DateTime.Now;
+                if (localNow - _lastSettingsReload < _reloadCooldown)
                 {
-                    Logger.Log(LogLevel.Error, $"Exception in OnSettingsChanged", ex);
+                    Logger.Log(LogLevel.Debug, $"Settings change ignored due to debounce for '{e.FullPath}' ({e.ChangeType})");
+                    return; // Too soon since last reload, skip this one
                 }
+
+                _lastSettingsReload = localNow;
+                Logger.Log(LogLevel.Debug, $"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings");
+                OnSettingsFileChanged?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, "Exception in OnSettingsChanged", ex);
+            }
         }
 
         private static void OnLockersChanged(object sender, FileSystemEventArgs e)
@@ -106,13 +106,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Exception in OnLockersChanged", ex);
+                Logger.Log(LogLevel.Error, "Exception in OnLockersChanged", ex);
             }
         }
 
         private static void OnWatcherError(object sender, ErrorEventArgs e)
         {
-            Logger.Log(LogLevel.Error, $"File watcher error", e.GetException());
+            Logger.Log(LogLevel.Error, "File watcher error", e.GetException());
         }
 
         public static void DisposeWatchers()
@@ -125,7 +125,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.FileSystem
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Error disposing file watchers", ex);
+                Logger.Log(LogLevel.Error, "Error disposing file watchers", ex);
             }
         }
     }

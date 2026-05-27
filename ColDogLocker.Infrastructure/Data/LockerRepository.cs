@@ -7,11 +7,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
 {
     public static class LockerRepository
     {
-        private static readonly string _databasePath = Path.Combine(Variables.localConfig, "lockers.db");
+        private static readonly string _databasePath = Path.Combine(Variables.LocalConfig, "lockers.db");
         private static readonly string _connectionString = $"Data Source={_databasePath}";
 
         /// <summary>
-        /// Initialize the database and create the lockers table if it doesn't exist
+        ///     Initialize the database and create the lockers table if it doesn't exist
         /// </summary>
         public static void InitializeDatabase()
         {
@@ -39,13 +39,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to initialize database", ex);
+                Logger.Log(LogLevel.Error, "Failed to initialize database", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Get all lockers from the database
+        ///     Get all lockers from the database
         /// </summary>
         public static List<LockerModel> GetAllLockers()
         {
@@ -65,12 +65,8 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     var locker = new LockerModel(
                         reader.GetString(1), // LockerName
                         reader.GetString(2), // Password
-                        reader.GetString(3)  // LockerLocation
-                    )
-                    {
-                        Guid = reader.GetString(0),
-                        IsLocked = reader.GetInt32(4) == 1
-                    };
+                        reader.GetString(3) // LockerLocation
+                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
                     lockers.Add(locker);
                 }
 
@@ -78,7 +74,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to load lockers from database", ex);
+                Logger.Log(LogLevel.Error, "Failed to load lockers from database", ex);
                 throw;
             }
 
@@ -86,7 +82,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         }
 
         /// <summary>
-        /// Get a single locker by GUID
+        ///     Get a single locker by GUID
         /// </summary>
         public static LockerModel? GetLockerByGuid(string guid)
         {
@@ -105,17 +101,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     return new LockerModel(
                         reader.GetString(1), // LockerName
                         reader.GetString(2), // Password
-                        reader.GetString(3)  // LockerLocation
-                    )
-                    {
-                        Guid = reader.GetString(0),
-                        IsLocked = reader.GetInt32(4) == 1
-                    };
+                        reader.GetString(3) // LockerLocation
+                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to get locker by GUID", ex);
+                Logger.Log(LogLevel.Error, "Failed to get locker by GUID", ex);
                 throw;
             }
 
@@ -123,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         }
 
         /// <summary>
-        /// Get a single locker by name
+        ///     Get a single locker by name
         /// </summary>
         public static LockerModel? GetLockerByName(string name)
         {
@@ -142,17 +134,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
                     return new LockerModel(
                         reader.GetString(1), // LockerName
                         reader.GetString(2), // Password
-                        reader.GetString(3)  // LockerLocation
-                    )
-                    {
-                        Guid = reader.GetString(0),
-                        IsLocked = reader.GetInt32(4) == 1
-                    };
+                        reader.GetString(3) // LockerLocation
+                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
                 }
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to get locker by name", ex);
+                Logger.Log(LogLevel.Error, "Failed to get locker by name", ex);
                 throw;
             }
 
@@ -160,7 +148,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
         }
 
         /// <summary>
-        /// Insert a new locker into the database
+        ///     Insert a new locker into the database
         /// </summary>
         public static void InsertLocker(LockerModel locker)
         {
@@ -191,13 +179,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to insert locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to insert locker", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Update an existing locker in the database
+        ///     Update an existing locker in the database
         /// </summary>
         public static void UpdateLocker(LockerModel locker)
         {
@@ -234,13 +222,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to update locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to update locker", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Delete a locker from the database
+        ///     Delete a locker from the database
         /// </summary>
         public static void DeleteLocker(string guid)
         {
@@ -265,13 +253,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to delete locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to delete locker", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Check if a locker with the given name exists
+        ///     Check if a locker with the given name exists
         /// </summary>
         public static bool LockerExists(string name)
         {
@@ -289,13 +277,13 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to check locker existence", ex);
+                Logger.Log(LogLevel.Error, "Failed to check locker existence", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Vacuum the database to reclaim space and optimize performance
+        ///     Vacuum the database to reclaim space and optimize performance
         /// </summary>
         public static long VacuumDatabase()
         {
@@ -328,23 +316,19 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to vacuum database", ex);
+                Logger.Log(LogLevel.Error, "Failed to vacuum database", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Get database information and statistics
+        ///     Get database information and statistics
         /// </summary>
         public static DatabaseInfo GetDatabaseInfo()
         {
             try
             {
-                var info = new DatabaseInfo
-                {
-                    Path = _databasePath,
-                    Exists = File.Exists(_databasePath)
-                };
+                var info = new DatabaseInfo { Path = _databasePath, Exists = File.Exists(_databasePath) };
 
                 if (!info.Exists)
                 {
@@ -387,7 +371,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Data
     }
 
     /// <summary>
-    /// Database information class
+    ///     Database information class
     /// </summary>
     public class DatabaseInfo
     {

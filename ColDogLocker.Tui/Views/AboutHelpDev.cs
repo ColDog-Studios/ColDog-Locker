@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
 using System.Runtime.InteropServices;
+using ColDogStudios.ColDogLocker.Core.Constants;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -43,21 +43,21 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime Identifier: {RuntimeInformation.RuntimeIdentifier}");
             Console.WriteLine($"Framework: {RuntimeInformation.FrameworkDescription}");
-        #if DEBUG
+#if DEBUG
             Console.WriteLine("Build: DEBUG");
-        #else
+#else
             Console.WriteLine("Build: RELEASE");
-        #endif
-        
+#endif
+
             Console.WriteLine($"\nUser: {Environment.UserName}");
-        
-            Console.WriteLine($"\nLocal Config Location: {Variables.localConfig}");
-            Console.WriteLine($"Current Directory: {Variables.cdlDir}");
-            var logPath = Path.Combine(Variables.localConfig, "logs");
+
+            Console.WriteLine($"\nLocal Config Location: {Variables.LocalConfig}");
+            Console.WriteLine($"Current Directory: {Variables.CdlDir}");
+            var logPath = Path.Combine(Variables.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
-        
-            var configDrive = new DriveInfo(new DirectoryInfo(Variables.localConfig).Root.Name);
+
+            var configDrive = new DriveInfo(new DirectoryInfo(Variables.LocalConfig).Root.Name);
             Console.WriteLine($"\nAvailable Disk Space: {configDrive.AvailableFreeSpace / (1024 * 1024 * 1024)} GB");
             Console.WriteLine($"Process Memory: {GC.GetTotalMemory(false) / 1024} KB");
             Console.ReadLine();

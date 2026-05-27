@@ -1,3 +1,4 @@
+using ColDogStudios.ColDogLocker.Application.Validation;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Infrastructure.Data;
 using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
@@ -10,7 +11,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         public static readonly List<LockerModel> Lockers = [];
 
         /// <summary>
-        /// Load locker metadata from the database
+        ///     Load locker metadata from the database
         /// </summary>
         public static void LoadLockers()
         {
@@ -22,13 +23,13 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"An error occurred while loading lockers from database. Starting with empty locker list", ex);
+                Logger.Log(LogLevel.Error, "An error occurred while loading lockers from database. Starting with empty locker list", ex);
                 Lockers.Clear(); // Ensure we have a clean state
             }
         }
 
         /// <summary>
-        /// Save locker metadata to the database (updates existing locker)
+        ///     Save locker metadata to the database (updates existing locker)
         /// </summary>
         public static void SaveLockers()
         {
@@ -44,13 +45,13 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"An error occurred while saving lockers to database", ex);
+                Logger.Log(LogLevel.Error, "An error occurred while saving lockers to database", ex);
                 throw;
             }
         }
 
         /// <summary>
-        /// Add a new locker to the metadata
+        ///     Add a new locker to the metadata
         /// </summary>
         /// <param name="locker"></param>
         public static void AddLocker(LockerModel locker)
@@ -74,7 +75,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         /// <summary>
-        /// Remove a locker from the metadata
+        ///     Remove a locker from the metadata
         /// </summary>
         /// <param name="locker"></param>
         public static void RemoveLocker(LockerModel locker)
@@ -87,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         /// <summary>
-        /// Method to lock the locker
+        ///     Method to lock the locker
         /// </summary>
         /// <param name="locker"></param>
         /// <param name="password"></param>
@@ -103,7 +104,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
             }
 
             // Safety check: Validate path is not protected (in case database was tampered with)
-            var pathValidationError = Validation.LockerPathValidator.ValidatePath(locker.LockerLocation);
+            var pathValidationError = LockerPathValidator.ValidatePath(locker.LockerLocation);
             if (pathValidationError != null)
             {
                 Logger.Log(LogLevel.Fatal, $"Security violation: Attempted to lock protected directory {locker.LockerLocation}");
@@ -146,7 +147,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         /// <summary>
-        /// Method to unlock the locker
+        ///     Method to unlock the locker
         /// </summary>
         /// <param name="locker"></param>
         /// <param name="password"></param>
@@ -197,7 +198,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         /// <summary>
-        /// Method to change a locker's password
+        ///     Method to change a locker's password
         /// </summary>
         /// <param name="locker"></param>
         /// <param name="oldPassword"></param>
@@ -251,7 +252,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         }
 
         /// <summary>
-        /// Method to verify locker integrity and status
+        ///     Method to verify locker integrity and status
         /// </summary>
         /// <param name="locker"></param>
         /// <returns></returns>
@@ -259,12 +260,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
         {
             ArgumentNullException.ThrowIfNull(locker);
 
-            var result = new LockerVerificationResult
-            {
-                LockerName = locker.LockerName,
-                Guid = locker.Guid,
-                IsLocked = locker.IsLocked
-            };
+            var result = new LockerVerificationResult { LockerName = locker.LockerName, Guid = locker.Guid, IsLocked = locker.IsLocked };
 
             // Check if directory exists
             if (!Directory.Exists(locker.LockerLocation))
@@ -333,7 +329,8 @@ namespace ColDogStudios.ColDogLocker.Application.Services
                     result.AddError("Access denied to locker directory");
                 }
 
-                Logger.Log(LogLevel.Info, $"Verification completed for {locker.LockerName}. Status: {(result.IsValid ? "Valid" : result.Errors.Count > 0 ? "Invalid" : "Warning")}");
+                Logger.Log(LogLevel.Info,
+                    $"Verification completed for {locker.LockerName}. Status: {(result.IsValid ? "Valid" : result.Errors.Count > 0 ? "Invalid" : "Warning")}");
             }
             catch (Exception ex)
             {
@@ -346,7 +343,7 @@ namespace ColDogStudios.ColDogLocker.Application.Services
     }
 
     /// <summary>
-    /// Result of locker verification
+    ///     Result of locker verification
     /// </summary>
     public class LockerVerificationResult
     {
@@ -362,7 +359,14 @@ namespace ColDogStudios.ColDogLocker.Application.Services
 
         public bool IsValid => Errors.Count == 0 && DirectoryExists && HasAccess;
 
-        public void AddError(string error) => Errors.Add(error);
-        public void AddWarning(string warning) => Warnings.Add(warning);
+        public void AddError(string error)
+        {
+            Errors.Add(error);
+        }
+
+        public void AddWarning(string warning)
+        {
+            Warnings.Add(warning);
+        }
     }
 }

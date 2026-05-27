@@ -1,15 +1,12 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
-using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Markup.Xaml;
 using ColDogStudios.ColDogLocker.Avalonia.ViewModels;
 using ColDogStudios.ColDogLocker.Avalonia.Views;
 
 namespace ColDogStudios.ColDogLocker.Avalonia
 {
-    public partial class App : Application
+    public class App : Application
     {
         public override void Initialize()
         {
@@ -23,7 +20,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow { DataContext = new MainWindowViewModel(), };
+                desktop.MainWindow = new MainWindow { DataContext = new MainWindowViewModel() };
             }
 
             base.OnFrameworkInitializationCompleted();

@@ -270,7 +270,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Encryption
         public void EncryptFile_WithNonExistentFile_ShouldThrowFileNotFoundException()
         {
             // Arrange
-            var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
+            var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
 
             // Act & Assert
             var exception = Assert.Throws<FileNotFoundException>(() =>
@@ -318,7 +318,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Encryption
         public void DecryptFile_WithNonExistentFile_ShouldThrowFileNotFoundException()
         {
             // Arrange
-            var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
+            var nonExistentFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
 
             // Act & Assert
             var exception = Assert.Throws<FileNotFoundException>(() =>

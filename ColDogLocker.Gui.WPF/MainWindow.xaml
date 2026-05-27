@@ -10,676 +10,674 @@
         Background="Transparent"
         ResizeMode="CanMinimize"
         Loaded="Window_Loaded">
-    
-    <Border CornerRadius="10" 
-            BorderBrush="#80000000" 
+
+    <Border CornerRadius="10"
+            BorderBrush="#80000000"
             BorderThickness="1">
         <Border CornerRadius="10"
                 Background="{DynamicResource AppBackgroundGradientBrush}"
                 ClipToBounds="True">
             <Border.Clip>
-                <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,998,598"/>
+                <RectangleGeometry RadiusX="10" RadiusY="10" Rect="0,0,998,598" />
             </Border.Clip>
-        <DockPanel>
-            <!-- Custom Title Bar with Menu -->
-            <Grid DockPanel.Dock="Top" 
-                  Height="40"
-                  Background="{DynamicResource HeaderGradientBrush}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <!-- App Icon -->
-                <Image Grid.Column="0" 
-                       Source="cdlIcon.ico"
-                       Width="24" 
-                       Height="24"
-                       Margin="10,0,0,0"
-                       VerticalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality"
-                       MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
-                
-                <!-- Draggable Area -->
-                <Border Grid.Column="2" 
-                        Background="Transparent"
-                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
-                
-                <!-- Menu Bar -->
-                <Menu Grid.Column="1" 
-                      x:Name="MainMenu" 
-                      VerticalAlignment="Center"
-                      Height="32"
-                      Background="Transparent">
-                    <Menu.ItemContainerStyle>
-                        <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-                            <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}"/>
-                            <Setter Property="Padding" Value="12,4"/>
-                            <Setter Property="Height" Value="40"/>
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        </Style>
-                    </Menu.ItemContainerStyle>
-            <!-- File Menu -->
-            <MenuItem Header="_File" Height="32">
-                <MenuItem Header="_New Locker" Click="NewLocker_Click" InputGestureText="Ctrl+N">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
+            <DockPanel>
+                <!-- Custom Title Bar with Menu -->
+                <Grid DockPanel.Dock="Top"
+                      Height="40"
+                      Background="{DynamicResource HeaderGradientBrush}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <!-- Locker Menu -->
-            <MenuItem Header="_Locker" Height="32">
-                <MenuItem x:Name="LockMenuItem" Header="_Lock" Click="Lock_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem x:Name="UnlockMenuItem" Header="_Unlock" Click="Unlock_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem x:Name="RemoveMenuItem" Header="_Remove" Click="Remove_Click" InputGestureText="Delete">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem x:Name="PropertiesMenuItem" Header="_Properties" Click="Properties_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem x:Name="OpenLocationMenuItem" Header="Open _Location" Click="OpenLocation_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xED25;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
+                    <!-- App Icon -->
+                    <Image Grid.Column="0"
+                           Source="cdlIcon.ico"
+                           Width="24"
+                           Height="24"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" />
 
-            <!-- View Menu -->
-            <MenuItem Header="_View" Height="32">
-                <MenuItem Header="_Toggle View" Click="ToggleView_Click" InputGestureText="Ctrl+T">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem Header="_Refresh" Click="Refresh_Click" InputGestureText="F5">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
+                    <!-- Draggable Area -->
+                    <Border Grid.Column="2"
+                            Background="Transparent"
+                            MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" />
 
-            <!-- Tools Menu -->
-            <MenuItem Header="_Tools" Height="32">
-                <MenuItem Header="_Settings" Click="Settings_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
+                    <!-- Menu Bar -->
+                    <Menu Grid.Column="1"
+                          x:Name="MainMenu"
+                          VerticalAlignment="Center"
+                          Height="32"
+                          Background="Transparent">
+                        <Menu.ItemContainerStyle>
+                            <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                <Setter Property="Foreground" Value="{DynamicResource HeaderTextBrush}" />
+                                <Setter Property="Padding" Value="12,4" />
+                                <Setter Property="Height" Value="40" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </Menu.ItemContainerStyle>
+                        <!-- File Menu -->
+                        <MenuItem Header="_File" Height="32">
+                            <MenuItem Header="_New Locker" Click="NewLocker_Click" InputGestureText="Ctrl+N">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator Style="{StaticResource MenuSeparatorStyle}" />
+                            <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE711;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
 
-            <!-- Developer Menu (Only visible in Dev Mode) -->
-            <MenuItem x:Name="DeveloperMenu" Header="De_veloper" Height="32">
-                <MenuItem Header="_Dev Info" Click="DevInfo_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator Style="{StaticResource MenuSeparatorStyle}"/>
-                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click"></MenuItem>
-            </MenuItem>
+                        <!-- Locker Menu -->
+                        <MenuItem Header="_Locker" Height="32">
+                            <MenuItem x:Name="LockMenuItem" Header="_Lock" Click="Lock_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem x:Name="UnlockMenuItem" Header="_Unlock" Click="Unlock_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator Style="{StaticResource MenuSeparatorStyle}" />
+                            <MenuItem x:Name="RemoveMenuItem" Header="_Remove" Click="Remove_Click" InputGestureText="Delete">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator Style="{StaticResource MenuSeparatorStyle}" />
+                            <MenuItem x:Name="PropertiesMenuItem" Header="_Properties" Click="Properties_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem x:Name="OpenLocationMenuItem" Header="Open _Location" Click="OpenLocation_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xED25;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
 
-            <!-- Help Menu -->
-            <MenuItem Header="_Help" Click="MenuItem_Click" Height="32">
-                <MenuItem Header="_Documentation" Click="Documentation_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="_About" Click="About_Click">
-                    <MenuItem.Icon>
-                        <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
-                
-                <!-- Window Controls -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="MinimizeButton" 
-                            Content="─" 
-                            Width="40" Height="40"
-                            Click="Minimize_Click"
-                            Style="{DynamicResource WindowControlButtonStyle}"
-                            Foreground="{DynamicResource HeaderTextBrush}"
-                            ToolTip="Minimize"/>
-                    <Button x:Name="CloseButton" 
-                            Content="✕" 
-                            Width="40" Height="40"
-                            Click="Close_Click"
-                            Style="{DynamicResource CloseButtonStyle}"
-                            Foreground="{DynamicResource HeaderTextBrush}"
-                            ToolTip="Close"/>
-                </StackPanel>
-            </Grid>
+                        <!-- View Menu -->
+                        <MenuItem Header="_View" Height="32">
+                            <MenuItem Header="_Toggle View" Click="ToggleView_Click" InputGestureText="Ctrl+T">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE8A9;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator Style="{StaticResource MenuSeparatorStyle}" />
+                            <MenuItem Header="_Refresh" Click="Refresh_Click" InputGestureText="F5">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
 
-        <!-- Toolbar -->
-        <Border DockPanel.Dock="Top" 
-                BorderBrush="{DynamicResource BorderBrush}" 
-                BorderThickness="0,0,0,1">
-            <ToolBarTray IsLocked="True">
-                <ToolBar x:Name="MainToolBar">
-                <ToolBar.Resources>
-                    <Style TargetType="{x:Type ToggleButton}" x:Key="{x:Static ToolBar.ToggleButtonStyleKey}">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                    </Style>
-                </ToolBar.Resources>
-                
-                <!-- New Locker -->
-                <Button Click="NewLocker_Click" 
-                        ToolTip="Create new locker (Ctrl+N)"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
-                
-                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
+                        <!-- Tools Menu -->
+                        <MenuItem Header="_Tools" Height="32">
+                            <MenuItem Header="_Settings" Click="Settings_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE895;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
 
-                <!-- Lock -->
-                <Button x:Name="LockButton" 
-                        Click="Lock_Click" 
-                        ToolTip="Lock selected locker(s)"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
+                        <!-- Developer Menu (Only visible in Dev Mode) -->
+                        <MenuItem x:Name="DeveloperMenu" Header="De_veloper" Height="32">
+                            <MenuItem Header="_Dev Info" Click="DevInfo_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <Separator Style="{StaticResource MenuSeparatorStyle}" />
+                            <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click" />
+                        </MenuItem>
 
-                <!-- Unlock -->
-                <Button x:Name="UnlockButton" 
-                        Click="Unlock_Click" 
-                        ToolTip="Unlock selected locker(s)"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
-                
-                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
+                        <!-- Help Menu -->
+                        <MenuItem Header="_Help" Click="MenuItem_Click" Height="32">
+                            <MenuItem Header="_Documentation" Click="Documentation_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE736;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="_About" Click="About_Click">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource TextPrimaryBrush}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
 
-                <!-- Remove -->
-                <Button x:Name="RemoveButton" 
-                        Click="Remove_Click" 
-                        ToolTip="Remove selected locker(s) (Delete)"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
-                
-                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
+                    <!-- Window Controls -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="MinimizeButton"
+                                Content="─"
+                                Width="40" Height="40"
+                                Click="Minimize_Click"
+                                Style="{DynamicResource WindowControlButtonStyle}"
+                                Foreground="{DynamicResource HeaderTextBrush}"
+                                ToolTip="Minimize" />
+                        <Button x:Name="CloseButton"
+                                Content="✕"
+                                Width="40" Height="40"
+                                Click="Close_Click"
+                                Style="{DynamicResource CloseButtonStyle}"
+                                Foreground="{DynamicResource HeaderTextBrush}"
+                                ToolTip="Close" />
+                    </StackPanel>
+                </Grid>
 
-                <!-- Select All -->
-                <Button x:Name="SelectAllButton" 
-                        Click="SelectAllToggle_Click" 
-                        ToolTip="Select/Deselect all lockers"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE8B3;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
+                <!-- Toolbar -->
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,0,0,1">
+                    <ToolBarTray IsLocked="True">
+                        <ToolBar x:Name="MainToolBar">
+                            <ToolBar.Resources>
+                            </ToolBar.Resources>
 
-                <!-- View Toggle -->
-                <Button x:Name="ViewToggleButton" 
-                        Click="ToggleView_Click" 
-                        ToolTip="Toggle View"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock x:Name="ViewToggleIcon" Text="&#xf2c7;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
+                            <!-- New Locker -->
+                            <Button Click="NewLocker_Click"
+                                    ToolTip="Create new locker (Ctrl+N)"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
 
-                <Separator Style="{StaticResource ToolBarSeparatorStyle}"/>
+                            <Separator Style="{StaticResource ToolBarSeparatorStyle}" />
 
-                <!-- Refresh -->
-                <Button Click="Refresh_Click" 
-                        ToolTip="Refresh locker list (F5)"
-                        Style="{StaticResource ToolBarButtonStyle}">
-                    <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="20"/>
-                </Button>
-            </ToolBar>
-        </ToolBarTray>
-        </Border>
+                            <!-- Lock -->
+                            <Button x:Name="LockButton"
+                                    Click="Lock_Click"
+                                    ToolTip="Lock selected locker(s)"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE72E;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
 
-        <!-- Status Bar -->
-        <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
-            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
-                <TextBlock x:Name="TotalLockersText" Text="0 lockers" Style="{StaticResource StatusBarTextStyle}"/>
-            </StatusBarItem>
-            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
-            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
-                <TextBlock x:Name="LockedCountText" Text="0 locked" Style="{StaticResource StatusBarTextStyle}"/>
-            </StatusBarItem>
-            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
-            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
-                <TextBlock x:Name="UnlockedCountText" Text="0 unlocked" Style="{StaticResource StatusBarTextStyle}"/>
-            </StatusBarItem>
-            <Separator Style="{StaticResource StatusBarSeparatorStyle}"/>
-            <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
-                <TextBlock x:Name="SelectedCountText" Text="0 selected" Style="{StaticResource StatusBarTextStyle}"/>
-            </StatusBarItem>
-        </StatusBar>
+                            <!-- Unlock -->
+                            <Button x:Name="UnlockButton"
+                                    Click="Unlock_Click"
+                                    ToolTip="Unlock selected locker(s)"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE785;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
 
-        <!-- Main Content Area -->
-        <Grid x:Name="ContentArea" Background="Transparent">
-            <!-- Grid View (ListBox with WrapPanel) -->
-            <ListBox x:Name="LockersGridView" 
-                     Visibility="Visible"
-                     SelectionMode="Multiple"
-                     MouseDoubleClick="LockerItem_DoubleClick"
-                     SelectionChanged="LockersView_SelectionChanged"
-                     Padding="10"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" d:ItemsSource="{d:SampleData ItemCount=5}">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel/>
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Margin" Value="4"/>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Width="150" Height="150" 
-                                Background="{DynamicResource CardGradientBrush}"
-                                CornerRadius="8" 
-                                Padding="10"
-                                BorderBrush="{DynamicResource BorderBrush}"
-                                BorderThickness="1">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                
-                                <!-- Icon -->
-                                <TextBlock Grid.Row="0" 
-                                          Text="{Binding IconGlyph}" 
-                                          FontFamily="Segoe Fluent Icons"
-                                          FontSize="48"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                
-                                <!-- Name -->
-                                <TextBlock Grid.Row="1" 
-                                          Text="{Binding Name}" 
-                                          TextAlignment="Center"
-                                          TextTrimming="CharacterEllipsis"
-                                          TextWrapping="Wrap"
-                                          MaxHeight="40"
-                                          Foreground="{DynamicResource TextPrimaryBrush}"
-                                          ToolTip="{Binding Name}"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Select All" Click="SelectAll_Click" x:Name="ContextSelectAllItem"/>
-                        <MenuItem Header="Deselect All" Click="DeselectAll_Click" x:Name="ContextDeselectAllItem"/>
-                        <Separator/>
-                        <MenuItem Header="Lock" Click="Lock_Click" x:Name="ContextLockItem"/>
-                        <MenuItem Header="Unlock" Click="Unlock_Click" x:Name="ContextUnlockItem"/>
-                        <Separator/>
-                        <MenuItem Header="Remove" Click="Remove_Click"/>
-                        <Separator/>
-                        <MenuItem Header="Properties" Click="Properties_Click"/>
-                        <MenuItem Header="Open Location" Click="OpenLocation_Click"/>
-                    </ContextMenu>
-                </ListBox.ContextMenu>
-            </ListBox>
+                            <Separator Style="{StaticResource ToolBarSeparatorStyle}" />
 
-            <!-- Modern List View -->
-            <Grid x:Name="LockersListViewContainer" Visibility="Collapsed">
-                <Grid.Resources>
-                    <!-- GridViewColumnHeader Style with Resizing and Sorting -->
-                    <Style x:Key="ModernGridViewColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
-                        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                        <Setter Property="Padding" Value="8,6"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                            <!-- Remove -->
+                            <Button x:Name="RemoveButton"
+                                    Click="Remove_Click"
+                                    ToolTip="Remove selected locker(s) (Delete)"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
+
+                            <Separator Style="{StaticResource ToolBarSeparatorStyle}" />
+
+                            <!-- Select All -->
+                            <Button x:Name="SelectAllButton"
+                                    Click="SelectAllToggle_Click"
+                                    ToolTip="Select/Deselect all lockers"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE8B3;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
+
+                            <!-- View Toggle -->
+                            <Button x:Name="ViewToggleButton"
+                                    Click="ToggleView_Click"
+                                    ToolTip="Toggle View"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock x:Name="ViewToggleIcon" Text="&#xf2c7;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
+
+                            <Separator Style="{StaticResource ToolBarSeparatorStyle}" />
+
+                            <!-- Refresh -->
+                            <Button Click="Refresh_Click"
+                                    ToolTip="Refresh locker list (F5)"
+                                    Style="{StaticResource ToolBarButtonStyle}">
+                                <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons" FontSize="20" />
+                            </Button>
+                        </ToolBar>
+                    </ToolBarTray>
+                </Border>
+
+                <!-- Status Bar -->
+                <StatusBar x:Name="MainStatusBar" DockPanel.Dock="Bottom">
+                    <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                        <TextBlock x:Name="TotalLockersText" Text="0 lockers" Style="{StaticResource StatusBarTextStyle}" />
+                    </StatusBarItem>
+                    <Separator Style="{StaticResource StatusBarSeparatorStyle}" />
+                    <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                        <TextBlock x:Name="LockedCountText" Text="0 locked" Style="{StaticResource StatusBarTextStyle}" />
+                    </StatusBarItem>
+                    <Separator Style="{StaticResource StatusBarSeparatorStyle}" />
+                    <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                        <TextBlock x:Name="UnlockedCountText" Text="0 unlocked" Style="{StaticResource StatusBarTextStyle}" />
+                    </StatusBarItem>
+                    <Separator Style="{StaticResource StatusBarSeparatorStyle}" />
+                    <StatusBarItem Style="{StaticResource StatusBarItemStyle}">
+                        <TextBlock x:Name="SelectedCountText" Text="0 selected" Style="{StaticResource StatusBarTextStyle}" />
+                    </StatusBarItem>
+                </StatusBar>
+
+                <!-- Main Content Area -->
+                <Grid x:Name="ContentArea" Background="Transparent">
+                    <!-- Grid View (ListBox with WrapPanel) -->
+                    <ListBox x:Name="LockersGridView"
+                             Visibility="Visible"
+                             SelectionMode="Multiple"
+                             MouseDoubleClick="LockerItem_DoubleClick"
+                             SelectionChanged="LockersView_SelectionChanged"
+                             Padding="10"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" d:ItemsSource="{d:SampleData ItemCount=5}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Margin" Value="4" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="150" Height="150"
+                                        Background="{DynamicResource CardGradientBrush}"
+                                        CornerRadius="8"
+                                        Padding="10"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1">
                                     <Grid>
-                                        <!-- Main header area -->
-                                        <Border x:Name="HeaderBorder"
-                                                Background="{TemplateBinding Background}"
-                                                BorderBrush="{TemplateBinding BorderBrush}"
-                                                BorderThickness="{TemplateBinding BorderThickness}"
-                                                Padding="{TemplateBinding Padding}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                
-                                                <!-- Header Content -->
-                                                <ContentPresenter Grid.Column="0"
-                                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                                                
-                                                <!-- Sort Indicator -->
-                                                <TextBlock x:Name="SortArrow" 
-                                                         Grid.Column="1"
-                                                         FontFamily="Segoe Fluent Icons"
-                                                         FontSize="12"
-                                                         Margin="4,0,4,0"
-                                                         VerticalAlignment="Center"
-                                                         Visibility="Collapsed"
-                                                         Foreground="{DynamicResource AccentBrush}"
-                                                         IsHitTestVisible="False"/>
-                                            </Grid>
-                                        </Border>
-                                        
-                                        <!-- Resize Thumb - overlays the right edge -->
-                                        <Thumb x:Name="PART_HeaderGripper"
-                                               HorizontalAlignment="Right"
-                                               Width="6"
-                                               Margin="0,0,-3,0"
-                                               Cursor="SizeWE"
-                                               Opacity="0">
-                                            <Thumb.Template>
-                                                <ControlTemplate TargetType="{x:Type Thumb}">
-                                                    <Border Background="Transparent"/>
-                                                </ControlTemplate>
-                                            </Thumb.Template>
-                                        </Thumb>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Icon -->
+                                        <TextBlock Grid.Row="0"
+                                                   Text="{Binding IconGlyph}"
+                                                   FontFamily="Segoe Fluent Icons"
+                                                   FontSize="48"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                                        <!-- Name -->
+                                        <TextBlock Grid.Row="1"
+                                                   Text="{Binding Name}"
+                                                   TextAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   TextWrapping="Wrap"
+                                                   MaxHeight="40"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   ToolTip="{Binding Name}" />
                                     </Grid>
-                                    <ControlTemplate.Triggers>
-                                        <!-- Hover Effect -->
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                                        </Trigger>
-                                        <!-- Pressed Effect -->
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource BorderBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Select All" Click="SelectAll_Click" x:Name="ContextSelectAllItem" />
+                                <MenuItem Header="Deselect All" Click="DeselectAll_Click" x:Name="ContextDeselectAllItem" />
+                                <Separator />
+                                <MenuItem Header="Lock" Click="Lock_Click" x:Name="ContextLockItem" />
+                                <MenuItem Header="Unlock" Click="Unlock_Click" x:Name="ContextUnlockItem" />
+                                <Separator />
+                                <MenuItem Header="Remove" Click="Remove_Click" />
+                                <Separator />
+                                <MenuItem Header="Properties" Click="Properties_Click" />
+                                <MenuItem Header="Open Location" Click="OpenLocation_Click" />
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                    </ListBox>
 
-                    <!-- Fixed Checkbox Column Header Style (No Resizing) -->
-                    <Style x:Key="CheckboxColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}" BasedOn="{StaticResource ModernGridViewColumnHeaderStyle}">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
-                                    <Border Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <CheckBox x:Name="SelectAllCheckBox"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  Click="SelectAllCheckBox_Click"
-                                                  ToolTip="Select/Deselect All"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
+                    <!-- Modern List View -->
+                    <Grid x:Name="LockersListViewContainer" Visibility="Collapsed">
+                        <Grid.Resources>
+                            <!-- GridViewColumnHeader Style with Resizing and Sorting -->
+                            <Style x:Key="ModernGridViewColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
+                                <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+                                <Setter Property="BorderThickness" Value="0,0,1,1" />
+                                <Setter Property="Padding" Value="8,6" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                            <Grid>
+                                                <!-- Main header area -->
+                                                <Border x:Name="HeaderBorder"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
 
-                    <!-- ListView Item Style -->
-                    <Style x:Key="ModernListViewItemStyle" TargetType="{x:Type ListViewItem}">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}"/>
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type ListViewItem}">
-                                    <Border Background="{TemplateBinding Background}"
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            Padding="{TemplateBinding Padding}">
-                                        <GridViewRowPresenter Content="{TemplateBinding Content}"
-                                                            Columns="{TemplateBinding GridView.ColumnCollection}"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <!-- Hover Effect -->
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-                                        </Trigger>
-                                        <!-- Selected Effect -->
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background">
-                                                <Setter.Value>
-                                                    <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.2"/>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Trigger>
-                                        <!-- Selected + Hover -->
-                                        <MultiTrigger>
-                                            <MultiTrigger.Conditions>
-                                                <Condition Property="IsSelected" Value="True"/>
-                                                <Condition Property="IsMouseOver" Value="True"/>
-                                            </MultiTrigger.Conditions>
-                                            <Setter Property="Background">
-                                                <Setter.Value>
-                                                    <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.3"/>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </MultiTrigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Grid.Resources>
-                
-                <!-- ListView with GridView -->
-                <ListView x:Name="LockersListView"
-                          SelectionMode="Multiple"
-                          MouseDoubleClick="LockerItem_DoubleClick"
-                          SelectionChanged="LockersView_SelectionChanged"
-                          Background="Transparent"
-                          BorderThickness="0"
-                          ItemContainerStyle="{StaticResource ModernListViewItemStyle}"
-                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          ScrollViewer.CanContentScroll="False">
-                    <ListView.View>
-                        <GridView x:Name="LockersGridViewColumns">
-                            <!-- Checkbox Column (Fixed Width) -->
-                            <GridViewColumn Width="48" HeaderContainerStyle="{StaticResource CheckboxColumnHeaderStyle}">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListViewItem}}"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  Margin="12,0,0,0"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                                        <!-- Header Content -->
+                                                        <ContentPresenter Grid.Column="0"
+                                                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
 
-                            <!-- Name Column -->
-                            <GridViewColumn x:Name="NameColumn" 
-                                          Width="200"
-                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Content="Name" 
-                                                        Click="ColumnHeader_Click"
-                                                        Tag="Name"/>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" 
-                                                   Padding="4,4"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Name}"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                                        <!-- Sort Indicator -->
+                                                        <TextBlock x:Name="SortArrow"
+                                                                   Grid.Column="1"
+                                                                   FontFamily="Segoe Fluent Icons"
+                                                                   FontSize="12"
+                                                                   Margin="4,0,4,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Visibility="Collapsed"
+                                                                   Foreground="{DynamicResource AccentBrush}"
+                                                                   IsHitTestVisible="False" />
+                                                    </Grid>
+                                                </Border>
 
-                            <!-- Status Column -->
-                            <GridViewColumn x:Name="StatusColumn"
-                                          Width="120"
-                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Content="Status" 
-                                                        Click="ColumnHeader_Click"
-                                                        Tag="Status"/>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Margin="4">
-                                            <TextBlock FontFamily="Segoe Fluent Icons" 
-                                                     FontSize="14"
-                                                     VerticalAlignment="Center"
-                                                     Margin="0,0,4,0">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="&#xE785;"/> <!-- Unlocked -->
-                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsLocked}" Value="True">
-                                                                <Setter Property="Text" Value="&#xE72E;"/> <!-- Locked -->
-                                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                            <TextBlock VerticalAlignment="Center"
-                                                     Foreground="{DynamicResource TextPrimaryBrush}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="Unlocked"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsLocked}" Value="True">
-                                                                <Setter Property="Text" Value="Locked"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                                                <!-- Resize Thumb - overlays the right edge -->
+                                                <Thumb x:Name="PART_HeaderGripper"
+                                                       HorizontalAlignment="Right"
+                                                       Width="6"
+                                                       Margin="0,0,-3,0"
+                                                       Cursor="SizeWE"
+                                                       Opacity="0">
+                                                    <Thumb.Template>
+                                                        <ControlTemplate TargetType="{x:Type Thumb}">
+                                                            <Border Background="Transparent" />
+                                                        </ControlTemplate>
+                                                    </Thumb.Template>
+                                                </Thumb>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <!-- Hover Effect -->
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                                </Trigger>
+                                                <!-- Pressed Effect -->
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource BorderBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
 
-                            <!-- Last Modified Column -->
-                            <GridViewColumn x:Name="LastModifiedColumn"
-                                          Width="180"
-                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Content="Last Modified" 
-                                                        Click="ColumnHeader_Click"
-                                                        Tag="LastModified"/>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}" 
-                                                   Padding="4,4"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                            <!-- Fixed Checkbox Column Header Style (No Resizing) -->
+                            <Style x:Key="CheckboxColumnHeaderStyle" TargetType="{x:Type GridViewColumnHeader}"
+                                   BasedOn="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <CheckBox x:Name="SelectAllCheckBox"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          Click="SelectAllCheckBox_Click"
+                                                          ToolTip="Select/Deselect All" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
 
-                            <!-- Size Column -->
-                            <GridViewColumn x:Name="SizeColumn"
-                                          Width="100"
-                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Content="Size" 
-                                                        Click="ColumnHeader_Click"
-                                                        Tag="Size"/>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding SizeText}" 
-                                                   Padding="4,4"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding SizeText}"
-                                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
+                            <!-- ListView Item Style -->
+                            <Style x:Key="ModernListViewItemStyle" TargetType="{x:Type ListViewItem}">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource DividerColor}" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <GridViewRowPresenter Content="{TemplateBinding Content}"
+                                                                      Columns="{TemplateBinding GridView.ColumnCollection}" />
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <!-- Hover Effect -->
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                                </Trigger>
+                                                <!-- Selected Effect -->
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.2" />
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Trigger>
+                                                <!-- Selected + Hover -->
+                                                <MultiTrigger>
+                                                    <MultiTrigger.Conditions>
+                                                        <Condition Property="IsSelected" Value="True" />
+                                                        <Condition Property="IsMouseOver" Value="True" />
+                                                    </MultiTrigger.Conditions>
+                                                    <Setter Property="Background">
+                                                        <Setter.Value>
+                                                            <SolidColorBrush Color="{DynamicResource PrimaryColor}" Opacity="0.3" />
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </MultiTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Grid.Resources>
 
-                            <!-- Location Column -->
-                            <GridViewColumn x:Name="LocationColumn"
-                                          Width="300"
-                                          HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
-                                <GridViewColumn.Header>
-                                    <GridViewColumnHeader Content="Location" 
-                                                        Click="ColumnHeader_Click"
-                                                        Tag="Location"/>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Location}" 
-                                                   Padding="4,4"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Location}"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                    <ListView.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Select All" Click="SelectAll_Click" x:Name="ContextSelectAllItem2"/>
-                            <MenuItem Header="Deselect All" Click="DeselectAll_Click" x:Name="ContextDeselectAllItem2"/>
-                            <Separator/>
-                            <MenuItem Header="Lock" Click="Lock_Click" x:Name="ContextLockItem2"/>
-                            <MenuItem Header="Unlock" Click="Unlock_Click" x:Name="ContextUnlockItem2"/>
-                            <Separator/>
-                            <MenuItem Header="Remove" Click="Remove_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Properties" Click="Properties_Click"/>
-                            <MenuItem Header="Open Location" Click="OpenLocation_Click"/>
-                        </ContextMenu>
-                    </ListView.ContextMenu>
-                </ListView>
-            </Grid>
-        </Grid>
-    </DockPanel>
+                        <!-- ListView with GridView -->
+                        <ListView x:Name="LockersListView"
+                                  SelectionMode="Multiple"
+                                  MouseDoubleClick="LockerItem_DoubleClick"
+                                  SelectionChanged="LockersView_SelectionChanged"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  ItemContainerStyle="{StaticResource ModernListViewItemStyle}"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  ScrollViewer.CanContentScroll="False">
+                            <ListView.View>
+                                <GridView x:Name="LockersGridViewColumns">
+                                    <!-- Checkbox Column (Fixed Width) -->
+                                    <GridViewColumn Width="48" HeaderContainerStyle="{StaticResource CheckboxColumnHeaderStyle}">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          Margin="12,0,0,0" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
+                                    <!-- Name Column -->
+                                    <GridViewColumn x:Name="NameColumn"
+                                                    Width="200"
+                                                    HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                        <GridViewColumn.Header>
+                                            <GridViewColumnHeader Content="Name"
+                                                                  Click="ColumnHeader_Click"
+                                                                  Tag="Name" />
+                                        </GridViewColumn.Header>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}"
+                                                           Padding="4,4"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Name}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
+                                    <!-- Status Column -->
+                                    <GridViewColumn x:Name="StatusColumn"
+                                                    Width="120"
+                                                    HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                        <GridViewColumn.Header>
+                                            <GridViewColumnHeader Content="Status"
+                                                                  Click="ColumnHeader_Click"
+                                                                  Tag="Status" />
+                                        </GridViewColumn.Header>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="4">
+                                                    <TextBlock FontFamily="Segoe Fluent Icons"
+                                                               FontSize="14"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,4,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="&#xE785;" /> <!-- Unlocked -->
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsLocked}" Value="True">
+                                                                        <Setter Property="Text" Value="&#xE72E;" /> <!-- Locked -->
+                                                                        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="Unlocked" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsLocked}" Value="True">
+                                                                        <Setter Property="Text" Value="Locked" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
+                                    <!-- Last Modified Column -->
+                                    <GridViewColumn x:Name="LastModifiedColumn"
+                                                    Width="180"
+                                                    HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                        <GridViewColumn.Header>
+                                            <GridViewColumnHeader Content="Last Modified"
+                                                                  Click="ColumnHeader_Click"
+                                                                  Tag="LastModified" />
+                                        </GridViewColumn.Header>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}"
+                                                           Padding="4,4"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding LastModified, StringFormat='MM/dd/yyyy hh:mm:ss tt'}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
+                                    <!-- Size Column -->
+                                    <GridViewColumn x:Name="SizeColumn"
+                                                    Width="100"
+                                                    HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                        <GridViewColumn.Header>
+                                            <GridViewColumnHeader Content="Size"
+                                                                  Click="ColumnHeader_Click"
+                                                                  Tag="Size" />
+                                        </GridViewColumn.Header>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SizeText}"
+                                                           Padding="4,4"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding SizeText}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
+                                    <!-- Location Column -->
+                                    <GridViewColumn x:Name="LocationColumn"
+                                                    Width="300"
+                                                    HeaderContainerStyle="{StaticResource ModernGridViewColumnHeaderStyle}">
+                                        <GridViewColumn.Header>
+                                            <GridViewColumnHeader Content="Location"
+                                                                  Click="ColumnHeader_Click"
+                                                                  Tag="Location" />
+                                        </GridViewColumn.Header>
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Location}"
+                                                           Padding="4,4"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Location}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                            <ListView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Select All" Click="SelectAll_Click" x:Name="ContextSelectAllItem2" />
+                                    <MenuItem Header="Deselect All" Click="DeselectAll_Click" x:Name="ContextDeselectAllItem2" />
+                                    <Separator />
+                                    <MenuItem Header="Lock" Click="Lock_Click" x:Name="ContextLockItem2" />
+                                    <MenuItem Header="Unlock" Click="Unlock_Click" x:Name="ContextUnlockItem2" />
+                                    <Separator />
+                                    <MenuItem Header="Remove" Click="Remove_Click" />
+                                    <Separator />
+                                    <MenuItem Header="Properties" Click="Properties_Click" />
+                                    <MenuItem Header="Open Location" Click="OpenLocation_Click" />
+                                </ContextMenu>
+                            </ListView.ContextMenu>
+                        </ListView>
+                    </Grid>
+                </Grid>
+            </DockPanel>
         </Border>
     </Border>
-    
+
     <Window.InputBindings>
-        <KeyBinding Key="N" Modifiers="Control" Command="{Binding CreateNewLockerCommand}"/>
-        <KeyBinding Key="T" Modifiers="Control" Command="{Binding ToggleViewCommand}"/>
-        <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
-        <KeyBinding Key="Delete" Command="{Binding RemoveSelectedCommand}"/>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding CreateNewLockerCommand}" />
+        <KeyBinding Key="T" Modifiers="Control" Command="{Binding ToggleViewCommand}" />
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+        <KeyBinding Key="Delete" Command="{Binding RemoveSelectedCommand}" />
     </Window.InputBindings>
 </Window>

@@ -13,10 +13,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" />
-        <PackageReference Include="Avalonia.Desktop" />
-        <PackageReference Include="Avalonia.Themes.Fluent" />
-        <PackageReference Include="Avalonia.Fonts.Inter" />
+        <PackageReference Include="Avalonia"/>
+        <PackageReference Include="Avalonia.Desktop"/>
+        <PackageReference Include="Avalonia.Themes.Fluent"/>
+        <PackageReference Include="Avalonia.Fonts.Inter"/>
         <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
@@ -25,12 +25,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj" />
-        <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
+        <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj"/>
+        <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj"/>
         <!-- <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" /> -->
     </ItemGroup>
 
     <ItemGroup>
-        <Resource Include="Assets\cdlIcon.ico" />
+        <Resource Include="Assets\cdlIcon.ico"/>
     </ItemGroup>
 </Project>

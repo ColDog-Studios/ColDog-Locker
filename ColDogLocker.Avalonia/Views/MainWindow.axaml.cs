@@ -1,20 +1,22 @@
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-//using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+//using ColDogStudios.ColDogLocker.Application.Services;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views
 {
     /// <summary>
-    /// Main windows for ColDog Locker Avalonia GUI.
+    ///     Main windows for ColDog Locker Avalonia GUI.
     /// </summary>
     public partial class MainWindow : Window
     {
+        private bool _currentSortAscending = true;
+
+        private string _currentSortColumn = "";
+
         //private readonly MainWindowViewModel _viewModel;
         private bool _isGridView = true;
-        private string _currentSortColumn = "";
-        private bool _currentSortAscending = true;
         private bool _listViewInitialized = false;
 
         public MainWindow()
@@ -34,11 +36,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
         {
             try
             {
-                
             }
             catch (Exception ex)
             {
-
             }
         }
 
@@ -46,13 +46,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
         {
             try
             {
-                if (!System.IO.Directory.Exists(path))
+                if (!Directory.Exists(path))
                 {
                     return 0;
                 }
 
-                var dirInfo = new System.IO.DirectoryInfo(path);
-                return dirInfo.EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
+                var dirInfo = new DirectoryInfo(path);
+                return dirInfo.EnumerateFiles("*", SearchOption.AllDirectories)
                     .Sum(file => file.Length);
             }
             catch
@@ -126,10 +126,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
             {
                 // Switch to ListView
             }
-            else
-            {
-                // Switch to GridView
-            }
+            // Switch to GridView
         }
 
         private void Refresh_Click(object? sender, RoutedEventArgs e)
@@ -154,22 +151,18 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
 
         private void Settings_Click(object? sender, RoutedEventArgs e)
         {
-            
         }
 
         private void CheckUpdates_Click(object? sender, RoutedEventArgs e)
         {
-            
         }
 
         private void DevInfo_Click(object? sender, RoutedEventArgs e)
         {
-            
         }
 
         private void TestErrorDialog_Click(object? sender, RoutedEventArgs e)
         {
-            
         }
 
         private void Documentation_Click(object? sender, RoutedEventArgs e)
@@ -181,16 +174,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
                 var url = "https://github.com/ColDog-Studios/ColDog-Locker";
                 if (OperatingSystem.IsWindows())
                 {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = url,
-                        UseShellExecute = true
-                    });
+                    Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
                 }
                 else if (OperatingSystem.IsLinux())
                 {
                     // Use Multi-distro multi-display manager approach
-                    System.Diagnostics.Process.Start("xdg-open", url);
+                    Process.Start("xdg-open", url);
                 }
             }
             catch
@@ -202,7 +191,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
 
         private void About_Click(object? sender, RoutedEventArgs e)
         {
-            
         }
 
         #endregion

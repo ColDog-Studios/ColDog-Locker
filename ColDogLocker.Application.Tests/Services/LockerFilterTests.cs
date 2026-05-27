@@ -12,7 +12,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Clear();
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: false);
+            var result = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Empty(result);
@@ -27,7 +27,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(new LockerModel("Locker2", "pass2", "loc2") { IsLocked = true });
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: false);
+            var result = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Empty(result);
@@ -42,7 +42,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(new LockerModel("Locker2", "pass2", "loc2") { IsLocked = false });
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: true);
+            var result = LockerFilter.ListLockers(true);
 
             // Assert
             Assert.Empty(result);
@@ -62,7 +62,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(lockedLocker2);
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: true);
+            var result = LockerFilter.ListLockers(true);
 
             // Assert
             Assert.Equal(2, result.Count);
@@ -85,7 +85,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(unlockedLocker2);
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: false);
+            var result = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Equal(2, result.Count);
@@ -108,8 +108,8 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.AddRange([locker1, locker2, locker3, locker4, locker5]);
 
             // Act
-            var lockedResult = LockerFilter.ListLockers(isLocked: true);
-            var unlockedResult = LockerFilter.ListLockers(isLocked: false);
+            var lockedResult = LockerFilter.ListLockers(true);
+            var unlockedResult = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Equal(3, lockedResult.Count);
@@ -131,8 +131,8 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true });
 
             // Act
-            var result1 = LockerFilter.ListLockers(isLocked: true);
-            var result2 = LockerFilter.ListLockers(isLocked: true);
+            var result1 = LockerFilter.ListLockers(true);
+            var result2 = LockerFilter.ListLockers(true);
 
             // Assert
             Assert.NotSame(result1, result2);
@@ -147,7 +147,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(locker);
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: true);
+            var result = LockerFilter.ListLockers(true);
 
             // Assert
             Assert.Single(result);
@@ -163,7 +163,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(locker);
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: false);
+            var result = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Single(result);
@@ -180,7 +180,7 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             var originalCount = LockerService.Lockers.Count;
 
             // Act
-            var result = LockerFilter.ListLockers(isLocked: true);
+            var result = LockerFilter.ListLockers(true);
             result.Add(new LockerModel("NewLocker", "pass", "loc") { IsLocked = true });
 
             // Assert
@@ -196,8 +196,8 @@ namespace ColDogStudios.ColDogLocker.Application.Tests.Services
             LockerService.Lockers.Add(new LockerModel("Unlocked1", "pass2", "loc2") { IsLocked = false });
 
             // Act
-            var lockedResult = LockerFilter.ListLockers(isLocked: true);
-            var unlockedResult = LockerFilter.ListLockers(isLocked: false);
+            var lockedResult = LockerFilter.ListLockers(true);
+            var unlockedResult = LockerFilter.ListLockers(false);
 
             // Assert
             Assert.Single(lockedResult);

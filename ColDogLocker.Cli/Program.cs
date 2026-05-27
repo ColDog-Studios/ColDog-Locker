@@ -1,9 +1,10 @@
+using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Gui;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using System.Runtime.InteropServices;
+using ColDogStudios.ColDogLocker.Tui;
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -62,9 +63,9 @@ namespace ColDogStudios.ColDogLocker.Cli
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
-            #if DEBUG
+#if DEBUG
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
-            #endif
+#endif
                 Console.ResetColor();
                 Logger.Log(LogLevel.Fatal, "Unhandled exception", ex);
                 Console.WriteLine();
@@ -78,7 +79,7 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             try
             {
-                var launcher = Gui.GuiLauncher.CreateLauncher();
+                var launcher = GuiLauncher.CreateLauncher();
                 return launcher.Launch(Array.Empty<string>());
             }
             catch (PlatformNotSupportedException ex)
@@ -101,7 +102,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int LaunchTui()
         {
-            return Tui.TuiLauncher.Launch();
+            return TuiLauncher.Launch();
         }
 
         #endregion
@@ -127,24 +128,24 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime Identifier: {RuntimeInformation.RuntimeIdentifier}");
             Console.WriteLine($"Framework: {RuntimeInformation.FrameworkDescription}");
-        #if DEBUG
+#if DEBUG
             Console.WriteLine("Build: DEBUG");
-        #else
+#else
             Console.WriteLine("Build: RELEASE");
-        #endif
-        
+#endif
+
             Console.WriteLine($"\nUser: {Environment.UserName}");
-        
-            Console.WriteLine($"\nLocal Config Location: {Variables.localConfig}");
-            Console.WriteLine($"Current Directory: {Variables.cdlDir}");
-            var logPath = Path.Combine(Variables.localConfig, "logs");
+
+            Console.WriteLine($"\nLocal Config Location: {Variables.LocalConfig}");
+            Console.WriteLine($"Current Directory: {Variables.CdlDir}");
+            var logPath = Path.Combine(Variables.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
-        
-            var configDrive = new DriveInfo(new DirectoryInfo(Variables.localConfig).Root.Name);
+
+            var configDrive = new DriveInfo(new DirectoryInfo(Variables.LocalConfig).Root.Name);
             Console.WriteLine($"\nAvailable Disk Space: {configDrive.AvailableFreeSpace / (1024 * 1024 * 1024)} GB");
             Console.WriteLine($"Process Memory: {GC.GetTotalMemory(false) / 1024} KB");
-        
+
             return 0;
         }
 

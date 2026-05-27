@@ -61,10 +61,11 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         ];
 
         /// <summary>
-        /// Gets a list of all password requirements with their current status.
-        /// Useful for displaying dynamic password requirement indicators in UI.
+        ///     Gets a list of all password requirements with their current status.
+        ///     Useful for displaying dynamic password requirement indicators in UI.
         /// </summary>
-        public static List<PasswordRequirement> GetPasswordRequirements(string password) // TODO: change function name to Validate so calling is PasswordFilter.Validate(password)
+        public static List<PasswordRequirement>
+            GetPasswordRequirements(string password) // TODO: change function name to Validate so calling is PasswordFilter.Validate(password)
         {
             var requirements = new List<PasswordRequirement>();
 
@@ -76,11 +77,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             // Check each security rule
             for (var i = 0; i < _securityRules.Count; i++)
             {
-                requirements.Add(new PasswordRequirement
-                {
-                    Description = _securityMessages[i],
-                    IsMet = _securityRules[i](password)
-                });
+                requirements.Add(new PasswordRequirement { Description = _securityMessages[i], IsMet = _securityRules[i](password) });
             }
 
             // Check common words
@@ -94,18 +91,14 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
                 }
             }
 
-            requirements.Add(new PasswordRequirement
-            {
-                Description = "No common words",
-                IsMet = !hasCommonWord
-            });
+            requirements.Add(new PasswordRequirement { Description = "No common words", IsMet = !hasCommonWord });
 
             return requirements;
         }
 
         /// <summary>
-        /// Validates a password against all security and common word checks.
-        /// Returns null if valid, otherwise returns the first validation error message.
+        ///     Validates a password against all security and common word checks.
+        ///     Returns null if valid, otherwise returns the first validation error message.
         /// </summary>
         public static string? ValidatePassword(string password)
         {

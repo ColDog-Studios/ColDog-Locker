@@ -5,7 +5,7 @@ using Microsoft.Win32;
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 {
     /// <summary>
-    /// Service for managing application theme
+    ///     Service for managing application theme
     /// </summary>
     public class ThemeService : IThemeService
     {
@@ -86,8 +86,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
             // Clear existing theme dictionaries (but keep Base.xaml)
             var themeDictionaries = app.Resources.MergedDictionaries
                 .Where(d => d.Source != null &&
-                       d.Source.OriginalString.Contains("Themes/") &&
-                       !d.Source.OriginalString.Contains("Base.xaml"))
+                            d.Source.OriginalString.Contains("Themes/") &&
+                            !d.Source.OriginalString.Contains("Base.xaml"))
                 .ToList();
 
             foreach (var dict in themeDictionaries)

@@ -55,7 +55,8 @@
 
 ## About The Project
 
-ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password. It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
+ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.
+It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
 
 > [!NOTE]
 > ColDog Locker is still in development and does not currently have an official supported release
@@ -71,7 +72,8 @@ ColDog Locker is a simple file locker that allows you to encrypt and decrypt the
 
 ## Getting Started
 
-The source code is publicly available for viewing and personal use. There are currently no official release binaries available yet. You can build from source following the instructions below.
+The source code is publicly available for viewing and personal use. There are currently no official release binaries available yet.
+You can build from source following the instructions below.
 
 > [!IMPORTANT]
 > While the source code is public, this is proprietary software. Please review the [LICENSE](LICENSE) for usage restrictions before building or using.
@@ -127,6 +129,7 @@ ColDog Locker allows you to manage directories by encrypting and decrypting thei
 > On Windows, the compiled executable is `cdlocker.exe`, Linux is `cdlocker`.
 
 ### Interactive Modes
+
 - **GUI (Graphical User Interface)**: Run `cdlocker gui` for a graphical interface (in development)
 - **TUI (Terminal User Interface)**: Run `cdlocker tui` for an interactive terminal menu
 
@@ -135,6 +138,7 @@ ColDog Locker allows you to manage directories by encrypting and decrypting thei
 For scripting, automation, and quick operations, use the CLI commands:
 
 #### Locker Commands
+
 ```bash
 # Create a new locker
 cdlocker new <name> [--path <path>] [--password <pass>]
@@ -156,6 +160,7 @@ cdlocker remove <name> [--force] [--delete]
 ```
 
 #### Locker Management
+
 ```bash
 # Change locker password
 cdlocker change-password <name>
@@ -165,6 +170,7 @@ cdlocker verify <name>
 ```
 
 #### Settings & Database
+
 ```bash
 # View or modify settings
 cdlocker settings [set <key> <value>]
@@ -177,6 +183,7 @@ cdlocker db-info
 ```
 
 #### Help & Version
+
 ```bash
 # Display help
 cdlocker help [command]
@@ -223,6 +230,7 @@ See the [open issues](https://github.com/ColDog-Studios/ColDog-Locker/issues) fo
 ColDog Locker is proprietary software and is not currently accepting public contributions. However, feedback and bug reports are always welcome!
 
 If you encounter a bug or have a suggestion for improvement:
+
 1. Open an issue with the appropriate tag ("bug" or "enhancement")
 2. Provide detailed information about the issue or suggestion
 3. The ColDog Studios team will review and respond
@@ -235,7 +243,8 @@ For business inquiries or collaboration opportunities, please contact us directl
 
 ColDog Locker is proprietary software. Copyright © 2025 Collin Laney. All Rights Reserved.
 
-This software is licensed for personal and internal business use only. Public distribution, commercial distribution, and SaaS hosting are not permitted. See [LICENSE](LICENSE) for complete terms and conditions.
+This software is licensed for personal and internal business use only. Public distribution, commercial distribution, and SaaS hosting are not permitted.
+See [LICENSE](LICENSE) for complete terms and conditions.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

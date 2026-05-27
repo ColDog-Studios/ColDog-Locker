@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 namespace ColDogStudios.ColDogLocker.Application.Validation
 {
     /// <summary>
-    /// Validates locker paths to prevent malicious use for ransomware or system damage.
-    /// Ensures critical system directories and user data folders cannot be locked.
+    ///     Validates locker paths to prevent malicious use for ransomware or system damage.
+    ///     Ensures critical system directories and user data folders cannot be locked.
     /// </summary>
     public static class LockerPathValidator // TODO: Rename to LockerPathFilter to be consistent with PasswordFilter
     {
         // Paths that block the exact folder AND all subdirectories (system paths)
         private static readonly string[] _systemProtectedPaths;
-        
+
         // Paths that block ONLY the exact folder, but allow subdirectories (user folders)
         private static readonly string[] _userFolderProtectedPaths;
 
@@ -30,7 +30,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             // Root drives (C:\, D:\, etc.) - will be checked separately in ValidatePath
 
             // === SYSTEM PATHS: Block folder AND all subdirectories ===
-            
+
             // Windows - blocks everything under C:\Windows (including System32, etc.)
             if (!string.IsNullOrEmpty(windows))
             {
@@ -116,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             }
 
             // === USER FOLDER PATHS: Block ONLY the exact folder, allow subdirectories ===
-            
+
             // User Profile root - can't lock C:\Users\ColDog\ but can lock C:\Users\ColDog\MyLocker
             if (!string.IsNullOrEmpty(userProfile))
             {
@@ -184,8 +184,8 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         }
 
         /// <summary>
-        /// Validates if a path is allowed to be used as a locker location.
-        /// Returns null if valid, otherwise returns an error message.
+        ///     Validates if a path is allowed to be used as a locker location.
+        ///     Returns null if valid, otherwise returns an error message.
         /// </summary>
         public static string? ValidatePath(string path)
         {
@@ -239,18 +239,18 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         }
 
         /// <summary>
-        /// Checks if a path is a drive root (e.g., C:\, D:\)
+        ///     Checks if a path is a drive root (e.g., C:\, D:\)
         /// </summary>
         private static bool IsDriveRoot(string normalizedPath)
         {
             // Check if path is in format "c:" or matches a drive root
-            return normalizedPath.Length == 2 && normalizedPath[1] == ':' ||
-                DriveInfo.GetDrives().Any(d => 
-                    d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant() == normalizedPath);
+            return normalizedPath is [_, ':'] ||
+                   DriveInfo.GetDrives().Any(d =>
+                       d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant() == normalizedPath);
         }
 
         /// <summary>
-        /// Gets a user-friendly name for a protected path
+        ///     Gets a user-friendly name for a protected path
         /// </summary>
         private static string GetFriendlyName(string path)
         {
@@ -259,7 +259,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
             var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant();
             var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
             var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData).ToLowerInvariant();
-            
+
             if (path.StartsWith(userProfile))
             {
                 var relativePath = path.Substring(userProfile.Length).TrimStart(Path.DirectorySeparatorChar);
@@ -292,7 +292,7 @@ namespace ColDogStudios.ColDogLocker.Application.Validation
         }
 
         /// <summary>
-        /// Gets a list of all protected paths for informational purposes
+        ///     Gets a list of all protected paths for informational purposes
         /// </summary>
         public static IReadOnlyList<string> GetProtectedPaths()
         {

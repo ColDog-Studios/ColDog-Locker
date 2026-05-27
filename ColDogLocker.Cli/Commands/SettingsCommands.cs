@@ -4,7 +4,7 @@ using ColDogStudios.ColDogLocker.Infrastructure.Logging;
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
     /// <summary>
-    /// Handlers for settings-related CLI commands.
+    ///     Handlers for settings-related CLI commands.
     /// </summary>
     public static class SettingsCommands
     {
@@ -20,7 +20,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"  Dev Mode: {SettingsManager.Settings.DevMode}");
                 Console.WriteLine($"  Log Level: {SettingsManager.Settings.LogLevel}");
                 Console.WriteLine($"  Log Format: {SettingsManager.Settings.LogFormat}");
-                Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMB} MB");
+                Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
                 Console.WriteLine($"  Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
                 Console.WriteLine($"  File Logging: {(SettingsManager.Settings.EnableFileLogging ? "Enabled" : "Disabled")}");
                 Console.WriteLine($"  Compression: {(SettingsManager.Settings.EnableCompression ? "Enabled" : "Disabled")}");
@@ -52,7 +52,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.WriteLine($"Log Format: {SettingsManager.Settings.LogFormat}");
                         return 0;
                     case "max-file-size":
-                        Console.WriteLine($"Max File Size: {SettingsManager.Settings.MaxFileSizeMB} MB");
+                        Console.WriteLine($"Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
                         return 0;
                     case "max-retained-files":
                         Console.WriteLine($"Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
@@ -132,8 +132,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     case "max-file-size":
                         if (int.TryParse(value, out var maxSize) && maxSize > 0)
                         {
-                            SettingsManager.Settings.MaxFileSizeMB = maxSize;
-                            Logger.SetMaxFileSizeMB(maxSize);
+                            SettingsManager.Settings.MaxFileSizeMb = maxSize;
+                            Logger.SetMaxFileSizeMb(maxSize);
                             SettingsManager.SaveSettings();
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"Max file size set to: {maxSize} MB");
@@ -251,7 +251,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         return 1;
 
                     case "db-vacuum-interval" or "vacuuminterval":
-                        if (int.TryParse(value, out var interval) && interval >= 0 && interval <= 365)
+                        if (int.TryParse(value, out var interval) && interval is >= 0 and <= 365)
                         {
                             SettingsManager.Settings.DatabaseVacuumInterval = interval;
                             SettingsManager.SaveSettings();
@@ -274,7 +274,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             Console.ResetColor();
                             return 0;
                         }
-                        else if (value is "prerelease" or "pre" or "p")
+
+                        if (value is "prerelease" or "pre" or "p")
                         {
                             SettingsManager.Settings.UpdateChannel = UpdateChannel.Prerelease;
                             SettingsManager.SaveSettings();
@@ -289,7 +290,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
                     default:
                         Console.Error.WriteLine($"Error: Unknown setting '{key}'.");
-                        Console.WriteLine("Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, max-retained-files, file-logging, compression, include-timestamps, include-thread-id, date-time-format, async-logging");
+                        Console.WriteLine(
+                            "Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, max-retained-files, file-logging, compression, include-timestamps, include-thread-id, date-time-format, async-logging");
                         return 1;
                 }
             }

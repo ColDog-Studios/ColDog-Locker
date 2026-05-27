@@ -167,10 +167,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void LogEntry_Caller_CanBeNull()
         {
             // Arrange & Act
-            var logEntry = new LogEntry
-            {
-                Caller = null
-            };
+            var logEntry = new LogEntry { Caller = null };
 
             // Assert
             Assert.Null(logEntry.Caller);
@@ -241,11 +238,11 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void LogLevel_ToString_ShouldReturnCorrectName()
         {
             // Act & Assert
-            Assert.Equal("Debug", LogLevel.Debug.ToString());
-            Assert.Equal("Info", LogLevel.Info.ToString());
-            Assert.Equal("Warning", LogLevel.Warning.ToString());
-            Assert.Equal("Error", LogLevel.Error.ToString());
-            Assert.Equal("Fatal", LogLevel.Fatal.ToString());
+            Assert.Equal("Debug", nameof(LogLevel.Debug));
+            Assert.Equal("Info", nameof(LogLevel.Info));
+            Assert.Equal("Warning", nameof(LogLevel.Warning));
+            Assert.Equal("Error", nameof(LogLevel.Error));
+            Assert.Equal("Fatal", nameof(LogLevel.Fatal));
         }
 
         [Theory]
@@ -337,12 +334,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void CallerInfo_AllProperties_CanBeSetTogether()
         {
             // Arrange & Act
-            var callerInfo = new CallerInfo
-            {
-                Method = "TestMethod",
-                File = "TestFile.cs",
-                Line = 456
-            };
+            var callerInfo = new CallerInfo { Method = "TestMethod", File = "TestFile.cs", Line = 456 };
 
             // Assert
             Assert.Equal("TestMethod", callerInfo.Method);
@@ -411,9 +403,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
             // Arrange & Act
             var exceptionInfo = new ExceptionInfo
             {
-                Type = "ArgumentNullException",
-                Message = "Argument was null",
-                StackTrace = "at Method() in File.cs:line 99"
+                Type = "ArgumentNullException", Message = "Argument was null", StackTrace = "at Method() in File.cs:line 99"
             };
 
             // Assert
@@ -426,12 +416,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void ExceptionInfo_StackTrace_CanBeNull()
         {
             // Arrange & Act
-            var exceptionInfo = new ExceptionInfo
-            {
-                Type = "Exception",
-                Message = "Error",
-                StackTrace = null
-            };
+            var exceptionInfo = new ExceptionInfo { Type = "Exception", Message = "Error", StackTrace = null };
 
             // Assert
             Assert.Null(exceptionInfo.StackTrace);
@@ -502,7 +487,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void Logger_SetMaxFileSizeMB_ShouldNotThrow()
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetMaxFileSizeMB(20));
+            var exception = Record.Exception(() => Logger.SetMaxFileSizeMb(20));
             Assert.Null(exception);
         }
 
@@ -513,7 +498,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void Logger_SetMaxFileSizeMB_WithVariousSizes_ShouldNotThrow(int mb)
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.SetMaxFileSizeMB(mb));
+            var exception = Record.Exception(() => Logger.SetMaxFileSizeMb(mb));
             Assert.Null(exception);
         }
 
@@ -648,7 +633,7 @@ namespace ColDogStudios.ColDogLocker.Infrastructure.Tests.Logging
         public void Logger_ReloadConfig_ShouldNotThrow()
         {
             // Act & Assert
-            var exception = Record.Exception(() => Logger.ReloadConfig());
+            var exception = Record.Exception(Logger.ReloadConfig);
             Assert.Null(exception);
         }
 

@@ -1,15 +1,16 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+
 namespace ColDogStudios.ColDogLocker.Gui
 {
     /// <summary>
-    /// Abstraction for launching different GUI implementations.
+    ///     Abstraction for launching different GUI implementations.
     /// </summary>
     public interface IGuiLauncher
     {
         /// <summary>
-        /// Launches the GUI application with the given arguments.
+        ///     Launches the GUI application with the given arguments.
         /// </summary>
         /// <param name="args">Command line arguments to pass to the GUI.</param>
         /// <returns>The exit code of the GUI application.</returns>
@@ -17,7 +18,7 @@ namespace ColDogStudios.ColDogLocker.Gui
     }
 
     /// <summary>
-    /// WPF GUI launcher for Windows platforms.
+    ///     WPF GUI launcher for Windows platforms.
     /// </summary>
     public class WpfGuiLauncher : IGuiLauncher
     {
@@ -61,11 +62,7 @@ namespace ColDogStudios.ColDogLocker.Gui
                 }
 
                 // Launch the GUI application as a separate process
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = guiPath,
-                    UseShellExecute = true
-                };
+                var startInfo = new ProcessStartInfo { FileName = guiPath, UseShellExecute = true };
 
                 var process = Process.Start(startInfo);
                 if (process == null)
@@ -92,11 +89,11 @@ namespace ColDogStudios.ColDogLocker.Gui
     public class AvaloniaGuiLauncher : IGuiLauncher
     {
         public int Launch(string[] args)
-        {            
+        {
             try
             {
                 Logger.Log(LogLevel.Debug, "Launching Avalonia GUI");
-                
+
                 // Find the Avalonia GUI executable in the same directory or nearby
                 var cliDirectory = AppContext.BaseDirectory;
                 var guiExeName = "ColDogLocker.Avalonia.exe";
@@ -131,11 +128,7 @@ namespace ColDogStudios.ColDogLocker.Gui
                 }
 
                 // Launch the GUI application as a separate process
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = guiPath,
-                    UseShellExecute = true
-                };
+                var startInfo = new ProcessStartInfo { FileName = guiPath, UseShellExecute = true };
 
                 var process = Process.Start(startInfo);
                 if (process == null)
@@ -160,12 +153,12 @@ namespace ColDogStudios.ColDogLocker.Gui
     }
 
     /// <summary>
-    /// Factory for creating GUI launcher instances based on platform.
+    ///     Factory for creating GUI launcher instances based on platform.
     /// </summary>
     public static class GuiLauncher
     {
         /// <summary>
-        /// Creates a GUI launcher appropriate for the current platform.
+        ///     Creates a GUI launcher appropriate for the current platform.
         /// </summary>
         /// <returns>An IGuiLauncher instance for the current platform.</returns>
         /// <exception cref="PlatformNotSupportedException">Thrown when the current platform is not supported.</exception>

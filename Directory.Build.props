@@ -1,34 +1,34 @@
 <Project>
-  <PropertyGroup>
-    <!-- Shared Version Information - Edit version here only -->
-    <Version>0.4.0-alpha</Version>
-    <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
-    <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
-    <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
+    <PropertyGroup>
+        <!-- Shared Version Information - Edit version here only -->
+        <Version>0.4.0-alpha</Version>
+        <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
+        <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
+        <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
 
-    <!-- Language & Compiler Settings -->
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <Nullable>enable</Nullable>
-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64</RuntimeIdentifiers>
-    <TargetFramework>net10.0</TargetFramework>
-    
-    <!-- Product Information -->
-    <Product>ColDog Locker</Product>
-    <AssemblyTitle>ColDog Locker</AssemblyTitle>
-    <Description>A secure file locker application</Description>
-    <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
-    <Authors>Collin Laney</Authors>
-    <Company>ColDog Studios</Company>
-    
-    <!-- Package Metadata -->
-    <PackageProjectUrl>https://github.com/ColDog-Studios/ColDog-Locker</PackageProjectUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+        <!-- Language & Compiler Settings -->
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <Nullable>enable</Nullable>
+        <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64</RuntimeIdentifiers>
+        <TargetFramework>net10.0</TargetFramework>
 
-    <!-- Output all projects to root bin directory -->
-    <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
-  </PropertyGroup>
+        <!-- Product Information -->
+        <Product>ColDog Locker</Product>
+        <AssemblyTitle>ColDog Locker</AssemblyTitle>
+        <Description>A secure file locker application</Description>
+        <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
+        <Authors>Collin Laney</Authors>
+        <Company>ColDog Studios</Company>
+
+        <!-- Package Metadata -->
+        <PackageProjectUrl>https://github.com/ColDog-Studios/ColDog-Locker</PackageProjectUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+
+        <!-- Output all projects to root bin directory -->
+        <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
+    </PropertyGroup>
 </Project>

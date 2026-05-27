@@ -109,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                 if (result.UpdateAvailable)
                 {
-                    Console.WriteLine($"\nA newer version is available:\n");
+                    Console.WriteLine("\nA newer version is available:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
                     Console.Write("Do you want to download the latest version? (y/N): ");
@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 }
                 else
                 {
-                    Console.WriteLine($"\nColDog Locker is up to date:\n");
+                    Console.WriteLine("\nColDog Locker is up to date:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}");
                 }
