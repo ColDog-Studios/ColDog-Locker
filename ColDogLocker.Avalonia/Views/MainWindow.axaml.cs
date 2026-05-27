@@ -65,7 +65,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
 
         private void New_Click(object? sender, RoutedEventArgs e)
         {
-            
+            Logger.Log(LogLevel.Debug, "New locker command triggered");
         }
 
         private void Exit_Click(object? sender, RoutedEventArgs e)
@@ -76,22 +76,22 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
 
         private void Lock_Click(object? sender, RoutedEventArgs e)
         {
-            
+            Logger.Log(LogLevel.Debug, "Lock locker command triggered");
         }
 
         private void Unlock_Click(object? sender, RoutedEventArgs e)
         {
-            
+            Logger.Log(LogLevel.Debug, "Unlock locker command triggered");
         }
 
         private void Remove_Click(object? sender, RoutedEventArgs e)
         {
-            
+            Logger.Log(LogLevel.Debug, "Remove locker command triggered");
         }
 
         private void Properties_Click(object? sender, RoutedEventArgs e)
         {
-            
+            Logger.Log(LogLevel.Debug, "Locker properties command triggered");
         }
 
         private void OpenLocation_Click(object? sender, RoutedEventArgs e)
