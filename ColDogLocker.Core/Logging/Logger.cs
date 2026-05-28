@@ -2,8 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Core.Logging
@@ -444,7 +444,7 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
             }
             catch
             {
-                System.Console.WriteLine("An exception occurred while processing log entries.");
+                Console.WriteLine("An exception occurred while processing log entries.");
             }
         }
 

@@ -1,8 +1,8 @@
 using ColDogStudios.ColDogLocker.Core.Data;
 using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Core.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
-using ColDogStudios.ColDogLocker.Core.Logging;
 
 namespace ColDogStudios.ColDogLocker.Core.Services
 {

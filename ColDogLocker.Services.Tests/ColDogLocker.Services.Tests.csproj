@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj" />
+        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj"/>
     </ItemGroup>
 
 </Project>

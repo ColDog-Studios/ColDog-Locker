@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Core.Services;
 using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Core.Services;
 
 namespace ColDogStudios.ColDogLocker.Core.Tests.Services
 {

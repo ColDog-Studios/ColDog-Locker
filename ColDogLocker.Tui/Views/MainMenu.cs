@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Services.Updates;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {

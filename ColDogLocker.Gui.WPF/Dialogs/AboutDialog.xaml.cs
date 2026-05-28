@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Services.Updates;
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {

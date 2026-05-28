@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj" />
+        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj"/>
     </ItemGroup>
 
     <PropertyGroup>

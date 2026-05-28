@@ -3,8 +3,8 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Constants;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {

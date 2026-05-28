@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.FileSystem

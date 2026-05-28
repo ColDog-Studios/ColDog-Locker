@@ -257,7 +257,9 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         {
             // Matches "c:" or "c:\" style roots
             if (normalizedPath.Length == 2 && normalizedPath[1] == ':')
+            {
                 return true;
+            }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

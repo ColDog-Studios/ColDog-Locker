@@ -1,9 +1,9 @@
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Core.Data;
-using ColDogStudios.ColDogLocker.Core.Services;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Services.Startup

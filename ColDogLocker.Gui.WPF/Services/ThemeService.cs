@@ -70,7 +70,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Services
 
         private void ApplyTheme(AppTheme theme)
         {
-            var app = System.Windows.Application.Current;
+            var app = Application.Current;
             if (app == null)
             {
                 return;

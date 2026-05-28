@@ -1,6 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Models;
 using Microsoft.Data.Sqlite;
 
 namespace ColDogStudios.ColDogLocker.Core.Data
