@@ -249,7 +249,9 @@ namespace ColDogStudios.ColDogLocker.Core.Configuration
                 if (File.Exists(_settingsFile))
                 {
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    var backupFile = Path.Combine(Variables.LocalConfig, $"settings_corrupted_{timestamp}.json.bak");
+                    var backupDirectory = Path.GetDirectoryName(_settingsFile) ?? Variables.LocalConfig;
+                    var backupFileName = $"settings_corrupted_{timestamp}.json.bak";
+                    var backupFile = Path.Combine(backupDirectory, Path.GetFileName(backupFileName));
                     File.Copy(_settingsFile, backupFile, true);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
