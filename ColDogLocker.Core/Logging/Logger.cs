@@ -443,9 +443,9 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine("An exception occurred while processing log entries.");
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
         }
 
