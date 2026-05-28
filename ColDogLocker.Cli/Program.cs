@@ -138,7 +138,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
             Console.WriteLine($"\nLocal Config Location: {Variables.LocalConfig}");
             Console.WriteLine($"Current Directory: {Variables.CdlDir}");
-            var logPath = Path.Combine(Variables.LocalConfig, "logs");
+            var logPath = Path.Join(Variables.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
 
