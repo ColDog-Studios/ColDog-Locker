@@ -2,11 +2,12 @@
 
 <!-- PROJECT SHIELDS -->
 
-[![Release][release-shield]][release-url]
+[![Stable Release][stable-release-shield]][stable-release-url]
+[![Latest Release][latest-release-shield]][latest-release-url]
 [![Downloads][downloads-shield]][downloads-url]
+[![Tests][tests-shield]][tests-url]
 [![Issues][issues-shield]][issues-url]
 [![Stargazers][stars-shield]][stars-url]
-[![LinkedIn][linkedin-shield]][linkedin-cds-url]
 
 <br />
 <div align="center">
@@ -275,10 +276,14 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
-[release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?style=for-the-badge
-[release-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[stable-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?style=for-the-badge
+[stable-release-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[latest-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?include_prereleases&style=for-the-badge&label=Latest%20Release
+[latest-release-url]: https://github.com/ColDog-Studios/ColDog-Locker
 [downloads-shield]: https://img.shields.io/github/downloads/ColDog-Studios/ColDog-Locker/total.svg?style=for-the-badge
 [downloads-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[tests-shield]: https://img.shields.io/github/actions/workflow/status/ColDog-Studios/ColDog-Locker/test.yml?style=for-the-badge&label=Tests
+[tests-url]: https://github.com/ColDog-Studios/ColDog-Locker/actions/workflows/test.yml
 [issues-shield]: https://img.shields.io/github/issues/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
 [issues-url]: https://github.com/ColDog-Studios/ColDog-Locker/issues
 [stars-shield]: https://img.shields.io/github/stars/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
