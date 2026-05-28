@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" />
-    <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj"/>
+    </ItemGroup>
 
-  <PropertyGroup>
-    <RootNamespace>ColDogStudios.ColDogLocker.Tui</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>ColDogStudios.ColDogLocker.Tui</RootNamespace>
+    </PropertyGroup>
 
 </Project>

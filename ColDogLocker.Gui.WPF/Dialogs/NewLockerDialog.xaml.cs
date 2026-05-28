@@ -1,29 +1,26 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using ColDogStudios.ColDogLocker.Application.Validation;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using System.Windows.Media;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Validation;
+using Microsoft.Win32;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class NewLockerDialog : Window
     {
-        public string LockerName { get; private set; } = string.Empty;
-        public string Location { get; private set; } = string.Empty;
-        public string Password { get; private set; } = string.Empty;
-        public bool LockImmediately { get; private set; } = true;
-        public bool Success { get; private set; }
-
-        private bool _isCustomPath = false;
         private readonly string _defaultBasePath;
+
+        private bool _isCustomPath;
 
         public NewLockerDialog()
         {
             InitializeComponent();
-            
+
             // Get default locker location from settings
             _defaultBasePath = SettingsManager.Settings.DefaultLockerLocation;
-            
+
             // Ensure the default directory exists
             if (!Directory.Exists(_defaultBasePath))
             {
@@ -37,23 +34,29 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     _defaultBasePath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 }
             }
-            
+
             // Initialize password requirements display
             UpdatePasswordRequirements(string.Empty);
-            
+
             UpdateCreateButtonState();
         }
+
+        public string LockerName { get; private set; } = string.Empty;
+        public string Location { get; private set; } = string.Empty;
+        public string Password { get; private set; } = string.Empty;
+        public bool LockImmediately { get; private set; } = true;
+        public bool Success { get; private set; }
 
         private void LockerNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             ValidateLockerName();
-            
+
             // Auto-update path if not using a custom path
             if (!_isCustomPath)
             {
                 UpdateDefaultPath();
             }
-            
+
             UpdateCreateButtonState();
         }
 
@@ -73,18 +76,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void BrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog
-            {
-                Title = "Select folder to lock",
-                InitialDirectory = _defaultBasePath
-            };
+            var dialog = new OpenFolderDialog { Title = "Select folder to lock", InitialDirectory = _defaultBasePath };
 
             if (dialog.ShowDialog() == true)
             {
                 LocationTextBox.Text = dialog.FolderName;
                 Location = dialog.FolderName;
                 LocationErrorText.Visibility = Visibility.Collapsed;
-                
+
                 // Mark as custom path since user browsed
                 _isCustomPath = true;
 
@@ -194,7 +193,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             try
             {
                 var path = LocationTextBox.Text;
-                
+
                 // Check if parent directory exists or can be accessed
                 var parentDir = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
@@ -240,7 +239,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void UpdateDefaultPath()
         {
             var lockerName = LockerNameTextBox.Text.Trim();
-            
+
             if (!string.IsNullOrWhiteSpace(lockerName))
             {
                 // Construct the default path: basePath\LockerName
@@ -265,45 +264,33 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
             foreach (var requirement in requirements)
             {
-                var stackPanel = new System.Windows.Controls.StackPanel
-                {
-                    Orientation = System.Windows.Controls.Orientation.Horizontal,
-                    Margin = new Thickness(0, 2, 0, 2)
-                };
+                var stackPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
 
                 // Checkbox icon
-                var icon = new System.Windows.Controls.TextBlock
+                var icon = new TextBlock
                 {
-                    Text = requirement.IsMet ? "✓" : "○",
-                    FontSize = 14,
-                    Margin = new Thickness(0, 0, 8, 0),
-                    VerticalAlignment = VerticalAlignment.Center
+                    Text = requirement.IsMet ? "✓" : "○", FontSize = 14, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center
                 };
 
                 if (requirement.IsMet)
                 {
-                    icon.Foreground = System.Windows.Media.Brushes.Green;
+                    icon.Foreground = Brushes.Green;
                 }
                 else
                 {
-                    icon.Foreground = System.Windows.Media.Brushes.Gray;
+                    icon.Foreground = Brushes.Gray;
                 }
 
                 // Requirement text
-                var text = new System.Windows.Controls.TextBlock
-                {
-                    Text = requirement.Description,
-                    FontSize = 12,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
+                var text = new TextBlock { Text = requirement.Description, FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
 
                 if (requirement.IsMet)
                 {
-                    text.Foreground = System.Windows.Media.Brushes.Green;
+                    text.Foreground = Brushes.Green;
                 }
                 else
                 {
-                    text.Foreground = System.Windows.Media.Brushes.Gray;
+                    text.Foreground = Brushes.Gray;
                 }
 
                 stackPanel.Children.Add(icon);

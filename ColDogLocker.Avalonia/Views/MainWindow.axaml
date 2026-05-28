@@ -14,9 +14,70 @@
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <DockPanel>
+
+        <!-- App shell: header + sidebar + content -->
+        <Menu DockPanel.Dock="Top"
+              Background="#002e44">
+            <!-- File Menu -->
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Locker" Click="New_Click" />
+                <Separator />
+                <MenuItem Header="E_xit" Click="Exit_Click" />
+            </MenuItem>
+            <!-- Locker Menu -->
+            <MenuItem Header="_Locker">
+                <MenuItem Header="_Lock" Click="Lock_Click" />
+                <MenuItem Header="_Unlock" Click="Unlock_Click" />
+                <Separator />
+                <MenuItem Header="_Remove" Click="Remove_Click" />
+                <Separator />
+                <MenuItem Header="_Properties" Click="Properties_Click" />
+                <MenuItem Header="_Open Location" Click="OpenLocation_Click" />
+            </MenuItem>
+            <!-- View Menu -->
+            <MenuItem Header="_View">
+                <MenuItem Header="_Toggle View" Click="ToggleView_Click" />
+                <MenuItem Header="_Refresh" Click="Refresh_Click" />
+            </MenuItem>
+            <!-- Tools Menu -->
+            <MenuItem Header="Tools">
+                <MenuItem Header="_Settings" Click="Settings_Click" />
+                <MenuItem Header="_Check for Updates" Click="CheckUpdates_Click" />
+            </MenuItem>
+            <!-- Developer Menu (Only visible in Dev Mode)-->
+            <MenuItem Header="_Developer">
+                <MenuItem Header="_Dev Info" Click="DevInfo_Click" />
+                <Separator />
+                <MenuItem Header="Test _Error Dialog" Click="TestErrorDialog_Click" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_Documentation" Click="Documentation_Click" />
+                <Separator />
+                <MenuItem Header="_About" Click="About_Click" />
+            </MenuItem>
+        </Menu>
+
+        <!-- TODO: Toolbar -->
+
+        <!-- TODO: Status Bar -->
+
+        <!-- TODO: Main Content -->
+        <Grid x:Name="ContentArea"
+              Background="Transparent">
+            <!-- Grid View -->
+            <ListBox x:Name="LockersGridView"
+                     IsVisible="True"
+                     SelectionMode="Multiple"
+                     Padding="10"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+        </Grid>
+
+    </DockPanel>
 
 </Window>

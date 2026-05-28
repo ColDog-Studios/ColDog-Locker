@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media.Animation;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
@@ -20,7 +22,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             {
                 try
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                     {
                         storyboard.Begin(this);
                     }
@@ -35,7 +37,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void LoadSystemInformation()
         {
             // Set application version
-            VersionText.Text = $"Version {BuildInfo.Version ?? "Version unknown"}";
+            VersionText.Text = $"Version {AppInfo.SemanticVersion ?? "Version unknown"}";
 
             // Set OS information
             try
@@ -92,20 +94,20 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                var result = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.CheckForUpdatesAsync());
+                var result = await Task.Run(() => UpdateManager.CheckForUpdatesAsync());
 
                 if (result.UpdateAvailable)
                 {
                     var message = $"A new version is available!\n\n" +
-                                 $"Current Version: {result.CurrentVersion}\n" +
-                                 $"Latest Version: {result.LatestVersion}\n\n" +
-                                 "Would you like to download and install it now?";
+                                  $"Current Version: {result.CurrentVersion}\n" +
+                                  $"Latest Version: {result.LatestVersion}\n\n" +
+                                  "Would you like to download and install it now?";
 
                     if (MessageDialog.ShowQuestion(message, "Update Available", this))
                     {
                         try
                         {
-                            var filePath = await Task.Run(() => ColDogStudios.ColDogLocker.Application.Services.UpdateManager.DownloadUpdateAsync(result));
+                            var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
                             MessageDialog.ShowInformation(
                                 $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
                                 "Download Complete",
@@ -116,10 +118,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                             var errorDialog = new ErrorDialog(
                                 $"Failed to download update: {downloadEx.Message}",
                                 downloadEx,
-                                "Download Failed")
-                            {
-                                Owner = this
-                            };
+                                "Download Failed") { Owner = this };
                             errorDialog.ShowDialog();
                         }
                     }
@@ -127,8 +126,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 else
                 {
                     var message = $"ColDog Locker is up to date.\n\n" +
-                                 $"Current Version: {result.CurrentVersion}\n" +
-                                 $"Latest Version: {result.LatestVersion}";
+                                  $"Current Version: {result.CurrentVersion}\n" +
+                                  $"Latest Version: {result.LatestVersion}";
                     MessageDialog.ShowInformation(message, "No Updates Available", this);
                 }
             }
@@ -137,10 +136,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 var errorDialog = new ErrorDialog(
                     $"Failed to check for updates: {ex.Message}",
                     ex,
-                    "Update Check Failed")
-                {
-                    Owner = this
-                };
+                    "Update Check Failed") { Owner = this };
                 errorDialog.ShowDialog();
             }
         }
@@ -154,11 +150,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -170,7 +162,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         }
 
         /// <summary>
-        /// Convenience method to show the About dialog
+        ///     Convenience method to show the About dialog
         /// </summary>
         public static void Show(Window? owner = null)
         {

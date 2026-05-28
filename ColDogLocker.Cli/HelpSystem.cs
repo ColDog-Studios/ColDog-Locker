@@ -1,7 +1,7 @@
 namespace ColDogStudios.ColDogLocker.Cli
 {
     /// <summary>
-    /// Provides help information for CLI commands.
+    ///     Provides help information for CLI commands.
     /// </summary>
     public static class HelpSystem
     {
@@ -263,7 +263,8 @@ namespace ColDogStudios.ColDogLocker.Cli
                 default:
                     Console.WriteLine($"No help available for command: {command}");
                     Console.WriteLine();
-                    Console.WriteLine("Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, gui, terminal");
+                    Console.WriteLine(
+                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, gui, terminal");
                     break;
             }
         }

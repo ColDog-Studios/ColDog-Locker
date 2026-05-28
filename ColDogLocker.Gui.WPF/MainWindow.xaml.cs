@@ -1,27 +1,37 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using ColDogStudios.ColDogLocker.Application.Services;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Gui.WPF.ViewModels;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF
 {
     /// <summary>
-    /// Main window for ColDog Locker application
+    ///     Main window for ColDog Locker application
     /// </summary>
     public partial class MainWindow : Window
     {
         private readonly MainViewModel _viewModel;
-        private bool _isGridView = true;
-        private string _currentSortColumn = "";
         private bool _currentSortAscending = true;
-        private bool _listViewInitialized = false;
+        private string _currentSortColumn = "";
+        private bool _isGridView = true;
+        private bool _listViewInitialized;
 
         public MainWindow()
         {
@@ -32,17 +42,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             {
                 // Use pack URI for the window icon (taskbar)
                 var iconUri = new Uri("pack://application:,,,/cdlIcon.ico", UriKind.Absolute);
-                Icon = new System.Windows.Media.Imaging.BitmapImage(iconUri);
+                Icon = new BitmapImage(iconUri);
             }
             catch
             {
                 // Fallback: try file system path
                 try
                 {
-                    var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "cdlIcon.ico");
-                    if (System.IO.File.Exists(iconPath))
+                    var iconPath = Path.Combine(AppContext.BaseDirectory, "cdlIcon.ico");
+                    if (File.Exists(iconPath))
                     {
-                        Icon = new System.Windows.Media.Imaging.BitmapImage(new Uri(iconPath, UriKind.Absolute));
+                        Icon = new BitmapImage(new Uri(iconPath, UriKind.Absolute));
                     }
                 }
                 catch { }
@@ -68,7 +78,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             {
                 try
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                     {
                         storyboard.Begin(this);
                     }
@@ -82,25 +92,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             // Don't initialize list view columns here since the view is not visible yet
             // It will be initialized when the user switches to list view
         }
-
-        #region Window Controls
-
-        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            DragMove();
-        }
-
-        private void Minimize_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        #endregion
 
         private void LoadLockers()
         {
@@ -120,8 +111,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                         Name = locker.LockerName,
                         IsLocked = locker.IsLocked,
                         Location = locker.LockerLocation,
-                        LastModified = System.IO.Directory.Exists(locker.LockerLocation)
-                            ? System.IO.Directory.GetLastWriteTime(locker.LockerLocation)
+                        LastModified = Directory.Exists(locker.LockerLocation)
+                            ? Directory.GetLastWriteTime(locker.LockerLocation)
                             : DateTime.MinValue,
                         Size = CalculateDirectorySize(locker.LockerLocation),
                         Guid = locker.Guid
@@ -151,7 +142,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
             catch (Exception ex)
             {
-                Dialogs.ErrorDialog.Show(
+                ErrorDialog.Show(
                     "Failed to load lockers from database",
                     ex,
                     "Load Error",
@@ -163,13 +154,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         {
             try
             {
-                if (!System.IO.Directory.Exists(path))
+                if (!Directory.Exists(path))
                 {
                     return 0;
                 }
 
-                var dirInfo = new System.IO.DirectoryInfo(path);
-                return dirInfo.EnumerateFiles("*", System.IO.SearchOption.AllDirectories)
+                var dirInfo = new DirectoryInfo(path);
+                return dirInfo.EnumerateFiles("*", SearchOption.AllDirectories)
                     .Sum(file => file.Length);
             }
             catch
@@ -178,23 +169,43 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
         }
 
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        #region Window Controls
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
+
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        #endregion
+
         #region Menu and Toolbar Event Handlers
 
         private void NewLocker_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Dialogs.NewLockerDialog
-            {
-                Owner = this
-            };
+            var dialog = new NewLockerDialog { Owner = this };
 
             if (dialog.ShowDialog() == true && dialog.Success)
             {
                 try
                 {
                     // Create locker model with hashed password
-                    var lockerModel = new Core.Models.LockerModel(
+                    var lockerModel = new LockerModel(
                         dialog.LockerName,
-                        Infrastructure.Encryption.EncryptionHelper.HashPassword(dialog.Password),
+                        EncryptionHelper.HashPassword(dialog.Password),
                         dialog.Location
                     );
 
@@ -210,14 +221,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     // Reload lockers to reflect changes
                     LoadLockers();
 
-                    Dialogs.MessageDialog.ShowInformation(
+                    MessageDialog.ShowInformation(
                         $"Locker '{dialog.LockerName}' created successfully.",
                         "Success",
                         this);
                 }
                 catch (Exception ex)
                 {
-                    Dialogs.ErrorDialog.Show(
+                    ErrorDialog.Show(
                         $"Failed to create locker '{dialog.LockerName}'",
                         ex,
                         "Create Locker Error",
@@ -241,10 +252,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     continue;
                 }
 
-                var passwordDialog = new Dialogs.PasswordDialog($"Lock {locker.Name}")
-                {
-                    Owner = this
-                };
+                var passwordDialog = new PasswordDialog($"Lock {locker.Name}") { Owner = this };
 
                 if (passwordDialog.ShowDialog() == true && passwordDialog.Success)
                 {
@@ -256,16 +264,16 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                         {
                             LockerService.Lock(lockerModel, passwordDialog.Password);
                             locker.IsLocked = true;
-                            Dialogs.MessageDialog.ShowInformation($"Locked: {locker.Name}", "Success", this);
+                            MessageDialog.ShowInformation($"Locked: {locker.Name}", "Success", this);
                         }
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        Dialogs.MessageDialog.ShowError("Incorrect password", "Lock Failed", this);
+                        MessageDialog.ShowError("Incorrect password", "Lock Failed", this);
                     }
                     catch (Exception ex)
                     {
-                        Dialogs.ErrorDialog.Show($"Failed to lock '{locker.Name}'", ex, "Lock Error", this);
+                        ErrorDialog.Show($"Failed to lock '{locker.Name}'", ex, "Lock Error", this);
                     }
                 }
             }
@@ -288,10 +296,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     continue;
                 }
 
-                var passwordDialog = new Dialogs.PasswordDialog($"Unlock {locker.Name}")
-                {
-                    Owner = this
-                };
+                var passwordDialog = new PasswordDialog($"Unlock {locker.Name}") { Owner = this };
 
                 if (passwordDialog.ShowDialog() == true && passwordDialog.Success)
                 {
@@ -304,16 +309,16 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                             LockerService.Unlock(lockerModel, passwordDialog.Password);
                             locker.IsLocked = false;
                             locker.Location = lockerModel.LockerLocation; // Update location in case it changed
-                            Dialogs.MessageDialog.ShowInformation($"Unlocked: {locker.Name}", "Success", this);
+                            MessageDialog.ShowInformation($"Unlocked: {locker.Name}", "Success", this);
                         }
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        Dialogs.MessageDialog.ShowError("Incorrect password", "Unlock Failed", this);
+                        MessageDialog.ShowError("Incorrect password", "Unlock Failed", this);
                     }
                     catch (Exception ex)
                     {
-                        Dialogs.ErrorDialog.Show($"Failed to unlock '{locker.Name}'", ex, "Unlock Error", this);
+                        ErrorDialog.Show($"Failed to unlock '{locker.Name}'", ex, "Unlock Error", this);
                     }
                 }
             }
@@ -329,10 +334,10 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 return;
             }
 
-            if (Dialogs.MessageDialog.ShowQuestion(
-                $"Are you sure you want to remove {selectedItems.Count} locker(s)? This will remove them from the database but will NOT delete the files.",
-                "Confirm Remove",
-                this))
+            if (MessageDialog.ShowQuestion(
+                    $"Are you sure you want to remove {selectedItems.Count} locker(s)? This will remove them from the database but will NOT delete the files.",
+                    "Confirm Remove",
+                    this))
             {
                 try
                 {
@@ -348,14 +353,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     // Reload lockers
                     LoadLockers();
 
-                    Dialogs.MessageDialog.ShowInformation(
+                    MessageDialog.ShowInformation(
                         $"{selectedItems.Count} locker(s) removed successfully.",
                         "Success",
                         this);
                 }
                 catch (Exception ex)
                 {
-                    Dialogs.ErrorDialog.Show("Failed to remove lockers", ex, "Remove Error", this);
+                    ErrorDialog.Show("Failed to remove lockers", ex, "Remove Error", this);
                 }
             }
         }
@@ -372,7 +377,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             var locker = LockerService.Lockers.FirstOrDefault(l => l.Guid == selectedItems[0].Guid);
             if (locker != null)
             {
-                Dialogs.LockerPropertiesDialog.Show(locker, this);
+                LockerPropertiesDialog.Show(locker, this);
 
                 // Refresh the UI after properties dialog closes
                 LoadLockers();
@@ -391,11 +396,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             {
                 try
                 {
-                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{locker.Location}\"");
+                    Process.Start("explorer.exe", $"/select,\"{locker.Location}\"");
                 }
                 catch (Exception ex)
                 {
-                    Dialogs.MessageDialog.ShowError($"Failed to open location: {ex.Message}", "Error", this);
+                    MessageDialog.ShowError($"Failed to open location: {ex.Message}", "Error", this);
                 }
             }
         }
@@ -426,7 +431,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     {
                         InitializeListViewColumns();
                         _listViewInitialized = true;
-                    }), System.Windows.Threading.DispatcherPriority.Loaded);
+                    }), DispatcherPriority.Loaded);
                 }
             }
         }
@@ -441,14 +446,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 // Refresh UI
                 LoadLockers();
 
-                Dialogs.MessageDialog.ShowInformation(
+                MessageDialog.ShowInformation(
                     $"Refreshed successfully. {_viewModel.Lockers.Count} locker(s) loaded.",
                     "Refresh",
                     this);
             }
             catch (Exception ex)
             {
-                Dialogs.ErrorDialog.Show(
+                ErrorDialog.Show(
                     "Failed to refresh lockers from database",
                     ex,
                     "Refresh Error",
@@ -458,10 +463,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
 
         private void Settings_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Dialogs.SettingsDialog
-            {
-                Owner = this
-            };
+            var dialog = new SettingsDialog { Owner = this };
 
             if (dialog.ShowDialog() == true)
             {
@@ -479,29 +481,26 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 if (result.UpdateAvailable)
                 {
                     var message = $"A new version is available!\n\n" +
-                                 $"Current Version: {result.CurrentVersion}\n" +
-                                 $"Latest Version: {result.LatestVersion}\n\n" +
-                                 "Would you like to download and install it now?";
+                                  $"Current Version: {result.CurrentVersion}\n" +
+                                  $"Latest Version: {result.LatestVersion}\n\n" +
+                                  "Would you like to download and install it now?";
 
-                    if (Dialogs.MessageDialog.ShowQuestion(message, "Update Available", this))
+                    if (MessageDialog.ShowQuestion(message, "Update Available", this))
                     {
                         try
                         {
                             var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
-                            Dialogs.MessageDialog.ShowInformation(
+                            MessageDialog.ShowInformation(
                                 $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
                                 "Download Complete",
                                 this);
                         }
                         catch (Exception downloadEx)
                         {
-                            var errorDialog = new Dialogs.ErrorDialog(
+                            var errorDialog = new ErrorDialog(
                                 $"Failed to download update: {downloadEx.Message}",
                                 downloadEx,
-                                "Download Failed")
-                            {
-                                Owner = this
-                            };
+                                "Download Failed") { Owner = this };
                             errorDialog.ShowDialog();
                         }
                     }
@@ -509,30 +508,24 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 else
                 {
                     var message = $"ColDog Locker is up to date.\n\n" +
-                                 $"Current Version: {result.CurrentVersion}\n" +
-                                 $"Latest Version: {result.LatestVersion}";
-                    Dialogs.MessageDialog.ShowInformation(message, "No Updates Available", this);
+                                  $"Current Version: {result.CurrentVersion}\n" +
+                                  $"Latest Version: {result.LatestVersion}";
+                    MessageDialog.ShowInformation(message, "No Updates Available", this);
                 }
             }
             catch (Exception ex)
             {
-                var errorDialog = new Dialogs.ErrorDialog(
+                var errorDialog = new ErrorDialog(
                     $"Failed to check for updates: {ex.Message}",
                     ex,
-                    "Update Check Failed")
-                {
-                    Owner = this
-                };
+                    "Update Check Failed") { Owner = this };
                 errorDialog.ShowDialog();
             }
         }
 
         private void DevInfo_Click(object sender, RoutedEventArgs e)
         {
-            var devDialog = new Dialogs.DevDialog
-            {
-                Owner = this
-            };
+            var devDialog = new DevDialog { Owner = this };
             devDialog.ShowDialog();
         }
 
@@ -545,7 +538,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
             catch (Exception ex)
             {
-                Dialogs.ErrorDialog.Show(
+                ErrorDialog.Show(
                     "This is a test error message to verify the error dialog is working correctly. " +
                     "The error dialog should display this message, the exception details, and a stack trace.",
                     ex,
@@ -558,18 +551,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         {
             try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://github.com/ColDog-Studios/ColDog-Locker",
-                    UseShellExecute = true
-                });
+                Process.Start(new ProcessStartInfo { FileName = "https://github.com/ColDog-Studios/ColDog-Locker", UseShellExecute = true });
             }
             catch { }
         }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
-            Dialogs.AboutDialog.Show(this);
+            AboutDialog.Show(this);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -694,11 +683,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 return new ObservableCollection<LockerViewModel>(
                     LockersGridView.SelectedItems.Cast<LockerViewModel>());
             }
-            else
-            {
-                return new ObservableCollection<LockerViewModel>(
-                    LockersListView.SelectedItems.Cast<LockerViewModel>());
-            }
+
+            return new ObservableCollection<LockerViewModel>(
+                LockersListView.SelectedItems.Cast<LockerViewModel>());
         }
 
         private void ApplySettings()
@@ -725,7 +712,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         #region List View Column Management
 
         /// <summary>
-        /// Initialize column resizing and auto-sizing
+        ///     Initialize column resizing and auto-sizing
         /// </summary>
         private void InitializeListViewColumns()
         {
@@ -764,12 +751,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             catch (Exception ex)
             {
                 // Log error but don't crash
-                System.Diagnostics.Debug.WriteLine($"Error initializing list view columns: {ex.Message}");
+                Debug.WriteLine($"Error initializing list view columns: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Find the GridViewColumnHeader for a column
+        ///     Find the GridViewColumnHeader for a column
         /// </summary>
         private GridViewColumnHeader? FindColumnHeader(GridViewColumn column)
         {
@@ -778,7 +765,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Attach resize handlers to column header
+        ///     Attach resize handlers to column header
         /// </summary>
         private void AttachColumnResizeHandlers(GridViewColumnHeader header, GridViewColumn column)
         {
@@ -795,7 +782,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Handle column resize via drag
+        ///     Handle column resize via drag
         /// </summary>
         private void OnColumnResize(GridViewColumn column, double widthChange)
         {
@@ -807,7 +794,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Auto-size a specific column to fit content
+        ///     Auto-size a specific column to fit content
         /// </summary>
         private void AutoSizeColumn(GridViewColumn column)
         {
@@ -837,8 +824,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 // Measure content width
                 foreach (var locker in _viewModel.FilteredLockers)
                 {
-                    string text = GetColumnValueAsString(locker, column);
-                    double contentWidth = MeasureString(text, LockersListView) + 20; // Add padding
+                    var text = GetColumnValueAsString(locker, column);
+                    var contentWidth = MeasureString(text, LockersListView) + 20; // Add padding
                     maxWidth = Math.Max(maxWidth, contentWidth);
                 }
 
@@ -847,12 +834,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error auto-sizing column: {ex.Message}");
+                Debug.WriteLine($"Error auto-sizing column: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Auto-size all columns except Location (which fits to window)
+        ///     Auto-size all columns except Location (which fits to window)
         /// </summary>
         private void AutoSizeAllColumns()
         {
@@ -887,7 +874,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Set Location column width to fill remaining space
+        ///     Set Location column width to fill remaining space
         /// </summary>
         private void SetLocationColumnWidth()
         {
@@ -907,14 +894,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
 
             // Calculate available width (account for scrollbar)
-            double availableWidth = LockersListView.ActualWidth - otherColumnsWidth - 20;
+            var availableWidth = LockersListView.ActualWidth - otherColumnsWidth - 20;
 
             // Set location column width (minimum 200)
             LocationColumn.Width = Math.Max(200, availableWidth);
         }
 
         /// <summary>
-        /// Get the value for a column as a string
+        ///     Get the value for a column as a string
         /// </summary>
         private string GetColumnValueAsString(LockerViewModel locker, GridViewColumn column)
         {
@@ -922,19 +909,23 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             {
                 return locker.Name ?? "";
             }
-            else if (column == StatusColumn)
+
+            if (column == StatusColumn)
             {
                 return locker.IsLocked ? "Locked" : "Unlocked";
             }
-            else if (column == LastModifiedColumn)
+
+            if (column == LastModifiedColumn)
             {
                 return locker.LastModified.ToString("MM/dd/yyyy hh:mm:ss tt");
             }
-            else if (column == SizeColumn)
+
+            if (column == SizeColumn)
             {
                 return locker.SizeText ?? "";
             }
-            else if (column == LocationColumn)
+
+            if (column == LocationColumn)
             {
                 return locker.Location ?? "";
             }
@@ -943,12 +934,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Measure string width for auto-sizing
+        ///     Measure string width for auto-sizing
         /// </summary>
         private double MeasureString(string text, FrameworkElement element)
         {
             // Try to get font properties from Control, otherwise use defaults
-            var fontFamily = (element as Control)?.FontFamily ?? new System.Windows.Media.FontFamily("Segoe UI");
+            var fontFamily = (element as Control)?.FontFamily ?? new FontFamily("Segoe UI");
             var fontSize = (element as Control)?.FontSize ?? 12;
             var fontStyle = (element as Control)?.FontStyle ?? FontStyles.Normal;
             var fontWeight = (element as Control)?.FontWeight ?? FontWeights.Normal;
@@ -956,7 +947,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
 
             var formattedText = new FormattedText(
                 text,
-                System.Globalization.CultureInfo.CurrentCulture,
+                CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
                 new Typeface(fontFamily, fontStyle, fontWeight, fontStretch),
                 fontSize,
@@ -967,7 +958,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Find a visual child in the tree with optional predicate
+        ///     Find a visual child in the tree with optional predicate
         /// </summary>
         private T? FindVisualChild<T>(DependencyObject? parent, Func<T, bool>? predicate = null) where T : DependencyObject
         {
@@ -976,7 +967,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 return null;
             }
 
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
 
@@ -996,15 +987,15 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         /// <summary>
-        /// Handle column header click for sorting
+        ///     Handle column header click for sorting
         /// </summary>
         private void ColumnHeader_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"ColumnHeader_Click called - sender: {sender?.GetType().Name}");
+            Debug.WriteLine($"ColumnHeader_Click called - sender: {sender?.GetType().Name}");
 
             if (sender is GridViewColumnHeader header && header.Tag is string columnName)
             {
-                System.Diagnostics.Debug.WriteLine($"Sorting by column: {columnName}, Current: {_currentSortColumn}, Ascending: {_currentSortAscending}");
+                Debug.WriteLine($"Sorting by column: {columnName}, Current: {_currentSortColumn}, Ascending: {_currentSortAscending}");
 
                 // Toggle sort direction if clicking the same column
                 if (_currentSortColumn == columnName)
@@ -1017,7 +1008,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     _currentSortAscending = true;
                 }
 
-                System.Diagnostics.Debug.WriteLine($"New sort: {_currentSortColumn} {(_currentSortAscending ? "ASC" : "DESC")}");
+                Debug.WriteLine($"New sort: {_currentSortColumn} {(_currentSortAscending ? "ASC" : "DESC")}");
 
                 // Apply sort
                 SortLockers(columnName, _currentSortAscending);
@@ -1027,12 +1018,12 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Header or Tag is null - Header: {sender is GridViewColumnHeader}, Tag: {(sender as GridViewColumnHeader)?.Tag}");
+                Debug.WriteLine($"Header or Tag is null - Header: {sender is GridViewColumnHeader}, Tag: {(sender as GridViewColumnHeader)?.Tag}");
             }
         }
 
         /// <summary>
-        /// Sort lockers by column
+        ///     Sort lockers by column
         /// </summary>
         private void SortLockers(string columnName, bool ascending)
         {
@@ -1078,16 +1069,16 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 _viewModel.SortColumn = columnName;
                 _viewModel.SortAscending = ascending;
 
-                System.Diagnostics.Debug.WriteLine($"Sorted by {columnName} {(ascending ? "ascending" : "descending")} - {sortedList.Count} items");
+                Debug.WriteLine($"Sorted by {columnName} {(ascending ? "ascending" : "descending")} - {sortedList.Count} items");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error sorting lockers: {ex.Message}");
+                Debug.WriteLine($"Error sorting lockers: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Update sort indicator arrows in column headers
+        ///     Update sort indicator arrows in column headers
         /// </summary>
         private void UpdateSortIndicators(GridViewColumnHeader clickedHeader)
         {
@@ -1118,10 +1109,5 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         }
 
         #endregion
-
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

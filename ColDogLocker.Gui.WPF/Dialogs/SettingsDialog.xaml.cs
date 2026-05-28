@@ -1,8 +1,12 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Data;
+using ColDogStudios.ColDogLocker.Core.Logging;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using Microsoft.Win32;
 using RadioButton = System.Windows.Controls.RadioButton;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -63,17 +67,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             EnableAnimationsCheckBox.IsChecked = SettingsManager.Settings.EnableAnimations;
 
             // Load logging options
-            LogLevelComboBox.SelectedItem = LogLevelComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+            LogLevelComboBox.SelectedItem = LogLevelComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.LogLevel) ?? LogLevelComboBox.Items[1];
-            LogFormatComboBox.SelectedItem = LogFormatComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+            LogFormatComboBox.SelectedItem = LogFormatComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.LogFormat) ?? LogFormatComboBox.Items[0];
-            MaxFileSizeTextBox.Text = SettingsManager.Settings.MaxFileSizeMB.ToString();
+            MaxFileSizeTextBox.Text = SettingsManager.Settings.MaxFileSizeMb.ToString();
             MaxRetainedFilesTextBox.Text = SettingsManager.Settings.MaxRetainedFiles.ToString();
             EnableFileLoggingCheckBox.IsChecked = SettingsManager.Settings.EnableFileLogging;
             EnableCompressionCheckBox.IsChecked = SettingsManager.Settings.EnableCompression;
             IncludeTimestampsCheckBox.IsChecked = SettingsManager.Settings.IncludeTimestamps;
             IncludeThreadIdCheckBox.IsChecked = SettingsManager.Settings.IncludeThreadId;
-            DateTimeFormatComboBox.SelectedItem = DateTimeFormatComboBox.Items.Cast<System.Windows.Controls.ComboBoxItem>()
+            DateTimeFormatComboBox.SelectedItem = DateTimeFormatComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.DateTimeFormat) ?? DateTimeFormatComboBox.Items[0];
             AsyncLoggingCheckBox.IsChecked = SettingsManager.Settings.AsyncLogging;
 
@@ -94,11 +98,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void BrowseDefaultLocation_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog
-            {
-                Title = "Select default locker folder",
-                InitialDirectory = DefaultLocationTextBox.Text
-            };
+            var dialog = new OpenFolderDialog { Title = "Select default locker folder", InitialDirectory = DefaultLocationTextBox.Text };
 
             if (dialog.ShowDialog() == true)
             {
@@ -134,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void NumericTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (sender is System.Windows.Controls.TextBox textBox && IsLoaded)
+            if (sender is TextBox textBox && IsLoaded)
             {
                 // Allow only numeric input between 7 and 90
                 if (int.TryParse(textBox.Text, out var value))
@@ -179,7 +179,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     Directory.CreateDirectory(logsPath);
                 }
 
-                System.Diagnostics.Process.Start("explorer.exe", logsPath);
+                Process.Start("explorer.exe", logsPath);
             }
             catch (Exception ex)
             {
@@ -190,13 +190,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void VacuumDatabase_Click(object sender, RoutedEventArgs e)
         {
             if (MessageDialog.ShowQuestion(
-                "This will optimize the database and reclaim unused space. Continue?",
-                "Vacuum Database",
-                this))
+                    "This will optimize the database and reclaim unused space. Continue?",
+                    "Vacuum Database",
+                    this))
             {
                 try
                 {
-                    var reclaimed = ColDogStudios.ColDogLocker.Infrastructure.Data.LockerRepository.VacuumDatabase();
+                    var reclaimed = LockerRepository.VacuumDatabase();
                     var reclaimedKB = reclaimed / 1024.0;
                     var message = reclaimed > 0
                         ? $"Database optimized successfully.\n\nSpace reclaimed: {reclaimedKB:F2} KB"
@@ -213,9 +213,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void ClearCache_Click(object sender, RoutedEventArgs e)
         {
             if (MessageDialog.ShowQuestion(
-                "Are you sure you want to clear all cached data?",
-                "Clear Cache",
-                this))
+                    "Are you sure you want to clear all cached data?",
+                    "Clear Cache",
+                    this))
             {
                 try
                 {
@@ -232,9 +232,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void ResetSettings_Click(object sender, RoutedEventArgs e)
         {
             if (MessageDialog.ShowQuestion(
-                "This will reset ALL settings to their default values. Continue?",
-                "Reset Settings",
-                this))
+                    "This will reset ALL settings to their default values. Continue?",
+                    "Reset Settings",
+                    this))
             {
                 RestoreDefaultSettings();
                 LoadCurrentSettings();
@@ -270,14 +270,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
                 // Apply logging settings to Infrastructure.Logging.Logger
                 var devModeEnabled = DevModeCheckBox.IsChecked ?? false;
-                ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.SetDevMode(devModeEnabled);
+                Logger.SetDevMode(devModeEnabled);
 
                 // Save logging options
-                SettingsManager.Settings.LogLevel = (LogLevelComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Info";
-                SettingsManager.Settings.LogFormat = (LogFormatComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "json";
+                SettingsManager.Settings.LogLevel = (LogLevelComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Info";
+                SettingsManager.Settings.LogFormat = (LogFormatComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "json";
                 if (int.TryParse(MaxFileSizeTextBox.Text, out var maxFileSize))
                 {
-                    SettingsManager.Settings.MaxFileSizeMB = maxFileSize;
+                    SettingsManager.Settings.MaxFileSizeMb = maxFileSize;
                 }
 
                 if (int.TryParse(MaxRetainedFilesTextBox.Text, out var maxRetained))
@@ -289,11 +289,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 SettingsManager.Settings.EnableCompression = EnableCompressionCheckBox.IsChecked ?? false;
                 SettingsManager.Settings.IncludeTimestamps = IncludeTimestampsCheckBox.IsChecked ?? true;
                 SettingsManager.Settings.IncludeThreadId = IncludeThreadIdCheckBox.IsChecked ?? false;
-                SettingsManager.Settings.DateTimeFormat = (DateTimeFormatComboBox.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "UTC";
+                SettingsManager.Settings.DateTimeFormat = (DateTimeFormatComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "UTC";
                 SettingsManager.Settings.AsyncLogging = AsyncLoggingCheckBox.IsChecked ?? true;
 
                 // Apply logging settings to logger
-                ColDogStudios.ColDogLocker.Infrastructure.Logging.Logger.ReloadConfig();
+                Logger.ReloadConfig();
 
                 if (int.TryParse(DbVacuumIntervalTextBox.Text, out var vacuumInterval))
                 {
@@ -334,9 +334,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             if (_hasChanges)
             {
                 if (!MessageDialog.ShowQuestion(
-                    "You have unsaved changes. Are you sure you want to cancel?",
-                    "Unsaved Changes",
-                    this))
+                        "You have unsaved changes. Are you sure you want to cancel?",
+                        "Unsaved Changes",
+                        this))
                 {
                     return;
                 }

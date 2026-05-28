@@ -1,14 +1,15 @@
-using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Media.Animation;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     /// <summary>
-    /// Developer Information Dialog - shows detailed build and system information
+    ///     Developer Information Dialog - shows detailed build and system information
     /// </summary>
     public partial class DevDialog : Window
     {
@@ -25,7 +26,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             {
                 try
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                     {
                         storyboard.Begin(this);
                     }
@@ -40,11 +41,11 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         private void LoadInformation()
         {
             // Load Build Information
-            VersionText.Text = BuildInfo.Version ?? "Unknown";
-            BuildNumberText.Text = BuildInfo.BuildNumber ?? "Unknown";
-            BuildDateText.Text = BuildInfo.BuildDate ?? "Unknown";
-            BuildTimeText.Text = BuildInfo.BuildTime ?? "Unknown";
-            FullVersionText.Text = BuildInfo.BuildVersion ?? "Unknown";
+            VersionText.Text = AppInfo.SemanticVersion ?? "Unknown";
+            BuildNumberText.Text = AppInfo.BuildNumber ?? "Unknown";
+            BuildDateText.Text = AppInfo.BuildDate ?? "Unknown";
+            BuildTimeText.Text = AppInfo.BuildTime ?? "Unknown";
+            FullVersionText.Text = AppInfo.BuildVersion ?? "Unknown";
 
             // Load System Information
             try
@@ -107,7 +108,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
             try
             {
-                InstallPathText.Text = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "Unknown";
+                InstallPathText.Text = Process.GetCurrentProcess().MainModule?.FileName ?? "Unknown";
             }
             catch
             {
@@ -117,7 +118,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             // Load Application Paths
             try
             {
-                ConfigDirText.Text = Variables.localConfig;
+                ConfigDirText.Text = Variables.LocalConfig;
             }
             catch
             {
@@ -126,7 +127,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
             try
             {
-                var dbPath = Path.Combine(Variables.localConfig, "lockers.db");
+                var dbPath = Path.Combine(Variables.LocalConfig, "lockers.db");
                 DatabasePathText.Text = dbPath;
             }
             catch
@@ -139,7 +140,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                var info = new System.Text.StringBuilder();
+                var info = new StringBuilder();
                 info.AppendLine("=== ColDog Locker Developer Information ===");
                 info.AppendLine();
                 info.AppendLine("BUILD INFORMATION:");
@@ -162,7 +163,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 info.AppendLine($"  Config Directory: {ConfigDirText.Text}");
                 info.AppendLine($"  Database Path: {DatabasePathText.Text}");
 
-                System.Windows.Clipboard.SetText(info.ToString());
+                Clipboard.SetText(info.ToString());
                 MessageDialog.ShowInformation("Developer information copied to clipboard.", "Success", this);
             }
             catch (Exception ex)

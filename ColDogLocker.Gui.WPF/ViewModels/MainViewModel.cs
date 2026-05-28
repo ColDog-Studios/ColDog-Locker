@@ -6,56 +6,49 @@ using CommunityToolkit.Mvvm.Input;
 namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
 {
     /// <summary>
-    /// Main view model for the application
+    ///     Main view model for the application
     /// </summary>
     public partial class MainViewModel : ObservableObject
     {
-        [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _lockers = [];
+        [ObservableProperty] private ObservableCollection<LockerViewModel> _filteredLockers = [];
 
-        [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _filteredLockers = [];
+        [ObservableProperty] private bool _isGridView = true;
 
-        [ObservableProperty]
-        private ObservableCollection<LockerViewModel> _selectedLockers = [];
+        [ObservableProperty] private ObservableCollection<LockerViewModel> _lockers = [];
 
-        [ObservableProperty]
-        private string _searchText = string.Empty;
+        [ObservableProperty] private string _searchText = string.Empty;
 
-        [ObservableProperty]
-        private bool _isGridView = true;
+        [ObservableProperty] private ObservableCollection<LockerViewModel> _selectedLockers = [];
 
-        [ObservableProperty]
-        private string _sortColumn = "Name";
+        [ObservableProperty] private bool _sortAscending = true;
 
-        [ObservableProperty]
-        private bool _sortAscending = true;
-
-        /// <summary>
-        /// Gets the total number of lockers
-        /// </summary>
-        public int TotalLockers => Lockers.Count;
-
-        /// <summary>
-        /// Gets the number of locked lockers
-        /// </summary>
-        public int LockedCount => Lockers.Count(l => l.IsLocked);
-
-        /// <summary>
-        /// Gets the number of unlocked lockers
-        /// </summary>
-        public int UnlockedCount => Lockers.Count(l => !l.IsLocked);
-
-        /// <summary>
-        /// Gets the number of selected lockers
-        /// </summary>
-        public int SelectedCount => SelectedLockers.Count;
+        [ObservableProperty] private string _sortColumn = "Name";
 
         public MainViewModel()
         {
             // Initialize with filtered lockers
             FilterLockers();
         }
+
+        /// <summary>
+        ///     Gets the total number of lockers
+        /// </summary>
+        public int TotalLockers => Lockers.Count;
+
+        /// <summary>
+        ///     Gets the number of locked lockers
+        /// </summary>
+        public int LockedCount => Lockers.Count(l => l.IsLocked);
+
+        /// <summary>
+        ///     Gets the number of unlocked lockers
+        /// </summary>
+        public int UnlockedCount => Lockers.Count(l => !l.IsLocked);
+
+        /// <summary>
+        ///     Gets the number of selected lockers
+        /// </summary>
+        public int SelectedCount => SelectedLockers.Count;
 
         [RelayCommand]
         private static async Task CreateNewLockerAsync()
@@ -71,7 +64,10 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
             await Task.CompletedTask;
         }
 
-        private bool CanLockUnlock() => SelectedLockers.Count > 0;
+        private bool CanLockUnlock()
+        {
+            return SelectedLockers.Count > 0;
+        }
 
         [RelayCommand(CanExecute = nameof(CanLockUnlock))]
         private async Task UnlockSelectedAsync()
@@ -138,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.ViewModels
             else
             {
                 var filtered = Lockers.Where(l =>
-                    l.Name.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase));
+                    l.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
                 FilteredLockers = new ObservableCollection<LockerViewModel>(filtered);
             }
 

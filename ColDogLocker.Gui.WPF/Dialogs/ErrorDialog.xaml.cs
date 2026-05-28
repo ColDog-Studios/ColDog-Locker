@@ -1,16 +1,20 @@
+using System.Diagnostics;
 using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Media.Animation;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
     public partial class ErrorDialog : Window
     {
-        private readonly Exception? _exception;
         private readonly string _errorMessage;
         private readonly string _errorTitle;
+        private readonly Exception? _exception;
 
         public ErrorDialog(string errorMessage, Exception? exception = null, string? title = null)
         {
@@ -30,7 +34,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             {
                 try
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is System.Windows.Media.Animation.Storyboard storyboard)
+                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                     {
                         storyboard.Begin(this);
                     }
@@ -53,8 +57,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             var errorDetails = new StringBuilder();
             errorDetails.AppendLine("=== ERROR DETAILS ===");
             errorDetails.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            errorDetails.AppendLine($"Application: ColDog Locker");
-            errorDetails.AppendLine($"Version: {BuildInfo.Version ?? "Unknown version"}");
+            errorDetails.AppendLine("Application: ColDog Locker");
+            errorDetails.AppendLine($"Version: {AppInfo.SemanticVersion ?? "Unknown version"}");
             errorDetails.AppendLine();
             errorDetails.AppendLine("Error Message:");
             errorDetails.AppendLine(_errorMessage);
@@ -116,10 +120,10 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             // System information
             errorDetails.AppendLine("=== SYSTEM INFORMATION ===");
             errorDetails.AppendLine($"OS: {Environment.OSVersion}");
-            errorDetails.AppendLine($"OS Architecture: {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture}");
-            errorDetails.AppendLine($"Process Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
+            errorDetails.AppendLine($"OS Architecture: {RuntimeInformation.OSArchitecture}");
+            errorDetails.AppendLine($"Process Architecture: {RuntimeInformation.ProcessArchitecture}");
             errorDetails.AppendLine($".NET Version: {Environment.Version}");
-            errorDetails.AppendLine($"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
+            errorDetails.AppendLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
             errorDetails.AppendLine($"Processor Count: {Environment.ProcessorCount}");
             errorDetails.AppendLine($"Memory (Working Set): {Environment.WorkingSet / 1024 / 1024} MB");
 
@@ -130,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var assembly = Assembly.GetExecutingAssembly();
                 var version = assembly.GetName().Version;
                 return version?.ToString() ?? "Unknown";
             }
@@ -144,7 +148,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                System.Windows.Clipboard.SetText(FullErrorTextBox.Text);
+                Clipboard.SetText(FullErrorTextBox.Text);
                 MessageDialog.ShowInformation("Error details copied to clipboard.", "Copied", this);
             }
             catch (Exception ex)
@@ -166,12 +170,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     Directory.CreateDirectory(logsPath);
                 }
 
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = logsPath,
-                    UseShellExecute = true,
-                    Verb = "open"
-                });
+                Process.Start(new ProcessStartInfo { FileName = logsPath, UseShellExecute = true, Verb = "open" });
             }
             catch (Exception ex)
             {
@@ -186,7 +185,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         }
 
         /// <summary>
-        /// Convenience method to show an error dialog
+        ///     Convenience method to show an error dialog
         /// </summary>
         public static void Show(string errorMessage, Exception? exception = null, string? title = null, Window? owner = null)
         {

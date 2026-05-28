@@ -1,10 +1,10 @@
-using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Application.Validation;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Core.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Infrastructure.Console;
-using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Console;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -13,7 +13,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         // Create a new locker ///////////////////////////////////////////////////////////////////////////////////
         public static void NewLocker()
         {
-            // 
+            //
             string? lockerName;
             while (true)
             {
@@ -49,7 +49,6 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 " - At least a special character (!@#$%^&*)\n";
 
             string? password;
-            string? confirmPassword;
             while (true)
             {
                 // Get locker password from user
@@ -69,7 +68,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                 // Confirm locker password
                 Console.Write("Confirm Locker Password: ");
-                confirmPassword = ConsoleHelper.ReadPassword();
+                var confirmPassword = ConsoleHelper.ReadPassword();
 
                 // Validate password confirmation
                 Logger.Log(LogLevel.Debug, "Validating locker password confirmation");
@@ -83,8 +82,8 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             // Get locker location
-            var lockerLocation = Path.Combine(Variables.cdlDir, lockerName);
-            
+            var lockerLocation = Path.Combine(Variables.CdlDir, lockerName);
+
             // Validate locker path is not protected
             Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");
             var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
@@ -98,7 +97,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             //TODO: Ensure hashing and creation is validated properly
-            
+
             // Hash the password
             Logger.Log(LogLevel.Debug, "Hashing locker password");
             var passwordHash = EncryptionHelper.HashPassword(password);
@@ -220,13 +219,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             try
             {
                 LockerService.Lock(locker, password);
-                return;
             }
             catch (UnauthorizedAccessException ex)
             {
                 Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
-                return;
             }
         }
 
@@ -285,14 +282,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             try
             {
                 LockerService.Unlock(locker, password);
-                return;
-
             }
             catch (UnauthorizedAccessException ex)
             {
                 Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
-                return;
             }
         }
 

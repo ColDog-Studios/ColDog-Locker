@@ -1,17 +1,17 @@
-using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Updates;
 using ColDogStudios.ColDogLocker.Tui.Views;
 
 namespace ColDogStudios.ColDogLocker.Tui
 {
     /// <summary>
-    /// Entry point for the TUI (Terminal User Interface) application.
-    /// This class is invoked by ColDogLocker.Cli when launching the terminal interface.
+    ///     Entry point for the TUI (Terminal User Interface) application.
+    ///     This class is invoked by ColDogLocker.Cli when launching the terminal interface.
     /// </summary>
     public static class TuiLauncher
     {
         /// <summary>
-        /// Launches the TUI application.
+        ///     Launches the TUI application.
         /// </summary>
         /// <returns>Exit code (0 for success, non-zero for error)</returns>
         public static int Launch()
@@ -19,9 +19,6 @@ namespace ColDogStudios.ColDogLocker.Tui
             try
             {
                 Logger.Log(LogLevel.Debug, "Launching ColDog Locker TUI");
-
-                // Initialize the application
-                Initialization.InitializeAsync().GetAwaiter().GetResult();
 
                 // Set up the UpdateManager menu title delegate
                 UpdateManager.ShowMenuTitle = MainMenu.MenuTitle;
@@ -36,7 +33,7 @@ namespace ColDogStudios.ColDogLocker.Tui
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
                 Console.ResetColor();
-                Logger.Log(LogLevel.Fatal, $"Unhandled exception in TUI", ex);
+                Logger.Log(LogLevel.Fatal, "Unhandled exception in TUI", ex);
                 return 1;
             }
         }

@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Logging;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -28,12 +28,12 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             var logFormatInput = Console.ReadLine();
             var logFormat = string.IsNullOrWhiteSpace(logFormatInput) ? SettingsManager.Settings.LogFormat : logFormatInput;
 
-            Console.Write($"Max Log File Size (MB) [Current: {SettingsManager.Settings.MaxFileSizeMB}]: ");
+            Console.Write($"Max Log File Size (MB) [Current: {SettingsManager.Settings.MaxFileSizeMb}]: ");
             var maxFileSizeInput = Console.ReadLine();
-            var maxFileSizeMB = SettingsManager.Settings.MaxFileSizeMB;
+            var maxFileSizeMb = SettingsManager.Settings.MaxFileSizeMb;
             if (!string.IsNullOrWhiteSpace(maxFileSizeInput) && int.TryParse(maxFileSizeInput, out var parsedSize) && parsedSize > 0)
             {
-                maxFileSizeMB = parsedSize;
+                maxFileSizeMb = parsedSize;
             }
 
             Console.Write($"Max Retained Log Files [Current: {SettingsManager.Settings.MaxRetainedFiles}]: ");
@@ -46,19 +46,27 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             Console.Write($"Enable File Logging? (y/N) [Current: {(SettingsManager.Settings.EnableFileLogging ? "Yes" : "No")}] ");
             var enableFileLoggingInput = Console.ReadLine();
-            var enableFileLogging = string.IsNullOrWhiteSpace(enableFileLoggingInput) ? SettingsManager.Settings.EnableFileLogging : enableFileLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var enableFileLogging = string.IsNullOrWhiteSpace(enableFileLoggingInput)
+                ? SettingsManager.Settings.EnableFileLogging
+                : enableFileLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Enable Compression? (y/N) [Current: {(SettingsManager.Settings.EnableCompression ? "Yes" : "No")}] ");
             var enableCompressionInput = Console.ReadLine();
-            var enableCompression = string.IsNullOrWhiteSpace(enableCompressionInput) ? SettingsManager.Settings.EnableCompression : enableCompressionInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var enableCompression = string.IsNullOrWhiteSpace(enableCompressionInput)
+                ? SettingsManager.Settings.EnableCompression
+                : enableCompressionInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Include Timestamps? (y/N) [Current: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}] ");
             var includeTimestampsInput = Console.ReadLine();
-            var includeTimestamps = string.IsNullOrWhiteSpace(includeTimestampsInput) ? SettingsManager.Settings.IncludeTimestamps : includeTimestampsInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var includeTimestamps = string.IsNullOrWhiteSpace(includeTimestampsInput)
+                ? SettingsManager.Settings.IncludeTimestamps
+                : includeTimestampsInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Include Thread ID? (y/N) [Current: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}] ");
             var includeThreadIdInput = Console.ReadLine();
-            var includeThreadId = string.IsNullOrWhiteSpace(includeThreadIdInput) ? SettingsManager.Settings.IncludeThreadId : includeThreadIdInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var includeThreadId = string.IsNullOrWhiteSpace(includeThreadIdInput)
+                ? SettingsManager.Settings.IncludeThreadId
+                : includeThreadIdInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             Console.Write($"Date/Time Format (UTC/Local) [Current: {SettingsManager.Settings.DateTimeFormat}]: ");
             var dateTimeFormatInput = Console.ReadLine();
@@ -66,13 +74,16 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             Console.Write($"Enable Async Logging? (y/N) [Current: {(SettingsManager.Settings.AsyncLogging ? "Yes" : "No")}] ");
             var asyncLoggingInput = Console.ReadLine();
-            var asyncLogging = string.IsNullOrWhiteSpace(asyncLoggingInput) ? SettingsManager.Settings.AsyncLogging : asyncLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var asyncLogging = string.IsNullOrWhiteSpace(asyncLoggingInput)
+                ? SettingsManager.Settings.AsyncLogging
+                : asyncLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             // Prompt the user to enable or disable auto updates
             Console.Write($"Enable Auto Update? (y/N) [Current: {(SettingsManager.Settings.AutoUpdate ? "Yes" : "No")}]: ");
             var autoUpdateInput = Console.ReadLine();
-            var autoUpdate = string.IsNullOrEmpty(autoUpdateInput) ? SettingsManager.Settings.AutoUpdate :
-                autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            var autoUpdate = string.IsNullOrEmpty(autoUpdateInput)
+                ? SettingsManager.Settings.AutoUpdate
+                : autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             // Prompt the user to select update channel
             Console.Write($"Update Channel (stable/prerelease) [Current: {SettingsManager.Settings.UpdateChannel}]: ");
@@ -100,7 +111,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 DevMode = devMode,
                 LogLevel = logLevel,
                 LogFormat = logFormat,
-                MaxFileSizeMB = maxFileSizeMB,
+                MaxFileSizeMb = maxFileSizeMb,
                 MaxRetainedFiles = maxRetainedFiles,
                 EnableFileLogging = enableFileLogging,
                 EnableCompression = enableCompression,
@@ -123,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine($"  Dev Mode: {(SettingsManager.Settings.DevMode ? "Enabled" : "Disabled")}");
             Console.WriteLine($"  Log Level: {SettingsManager.Settings.LogLevel}");
             Console.WriteLine($"  Log Format: {SettingsManager.Settings.LogFormat}");
-            Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMB} MB");
+            Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
             Console.WriteLine($"  Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
             Console.WriteLine($"  File Logging: {(SettingsManager.Settings.EnableFileLogging ? "Enabled" : "Disabled")}");
             Console.WriteLine($"  Compression: {(SettingsManager.Settings.EnableCompression ? "Enabled" : "Disabled")}");

@@ -1,9 +1,10 @@
-using ColDogStudios.ColDogLocker.Application.Services;
+using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
-using System.Runtime.InteropServices;
+using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Gui;
+using ColDogStudios.ColDogLocker.Services.Startup;
+using ColDogStudios.ColDogLocker.Tui;
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -11,23 +12,21 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         private static int Main(string[] args)
         {
+            // Initialize the application
+            Initialization.InitializeAsync().GetAwaiter().GetResult();
+
+            // New line for better readability in console output
             Console.WriteLine();
 
             try
             {
-                // Initialize application for CLI commands (except for UI launchers)
-                if (args.Length > 0 && args[0].ToLowerInvariant() is not "gui" and not "terminal" and not "tui")
-                {
-                    InitializeCli();
-                }
-
                 int result;
 
                 // No arguments - show help
                 if (args.Length == 0)
                 {
                     Logger.Log(LogLevel.Debug, "No CLI command provided");
-                    result = HandleHelpCommand(args);
+                    result = HelpCommand(args);
                 }
                 else
                 {
@@ -39,21 +38,21 @@ namespace ColDogStudios.ColDogLocker.Cli
                     {
                         "gui" => LaunchGui(),
                         "terminal" or "tui" => LaunchTui(),
-                        "new" => LockerCommandHandlers.HandleNew(args),
-                        "remove" => LockerCommandHandlers.HandleRemove(args),
-                        "lock" => LockerCommandHandlers.HandleLock(args),
-                        "unlock" => LockerCommandHandlers.HandleUnlock(args),
-                        "list" => LockerCommandHandlers.HandleList(args),
-                        "status" => LockerCommandHandlers.HandleStatus(args),
-                        "change-password" => LockerCommandHandlers.HandleChangePassword(args),
-                        "verify" => LockerCommandHandlers.HandleVerify(args),
-                        "settings" => SettingsCommandHandlers.HandleSettings(args),
-                        "db-vacuum" => DatabaseCommandHandlers.HandleDbVacuum(args),
-                        "db-info" => DatabaseCommandHandlers.HandleDbInfo(args),
-                        "help" => HandleHelpCommand(args),
-                        "dev" => HandleDevCommand(),
-                        "--version" or "-v" => HandleVersionCommand(),
-                        _ => HandleUnknownCommand(command)
+                        "new" => LockerCommands.New(args),
+                        "remove" => LockerCommands.Remove(args),
+                        "lock" => LockerCommands.Lock(args),
+                        "unlock" => LockerCommands.Unlock(args),
+                        "list" => LockerCommands.List(args),
+                        "status" => LockerCommands.Status(args),
+                        "change-password" => LockerCommands.ChangePassword(args),
+                        "verify" => LockerCommands.Verify(args),
+                        "settings" => SettingsCommands.Settings(args),
+                        "db-vacuum" => DatabaseCommands.DbVacuum(args),
+                        "db-info" => DatabaseCommands.DbInfo(args),
+                        "help" => HelpCommand(args),
+                        "dev" => DevCommand(),
+                        "--version" or "-v" => VersionCommand(),
+                        _ => UnknownCommand(command)
                     };
                 }
 
@@ -64,32 +63,14 @@ namespace ColDogStudios.ColDogLocker.Cli
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine($"Error: {ex.Message}");
-            #if DEBUG
+#if DEBUG
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
-            #endif
+#endif
                 Console.ResetColor();
-                Logger.Log(LogLevel.Fatal, $"Unhandled exception", ex);
+                Logger.Log(LogLevel.Fatal, "Unhandled exception", ex);
                 Console.WriteLine();
                 return 1;
             }
-        }
-
-        private static void InitializeCli()
-        {
-            Logger.Log(LogLevel.Debug, "Initializing ColDog Locker CLI");
-
-            // Create directories if needed
-            if (!Directory.Exists(Variables.localConfig))
-            {
-                Directory.CreateDirectory(Variables.localConfig);
-            }
-
-            // Initialize database and migrate from JSON if needed
-            Infrastructure.Data.LockerRepository.InitializeDatabase();
-
-            // Load settings and lockers (minimal initialization for CLI)
-            SettingsManager.LoadSettings();
-            LockerService.LoadLockers();
         }
 
         #region UI Launchers
@@ -98,7 +79,7 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             try
             {
-                var launcher = Gui.GuiLauncher.CreateLauncher();
+                var launcher = GuiLauncher.CreateLauncher();
                 return launcher.Launch(Array.Empty<string>());
             }
             catch (PlatformNotSupportedException ex)
@@ -121,14 +102,14 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int LaunchTui()
         {
-            return Tui.TuiLauncher.Launch();
+            return TuiLauncher.Launch();
         }
 
         #endregion
 
         #region Simple Command Handlers
 
-        private static int HandleHelpCommand(string[] args)
+        private static int HelpCommand(string[] args)
         {
             if (args.Length <= 1)
             {
@@ -141,45 +122,45 @@ namespace ColDogStudios.ColDogLocker.Cli
             return 0;
         }
 
-        private static int HandleDevCommand()
+        private static int DevCommand()
         {
             Console.WriteLine($"Environment: {Environment.OSVersion.Platform}");
             Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}");
             Console.WriteLine($"Runtime Identifier: {RuntimeInformation.RuntimeIdentifier}");
             Console.WriteLine($"Framework: {RuntimeInformation.FrameworkDescription}");
-        #if DEBUG
+#if DEBUG
             Console.WriteLine("Build: DEBUG");
-        #else
+#else
             Console.WriteLine("Build: RELEASE");
-        #endif
-        
+#endif
+
             Console.WriteLine($"\nUser: {Environment.UserName}");
-        
-            Console.WriteLine($"\nLocal Config Location: {Variables.localConfig}");
-            Console.WriteLine($"Current Directory: {Variables.cdlDir}");
-            var logPath = Path.Combine(Variables.localConfig, "logs");
+
+            Console.WriteLine($"\nLocal Config Location: {Variables.LocalConfig}");
+            Console.WriteLine($"Current Directory: {Variables.CdlDir}");
+            var logPath = Path.Join(Variables.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
-        
-            var configDrive = new DriveInfo(new DirectoryInfo(Variables.localConfig).Root.Name);
+
+            var configDrive = new DriveInfo(new DirectoryInfo(Variables.LocalConfig).Root.Name);
             Console.WriteLine($"\nAvailable Disk Space: {configDrive.AvailableFreeSpace / (1024 * 1024 * 1024)} GB");
             Console.WriteLine($"Process Memory: {GC.GetTotalMemory(false) / 1024} KB");
-        
+
             return 0;
         }
 
-        private static int HandleVersionCommand()
+        private static int VersionCommand()
         {
             var version = typeof(Program).Assembly.GetName().Version;
-            Console.WriteLine($"ColDog Locker {BuildInfo.Version}");
-            Console.WriteLine($"Build Version: {BuildInfo.BuildVersion}");
+            Console.WriteLine($"ColDog Locker {AppInfo.SemanticVersion}");
+            Console.WriteLine($"Build Version: {AppInfo.BuildVersion}");
             Console.WriteLine($"Assembly Version: {version}");
-            Console.WriteLine($"Build Date: {BuildInfo.BuildDate}");
-            Console.WriteLine($"Build Time: {BuildInfo.BuildTime}");
+            Console.WriteLine($"Build Date: {AppInfo.BuildDate}");
+            Console.WriteLine($"Build Time: {AppInfo.BuildTime}");
             return 0;
         }
 
-        private static int HandleUnknownCommand(string command)
+        private static int UnknownCommand(string command)
         {
             Logger.Log(LogLevel.Debug, $"Unknown command: {command}");
             Console.Error.WriteLine($"Error: Unknown command '{command}'");

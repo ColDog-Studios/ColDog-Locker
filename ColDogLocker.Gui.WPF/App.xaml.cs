@@ -1,15 +1,16 @@
 using System.Windows;
-using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Services.Startup;
+using ColDogStudios.ColDogLocker.Services.Updates;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    ///     Interaction logic for App.xaml
     /// </summary>
-    public partial class App : System.Windows.Application
+    public partial class App : Application
     {
         protected override async void OnStartup(StartupEventArgs e)
         {

@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Application.Services;
 using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -70,7 +70,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         {
             Console.Clear();
             var width = Console.WindowWidth;
-            var title = $"ColDog Locker {BuildInfo.Version}";
+            var title = $"ColDog Locker {AppInfo.SemanticVersion}";
             var copyright = "Copyright (c) ColDog Studios. All Rights Reserved.";
             string line = new('#', width);
             var separatorLength = width / 2;
@@ -109,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                 if (result.UpdateAvailable)
                 {
-                    Console.WriteLine($"\nA newer version is available:\n");
+                    Console.WriteLine("\nA newer version is available:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
                     Console.Write("Do you want to download the latest version? (y/N): ");
@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 }
                 else
                 {
-                    Console.WriteLine($"\nColDog Locker is up to date:\n");
+                    Console.WriteLine("\nColDog Locker is up to date:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}");
                 }

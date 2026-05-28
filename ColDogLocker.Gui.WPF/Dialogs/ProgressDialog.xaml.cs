@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 
@@ -7,8 +8,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
     {
         private readonly StringBuilder _statusLog = new();
 
-        public bool IsCancelled { get; private set; }
-
         public ProgressDialog(string operationTitle)
         {
             InitializeComponent();
@@ -16,11 +15,13 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             IsCancelled = false;
         }
 
+        public bool IsCancelled { get; private set; }
+
         public void UpdateProgress(int current, int total, string currentItem)
         {
             Dispatcher.Invoke(() =>
             {
-                var percentage = total > 0 ? (int)((current / (double)total) * 100) : 0;
+                var percentage = total > 0 ? (int)(current / (double)total * 100) : 0;
                 OperationProgressBar.Value = percentage;
                 ProgressText.Text = $"{current} of {total} ({percentage}%)";
                 CurrentItemText.Text = $"Processing: {currentItem}";
@@ -75,14 +76,14 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             }
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
             if (!IsCancelled && CancelButton.Content.ToString() != "Close")
             {
                 if (!MessageDialog.ShowQuestion(
-                    "Are you sure you want to cancel the operation?",
-                    "Cancel Operation",
-                    this))
+                        "Are you sure you want to cancel the operation?",
+                        "Cancel Operation",
+                        this))
                 {
                     e.Cancel = true;
                 }
