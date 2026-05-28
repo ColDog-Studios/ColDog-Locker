@@ -95,10 +95,6 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             {
                 Logger.Log(LogLevel.Error, "Invalid operation in OnSettingsChanged", ex);
             }
-            catch (ObjectDisposedException ex)
-            {
-                Logger.Log(LogLevel.Error, "Object disposed in OnSettingsChanged", ex);
-            }
         }
 
         private static void OnLockersChanged(object sender, FileSystemEventArgs e)
