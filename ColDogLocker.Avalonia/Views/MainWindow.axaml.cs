@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Logging;
 //using ColDogStudios.ColDogLocker.Application.Services;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views

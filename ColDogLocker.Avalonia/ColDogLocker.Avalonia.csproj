@@ -26,8 +26,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj"/>
-        <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj"/>
-        <!-- <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj" /> -->
+        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj" />
     </ItemGroup>
 
     <ItemGroup>

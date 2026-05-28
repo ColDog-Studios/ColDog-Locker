@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <ProjectReference Include="..\ColDogLocker.Application\ColDogLocker.Application.csproj"/>
-        <ProjectReference Include="..\ColDogLocker.Infrastructure\ColDogLocker.Infrastructure.csproj"/>
+        <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj" />
     </ItemGroup>
 
     <PropertyGroup>

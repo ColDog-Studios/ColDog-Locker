@@ -2,8 +2,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using ColDogStudios.ColDogLocker.Application.Validation;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using Microsoft.Win32;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs

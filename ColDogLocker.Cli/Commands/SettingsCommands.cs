@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Logging;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {

@@ -1,4 +1,4 @@
-using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Services.Updates;
 using ColDogStudios.ColDogLocker.Core.Constants;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views

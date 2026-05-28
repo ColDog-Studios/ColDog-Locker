@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {

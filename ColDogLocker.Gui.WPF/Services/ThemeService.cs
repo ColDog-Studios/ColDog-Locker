@@ -1,5 +1,5 @@
 using System.Windows;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
+using ColDogStudios.ColDogLocker.Core.Configuration;
 using Microsoft.Win32;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Services

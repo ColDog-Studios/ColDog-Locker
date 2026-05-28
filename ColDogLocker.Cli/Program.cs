@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Services.Startup;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Constants;
 using ColDogStudios.ColDogLocker.Gui;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Logging;
 using ColDogStudios.ColDogLocker.Tui;
 
 namespace ColDogStudios.ColDogLocker.Cli

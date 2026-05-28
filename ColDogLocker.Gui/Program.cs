@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Logging;
 
 namespace ColDogStudios.ColDogLocker.Gui
 {

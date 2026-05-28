@@ -1,8 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+    <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Next"/>
+        <PackageReference Include="Microsoft.Data.Sqlite"/>
+        <PackageReference Include="Newtonsoft.Json"/>
+    </ItemGroup>
+
     <PropertyGroup>
         <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
     </PropertyGroup>
+
+    <!-- Include the generated file unconditionally at the top level -->
+    <ItemGroup>
+        <Compile Include="$(IntermediateOutputPath)AppInfo.g.cs">
+            <AutoGen>true</AutoGen>
+            <DesignTime>true</DesignTime>
+            <DependentUpon>AppInfo.g.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
     <!-- Auto-generate AppInfo.cs at build time -->
     <Target Name="GenerateAppInfo" BeforeTargets="CoreCompile">
@@ -49,8 +64,8 @@
             Lines="$(AppInfoContent)"
             Overwrite="true"
             Encoding="UTF-8"/>
+        <!-- FileWrites can stay here — it's fine inside a Target -->
         <ItemGroup>
-            <Compile Include="$(IntermediateOutputPath)AppInfo.g.cs"/>
             <FileWrites Include="$(IntermediateOutputPath)AppInfo.g.cs"/>
         </ItemGroup>
     </Target>

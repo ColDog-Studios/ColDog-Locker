@@ -1,5 +1,5 @@
-using ColDogStudios.ColDogLocker.Application.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Updates;
 using ColDogStudios.ColDogLocker.Tui.Views;
 
 namespace ColDogStudios.ColDogLocker.Tui

@@ -3,9 +3,9 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.Data;
-using ColDogStudios.ColDogLocker.Infrastructure.Logging;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Data;
+using ColDogStudios.ColDogLocker.Core.Logging;
 using Microsoft.Win32;
 using RadioButton = System.Windows.Controls.RadioButton;
 

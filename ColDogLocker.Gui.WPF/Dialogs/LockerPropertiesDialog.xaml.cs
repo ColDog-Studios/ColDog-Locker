@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Infrastructure.Data;
+using ColDogStudios.ColDogLocker.Core.Data;
 using Microsoft.Win32;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs

@@ -10,14 +10,15 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using ColDogStudios.ColDogLocker.Application.Services;
+using ColDogStudios.ColDogLocker.Core.Services;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Gui.WPF.ViewModels;
-using ColDogStudios.ColDogLocker.Infrastructure.Configuration;
-using ColDogStudios.ColDogLocker.Infrastructure.Encryption;
+using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF
 {
