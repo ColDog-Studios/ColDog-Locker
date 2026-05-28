@@ -91,9 +91,13 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
                 Logger.Log(LogLevel.Debug, $"Settings file changed ({e.ChangeType}) for '{e.FullPath}'. Reloading settings");
                 OnSettingsFileChanged?.Invoke();
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
-                Logger.Log(LogLevel.Error, "Exception in OnSettingsChanged", ex);
+                Logger.Log(LogLevel.Error, "Invalid operation in OnSettingsChanged", ex);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                Logger.Log(LogLevel.Error, "Object disposed in OnSettingsChanged", ex);
             }
         }
 
