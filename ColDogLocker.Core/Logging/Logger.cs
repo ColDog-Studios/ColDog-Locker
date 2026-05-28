@@ -95,7 +95,7 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
     /// </summary>
     public static class Logger
     {
-        private static readonly string _logDirectory = Path.Combine(Variables.LocalConfig, "logs");
+        private static readonly string _logDirectory = Path.Combine(Path.GetFullPath(Variables.LocalConfig), "logs");
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         private static readonly string _logFilePath = Path.Combine(_logDirectory, "cdl.log");
         private static readonly Lock _lockObject = new();
