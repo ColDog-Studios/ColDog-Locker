@@ -28,6 +28,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             var lockerName = args[1];
+            if (Path.IsPathRooted(lockerName))
+            {
+                Console.Error.WriteLine("Error: Locker name must be a relative name, not an absolute path.");
+                return 1;
+            }
+
             string? customPath = null;
             string? providedPassword = null;
 
