@@ -7,7 +7,7 @@ namespace ColDogStudios.ColDogLocker.Core.Data
 {
     public static class LockerRepository
     {
-        private static readonly string _databasePath = Path.Combine(Variables.LocalConfig, "lockers.db");
+        private static readonly string _databasePath = Path.Join(Variables.LocalConfig, Path.GetFileName("lockers.db"));
         private static readonly string _connectionString = $"Data Source={_databasePath}";
 
         /// <summary>
