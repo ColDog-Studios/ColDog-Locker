@@ -318,7 +318,8 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
             }
             catch (Exception ex)
             {
-                var fallbackPath = Path.Combine(_logDirectory, $"fallback_{_sessionId}.txt");
+                var fallbackFileName = Path.GetFileName($"fallback_{_sessionId}.txt");
+                var fallbackPath = Path.Combine(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
                     $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {ex.Message}){Environment.NewLine}");
             }
