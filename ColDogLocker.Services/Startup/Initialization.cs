@@ -25,10 +25,17 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
             }
 
             // Create logs directory if it does not already exist
-            if (!Directory.Exists(Path.Combine(Variables.LocalConfig, "logs")))
+            var logsDirectoryName = "logs";
+            if (Path.IsPathRooted(logsDirectoryName))
             {
-                Directory.CreateDirectory(Path.Combine(Variables.LocalConfig, "logs"));
-                Logger.Log(LogLevel.Debug, $"Created directory: {Path.Combine(Variables.LocalConfig, "logs")}");
+                throw new InvalidOperationException("Logs directory name must be a relative path segment.");
+            }
+
+            var logsDirectoryPath = Path.Combine(Variables.LocalConfig, logsDirectoryName);
+            if (!Directory.Exists(logsDirectoryPath))
+            {
+                Directory.CreateDirectory(logsDirectoryPath);
+                Logger.Log(LogLevel.Debug, $"Created directory: {logsDirectoryPath}");
             }
 
             // Initialize database
