@@ -443,7 +443,19 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
                 }
             }
-            catch (Exception ex)
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+            }
+            catch (NotSupportedException ex)
             {
                 Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
