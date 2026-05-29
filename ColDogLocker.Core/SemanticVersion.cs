@@ -1,5 +1,4 @@
 /*
-** SemanticVersion.cs
 ** Copyright (C) 2026 ColDog Studios
 */
 
@@ -7,23 +6,22 @@ namespace ColDogStudios.ColDogLocker.Core
 {
     public class SemanticVersion : IComparable<SemanticVersion>, IEquatable<SemanticVersion>
     {
-        public int Major { get; set; }
-        public int Minor { get; set; }
-        public int Patch { get; set; }
-        public string? PreRelease { get; set; }
-        private string[]? _preReleaseParts; // Cache parsed prerelease identifiers
+        public int Major { get; private set; }
+        public int Minor { get; private set; }
+        public int Patch { get; private set; }
+        public string? PreRelease { get; private set; }
+        private readonly string[]? _preReleaseParts; // Cache parsed prerelease identifiers
 
         /// <summary>
         ///     Initializes a new instance of the SemanticVersion class by parsing a version string.
         /// </summary>
-        /// <param name="version"></param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="FormatException"></exception>
+        /// <param name="version">The version string to parse (e.g., "1.2.3-alpha")</param>
+        /// <exception cref="FormatException">Thrown if the version string is invalid or in an incorrect format.</exception>
         public SemanticVersion(string version)
         {
             if (string.IsNullOrWhiteSpace(version))
             {
-                throw new ArgumentException("Version cannot be null or empty.", nameof(version));
+                throw new FormatException("Version cannot be null or empty.");
             }
 
             if (!TryParse(version, out var parsed))
@@ -41,9 +39,9 @@ namespace ColDogStudios.ColDogLocker.Core
         /// <summary>
         ///     Tries to parse a version string into a SemanticVersion instance. Returns true if successful, false otherwise.
         /// </summary>
-        /// <param name="version"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
+        /// <param name="version">The version string to parse.</param>
+        /// <param name="result">The resulting SemanticVersion instance if parsing succeeds; null otherwise.</param>
+        /// <returns>True if parsing succeeds; false otherwise.</returns>
         public static bool TryParse(string version, out SemanticVersion result)
         {
             result = null!;
@@ -79,16 +77,22 @@ namespace ColDogStudios.ColDogLocker.Core
                     return false;
                 }
 
-                var instance = new SemanticVersion
+                // Validate pre-release format (no leading zeros in numeric identifiers per semver spec)
+                if (preRelease != null)
                 {
-                    Major = major,
-                    Minor = minor,
-                    Patch = patch,
-                    PreRelease = preRelease,
-                    _preReleaseParts = preRelease?.Split('.') // Cache split parts
-                };
+                    var parts = preRelease.Split('.');
+                    foreach (var part in parts)
+                    {
+                        // Reject numeric identifiers with leading zeros (except "0" itself)
+                        if (part.Length > 1 && part[0] == '0' && char.IsDigit(part[1]))
+                        {
+                            return false;
+                        }
+                    }
+                }
 
-                result = instance;
+                var preReleaseParts = preRelease?.Split('.');
+                result = new SemanticVersion(major, minor, patch, preRelease, preReleaseParts);
                 return true;
             }
             catch
@@ -98,10 +102,11 @@ namespace ColDogStudios.ColDogLocker.Core
         }
 
         /// <summary>
-        ///    Compares this instance to another SemanticVersion instance. Returns a positive number if this instance is greater, negative if less, and zero if equal.
+        ///    Compares this instance to another SemanticVersion instance. Returns a positive number if this instance is greater, 
+        ///    negative if less, and zero if equal.
         /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
+        /// <param name="other">The SemanticVersion instance to compare against.</param>
+        /// <returns>A positive number if this instance is greater; negative if less; zero if equal.</returns>
         public int CompareTo(SemanticVersion? other)
         {
             if (other == null)
@@ -184,8 +189,13 @@ namespace ColDogStudios.ColDogLocker.Core
             return thisParts.Length.CompareTo(otherParts.Length);
         }
 
-        public bool Equals(SemanticVersion? other) => other != null && CompareTo(other) == 0;
+        public bool Equals(SemanticVersion? other)
+        {
+            return other != null && CompareTo(other) == 0;
+        }
+
         public override bool Equals(object? obj) => obj is SemanticVersion other && Equals(other);
+
         public override int GetHashCode() => HashCode.Combine(Major, Minor, Patch, PreRelease);
 
         public override string ToString()
@@ -193,14 +203,46 @@ namespace ColDogStudios.ColDogLocker.Core
             return PreRelease != null ? $"{Major}.{Minor}.{Patch}-{PreRelease}" : $"{Major}.{Minor}.{Patch}";
         }
 
-        public static bool operator >(SemanticVersion v1, SemanticVersion v2) => v1.CompareTo(v2) > 0;
-        public static bool operator <(SemanticVersion v1, SemanticVersion v2) => v1.CompareTo(v2) < 0;
-        public static bool operator >=(SemanticVersion v1, SemanticVersion v2) => v1.CompareTo(v2) >= 0;
-        public static bool operator <=(SemanticVersion v1, SemanticVersion v2) => v1.CompareTo(v2) <= 0;
-        public static bool operator ==(SemanticVersion v1, SemanticVersion v2) => v1.Equals(v2);
-        public static bool operator !=(SemanticVersion v1, SemanticVersion v2) => !v1.Equals(v2);
+        public static bool operator >(SemanticVersion v1, SemanticVersion v2)
+        {
+            return v1.CompareTo(v2) > 0;
+        }
 
-        // Private constructor for TryParse
-        private SemanticVersion() { }
+        public static bool operator <(SemanticVersion v1, SemanticVersion v2)
+        {
+            return v1.CompareTo(v2) < 0;
+        }
+
+        public static bool operator >=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return v1.CompareTo(v2) >= 0;
+        }
+
+        public static bool operator <=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return v1.CompareTo(v2) <= 0;
+        }
+
+        public static bool operator ==(SemanticVersion v1, SemanticVersion v2)
+        {
+            return ReferenceEquals(v1, v2) || (v1 is not null && v2 is not null && v1.Equals(v2));
+        }
+
+        public static bool operator !=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return !(v1 == v2);
+        }
+
+        /// <summary>
+        ///     Private constructor used by TryParse to create validated SemanticVersion instances.
+        /// </summary>
+        private SemanticVersion(int major, int minor, int patch, string? preRelease, string[]? preReleaseParts)
+        {
+            Major = major;
+            Minor = minor;
+            Patch = patch;
+            PreRelease = preRelease;
+            _preReleaseParts = preReleaseParts;
+        }
     }
 }
