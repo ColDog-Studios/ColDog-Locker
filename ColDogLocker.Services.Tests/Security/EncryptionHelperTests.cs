@@ -1,6 +1,6 @@
-using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Services.Security;
 
-namespace ColDogStudios.ColDogLocker.Core.Tests.Encryption
+namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 {
     public class EncryptionHelperTests
     {

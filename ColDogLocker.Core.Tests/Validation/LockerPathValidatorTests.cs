@@ -20,7 +20,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAllowedPath_ShouldReturnNull()
         {
             // Arrange - A safe subdirectory under Documents is now allowed
-            var safePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ColDog Locker", "TestLocker");
+            var safePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "ColDog Locker", "TestLocker");
 
             // Act
             var result = LockerPathValidator.ValidatePath(safePath);
@@ -47,7 +47,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithWindowsDirectory_ShouldReturnError()
         {
             // Arrange
-            var windowsPath = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var windowsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows);
 
             // Act
             var result = LockerPathValidator.ValidatePath(windowsPath);
@@ -61,7 +61,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithProgramFiles_ShouldReturnError()
         {
             // Arrange
-            var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            var programFilesPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
             // Act
             var result = LockerPathValidator.ValidatePath(programFilesPath);
@@ -75,7 +75,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithUserProfile_ShouldReturnError()
         {
             // Arrange
-            var userProfilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var userProfilePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
 
             // Act
             var result = LockerPathValidator.ValidatePath(userProfilePath);
@@ -89,7 +89,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithDocuments_ShouldReturnError()
         {
             // Arrange - Exact Documents folder
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var documentsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 
             // Act
             var result = LockerPathValidator.ValidatePath(documentsPath);
@@ -102,7 +102,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithDesktop_ShouldReturnError()
         {
             // Arrange - Exact Desktop folder
-            var desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            var desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
 
             // Act
             var result = LockerPathValidator.ValidatePath(desktopPath);
@@ -115,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAppData_ShouldReturnError()
         {
             // Arrange - Exact AppData root folder
-            var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData");
+            var appDataPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData");
 
             // Act
             var result = LockerPathValidator.ValidatePath(appDataPath);
@@ -129,7 +129,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAppDataSubdirectory_ShouldReturnNull()
         {
             // Arrange - Subdirectory under AppData (like C:\Users\ColDog\AppData\MyHiddenLocker)
-            var appDataSubPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "MyHiddenLocker");
+            var appDataSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData", "MyHiddenLocker");
 
             // Act
             var result = LockerPathValidator.ValidatePath(appDataSubPath);
@@ -142,7 +142,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAppDataRoaming_ShouldReturnError()
         {
             // Arrange - AppData\Roaming (system path, blocks subdirectories)
-            var appDataRoaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var appDataRoaming = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
 
             // Act
             var result = LockerPathValidator.ValidatePath(appDataRoaming);
@@ -155,7 +155,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithUserProfileSubdirectory_ShouldReturnNull()
         {
             // Arrange - Subdirectory under user profile (like C:\Users\ColDog\MyLocker)
-            var userProfileSub = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "MyLocker");
+            var userProfileSub = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "MyLocker");
 
             // Act
             var result = LockerPathValidator.ValidatePath(userProfileSub);
@@ -168,7 +168,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithSubdirectoryOfProtectedPath_ShouldReturnError()
         {
             // Arrange - Try to lock a subdirectory of Windows
-            var windowsSubPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32");
+            var windowsSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows), "System32");
 
             // Act
             var result = LockerPathValidator.ValidatePath(windowsSubPath);

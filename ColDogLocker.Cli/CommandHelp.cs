@@ -3,7 +3,7 @@ namespace ColDogStudios.ColDogLocker.Cli
     /// <summary>
     ///     Provides help information for CLI commands.
     /// </summary>
-    public static class HelpSystem
+    public static class CommandHelp
     {
         public static void ShowGeneralHelp()
         {

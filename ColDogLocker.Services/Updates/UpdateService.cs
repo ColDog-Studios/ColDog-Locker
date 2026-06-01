@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Updates
 {
@@ -16,7 +16,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string? HashUrl { get; set; }
     }
 
-    public static class UpdateManager
+    public static class UpdateService
     {
         // Delegate for showing menu title (to avoid dependency on TUI)
         public static Action<string>? ShowMenuTitle { get; set; }
@@ -137,7 +137,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         }
 
         // Fetch the latest release based on the configured update channel
-        private static async Task<GitHubRelease?> FetchLatestReleaseAsync(HttpClient client)
+        private static async Task<GitHubReleaseDto?> FetchLatestReleaseAsync(HttpClient client)
         {
             var channel = SettingsManager.Settings.UpdateChannel;
 
@@ -149,7 +149,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases/latest";
                 Logger.Log(LogLevel.Info, "Checking for updates on Stable channel.");
                 var json = await client.GetStringAsync(uri);
-                return JsonSerializer.Deserialize<GitHubRelease>(json, options);
+                return JsonSerializer.Deserialize<GitHubReleaseDto>(json, options);
             }
             else
             {
@@ -157,7 +157,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 var uri = "https://api.github.com/repos/ColDog-Studios/ColDog-Locker/releases";
                 Logger.Log(LogLevel.Info, "Checking for updates on Prerelease channel.");
                 var json = await client.GetStringAsync(uri);
-                var releases = JsonSerializer.Deserialize<List<GitHubRelease>>(json, options);
+                var releases = JsonSerializer.Deserialize<List<GitHubReleaseDto>>(json, options);
 
                 if (releases == null || releases.Count == 0)
                 {

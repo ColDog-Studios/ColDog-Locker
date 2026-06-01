@@ -20,12 +20,12 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             var userFolderPaths = new List<string>();
 
             // Get common environment paths
-            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-            var commonProgramFiles = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles);
-            var commonProgramFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFilesX86);
+            var userProfile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+            var programFiles = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
+            var programFilesX86 = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86);
+            var windows = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows);
+            var commonProgramFiles = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonProgramFiles);
+            var commonProgramFilesX86 = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonProgramFilesX86);
 
             // Root drives (C:\, D:\, etc.) - will be checked separately in ValidatePath
 
@@ -59,15 +59,15 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             }
 
             // ProgramData
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var programData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData);
             if (!string.IsNullOrEmpty(programData))
             {
                 systemPaths.Add(programData);
             }
 
             // AppData subfolders (Roaming, Local) - block these AND subdirectories
-            var appDataRoaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var appDataLocal = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var appDataRoaming = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+            var appDataLocal = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
 
             if (!string.IsNullOrEmpty(appDataRoaming))
             {
@@ -88,8 +88,8 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             }
 
             // Startup folders
-            var startup = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
-            var commonStartup = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup);
+            var startup = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Startup);
+            var commonStartup = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonStartup);
 
             if (!string.IsNullOrEmpty(startup))
             {
@@ -105,7 +105,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var systemDrive = Path.GetPathRoot(Environment.SystemDirectory)?.TrimEnd(Path.DirectorySeparatorChar) ?? "C:";
+                var systemDrive = Path.GetPathRoot(System.Environment.SystemDirectory)?.TrimEnd(Path.DirectorySeparatorChar) ?? "C:";
                 systemPaths.Add(Path.Combine(systemDrive, "PerfLogs"));
                 systemPaths.Add(Path.Combine(systemDrive, "Recovery"));
                 systemPaths.Add(Path.Combine(systemDrive, "System Volume Information"));
@@ -114,13 +114,13 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 systemPaths.Add(Path.Combine(systemDrive, "bootmgr"));
                 systemPaths.Add(Path.Combine(systemDrive, "EFI"));
 
-                var sysRoot = Environment.GetEnvironmentVariable("SystemRoot") ?? @"C:\Windows";
+                var sysRoot = System.Environment.GetEnvironmentVariable("SystemRoot") ?? @"C:\Windows";
                 if (!string.IsNullOrEmpty(sysRoot) && !systemPaths.Contains(sysRoot, StringComparer.OrdinalIgnoreCase))
                 {
                     systemPaths.Add(sysRoot);
                 }
 
-                var pf = Environment.GetEnvironmentVariable("ProgramFiles") ?? @"C:\Program Files";
+                var pf = System.Environment.GetEnvironmentVariable("ProgramFiles") ?? @"C:\Program Files";
                 if (!string.IsNullOrEmpty(pf) && !systemPaths.Contains(pf, StringComparer.OrdinalIgnoreCase))
                 {
                     systemPaths.Add(pf);
@@ -143,11 +143,11 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             }
 
             // User data folders
-            var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-            var videos = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
-            var music = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            var documents = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+            var pictures = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyPictures);
+            var videos = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyVideos);
+            var music = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyMusic);
+            var desktop = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
             var downloads = Path.Combine(userProfile, "Downloads");
 
             if (!string.IsNullOrEmpty(documents))
@@ -278,10 +278,10 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         private static string GetFriendlyName(string path)
         {
             // Try to map back to environment variables for better readability
-            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToLowerInvariant();
-            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant();
-            var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
-            var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData).ToLowerInvariant();
+            var userProfile = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile).ToLowerInvariant();
+            var windows = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows).ToLowerInvariant();
+            var programFiles = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
+            var programData = System.Environment.GetFolderPath(System.Environment.SpecialFolder.CommonApplicationData).ToLowerInvariant();
 
             if (path.StartsWith(userProfile))
             {

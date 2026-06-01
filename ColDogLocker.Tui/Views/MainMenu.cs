@@ -1,4 +1,4 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
@@ -42,10 +42,10 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         LockerMenu.Unlock();
                         break;
                     case "5":
-                        AboutHelpDev.ShowAbout();
+                        AboutMenu.Show();
                         break;
                     case "6":
-                        AboutHelpDev.ShowHelp();
+                        HelpMenu.Show();
                         break;
                     case "7":
                         await CheckForUpdates();
@@ -56,7 +56,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     case "0":
                         return;
                     case "dev":
-                        AboutHelpDev.ShowDev();
+                        DevMenu.Show();
                         break;
                     default:
                         Console.Write("\nInvalid choice. Please try again.");
@@ -105,7 +105,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             try
             {
-                var result = await UpdateManager.CheckForUpdatesAsync();
+                var result = await UpdateService.CheckForUpdatesAsync();
 
                 if (result.UpdateAvailable)
                 {
@@ -119,7 +119,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     {
                         try
                         {
-                            var filePath = await UpdateManager.DownloadUpdateAsync(result);
+                            var filePath = await UpdateService.DownloadUpdateAsync(result);
                             Console.WriteLine($"\nDownloaded the latest version to: {filePath}");
                             Console.WriteLine("Please run the installer to update ColDog Locker.");
                         }

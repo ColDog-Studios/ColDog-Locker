@@ -1,14 +1,14 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Environment;
 
-namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
+namespace ColDogStudios.ColDogLocker.Core.Tests.Environment
 {
-    public class VariablesTests
+    public class AppPathsTests
     {
         [Fact]
         public void LocalConfig_ShouldNotBeNull()
         {
             // Act
-            var localConfig = Variables.LocalConfig;
+            var localConfig = AppPaths.LocalConfig;
 
             // Assert
             Assert.NotNull(localConfig);
@@ -19,7 +19,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void LocalConfig_ShouldContainExpectedPathComponents()
         {
             // Act
-            var localConfig = Variables.LocalConfig;
+            var localConfig = AppPaths.LocalConfig;
 
             // Assert
             Assert.Contains("ColDog Studios", localConfig);
@@ -30,10 +30,10 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void LocalConfig_ShouldBeInLocalApplicationData()
         {
             // Arrange
-            var expectedBasePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var expectedBasePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
 
             // Act
-            var localConfig = Variables.LocalConfig;
+            var localConfig = AppPaths.LocalConfig;
 
             // Assert
             Assert.StartsWith(expectedBasePath, localConfig);
@@ -43,7 +43,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void CdlDir_ShouldNotBeNull()
         {
             // Act
-            var cdlDir = Variables.CdlDir;
+            var cdlDir = AppPaths.CdlDir;
 
             // Assert
             Assert.NotNull(cdlDir);
@@ -54,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void CdlDir_ShouldContainColDogLocker()
         {
             // Act
-            var cdlDir = Variables.CdlDir;
+            var cdlDir = AppPaths.CdlDir;
 
             // Assert
             Assert.Contains("ColDog Locker", cdlDir);
@@ -64,10 +64,10 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void CdlDir_ShouldBeInMyDocuments()
         {
             // Arrange
-            var expectedBasePath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var expectedBasePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 
             // Act
-            var cdlDir = Variables.CdlDir;
+            var cdlDir = AppPaths.CdlDir;
 
             // Assert
             Assert.StartsWith(expectedBasePath, cdlDir);
@@ -77,8 +77,8 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void LocalConfig_AndCdlDir_ShouldBeDifferent()
         {
             // Act
-            var localConfig = Variables.LocalConfig;
-            var cdlDir = Variables.CdlDir;
+            var localConfig = AppPaths.LocalConfig;
+            var cdlDir = AppPaths.CdlDir;
 
             // Assert
             Assert.NotEqual(localConfig, cdlDir);
@@ -88,18 +88,18 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void AllPaths_ShouldBeAbsolutePaths()
         {
             // Act & Assert
-            Assert.True(Path.IsPathRooted(Variables.LocalConfig), "localConfig should be an absolute path");
-            Assert.True(Path.IsPathRooted(Variables.CdlDir), "cdlDir should be an absolute path");
+            Assert.True(Path.IsPathRooted(AppPaths.LocalConfig), "localConfig should be an absolute path");
+            Assert.True(Path.IsPathRooted(AppPaths.CdlDir), "cdlDir should be an absolute path");
         }
 
         [Fact]
         public void AllPaths_ShouldBeConsistentAcrossMultipleAccesses()
         {
             // Act - Access the properties multiple times
-            var localConfig1 = Variables.LocalConfig;
-            var localConfig2 = Variables.LocalConfig;
-            var cdlDir1 = Variables.CdlDir;
-            var cdlDir2 = Variables.CdlDir;
+            var localConfig1 = AppPaths.LocalConfig;
+            var localConfig2 = AppPaths.LocalConfig;
+            var cdlDir1 = AppPaths.CdlDir;
+            var cdlDir2 = AppPaths.CdlDir;
 
             // Assert - Should return the same values
             Assert.Equal(localConfig1, localConfig2);
@@ -111,7 +111,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void LocalConfig_ShouldEndWithCorrectFolderStructure()
         {
             // Act
-            var localConfig = Variables.LocalConfig;
+            var localConfig = AppPaths.LocalConfig;
 
             // Assert
             Assert.EndsWith(Path.Combine("ColDog Studios", "ColDog Locker"), localConfig);
@@ -121,7 +121,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Constants
         public void CdlDir_ShouldEndWithColDogLocker()
         {
             // Act
-            var cdlDir = Variables.CdlDir;
+            var cdlDir = AppPaths.CdlDir;
 
             // Assert
             Assert.EndsWith("ColDog Locker", cdlDir);

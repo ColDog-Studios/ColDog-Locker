@@ -1,7 +1,7 @@
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 
-namespace ColDogStudios.ColDogLocker.Core.Tests.Services
+namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 {
     public class LockerFilterTests
     {

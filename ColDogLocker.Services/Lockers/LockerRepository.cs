@@ -1,13 +1,13 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
 using Microsoft.Data.Sqlite;
 
-namespace ColDogStudios.ColDogLocker.Core.Data
+namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerRepository
     {
-        private static readonly string _databasePath = Path.Join(Variables.LocalConfig, Path.GetFileName("lockers.db"));
+        private static readonly string _databasePath = Path.Join(AppPaths.LocalConfig, Path.GetFileName("lockers.db"));
         private static readonly string _connectionString = $"Data Source={_databasePath}";
 
         /// <summary>

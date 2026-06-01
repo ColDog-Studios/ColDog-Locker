@@ -1,5 +1,5 @@
 using System.Windows;
-using ColDogStudios.ColDogLocker.Core.Configuration;
+using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using ColDogStudios.ColDogLocker.Services.Startup;
 using ColDogStudios.ColDogLocker.Services.Updates;
@@ -37,7 +37,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 {
                     try
                     {
-                        await UpdateManager.CheckForUpdatesAsync();
+                        await UpdateService.CheckForUpdatesAsync();
                     }
                     catch
                     {

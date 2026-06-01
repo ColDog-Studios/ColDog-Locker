@@ -2,11 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Core.Logging
+namespace ColDogStudios.ColDogLocker.Services.Logging
 {
     /// <summary>
     ///     Defines the severity level of a log entry.
@@ -95,7 +95,7 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
     /// </summary>
     public static class Logger
     {
-        private static readonly string _logDirectory = Path.GetFullPath(Path.Join(Path.GetFullPath(Variables.LocalConfig), "logs"));
+        private static readonly string _logDirectory = Path.GetFullPath(Path.Join(Path.GetFullPath(AppPaths.LocalConfig), "logs"));
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         private static readonly string _logFilePath = Path.Combine(_logDirectory, "cdl.log");
         private static readonly Lock _lockObject = new();
@@ -445,19 +445,19 @@ namespace ColDogStudios.ColDogLocker.Core.Logging
             }
             catch (JsonException ex)
             {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (IOException ex)
             {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (NotSupportedException ex)
             {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
         }
 

@@ -1,14 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using Newtonsoft.Json;
 
-namespace ColDogStudios.ColDogLocker.Core.Configuration
+namespace ColDogStudios.ColDogLocker.Services.Configuration
 {
     public static class SettingsManager
     {
         // Path to the settings file
-        private static readonly string _settingsFile = Path.Combine(Variables.LocalConfig, "settings.json");
+        private static readonly string _settingsFile = Path.Combine(AppPaths.LocalConfig, "settings.json");
 
         // Timestamp of the last time the application wrote the settings file (UTC).
         // FileWatcherManager uses this to ignore change events caused by our own saves.
@@ -249,7 +249,7 @@ namespace ColDogStudios.ColDogLocker.Core.Configuration
                 if (File.Exists(_settingsFile))
                 {
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    var backupDirectory = Path.GetDirectoryName(_settingsFile) ?? Variables.LocalConfig;
+                    var backupDirectory = Path.GetDirectoryName(_settingsFile) ?? AppPaths.LocalConfig;
                     var backupFileName = $"settings_corrupted_{timestamp}.json.bak";
                     var backupFile = Path.Combine(backupDirectory, backupFileName);
                     File.Copy(_settingsFile, backupFile, true);
@@ -378,7 +378,7 @@ namespace ColDogStudios.ColDogLocker.Core.Configuration
         /// <summary>
         ///     Gets or sets the default location for new lockers.
         /// </summary>
-        public string DefaultLockerLocation { get; set; } = Variables.CdlDir;
+        public string DefaultLockerLocation { get; set; } = AppPaths.CdlDir;
 
         /// <summary>
         ///     Gets or sets a value indicating whether the default view is grid (true) or list (false).

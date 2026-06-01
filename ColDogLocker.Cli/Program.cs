@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Cli.Commands;
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Gui;
 using ColDogStudios.ColDogLocker.Services.Startup;
 using ColDogStudios.ColDogLocker.Tui;
@@ -36,6 +36,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                     result = command switch
                     {
+                        // TODO: Add command for checking updates after refactoring update system
                         "gui" => LaunchGui(),
                         "terminal" or "tui" => LaunchTui(),
                         "new" => LockerCommands.New(args),
@@ -113,12 +114,12 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             if (args.Length <= 1)
             {
-                HelpSystem.ShowGeneralHelp();
+                CommandHelp.ShowGeneralHelp();
                 return 0;
             }
 
             var command = args[1].ToLowerInvariant();
-            HelpSystem.ShowCommandHelp(command);
+            CommandHelp.ShowCommandHelp(command);
             return 0;
         }
 
@@ -136,13 +137,13 @@ namespace ColDogStudios.ColDogLocker.Cli
 
             Console.WriteLine($"\nUser: {Environment.UserName}");
 
-            Console.WriteLine($"\nLocal Config Location: {Variables.LocalConfig}");
-            Console.WriteLine($"Current Directory: {Variables.CdlDir}");
-            var logPath = Path.Join(Variables.LocalConfig, "logs");
+            Console.WriteLine($"\nLocal Config Location: {AppPaths.LocalConfig}");
+            Console.WriteLine($"Current Directory: {AppPaths.CdlDir}");
+            var logPath = Path.Join(AppPaths.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
 
-            var configDrive = new DriveInfo(new DirectoryInfo(Variables.LocalConfig).Root.Name);
+            var configDrive = new DriveInfo(new DirectoryInfo(AppPaths.LocalConfig).Root.Name);
             Console.WriteLine($"\nAvailable Disk Space: {configDrive.AvailableFreeSpace / (1024 * 1024 * 1024)} GB");
             Console.WriteLine($"Process Memory: {GC.GetTotalMemory(false) / 1024} KB");
 
@@ -165,7 +166,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Logger.Log(LogLevel.Debug, $"Unknown command: {command}");
             Console.Error.WriteLine($"Error: Unknown command '{command}'");
             Console.WriteLine();
-            HelpSystem.ShowGeneralHelp();
+            CommandHelp.ShowGeneralHelp();
             return 1;
         }
 

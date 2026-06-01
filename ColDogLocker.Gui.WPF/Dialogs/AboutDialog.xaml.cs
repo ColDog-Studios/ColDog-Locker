@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -94,7 +94,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                var result = await Task.Run(() => UpdateManager.CheckForUpdatesAsync());
+                var result = await Task.Run(() => UpdateService.CheckForUpdatesAsync());
 
                 if (result.UpdateAvailable)
                 {
@@ -107,7 +107,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     {
                         try
                         {
-                            var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
+                            var filePath = await Task.Run(() => UpdateService.DownloadUpdateAsync(result));
                             MessageDialog.ShowInformation(
                                 $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
                                 "Download Complete",

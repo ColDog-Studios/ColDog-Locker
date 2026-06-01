@@ -10,10 +10,10 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Encryption;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Gui.WPF.Dialogs;
 using ColDogStudios.ColDogLocker.Gui.WPF.Models;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
@@ -476,7 +476,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
         {
             try
             {
-                var result = await Task.Run(() => UpdateManager.CheckForUpdatesAsync());
+                var result = await Task.Run(() => UpdateService.CheckForUpdatesAsync());
 
                 if (result.UpdateAvailable)
                 {
@@ -489,7 +489,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                     {
                         try
                         {
-                            var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
+                            var filePath = await Task.Run(() => UpdateService.DownloadUpdateAsync(result));
                             MessageDialog.ShowInformation(
                                 $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
                                 "Download Complete",

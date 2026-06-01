@@ -1,6 +1,6 @@
 using ColDogStudios.ColDogLocker.Core.Models;
 
-namespace ColDogStudios.ColDogLocker.Core.Services
+namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerFilter
     {

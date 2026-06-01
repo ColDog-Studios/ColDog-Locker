@@ -1,10 +1,10 @@
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.FileSystem
 {
-    public static class FileWatcherManager
+    public static class AppFileWatcher
     {
         private static FileSystemWatcher? _settingsWatcher;
         private static FileSystemWatcher? _lockersWatcher;
@@ -15,22 +15,22 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
         public static Action? OnSettingsFileChanged { get; set; }
         public static Action? OnLockersFileChanged { get; set; }
 
-        public static void InitializeWatchers()
+        public static void Initialize()
         {
             try
             {
                 Logger.Log(LogLevel.Debug, "Initializing file watchers");
 
                 // Ensure the directory exists before creating watchers
-                if (!Directory.Exists(Variables.LocalConfig))
+                if (!Directory.Exists(AppPaths.LocalConfig))
                 {
-                    Directory.CreateDirectory(Variables.LocalConfig);
+                    Directory.CreateDirectory(AppPaths.LocalConfig);
                 }
 
                 // Initialize settings file watcher
                 _settingsWatcher = new FileSystemWatcher
                 {
-                    Path = Variables.LocalConfig,
+                    Path = AppPaths.LocalConfig,
                     Filter = "settings.json",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                     IncludeSubdirectories = false,
@@ -47,7 +47,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
                 // Initialize lockers DB watcher (lockers.db)
                 _lockersWatcher = new FileSystemWatcher
                 {
-                    Path = Variables.LocalConfig,
+                    Path = AppPaths.LocalConfig,
                     Filter = "lockers.db",
                     NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Size,
                     IncludeSubdirectories = false,
@@ -115,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             Logger.Log(LogLevel.Error, "File watcher error", e.GetException());
         }
 
-        public static void DisposeWatchers()
+        public static void Dispose()
         {
             try
             {

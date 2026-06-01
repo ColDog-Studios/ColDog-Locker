@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ColDogStudios.ColDogLocker.Services.Console
+namespace ColDogStudios.ColDogLocker.Tui.Input
 {
     /// <summary>
     ///     Provides console-related utility methods for secure password input and other console operations.
@@ -19,21 +19,21 @@ namespace ColDogStudios.ColDogLocker.Services.Console
 
             do
             {
-                key = System.Console.ReadKey(true);
+                key = Console.ReadKey(true);
 
                 if (key.Key is not (ConsoleKey.Backspace or ConsoleKey.Enter))
                 {
                     password.Append(key.KeyChar);
-                    System.Console.Write("*");
+                    Console.Write("*");
                 }
                 else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
                 {
                     password.Remove(password.Length - 1, 1);
-                    System.Console.Write("\b \b");
+                    Console.Write("\b \b");
                 }
             } while (key.Key != ConsoleKey.Enter);
 
-            System.Console.WriteLine();
+            Console.WriteLine();
             return password.ToString();
         }
     }

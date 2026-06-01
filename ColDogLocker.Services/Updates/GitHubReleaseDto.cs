@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ColDogStudios.ColDogLocker.Services.Updates
 {
-    public class GitHubRelease
+    public class GitHubReleaseDto
     {
         [JsonPropertyName("tag_name")] public string TagName { get; set; } = string.Empty;
 

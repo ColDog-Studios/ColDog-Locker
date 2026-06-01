@@ -1,4 +1,4 @@
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Services.Updates;
 using ColDogStudios.ColDogLocker.Tui.Views;
 
@@ -20,8 +20,8 @@ namespace ColDogStudios.ColDogLocker.Tui
             {
                 Logger.Log(LogLevel.Debug, "Launching ColDog Locker TUI");
 
-                // Set up the UpdateManager menu title delegate
-                UpdateManager.ShowMenuTitle = MainMenu.MenuTitle;
+                // Set up the UpdateService menu title delegate
+                UpdateService.ShowMenuTitle = MainMenu.MenuTitle;
 
                 // Show the main menu (TUI)
                 MainMenu.MenuOptions().GetAwaiter().GetResult();

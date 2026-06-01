@@ -1,10 +1,10 @@
-namespace ColDogStudios.ColDogLocker.Core.Constants
+namespace ColDogStudios.ColDogLocker.Core.Environment
 {
     /// <summary>
     ///     Application-wide path configuration and constants.
     ///     Application Build version information is available in AppInfo (auto-generated at compile time).
     /// </summary>
-    public static class Variables
+    public static class AppPaths
     {
         //////////////////////////////////////////
         // Path Configuration
@@ -12,14 +12,14 @@ namespace ColDogStudios.ColDogLocker.Core.Constants
 
         // Local configuration directory
         public static readonly string LocalConfig = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
             "ColDog Studios",
             "ColDog Locker"
         );
 
         // Default ColDog Locker Directory
         public static readonly string CdlDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments),
             "ColDog Locker"
         );
     }

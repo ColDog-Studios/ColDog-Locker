@@ -1,10 +1,9 @@
-using ColDogStudios.ColDogLocker.Core.Data;
-using ColDogStudios.ColDogLocker.Core.Encryption;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Security;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
 
-namespace ColDogStudios.ColDogLocker.Core.Services
+namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerService
     {
