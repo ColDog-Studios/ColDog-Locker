@@ -2,7 +2,7 @@
 ** Copyright (C) 2026 ColDog Studios
 */
 
-namespace ColDogStudios.ColDogLocker.Core
+namespace ColDogStudios.ColDogLocker.Core.Versioning
 {
     public class SemanticVersion : IComparable<SemanticVersion>, IEquatable<SemanticVersion>
     {

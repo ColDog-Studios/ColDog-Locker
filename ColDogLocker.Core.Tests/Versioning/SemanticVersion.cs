@@ -2,9 +2,9 @@
 ** Copyright (C) 2026 ColDog Studios
 */
 
-using ColDogStudios.ColDogLocker.Core;
+using ColDogStudios.ColDogLocker.Core.Versioning;
 
-namespace ColDogStudios.ColDogLocker.Core.Tests
+namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
 {
     public class SemanticVersionTests
     {
