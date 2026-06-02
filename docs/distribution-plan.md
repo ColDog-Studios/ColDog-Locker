@@ -1,239 +1,182 @@
-# ColDog Locker Distribution Plan
+# Distribution Plan
 
-## Build Strategy
+ColDog Locker is pre-release. This document tracks the practical distribution plan based on the current project layout and publish settings.
 
-### System Requirements
-- **Operating System:**
-  - **Minimum:** Windows 10 (version determined by .NET 10 support)
-  - **Recommended:** Windows 11
-- **Runtime:** .NET 10 Runtime (detected and prompted by installer if missing)
-- **Architecture:** x64 ~~or ARM64~~ (no 32-bit support)
-- **Permissions:** Administrator required for installation (Program Files installation)
+## Current Build Reality
 
-### Target Architectures
-- **x64** (Windows 10/11 on Intel/AMD)
-- ~~**ARM64** (Windows on ARM devices - Surface, Qualcomm)~~ Not a priority
-- ~~x86 (32-bit)~~ - Not a priority, most systems are 64-bit
+The active solution file is:
 
-### Build Configuration
-- **Type:** Framework-dependent (requires .NET 10 runtime)
-- **Packaging:** Separate DLLs (not single-file)
-- **Optimization:** Release configuration with full optimizations
-
-### Benefits of This Approach
-- Smaller installer size (~5-10MB vs 80-120MB self-contained)
-- Easier updates (replace only changed DLLs)
-- Better for plugin architecture in the future
-- Third-party DLLs can be organized in `libs` subfolder
-
----
-
-## MSI Installer
-
-### Installer Technology
-- **Format:** MSI (Microsoft Installer)
-- **Tools:** WiX Toolset / Advanced Installer / Visual Studio Installer Projects
-- **Why MSI:** Better reputation, enterprise-friendly, proper uninstall/rollback support
-
-### Installation Scope
-- **Type:** System-wide installation (all users)
-- **Location:** `C:\Program Files\ColDog Studios\ColDog Locker\`
-- **Permissions:** Requires administrator privileges to install
-- **Rationale:** 
-  - Enterprise-friendly deployment
-  - Centralized management for IT departments
-  - Avoids per-user AppData pollution
-  - Single installation for all users on the system
-  - Professional application standard
-
-> **Important:** No per-user installation option. MSI must require elevation for proper Program Files installation.
-
-### Prerequisites Check
-- Detect if .NET 10 Runtime is installed
-- If missing, prompt user to install or download automatically
-- Support both x64 ~~and ARM64~~ runtime installations
-
-### Installation Directory Structure
+```text
+ColDogLocker.slnx
 ```
+
+The shared build configuration is in `Directory.Build.props`:
+
+- Target framework: `.NET 10`
+- Runtime identifiers: `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-musl-x64`, `linux-musl-arm64`
+- Version source: `0.5.0-alpha`
+
+The CLI project is configured so RID-based publishes are:
+
+- Single-file.
+- Self-contained.
+- Trimmed.
+- Including native libraries for self-extract.
+
+This differs from older framework-dependent, separate-DLL planning.
+
+## Primary Artifacts
+
+| Artifact | Project | Purpose |
+| --- | --- | --- |
+| `cdlocker` / `cdlocker.exe` | `ColDogLocker.Cli` | CLI, TUI launcher, GUI launcher, automation surface. |
+| `ColDogLocker.exe` | `ColDogLocker.Gui.WPF` | Windows WPF GUI. |
+| `ColDogLocker` | `ColDogLocker.Avalonia` | Experimental Avalonia GUI output. |
+
+The `Application` and `Infrastructure` DLLs from older planning docs are not part of the current solution.
+
+## Recommended Release Scope
+
+### Windows
+
+Windows should be the first packaged release target because the WPF GUI is the most complete GUI.
+
+Recommended package:
+
+- MSI installer for `win-x64`.
+- Optional `win-arm64` once tested.
+- Install the CLI and WPF GUI together.
+- Add Start Menu entry for the GUI.
+- Optionally add install directory to `PATH` for `cdlocker`.
+
+### Linux
+
+Linux packaging is useful for CLI/TUI first, with Avalonia labeled experimental until feature parity improves.
+
+Possible packages:
+
+- `.deb` for Debian/Ubuntu-family distributions.
+- `.rpm` for Fedora/RHEL/openSUSE-family distributions.
+- Tarball for generic CLI/TUI use if installers are not ready.
+
+### macOS
+
+macOS GUI launching is not implemented. Treat macOS as future work unless a CLI/TUI-only package is intentionally produced and tested.
+
+## Publish Commands
+
+CLI examples:
+
+```bash
+dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-x64
+dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r linux-x64
+```
+
+WPF GUI:
+
+```bash
+dotnet publish ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj -c Release -r win-x64
+```
+
+Avalonia GUI:
+
+```bash
+dotnet publish ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj -c Release -r linux-x64
+```
+
+## Installer Layout
+
+Suggested Windows install directory:
+
+```text
 C:\Program Files\ColDog Studios\ColDog Locker\
-├── ColDogLocker.exe                # GUI application
-├── cdlocker.exe                    # CLI application
-├── ColDogLocker.Core.dll           # Core library
-├── ColDogLocker.Application.dll    # Application layer
-├── ColDogLocker.Infrastructure.dll # Infrastructure layer
-└── libs\                           # Third-party dependencies
-    ├── BCrypt.Net-Next.dll
-    ├── Microsoft.Data.Sqlite.dll
-    ├── Newtonsoft.Json.dll
-    ├── CommunityToolkit.Mvvm.dll
-    └── Microsoft.Extensions.DependencyInjection.dll
 ```
 
-### User Data Storage
-- **Location:** `%LOCALAPPDATA%\ColDog Studios\ColDog Locker\`
-- **Scope:** Per-user (each Windows user has their own data)
-- **Contents:**
-  - Locker database (`lockers.db`)
-  - Application settings (`settings.json`)
-  - Log files (`logs/` folder)
-- **No Roaming:** Data stays on local machine only
-- **Multi-User:** Fully supported - each user maintains separate lockers and settings
+Suggested contents:
 
-> **Important:** User data is stored outside Program Files to avoid permission issues and support multi-user scenarios.
-
----
-
-## Installer Behavior
-
-### Default Actions (Automatic)
-- ✅ Create Start Menu shortcut
-- ✅ Create Desktop shortcut
-- ✅ Optional launch ColDogLocker.exe after installation completes
-
-### Optional Actions (User Choice)
-- ✅ Add installation directory to PATH (pre-checked)
-  - Enables running `cdlocker` from any command prompt/PowerShell
-  - Power users benefit, GUI-only users unaffected
-
-### Explicitly NOT Included
-- ❌ No auto-launch on Windows startup
-- ❌ No installer-based update checks (handled by app settings)
-- ❌ No file associations or context menu integration (future consideration)
-
-### Uninstall Behavior
-- **Program Files:** Always removed completely
-- **User Data:** Optional removal (checkbox during uninstall)
-  - If checked: Removes all logs, settings, and locker database from `%LOCALAPPDATA%`
-  - If unchecked: Preserves user data for potential reinstall
-  - **Default:** Unchecked (preserve data - avoid accidental data loss)
-
-### EULA / License
-- **License Display:** MSI shows ColDog Locker License text during installation
-- **Acceptance Required:** User must accept license to proceed with installation
-- **Language:** English only
-
----
-
-## Update Strategy
-
-### In-App Updates
-- Update check handled by application (already implemented)
-- Controlled via Settings → "Check for updates on startup"
-- Default: Enabled
-- No installer-level update mechanism needed
-
-### Version Upgrades
-- MSI GUID changes per version for proper upgrade handling
-- Installer can detect and upgrade previous versions
-- Clean uninstall of old version before installing new
-
-### Database & Settings Migration
-- **Handled by Application:** Schema/format changes managed by software, not installer
-- **Automatic Backup:** Application creates backup before applying migrations
-- **Backup Location:** `%LOCALAPPDATA%\ColDog Studios\ColDog Locker\backups\`
-- **Migration Strategy:** On first launch after upgrade, detect version and migrate as needed
-
----
-
-## Code Signing & Security
-
-### Current Status (Pre-Release)
-- No code signing (SmartScreen warnings may appear)
-- Antivirus false positives expected (encryption triggers heuristics)
-
-### Future Consideration (Stable Release)
-- **Code Signing Certificate:** ~$100/year (probably won't happen)
-  - Removes Windows SmartScreen warnings
-  - Increases user trust
-  - Required for enterprise deployment
-- **Windows Defender Submission:** Submit to Microsoft for whitelisting at stable release
-- **Antivirus Whitelisting:** File encryption operations may trigger false positives
-  - Submit to major antivirus vendors for analysis
-  - Document legitimate encryption use case
-
----
-
-## Release Pipeline
-
-### Build Commands
-
-#### GUI (WPF)
-```powershell
-# x64
-dotnet publish ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj -c Release -r win-x64 --self-contained false
-
-# ARM64
-dotnet publish ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj -c Release -r win-arm64 --self-contained false
+```text
+ColDog Locker\
+├── cdlocker.exe
+├── ColDogLocker.exe
+├── LICENSE
+└── README.md
 ```
 
-#### CLI
-```powershell
-# x64
-dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-x64 --self-contained false
+If a framework-dependent WPF build is used for the GUI, include the required DLLs and runtime dependencies in the app directory. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
 
-# ARM64
-dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-arm64 --self-contained false
+## User Data
+
+User data is per-user and must remain outside Program Files:
+
+```text
+%LOCALAPPDATA%\ColDog Studios\ColDog Locker\
+├── settings.json
+├── lockers.db
+└── logs\
 ```
 
-### Automation Options
-- **Manual:** Build and package locally for each release
-- **GitHub Actions:** Automated builds on tag/release
-- **CI/CD:** Auto-build, sign, and upload installers
+Uninstallers should preserve this data by default. If data removal is offered, it should be an explicit unchecked option.
 
----
+## Updates
 
-## Next Steps
+The application update checker uses GitHub Releases.
 
-### Phase 1: Build Configuration
-- [ ] Add Release configuration properties to WPF project
-- [ ] Add Release configuration properties to CLI project
-- [ ] Test Release builds for both x64 ~~and ARM64~~
-- [ ] Verify memory usage improvements in Release mode
+Current behavior:
 
-### Phase 2: Installer Creation
-- [ ] Choose installer tool (WiX / Advanced Installer / VS Installer)
-- [ ] Create installer project/script
-- [ ] Configure .NET runtime detection
-- [ ] Add Start Menu + Desktop shortcuts
-- [ ] Implement optional PATH addition (pre-checked)
-- [ ] Set up launch-after-install
+- Stable channel checks the latest stable release.
+- Unstable channel scans published non-draft releases.
+- Platform detection chooses Windows, Linux DEB, Linux RPM, macOS, or unsupported.
+- Automatic download requires a matching asset and a GitHub `sha256:` digest.
+- Downloads go to the user's Downloads folder.
+- The installer must still be run manually.
 
-### Phase 3: Testing
-- [ ] Test on clean Windows 10 x64 machine (no .NET 10)
-- [ ] Test on Windows 11 ARM64 device (if available - no ARM64 hardware currently available)
-- [ ] Test upgrade from previous version
-- [ ] Test uninstallation (clean removal)
-- [ ] Test uninstallation with user data removal option
-- [ ] Verify PATH addition works correctly
-- [ ] Verify database migration on upgrade
-- [ ] Verify `Microsoft.Data.Sqlite` native libraries work on both architectures
+Release assets should use names that the update selector can match by OS, architecture, and package family.
 
-### Phase 4: Distribution
-- [ ] Create GitHub Release with MSI files
-- [ ] Update README with installation instructions
-- [ ] Consider code signing certificate
-- [ ] Set up download page or release notes
+Suggested names:
 
----
+```text
+ColDogLocker-0.5.0-alpha-win-x64.msi
+ColDogLocker-0.5.0-alpha-win-arm64.msi
+ColDogLocker-0.5.0-alpha-linux-x64.deb
+ColDogLocker-0.5.0-alpha-linux-x64.rpm
+```
 
-## File Naming Convention
+## Code Signing
 
-### Installers
-- `ColDogLocker-0.2.0-x64.msi`
-- ~~`ColDogLocker-0.2.0-ARM64.msi`~~
+Current expected state:
 
+- No code signing.
+- SmartScreen warnings may appear on Windows.
+- Antivirus false positives are possible because the app encrypts files.
 
----
+Future stable releases should consider:
 
-## Notes
+- Windows code signing certificate.
+- Submitting release builds to Microsoft Defender.
+- Clear release notes explaining legitimate encryption behavior.
 
-- MSI provides better user experience than plain EXE installers
-- Framework-dependent approach keeps installer size small
-- Dual architecture support future-proofs the application
-- In-app update checks reduce installer complexity
-- Clean directory structure allows for future expansion
-- Program Files installation requires admin but ensures enterprise compatibility
-- User data in %LOCALAPPDATA% avoids permission issues and supports multi-user
-- Optional user data removal on uninstall protects against accidental data loss
-- Application-level migrations provide more control than installer-based upgrades
-- ~~ARM64 support included but untested due to hardware limitations~~
+## Release Checklist
+
+1. Run tests:
+
+```bash
+dotnet test
+```
+
+2. Publish target artifacts.
+3. Test on a clean machine or VM for each target.
+4. Confirm `cdlocker --version`.
+5. Confirm `cdlocker new`, `lock`, `unlock`, `verify`, and `remove`.
+6. Confirm WPF GUI workflows on Windows.
+7. Confirm TUI workflows on non-GUI environments.
+8. Confirm update asset naming and SHA-256 digest availability.
+9. Create a GitHub Release with clear stable/unstable intent.
+10. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
+
+## Open Distribution Decisions
+
+- Whether Windows releases should bundle WPF as framework-dependent or self-contained.
+- Whether CLI and GUI should be installed as one package or split packages.
+- Whether Linux should start as CLI/TUI-only until Avalonia reaches parity.
+- Whether ARM64 packages are supported now or only published after hardware/VM testing.
+- Whether macOS is intentionally unsupported for the current release line.

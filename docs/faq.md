@@ -1,0 +1,97 @@
+# FAQ
+
+## Is ColDog Locker ready for production use?
+
+Not yet. It is pre-release software. The core CLI, TUI, and Windows WPF GUI exist, but release packaging and cross-platform GUI support are still in progress.
+
+## What is a locker?
+
+A locker is a managed directory. While unlocked, it behaves like a normal folder. When locked, the files inside it are encrypted, the directory is renamed with a leading dot, and the directory is marked hidden/system where supported.
+
+## Where are lockers created by default?
+
+By default, `cdlocker new <name>` creates lockers under the user's Documents folder in a `ColDog Locker` directory.
+
+On Windows, that is usually:
+
+```text
+%USERPROFILE%\Documents\ColDog Locker
+```
+
+## What does `--path` mean when creating a locker?
+
+`--path` is the parent directory. For example:
+
+```bash
+cdlocker new Taxes --path "D:\Private"
+```
+
+creates:
+
+```text
+D:\Private\Taxes
+```
+
+## Can I recover a forgotten password?
+
+No. Password recovery is not available. If the files are locked and the password is lost, ColDog Locker cannot decrypt the files.
+
+## Why are some folders blocked?
+
+ColDog Locker blocks drive roots, system directories, app data folders, temp folders, profile roots, and top-level user folders to reduce accidental damage and malicious use. Create lockers in dedicated subdirectories instead.
+
+## Does ColDog Locker store my password?
+
+It stores a BCrypt password hash, not the plaintext password. The password itself is not saved.
+
+## Where is the locker database?
+
+Locker metadata is stored in SQLite at:
+
+```text
+%LOCALAPPDATA%\ColDog Studios\ColDog Locker\lockers.db
+```
+
+The database stores locker names, paths, password hashes, GUIDs, and lock state.
+
+## Where are settings and logs?
+
+Settings and logs are stored under:
+
+```text
+%LOCALAPPDATA%\ColDog Studios\ColDog Locker
+```
+
+Settings are stored in `settings.json`; logs are stored in `logs/`.
+
+## Does locking delete my files?
+
+No. Locking encrypts file contents in place and replaces each plaintext file with encrypted bytes. Unlocking decrypts the files back in place.
+
+## Should I keep backups?
+
+Yes. Always keep backups of important data. Backups protect you from forgotten passwords, interrupted writes, hardware failure, accidental deletion, and software bugs.
+
+## Is `--password` safe?
+
+It is intended for automation, not normal interactive use. Command-line passwords may be visible in shell history, scripts, logs, or process lists. Prefer the prompt when using ColDog Locker manually.
+
+## Why does `cdlocker` show help instead of opening the GUI?
+
+That is the current CLI behavior. Use `cdlocker gui` to launch the graphical interface or execute `ColDogLocker.exe`.
+
+## What GUI should I use?
+
+On Windows, use the WPF GUI. On Linux, the launcher attempts to use the Avalonia GUI, but that GUI is still early. On macOS, use the TUI for now.
+
+## What does `verify` prove?
+
+`verify` checks filesystem and metadata consistency. It does not cryptographically authenticate every file. It reports whether the directory exists, is accessible, has the expected hidden/name state, and can be counted.
+
+## Why did my locked folder get renamed?
+
+Locked folders are renamed with a leading dot, such as `MyLocker` to `.MyLocker`, and the metadata path is updated. Unlocking renames it back.
+
+## Can I remove a locked locker?
+
+No. Unlock it first, then run `cdlocker remove <name>`. Use `--delete` only if you also want to delete the directory and its contents.

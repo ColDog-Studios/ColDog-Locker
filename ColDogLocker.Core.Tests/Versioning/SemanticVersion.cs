@@ -41,7 +41,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
         public void Constructor_WithNullOrWhitespace_ShouldThrowFormatException(string? invalidVersion)
         {
             // Act & Assert
-            Assert.Throws<FormatException>(() => new SemanticVersion(invalidVersion));
+            Assert.Throws<FormatException>(() => new SemanticVersion(invalidVersion!));
         }
 
         [Theory]
@@ -55,7 +55,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
         public void Constructor_WithInvalidFormat_ShouldThrowFormatException(string? invalidVersion)
         {
             // Act & Assert
-            Assert.Throws<FormatException>(() => new SemanticVersion(invalidVersion));
+            Assert.Throws<FormatException>(() => new SemanticVersion(invalidVersion!));
         }
 
         [Theory]
@@ -98,7 +98,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
         public void TryParse_WithNullOrWhitespace_ShouldReturnFalseAndNull(string? invalidVersion)
         {
             // Act
-            var result = SemanticVersion.TryParse(invalidVersion, out var version);
+            var result = SemanticVersion.TryParse(invalidVersion!, out var version);
 
             // Assert
             Assert.False(result);
