@@ -482,8 +482,31 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
                 {
                     var message = $"A new version is available!\n\n" +
                                   $"Current Version: {result.CurrentVersion}\n" +
-                                  $"Latest Version: {result.LatestVersion}\n\n" +
-                                  "Would you like to download and install it now?";
+                                  $"Latest Version: {result.LatestVersion}\n";
+
+                    if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
+                    {
+                        message += $"\nRelease Notes:\n{result.ReleaseNotesMarkdown.Trim()}\n";
+                    }
+
+                    if (!result.CanDownload)
+                    {
+                        message += $"\n{result.UserMessage ?? "This update cannot be downloaded automatically."}";
+                        if (!string.IsNullOrWhiteSpace(result.ManualUpdateInstructions))
+                        {
+                            message += $"\n\n{result.ManualUpdateInstructions}";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
+                        {
+                            message += $"\n\nRelease: {result.ReleaseUrl}";
+                        }
+
+                        MessageDialog.ShowInformation(message, "Update Available", this);
+                        return;
+                    }
+
+                    message += "\nWould you like to download and install it now?";
 
                     if (MessageDialog.ShowQuestion(message, "Update Available", this))
                     {

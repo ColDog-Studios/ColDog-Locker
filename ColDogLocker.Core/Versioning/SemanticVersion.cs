@@ -109,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
         /// <returns>A positive number if this instance is greater; negative if less; zero if equal.</returns>
         public int CompareTo(SemanticVersion? other)
         {
-            if (other == null)
+            if (other is null)
             {
                 return 1;
             }
@@ -191,7 +191,7 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
 
         public bool Equals(SemanticVersion? other)
         {
-            return other != null && CompareTo(other) == 0;
+            return other is not null && CompareTo(other) == 0;
         }
 
         public override bool Equals(object? obj) => obj is SemanticVersion other && Equals(other);
@@ -203,32 +203,32 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
             return PreRelease != null ? $"{Major}.{Minor}.{Patch}-{PreRelease}" : $"{Major}.{Minor}.{Patch}";
         }
 
-        public static bool operator >(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator >(SemanticVersion? v1, SemanticVersion? v2)
         {
-            return v1.CompareTo(v2) > 0;
+            return v1 is not null && v1.CompareTo(v2) > 0;
         }
 
-        public static bool operator <(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator <(SemanticVersion? v1, SemanticVersion? v2)
         {
-            return v1.CompareTo(v2) < 0;
+            return v2 is not null && (v1 is null || v1.CompareTo(v2) < 0);
         }
 
-        public static bool operator >=(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator >=(SemanticVersion? v1, SemanticVersion? v2)
         {
-            return v1.CompareTo(v2) >= 0;
+            return v1 is null ? v2 is null : v1.CompareTo(v2) >= 0;
         }
 
-        public static bool operator <=(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator <=(SemanticVersion? v1, SemanticVersion? v2)
         {
-            return v1.CompareTo(v2) <= 0;
+            return v1 is null || v1.CompareTo(v2) <= 0;
         }
 
-        public static bool operator ==(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator ==(SemanticVersion? v1, SemanticVersion? v2)
         {
             return ReferenceEquals(v1, v2) || (v1 is not null && v2 is not null && v1.Equals(v2));
         }
 
-        public static bool operator !=(SemanticVersion v1, SemanticVersion v2)
+        public static bool operator !=(SemanticVersion? v1, SemanticVersion? v2)
         {
             return !(v1 == v2);
         }

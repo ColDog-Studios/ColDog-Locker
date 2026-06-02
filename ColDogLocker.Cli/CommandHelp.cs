@@ -38,6 +38,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine();
 
             Console.WriteLine("OTHER:");
+            Console.WriteLine("  update [--download] [--notes]          Check for updates");
             Console.WriteLine("  help [command]                         Show help information");
             Console.WriteLine("  --version, -v                          Show version information");
             Console.WriteLine();
@@ -183,7 +184,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  debug                 Enable/disable debug mode (true/false)");
                     Console.WriteLine("  log-retention         Days to keep log files (1-3650)");
                     Console.WriteLine("  auto-update           Enable/disable auto-updates (true/false)");
-                    Console.WriteLine("  update-channel        Update channel (stable/prerelease)");
+                    Console.WriteLine("  update-channel        Update channel (stable/unstable)");
                     Console.WriteLine("  db-vacuum-interval    Days between database optimizations (0=disabled, 1-365)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
@@ -192,6 +193,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  cdlocker settings log-retention 60");
                     Console.WriteLine("  cdlocker settings auto-update true");
                     Console.WriteLine("  cdlocker settings update-channel stable");
+                    Console.WriteLine("  cdlocker settings update-channel unstable");
                     Console.WriteLine("  cdlocker settings db-vacuum-interval 30");
                     break;
 
@@ -230,6 +232,24 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker db-info");
+                    break;
+
+                case "update":
+                    Console.WriteLine("CHECK FOR UPDATES:");
+                    Console.WriteLine("  cdlocker update [--download] [--notes]");
+                    Console.WriteLine();
+                    Console.WriteLine("DESCRIPTION:");
+                    Console.WriteLine("  Checks GitHub Releases for a newer version matching the configured");
+                    Console.WriteLine("  update channel and current platform.");
+                    Console.WriteLine();
+                    Console.WriteLine("OPTIONS:");
+                    Console.WriteLine("  --download    Download and verify the matching installer package");
+                    Console.WriteLine("  --notes       Print markdown release notes when an update is available");
+                    Console.WriteLine();
+                    Console.WriteLine("EXAMPLES:");
+                    Console.WriteLine("  cdlocker update");
+                    Console.WriteLine("  cdlocker update --notes");
+                    Console.WriteLine("  cdlocker update --download");
                     break;
 
                 case "status":

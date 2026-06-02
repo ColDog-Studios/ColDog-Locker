@@ -112,6 +112,32 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     Console.WriteLine("\nA newer version is available:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
+
+                    if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
+                    {
+                        Console.WriteLine("Release Notes:");
+                        Console.WriteLine(result.ReleaseNotesMarkdown.Trim());
+                        Console.WriteLine();
+                    }
+
+                    if (!result.CanDownload)
+                    {
+                        Console.WriteLine(result.UserMessage ?? "This update cannot be downloaded automatically.");
+                        if (!string.IsNullOrWhiteSpace(result.ManualUpdateInstructions))
+                        {
+                            Console.WriteLine(result.ManualUpdateInstructions);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
+                        {
+                            Console.WriteLine($"Release: {result.ReleaseUrl}");
+                        }
+
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
+                        return;
+                    }
+
                     Console.Write("Do you want to download the latest version? (y/N): ");
 
                     var response = Console.ReadLine()?.ToLower();

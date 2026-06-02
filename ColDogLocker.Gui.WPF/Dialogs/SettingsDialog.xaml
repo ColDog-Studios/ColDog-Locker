@@ -145,12 +145,12 @@
                                        FontSize="11"
                                        Margin="20,0,0,12" />
 
-                            <RadioButton x:Name="PrereleaseChannelRadio"
-                                         Content="Prerelease"
+                            <RadioButton x:Name="UnstableChannelRadio"
+                                         Content="Unstable"
                                          GroupName="UpdateChannel"
                                          Foreground="{DynamicResource TextPrimaryBrush}"
                                          Margin="0,0,0,4" />
-                            <TextBlock Text="Get early access to new features before stable release"
+                            <TextBlock Text="Receive the newest available release, including unstable builds"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        FontSize="11"
                                        Margin="20,0,0,8" />

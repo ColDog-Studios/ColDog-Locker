@@ -36,9 +36,9 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                     result = command switch
                     {
-                        // TODO: Add command for checking updates after refactoring update system
                         "gui" => LaunchGui(),
                         "terminal" or "tui" => LaunchTui(),
+                        "update" => UpdateCommands.Update(args),
                         "new" => LockerCommands.New(args),
                         "remove" => LockerCommands.Remove(args),
                         "lock" => LockerCommands.Lock(args),

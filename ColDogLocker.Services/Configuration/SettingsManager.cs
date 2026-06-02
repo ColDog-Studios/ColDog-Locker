@@ -267,7 +267,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
     public enum UpdateChannel
     {
         Stable,
-        Prerelease
+        Unstable
     }
 
     // Enum for GUI view mode
@@ -295,7 +295,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
         public bool AutoUpdate { get; set; } = true;
 
         /// <summary>
-        ///     Gets or sets the update channel (Stable or Prerelease).
+        ///     Gets or sets the update channel (Stable or Unstable).
         /// </summary>
         public UpdateChannel UpdateChannel { get; set; } = UpdateChannel.Stable;
 

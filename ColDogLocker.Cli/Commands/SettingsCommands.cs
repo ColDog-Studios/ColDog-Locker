@@ -275,17 +275,17 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             return 0;
                         }
 
-                        if (value is "prerelease" or "pre" or "p")
+                        if (value is "unstable" or "u" or "prerelease" or "pre" or "p")
                         {
-                            SettingsManager.Settings.UpdateChannel = UpdateChannel.Prerelease;
+                            SettingsManager.Settings.UpdateChannel = UpdateChannel.Unstable;
                             SettingsManager.SaveSettings();
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine("Update channel set to: Prerelease");
+                            Console.WriteLine("Update channel set to: Unstable");
                             Console.ResetColor();
                             return 0;
                         }
 
-                        Console.Error.WriteLine("Error: Invalid value. Use 'stable' or 'prerelease'.");
+                        Console.Error.WriteLine("Error: Invalid value. Use 'stable' or 'unstable'.");
                         return 1;
 
                     default:

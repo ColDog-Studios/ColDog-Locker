@@ -86,7 +86,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 : autoUpdateInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
             // Prompt the user to select update channel
-            Console.Write($"Update Channel (stable/prerelease) [Current: {SettingsManager.Settings.UpdateChannel}]: ");
+            Console.Write($"Update Channel (stable/unstable) [Current: {SettingsManager.Settings.UpdateChannel}]: ");
             var channelInput = Console.ReadLine()?.ToLowerInvariant();
             var updateChannel = SettingsManager.Settings.UpdateChannel;
             if (!string.IsNullOrEmpty(channelInput))
@@ -95,9 +95,9 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 {
                     updateChannel = UpdateChannel.Stable;
                 }
-                else if (channelInput is "prerelease" or "pre" or "p")
+                else if (channelInput is "unstable" or "u" or "prerelease" or "pre" or "p")
                 {
-                    updateChannel = UpdateChannel.Prerelease;
+                    updateChannel = UpdateChannel.Unstable;
                 }
                 else
                 {
