@@ -87,8 +87,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public Architecture Architecture { get; init; } = RuntimeInformation.ProcessArchitecture;
         public LinuxPackageFormat LinuxPackageFormat { get; init; }
 
-        public bool SupportsAutomaticUpdates =>
-            OperatingSystem is UpdateOperatingSystem.Windows ||
+        public bool SupportsAutomaticUpdates
+            => OperatingSystem is UpdateOperatingSystem.Windows ||
             (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
 
         public string DisplayName
@@ -146,14 +146,14 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         {
             try
             {
-                const string osReleasePath = "/etc/os-release";
-                if (!File.Exists(osReleasePath))
+                const string OsReleasePath = "/etc/os-release";
+                if (!File.Exists(OsReleasePath))
                 {
                     Logger.Log(LogLevel.Debug, "Unable to detect Linux package format because /etc/os-release was not found.");
                     return LinuxPackageFormat.Unknown;
                 }
 
-                var values = File.ReadAllLines(osReleasePath)
+                var values = File.ReadAllLines(OsReleasePath)
                     .Select(line => line.Split('=', 2))
                     .Where(parts => parts.Length == 2)
                     .ToDictionary(parts => parts[0], parts => parts[1].Trim('"').ToLowerInvariant());
@@ -677,6 +677,5 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 Logger.Log(LogLevel.Warning, $"Failed to clean up temporary update file '{tempPath}'.", ex);
             }
         }
-
     }
 }
