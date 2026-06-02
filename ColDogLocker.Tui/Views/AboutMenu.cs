@@ -26,9 +26,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
         {
             MainMenu.MenuTitle("Main Menu > About");
 
-            Console.Write("\nThe idea of ColDog Locker was created by Collin 'ColDog' Laney on 11/17/21,\n" +
-                          "for a security project in Cybersecurity class.\n" +
-                          "Collin Laney is the Founder and CEO of ColDog Studios.");
+            Console.Write("\nColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.");
             Console.WriteLine("\n\nColDog Locker is a free and open-source project licensed under the GNU General Public License v3.0.");
             Console.ReadLine();
         }

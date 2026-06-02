@@ -23,17 +23,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        d:DesignWidth="1100"
+        d:DesignWidth="1200"
         d:DesignHeight="720"
         x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         x:Name="Root"
         Icon="/Assets/cdlIcon.ico"
         Title="ColDog Locker"
-        Width="1100"
+        Width="1200"
         Height="720"
         MinWidth="900"
-        MinHeight="560">
+        MinHeight="540">
 
     <DockPanel>
         <DockPanel.Styles>
@@ -123,30 +123,30 @@
                     BorderThickness="0,0,0,1"
                     Padding="8">
                 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,220,120,Auto" ColumnSpacing="8">
-                    <Button Grid.Column="0" Width="36" Height="32" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M11 4H13V11H20V13H13V20H11V13H4V11H11Z" />
+                    <Button Grid.Column="0" Classes="tool-button" Width="36" Height="32" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
+                        <PathIcon Width="16" Height="16" Data="M11 4H13V11H20V13H13V20H11V13H4V11H11Z" />
                     </Button>
-                    <Button Grid.Column="1" Width="36" Height="32" Command="{Binding LockSelectedCommand}" ToolTip.Tip="Lock selected locker">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M7 10V8C7 5.24 9.24 3 12 3S17 5.24 17 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7ZM9 10H15V8C15 6.34 13.66 5 12 5S9 6.34 9 8V10Z" />
+                    <Button Grid.Column="1" Classes="tool-button" Width="36" Height="32" Command="{Binding LockSelectedCommand}" ToolTip.Tip="Lock selected locker">
+                        <PathIcon Width="16" Height="16" Data="M7 10V8C7 5.24 9.24 3 12 3S17 5.24 17 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7ZM9 10H15V8C15 6.34 13.66 5 12 5S9 6.34 9 8V10Z" />
                     </Button>
-                    <Button Grid.Column="2" Width="36" Height="32" Command="{Binding UnlockSelectedCommand}" ToolTip.Tip="Unlock selected locker">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M7 10V8C7 5.24 9.24 3 12 3C14.05 3 15.82 4.23 16.59 6H14.24C13.69 5.39 12.89 5 12 5C10.34 5 9 6.34 9 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7Z" />
+                    <Button Grid.Column="2" Classes="tool-button" Width="36" Height="32" Command="{Binding UnlockSelectedCommand}" ToolTip.Tip="Unlock selected locker">
+                        <PathIcon Width="16" Height="16" Data="M7 10V8C7 5.24 9.24 3 12 3C14.05 3 15.82 4.23 16.59 6H14.24C13.69 5.39 12.89 5 12 5C10.34 5 9 6.34 9 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7Z" />
                     </Button>
-                    <Button Grid.Column="3" Width="36" Height="32" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="Remove selected locker">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M9 3H15L16 5H21V7H3V5H8L9 3ZM5 9H19L18 21H6L5 9Z" />
+                    <Button Grid.Column="3" Classes="tool-button" Width="36" Height="32" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="Remove selected locker">
+                        <PathIcon Width="16" Height="16" Data="M9 3H15L16 5H21V7H3V5H8L9 3ZM5 9H19L18 21H6L5 9Z" />
                     </Button>
                     <Border Grid.Column="4" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
-                    <Button Grid.Column="5" Width="36" Height="32" Command="{Binding OpenLocationCommand}" ToolTip.Tip="Open selected locker in Explorer">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M3 6C3 4.9 3.9 4 5 4H10L12 6H19C20.1 6 21 6.9 21 8V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V6Z" />
+                    <Button Grid.Column="5" Classes="tool-button" Width="36" Height="32" Command="{Binding OpenLocationCommand}" ToolTip.Tip="Open selected locker in Explorer">
+                        <PathIcon Width="16" Height="16" Data="M3 6C3 4.9 3.9 4 5 4H10L12 6H19C20.1 6 21 6.9 21 8V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V6Z" />
                     </Button>
-                    <Button Grid.Column="6" Width="36" Height="32" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="Show selected locker properties">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 10H13V17H11V10ZM11 7H13V9H11V7Z" />
+                    <Button Grid.Column="6" Classes="tool-button" Width="36" Height="32" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="Show selected locker properties">
+                        <PathIcon Width="16" Height="16" Data="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 10H13V17H11V10ZM11 7H13V9H11V7Z" />
                     </Button>
-                    <Button Grid.Column="7" Width="36" Height="32" Command="{Binding ToggleViewCommand}" ToolTip.Tip="Toggle grid/list view">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="{Binding ToggleViewIconData}" />
+                    <Button Grid.Column="7" Classes="tool-button" Width="36" Height="32" Command="{Binding ToggleViewCommand}" ToolTip.Tip="Toggle grid/list view">
+                        <PathIcon Width="16" Height="16" Data="{Binding ToggleViewIconData}" />
                     </Button>
-                    <Button Grid.Column="8" Width="36" Height="32" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
-                        <PathIcon Width="16" Height="16" Foreground="{DynamicResource AppPrimaryBrush}" Data="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.6 18 12 18C8.69 18 6 15.31 6 12S8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" />
+                    <Button Grid.Column="8" Classes="tool-button" Width="36" Height="32" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
+                        <PathIcon Width="16" Height="16" Data="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.6 18 12 18C8.69 18 6 15.31 6 12S8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" />
                     </Button>
                     <Border Grid.Column="9" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
                     <TextBox Grid.Column="11"

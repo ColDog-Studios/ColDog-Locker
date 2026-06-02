@@ -75,12 +75,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         public static Button Button(string text)
         {
-            return new Button
+            var button = new Button
             {
                 Content = text,
                 MinWidth = 92,
-                HorizontalContentAlignment = HorizontalAlignment.Center
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                Padding = new global::Avalonia.Thickness(14, 6)
             };
+            button.Classes.Add("accent-button");
+            return button;
         }
     }
 }

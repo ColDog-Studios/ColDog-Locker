@@ -16,31 +16,54 @@
 */
 
 using ColDogStudios.ColDogLocker.Services.Updates;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
     public sealed class AvaloniaUpdateDialogHost : IUpdateDialogHost
     {
-        private readonly IUserDialogService _dialogs;
-
-        public AvaloniaUpdateDialogHost(IUserDialogService dialogs)
-        {
-            _dialogs = dialogs;
-        }
-
         public Task ShowMessageAsync(UpdateDialogMessage message, CancellationToken cancellationToken = default)
         {
-            return _dialogs.ShowMessageAsync(message.Title, message.Message);
+            return ShowDialogAsync(new MessageDialog(message.Title, message.Message, MessageDialogKind.Information));
         }
 
         public Task<bool> ConfirmDownloadAsync(UpdateDialogMessage prompt, CancellationToken cancellationToken = default)
         {
-            return _dialogs.ConfirmAsync(prompt.Title, prompt.Message);
+            return ShowDialogAsync<bool>(new MessageDialog(prompt.Title, prompt.Message, MessageDialogKind.Confirmation));
         }
 
         public Task ShowErrorAsync(UpdateDialogError error, CancellationToken cancellationToken = default)
         {
-            return _dialogs.ShowErrorAsync(error.Title, error.Message, error.Exception);
+            var message = error.Exception == null
+                ? error.Message
+                : $"{error.Message}\n\n{error.Exception}";
+            return ShowDialogAsync(new MessageDialog(error.Title, message, MessageDialogKind.Error));
+        }
+
+        private static Window Owner
+        {
+            get
+            {
+                if (global::Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                    desktop.MainWindow is { } mainWindow)
+                {
+                    return mainWindow;
+                }
+
+                throw new InvalidOperationException("No Avalonia main window is available for dialog ownership.");
+            }
+        }
+
+        private static async Task ShowDialogAsync(Window dialog)
+        {
+            await dialog.ShowDialog<object?>(Owner);
+        }
+
+        private static Task<T?> ShowDialogAsync<T>(Window dialog)
+        {
+            return dialog.ShowDialog<T?>(Owner);
         }
     }
 }

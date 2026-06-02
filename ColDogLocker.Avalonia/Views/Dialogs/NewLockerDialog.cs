@@ -20,6 +20,7 @@ using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Validation;
 using ColDogStudios.ColDogLocker.Services.Configuration;
+using System.IO;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -32,24 +33,65 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             CanResize = false;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
+            var defaultBasePath = GetDefaultBasePath();
+            var isCustomPath = false;
+            var isUpdatingLocation = false;
+
             var nameBox = new TextBox { PlaceholderText = "Locker name" };
-            var locationBox = new TextBox { Text = SettingsManager.Settings.DefaultLockerLocation, PlaceholderText = "Folder path" };
+            var locationBox = new TextBox { PlaceholderText = "Folder path" };
             var passwordBox = new TextBox { PasswordChar = '*', PlaceholderText = "Password" };
             var confirmBox = new TextBox { PasswordChar = '*', PlaceholderText = "Confirm password" };
             var errorText = new TextBlock { Foreground = global::Avalonia.Media.Brushes.Firebrick, TextWrapping = global::Avalonia.Media.TextWrapping.Wrap };
+
+            void SetLocation(string value)
+            {
+                isUpdatingLocation = true;
+                locationBox.Text = value;
+                isUpdatingLocation = false;
+            }
+
+            void UpdateDefaultLocation()
+            {
+                if (isCustomPath)
+                {
+                    return;
+                }
+
+                var lockerName = nameBox.Text?.Trim();
+                SetLocation(string.IsNullOrWhiteSpace(lockerName)
+                    ? string.Empty
+                    : Path.Combine(defaultBasePath, lockerName));
+            }
+
+            nameBox.TextChanged += (_, _) => UpdateDefaultLocation();
+            locationBox.TextChanged += (_, _) =>
+            {
+                if (!isUpdatingLocation && locationBox.IsFocused)
+                {
+                    isCustomPath = true;
+                }
+            };
 
             var browseButton = DialogHelpers.Button("Browse");
             browseButton.Click += async (_, _) =>
             {
                 var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
                 {
-                    Title = "Select locker folder",
+                    Title = "Select folder to lock",
                     AllowMultiple = false
                 });
 
                 if (folders.Count > 0)
                 {
-                    locationBox.Text = folders[0].TryGetLocalPath() ?? locationBox.Text;
+                    var selectedPath = folders[0].TryGetLocalPath() ?? folders[0].Path.LocalPath;
+                    isCustomPath = true;
+                    SetLocation(selectedPath);
+
+                    var selectedName = GetFolderName(selectedPath);
+                    if (!string.IsNullOrWhiteSpace(selectedName))
+                    {
+                        nameBox.Text = selectedName;
+                    }
                 }
             };
 
@@ -127,6 +169,31 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
 
             return null;
+        }
+
+        private static string GetDefaultBasePath()
+        {
+            var defaultBasePath = SettingsManager.Settings.DefaultLockerLocation;
+            if (string.IsNullOrWhiteSpace(defaultBasePath))
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            }
+
+            try
+            {
+                Directory.CreateDirectory(defaultBasePath);
+                return defaultBasePath;
+            }
+            catch
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            }
+        }
+
+        private static string GetFolderName(string path)
+        {
+            var trimmedPath = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return Path.GetFileName(trimmedPath);
         }
     }
 }
