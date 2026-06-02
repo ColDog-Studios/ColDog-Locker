@@ -3,11 +3,12 @@
 <!-- PROJECT SHIELDS -->
 
 [![Stable Release][stable-release-shield]][stable-release-url]
-[![Latest Release][latest-release-shield]][latest-release-url]
+[![Unstable Release][unstable-release-shield]][unstable-release-url]
 [![Downloads][downloads-shield]][downloads-url]
 [![Tests][tests-shield]][tests-url]
 [![Issues][issues-shield]][issues-url]
 [![Stargazers][stars-shield]][stars-url]
+[![License][license-shield]][license-url]
 
 <br />
 <div align="center">
@@ -73,11 +74,8 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 ## Getting Started
 
-The source code is publicly available for viewing and personal use. There are currently no official release binaries available yet.
+There are currently no official release binaries available yet.
 You can build from source following the instructions below.
-
-> [!IMPORTANT]
-> While the source code is public, this is proprietary software. Please review the [LICENSE](LICENSE) for usage restrictions before building or using.
 
 ### Prerequisites
 
@@ -242,10 +240,9 @@ For business inquiries or collaboration opportunities, please contact us directl
 
 ## License
 
-ColDog Locker is proprietary software. Copyright © 2025 Collin Laney. All Rights Reserved.
+ColDog Locker is free software licensed under the GNU General Public License v3.0. Copyright © 2026 ColDog Studios.
 
-This software is licensed for personal and internal business use only. Public distribution, commercial distribution, and SaaS hosting are not permitted.
-See [LICENSE](LICENSE) for complete terms and conditions.
+See [LICENSE](LICENSE) for the full terms and conditions of the GNU GPLv3.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -276,20 +273,22 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
-[stable-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?style=for-the-badge
-[stable-release-url]: https://github.com/ColDog-Studios/ColDog-Locker
-[latest-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?include_prereleases&style=for-the-badge&label=Latest%20Release
-[latest-release-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[stable-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?style=for-the-badge&label=Stable%20Release
+[stable-release-url]: https://github.com/ColDog-Studios/ColDog-Locker/releases
+[unstable-release-shield]: https://img.shields.io/github/v/release/ColDog-Studios/ColDog-Locker?include_prereleases&style=for-the-badge&label=Latest%20Release
+[unstable-release-url]: https://github.com/ColDog-Studios/ColDog-Locker/releases
 [downloads-shield]: https://img.shields.io/github/downloads/ColDog-Studios/ColDog-Locker/total.svg?style=for-the-badge
-[downloads-url]: https://github.com/ColDog-Studios/ColDog-Locker
+[downloads-url]: https://github.com/ColDog-Studios/ColDog-Locker/releases
 [tests-shield]: https://img.shields.io/github/actions/workflow/status/ColDog-Studios/ColDog-Locker/test.yml?style=for-the-badge&label=Tests
 [tests-url]: https://github.com/ColDog-Studios/ColDog-Locker/actions/workflows/test.yml
 [issues-shield]: https://img.shields.io/github/issues/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
 [issues-url]: https://github.com/ColDog-Studios/ColDog-Locker/issues
 [stars-shield]: https://img.shields.io/github/stars/ColDog-Studios/ColDog-Locker.svg?style=for-the-badge
-[stars-url]: https://github.com/ColDogStudios/ColDog-Locker/stargazers
+[stars-url]: https://github.com/ColDog-Studios/ColDog-Locker/stargazers
+[license-shield]: https://img.shields.io/github/license/ColDog-Studios/ColDog-Locker?style=for-the-badge
+[license-url]: https://github.com/ColDog-Studios/ColDog-Locker/blob/main/LICENSE
 [github-shield]: https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white
-[github-url]: https://github.com/ColDogStudios
+[github-url]: https://github.com/ColDog-Studios
 [twitter-shield]: https://img.shields.io/badge/Twitter-%231DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=white
 [linkedin-shield]: https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white
 [twitter-cds-url]: https://twitter.com/ColDogStudios

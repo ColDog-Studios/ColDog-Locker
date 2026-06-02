@@ -77,12 +77,12 @@
                             Padding="15"
                             Margin="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="© 2026 ColDog Studios"
+                            <TextBlock Text="Copyright © 2026 ColDog Studios"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimaryBrush}"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Text="All rights reserved"
+                            <TextBlock Text="Licensed under the GNU General Public License v3.0"
                                        FontSize="12"
                                        Foreground="{DynamicResource TextSecondaryBrush}"
                                        HorizontalAlignment="Center"
