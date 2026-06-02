@@ -1,11 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <ItemGroup>
-        <PackageReference Include="BCrypt.Net-Next"/>
-        <PackageReference Include="Microsoft.Data.Sqlite"/>
-        <PackageReference Include="Newtonsoft.Json"/>
-    </ItemGroup>
-
     <PropertyGroup>
         <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
     </PropertyGroup>
@@ -19,7 +13,7 @@
         </Compile>
     </ItemGroup>
 
-    <!-- Auto-generate AppInfo.cs at build time -->
+    <!-- Auto-generate AppInfo.g.cs at build time -->
     <Target Name="GenerateAppInfo" BeforeTargets="CoreCompile">
         <PropertyGroup>
             <BuildNumber>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</BuildNumber>
@@ -32,7 +26,7 @@
                 // Do not edit manually - changes will be overwritten.
                 // &lt;/auto-generated&gt;
 
-                namespace ColDogStudios.ColDogLocker.Core.Constants%3B
+                namespace ColDogStudios.ColDogLocker.Core.Environment%3B
 
                 /// &lt;summary&gt;
                 /// Build information auto-generated at compile time.

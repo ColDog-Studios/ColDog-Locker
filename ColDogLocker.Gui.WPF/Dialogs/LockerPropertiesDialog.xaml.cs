@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using ColDogStudios.ColDogLocker.Core.Data;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Core.Models;
 using Microsoft.Win32;
 

@@ -1,11 +1,10 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
-using ColDogStudios.ColDogLocker.Core.Data;
-using ColDogStudios.ColDogLocker.Core.Encryption;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Security;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Core.Services;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Core.Validation;
-using ColDogStudios.ColDogLocker.Services.Console;
+using ColDogStudios.ColDogLocker.Tui.Input;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
@@ -55,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Determine locker location
             var lockerLocation = customPath is not null
                 ? Path.Combine(customPath, lockerName)
-                : Path.Combine(Variables.CdlDir, lockerName);
+                : Path.Combine(AppPaths.CdlDir, lockerName);
 
             // Validate path is not protected
             var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);

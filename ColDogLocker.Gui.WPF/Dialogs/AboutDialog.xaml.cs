@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
@@ -94,20 +94,43 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             try
             {
-                var result = await Task.Run(() => UpdateManager.CheckForUpdatesAsync());
+                var result = await Task.Run(() => UpdateService.CheckForUpdatesAsync());
 
                 if (result.UpdateAvailable)
                 {
                     var message = $"A new version is available!\n\n" +
                                   $"Current Version: {result.CurrentVersion}\n" +
-                                  $"Latest Version: {result.LatestVersion}\n\n" +
-                                  "Would you like to download and install it now?";
+                                  $"Latest Version: {result.LatestVersion}\n";
+
+                    if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
+                    {
+                        message += $"\nRelease Notes:\n{result.ReleaseNotesMarkdown.Trim()}\n";
+                    }
+
+                    if (!result.CanDownload)
+                    {
+                        message += $"\n{result.UserMessage ?? "This update cannot be downloaded automatically."}";
+                        if (!string.IsNullOrWhiteSpace(result.ManualUpdateInstructions))
+                        {
+                            message += $"\n\n{result.ManualUpdateInstructions}";
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
+                        {
+                            message += $"\n\nRelease: {result.ReleaseUrl}";
+                        }
+
+                        MessageDialog.ShowInformation(message, "Update Available", this);
+                        return;
+                    }
+
+                    message += "\nWould you like to download and install it now?";
 
                     if (MessageDialog.ShowQuestion(message, "Update Available", this))
                     {
                         try
                         {
-                            var filePath = await Task.Run(() => UpdateManager.DownloadUpdateAsync(result));
+                            var filePath = await Task.Run(() => UpdateService.DownloadUpdateAsync(result));
                             MessageDialog.ShowInformation(
                                 $"Update downloaded successfully to:\n{filePath}\n\nPlease run the installer to complete the update.",
                                 "Download Complete",

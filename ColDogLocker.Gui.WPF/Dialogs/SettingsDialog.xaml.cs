@@ -2,9 +2,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Data;
-using ColDogStudios.ColDogLocker.Core.Logging;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 using Microsoft.Win32;
 using RadioButton = System.Windows.Controls.RadioButton;
@@ -87,8 +87,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 case UpdateChannel.Stable:
                     StableChannelRadio.IsChecked = true;
                     break;
-                case UpdateChannel.Prerelease:
-                    PrereleaseChannelRadio.IsChecked = true;
+                case UpdateChannel.Unstable:
+                    UnstableChannelRadio.IsChecked = true;
                     break;
                 default:
                     StableChannelRadio.IsChecked = true;
@@ -307,9 +307,9 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 {
                     SettingsManager.Settings.UpdateChannel = UpdateChannel.Stable;
                 }
-                else if (PrereleaseChannelRadio.IsChecked == true)
+                else if (UnstableChannelRadio.IsChecked == true)
                 {
-                    SettingsManager.Settings.UpdateChannel = UpdateChannel.Prerelease;
+                    SettingsManager.Settings.UpdateChannel = UpdateChannel.Unstable;
                 }
 
                 SettingsManager.SaveSettings();

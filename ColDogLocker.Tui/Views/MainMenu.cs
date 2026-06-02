@@ -1,4 +1,4 @@
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
@@ -42,10 +42,10 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         LockerMenu.Unlock();
                         break;
                     case "5":
-                        AboutHelpDev.ShowAbout();
+                        AboutMenu.Show();
                         break;
                     case "6":
-                        AboutHelpDev.ShowHelp();
+                        HelpMenu.Show();
                         break;
                     case "7":
                         await CheckForUpdates();
@@ -56,7 +56,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     case "0":
                         return;
                     case "dev":
-                        AboutHelpDev.ShowDev();
+                        DevMenu.Show();
                         break;
                     default:
                         Console.Write("\nInvalid choice. Please try again.");
@@ -105,13 +105,39 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             try
             {
-                var result = await UpdateManager.CheckForUpdatesAsync();
+                var result = await UpdateService.CheckForUpdatesAsync();
 
                 if (result.UpdateAvailable)
                 {
                     Console.WriteLine("\nA newer version is available:\n");
                     Console.WriteLine($"Current Version: {result.CurrentVersion}");
                     Console.WriteLine($"Latest Version: {result.LatestVersion}\n");
+
+                    if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
+                    {
+                        Console.WriteLine("Release Notes:");
+                        Console.WriteLine(result.ReleaseNotesMarkdown.Trim());
+                        Console.WriteLine();
+                    }
+
+                    if (!result.CanDownload)
+                    {
+                        Console.WriteLine(result.UserMessage ?? "This update cannot be downloaded automatically.");
+                        if (!string.IsNullOrWhiteSpace(result.ManualUpdateInstructions))
+                        {
+                            Console.WriteLine(result.ManualUpdateInstructions);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(result.ReleaseUrl))
+                        {
+                            Console.WriteLine($"Release: {result.ReleaseUrl}");
+                        }
+
+                        Console.WriteLine("\nPress any key to continue...");
+                        Console.ReadKey();
+                        return;
+                    }
+
                     Console.Write("Do you want to download the latest version? (y/N): ");
 
                     var response = Console.ReadLine()?.ToLower();
@@ -119,7 +145,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     {
                         try
                         {
-                            var filePath = await UpdateManager.DownloadUpdateAsync(result);
+                            var filePath = await UpdateService.DownloadUpdateAsync(result);
                             Console.WriteLine($"\nDownloaded the latest version to: {filePath}");
                             Console.WriteLine("Please run the installer to update ColDog Locker.");
                         }

@@ -3,8 +3,8 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Core.Configuration;
-using ColDogStudios.ColDogLocker.Core.Constants;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Core.Environment;
 
 namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 {
@@ -118,7 +118,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             // Load Application Paths
             try
             {
-                ConfigDirText.Text = Variables.LocalConfig;
+                ConfigDirText.Text = AppPaths.LocalConfig;
             }
             catch
             {
@@ -127,7 +127,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
             try
             {
-                var dbPath = Path.Combine(Variables.LocalConfig, "lockers.db");
+                var dbPath = Path.Combine(AppPaths.LocalConfig, "lockers.db");
                 DatabasePathText.Text = dbPath;
             }
             catch
