@@ -1,234 +1,167 @@
 # Security Features
 
-ColDog Locker is built with security as a core principle. This document outlines the cryptographic protections, password security measures, and anti-ransomware safeguards that make ColDog Locker a trustworthy file security solution.
+ColDog Locker is designed to protect files at rest inside managed locker directories. It combines file encryption, password hashing, password strength checks, and path validation that blocks risky locker locations.
 
-## Overview
+This document describes the current implementation, not an aspirational design.
 
-- **Encryption**: AES-256-CBC with PBKDF2 key derivation
-- **Password Hashing**: BCrypt with configurable work factor
-- **Anti-Ransomware**: Path validation prevents locking critical system directories
-- **Defense in Depth**: Multiple validation layers and security checkpoints
+## Summary
 
----
+| Area | Current Implementation |
+| --- | --- |
+| File encryption | .NET AES with key and IV derived per file |
+| Key derivation | PBKDF2-HMAC-SHA256, 10,000 iterations |
+| Per-file salt | 16 random bytes stored at the start of each encrypted file |
+| Password storage | BCrypt hash, cost factor 14 |
+| Locker metadata | Per-user SQLite database |
+| Settings | Per-user JSON file |
+| Path protection | Blocks drive roots, system paths, app data paths, and top-level user folders |
 
-## Encryption
+## File Encryption
 
-### AES-256-CBC Encryption
+When a locker is locked, ColDog Locker recursively encrypts each file in the locker directory.
 
-ColDog Locker uses **AES-256 in CBC (Cipher Block Chaining) mode** for file encryption:
+For each file:
 
-- **Algorithm**: Advanced Encryption Standard with 256-bit keys
-- **Mode**: CBC provides semantic security - identical plaintext blocks produce different ciphertext
-- **IV (Initialization Vector)**: Cryptographically random 16-byte IV generated per file
-- **Padding**: PKCS7 padding ensures proper block alignment
+1. Generate a random 16-byte salt.
+2. Use PBKDF2-HMAC-SHA256 with 10,000 iterations to derive 48 bytes from the locker password and salt.
+3. Use the first 32 derived bytes as the AES key.
+4. Use the remaining 16 derived bytes as the AES IV.
+5. Write the salt at the beginning of the encrypted file.
+6. Write encrypted content to a temporary `.enc` file.
+7. Delete the plaintext file and move the encrypted file into its place.
 
-**Why AES-256-CBC?**
-- Industry-standard symmetric encryption algorithm
-- 256-bit keys provide strong protection against brute-force attacks
-- CBC mode prevents pattern analysis attacks
-- Widely audited and NIST-approved
+When unlocking, ColDog Locker reads the first 16 bytes as the salt, derives the same key and IV, decrypts to a temporary `.dec` file, deletes the encrypted file, and moves the decrypted file into place.
 
-### Key Derivation (PBKDF2)
+## Important Crypto Caveats
 
-User passwords are transformed into encryption keys using **PBKDF2-HMAC-SHA256**:
+The current implementation does not store a separate authentication tag or MAC for each encrypted file. That means the encrypted file format is focused on confidentiality, not strong tamper detection.
 
-- **Algorithm**: Password-Based Key Derivation Function 2
-- **Hash Function**: HMAC-SHA256
-- **Iterations**: 100,000 rounds (configurable, increases computation time for attackers)
-- **Salt**: Cryptographically random 32-byte salt per locker (prevents rainbow table attacks)
-- **Output**: 256-bit encryption key
+Practical effects:
 
-**Security Benefits**:
-- **Slow by design**: Makes brute-force attacks computationally expensive
-- **Unique salts**: Same password produces different keys for different lockers
-- **Memory-hard**: Resists GPU and ASIC-based cracking attempts
+- A wrong password will usually fail during decryption, but the file format does not provide explicit authenticated integrity.
+- A modified encrypted file may not always be detected as a deliberate tamper event before decryption is attempted.
+- Backups matter. Keep copies of important data outside the locker workflow.
 
-### File Encryption Process
+Future improvements should consider authenticated encryption, such as AES-GCM, or an encrypt-then-MAC format.
 
-1. Generate random 16-byte IV
-2. Derive 256-bit key from password using PBKDF2
-3. Encrypt file with AES-256-CBC
-4. Prepend IV to encrypted file (IV is not secret, just must be unique)
-5. Securely overwrite original file with encrypted data
+## Password Storage
 
-### File Decryption Process
+Locker passwords are not stored in plaintext.
 
-1. Extract IV from first 16 bytes of encrypted file
-2. Derive key from user password using stored salt
-3. Decrypt remaining bytes using AES-256-CBC with extracted IV
-4. Verify decryption success (invalid password produces garbage data)
-5. Restore original file
+The locker database stores BCrypt hashes generated with cost factor 14. Password verification compares the supplied password against that hash before lock, unlock, or password-change operations proceed.
 
----
+Changing a password requires:
 
-## Password Security
+- The locker must be unlocked.
+- The current password must be entered correctly.
+- The new password must pass the password filter.
 
-### BCrypt Hashing
+Because files are already plaintext while a locker is unlocked, changing the password updates only the stored password hash. Files are encrypted with the new password the next time the locker is locked.
 
-Locker passwords are hashed using **BCrypt** before storage:
+## Password Requirements
 
-- **Algorithm**: Blowfish-based adaptive hash function
-- **Work Factor**: Configurable cost parameter (default: 12)
-- **Salt**: Automatically generated per password
-- **Output**: 60-character hash string
+Passwords must satisfy all of these rules:
 
-**Why BCrypt?**
-- **Adaptive**: Cost factor can be increased as hardware improves
-- **Salted**: Each password gets a unique salt (prevents rainbow tables)
-- **Slow**: Intentionally computationally expensive to slow brute-force attacks
-- **Proven**: Battle-tested algorithm used by major platforms
+- At least 12 characters.
+- At least one uppercase letter.
+- At least one lowercase letter.
+- At least one digit.
+- At least one special character.
+- Must not contain blocked common words such as `password`, `admin`, `locker`, `secret`, `123456`, `qwerty`, or similar entries.
 
-**Database Storage**: Only BCrypt hashes are stored, never plaintext passwords. Even with database access, an attacker cannot recover the original passwords without brute-forcing the hash.
+## Path Protection
 
-### Password Requirements
+ColDog Locker validates locker paths when lockers are created and again before locking. This prevents many accidental or malicious attempts to encrypt important system locations.
 
-Enforced password complexity requirements protect against weak passwords:
+Blocked exact roots include:
 
-- **Minimum Length**: 12 characters (resists brute-force)
-- **Uppercase**: At least one uppercase letter (A-Z)
-- **Lowercase**: At least one lowercase letter (a-z)
-- **Digit**: At least one number (0-9)
-- **Special Character**: At least one symbol (!@#$%^&*, etc.)
-- **Common Words**: Blocks passwords containing common words (password, admin, locker, etc.)
+- Drive roots, such as `C:\` or `/`.
+- The user profile root.
+- Top-level user folders such as Documents, Desktop, Downloads, Pictures, Videos, and Music.
+- The top-level AppData folder.
 
-These requirements ensure passwords have sufficient entropy to resist dictionary and brute-force attacks.
+Blocked paths and their subdirectories include:
 
----
+- Windows system directories.
+- Program Files and common program files directories.
+- ProgramData.
+- AppData Roaming and Local.
+- Temp directories.
+- Startup folders.
+- Additional Windows critical directories such as Recovery, Boot, EFI, `$Recycle.Bin`, and System Volume Information.
 
-## Anti-Ransomware Protection
+Use dedicated subdirectories for lockers:
 
-ColDog Locker prevents malicious use by blocking critical system and user directory roots from being locked.
+```text
+Documents\ColDog Locker\MyLocker
+Documents\SecureFiles
+D:\Private\Taxes
+```
 
-### Two-Tier Protection
+## Metadata and Settings Security
 
-**System Paths** (blocks path + all subdirectories):
-- Drive roots (`C:\`, `D:\`), Windows, Program Files, ProgramData
-- AppData\Roaming, AppData\Local, Temp, Startup folders
+Locker metadata is stored in SQLite at:
 
-**User Folders** (blocks exact path only, allows subdirectories):
-- User profile root, AppData root, Documents, Desktop, Downloads, Pictures, Videos, Music
-- Example: ❌ `C:\Users\[Username]\Documents` ✅ `C:\Users\[Username]\Documents\MyLocker`
+```text
+%LOCALAPPDATA%\ColDog Studios\ColDog Locker\lockers.db
+```
 
-### Validation Points
+The database stores:
 
-Path validation occurs at:
-1. **Creation time** (GUI/CLI/TUI) - User-friendly error messages
-2. **Lock operation** - Final safety check, logs violations at Fatal level
+- Locker GUID.
+- Locker name.
+- BCrypt password hash.
+- Locker directory path.
+- Lock state.
+- Created and updated timestamps.
 
-This defense-in-depth approach catches attempts to bypass protection by tampering with the database.
+The database is not itself encrypted. It does not store plaintext passwords or encryption keys.
 
-**Best Practice**: Create dedicated subdirectories for lockers (e.g., `Documents\SecureFiles`, `AppData\MyHiddenLocker`) rather than locking top-level folders.
+Settings are stored as JSON at:
 
----
+```text
+%LOCALAPPDATA%\ColDog Studios\ColDog Locker\settings.json
+```
 
-## Database Security
+Settings writes use a temporary-file replacement flow. If a malformed settings file is detected, ColDog Locker backs it up and reinitializes defaults.
 
-### SQLite Encryption
+## What ColDog Locker Protects Against
 
-Locker metadata is stored in an **SQLite database** with the following protections:
+ColDog Locker is intended to help with:
 
-- **Password Hashes Only**: Only BCrypt hashes stored, never plaintext passwords
-- **Salts**: PBKDF2 salts stored per locker for key derivation
-- **No Key Storage**: Encryption keys are never stored - derived from user password at runtime
-- **Metadata**: Stores locker names, paths, creation dates, and lock status
+- Casual or unauthorized access to files at rest.
+- Exposure from someone browsing the filesystem while lockers are locked.
+- Password hash disclosure, because plaintext passwords are not stored.
+- Accidental locking of high-risk system or profile locations.
 
-**Security Model**: Even with full database access, an attacker cannot:
-- Recover original passwords (BCrypt is one-way)
-- Decrypt files without the user's password
-- Derive encryption keys without brute-forcing the password
+## What ColDog Locker Does Not Protect Against
 
-### File Integrity
+ColDog Locker does not protect against:
 
-The database tracks:
-- **File Count**: Number of files in each locker
-- **Lock Status**: Whether locker is currently locked/unlocked
-- **Timestamps**: Creation and last modified dates
+- Forgotten passwords.
+- Malware or keyloggers capturing passwords.
+- A compromised operating system.
+- Physical access while a locker is unlocked.
+- Memory inspection while passwords or derived keys are in use.
+- File tampering with authenticated integrity guarantees.
+- Data loss from interrupted operations, hardware failure, or missing backups.
 
-This metadata helps detect tampering attempts and ensures consistency between database state and filesystem state.
+## Recommended User Practices
 
----
-
-## Security Best Practices
-
-### For Users
-
-✅ **DO**:
-- Use strong, unique passwords for each locker (minimum 12 characters)
-- Store lockers in subdirectories (e.g., `Documents\SecureFiles`)
-- Keep multiple backups of critical encrypted data
-- Run ColDog Locker with normal user privileges (not as Administrator)
-
-❌ **DON'T**:
-- Reuse passwords across lockers
-- Lock system directories or drive roots
-- Forget your password (it cannot be recovered)
-- Share your locker password insecurely
-
-### For Developers
-
-The codebase includes:
-- **Unit Tests**: 71 tests covering validation, encryption, and security logic
-- **Static Analysis**: Enforces code quality and security patterns
-- **Input Validation**: All user inputs sanitized and validated
-- **Error Handling**: Security violations logged at Fatal level
-
----
-
-## Threat Model
-
-### What ColDog Locker Protects Against
-
-✅ **Protected**:
-- Unauthorized file access (files encrypted at rest)
-- Password guessing (BCrypt + strong requirements)
-- Rainbow table attacks (unique salts per locker/password)
-- Brute-force attacks (PBKDF2 with 100k iterations, BCrypt work factor)
-- Ransomware abuse (path validation prevents locking critical directories)
-- Database tampering (re-validation at lock time)
-
-### What ColDog Locker Does NOT Protect Against
-
-❌ **Not Protected**:
-- Keyloggers or malware capturing passwords during entry
-- Physical access to unlocked files
-- Attacks on the operating system or hardware
-- Social engineering (user reveals password)
-- Memory dumps while locker is unlocked (keys in memory)
-- Backdoors or compromised system components
-
-**Security Principle**: ColDog Locker provides strong file encryption and password protection, but cannot protect against compromised systems or user errors. Always use trusted, malware-free systems.
-
----
-
-## Cryptographic Specifications
-
-| Component | Algorithm | Parameters |
-|-----------|-----------|------------|
-| **File Encryption** | AES-256-CBC | 256-bit key, 16-byte IV per file |
-| **Key Derivation** | PBKDF2-HMAC-SHA256 | 100,000 iterations, 32-byte salt |
-| **Password Hashing** | BCrypt | Work factor 12 (configurable) |
-| **Random Generation** | System CSPRNG | .NET `RandomNumberGenerator` |
-| **Padding** | PKCS7 | Standard block cipher padding |
-
-### Algorithm Justifications
-
-- **AES-256**: NIST-approved, quantum-resistant for foreseeable future
-- **PBKDF2**: NIST SP 800-132 recommended, widely supported
-- **BCrypt**: Adaptive hashing, resists GPU attacks
-- **CBC Mode**: Simple, secure when properly implemented with random IVs
-
----
+- Use strong, unique passwords for each locker.
+- Prefer interactive password prompts over `--password`.
+- Keep tested backups of important files.
+- Do not run ColDog Locker with elevated privileges unless absolutely required.
+- Avoid editing locked locker contents outside ColDog Locker.
+- Do not manually rename locked locker folders unless you also know how to repair the metadata.
 
 ## Reporting Security Issues
 
-If you discover a security vulnerability in ColDog Locker, please report it responsibly:
+Do not open a public issue for a vulnerability.
 
-1. **DO NOT** open a public GitHub issue
-2. Open a [private security advisory](https://github.com/yourusername/ColDog-Locker/security/advisories/new) on GitHub
-3. Include:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if applicable)
+Use GitHub's private security advisory flow for the repository and include:
 
-We take security seriously and will respond to verified reports promptly.
+- A short description.
+- Reproduction steps.
+- Expected impact.
+- A suggested fix, if you have one.
