@@ -3,7 +3,7 @@
         <OutputType>WinExe</OutputType>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <RootNamespace>ColDogStudios.ColDogLocker.Gui.Avalonia</RootNamespace>
+        <RootNamespace>ColDogStudios.ColDogLocker.Avalonia</RootNamespace>
         <AssemblyName>ColDogLocker</AssemblyName>
         <ApplicationIcon>Assets\cdlIcon.ico</ApplicationIcon>
     </PropertyGroup>
@@ -22,6 +22,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
     </ItemGroup>
 
     <ItemGroup>

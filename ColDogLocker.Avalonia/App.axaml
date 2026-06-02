@@ -9,6 +9,53 @@
         <local:ViewLocator />
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="AppPrimaryBrush" Color="#0096DC" />
+            <SolidColorBrush x:Key="AppAccentBrush" Color="#0077B6" />
+            <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#002E44" />
+            <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppForegroundBrush" Color="#1F2933" />
+            <SolidColorBrush x:Key="AppSecondaryForegroundBrush" Color="#4A5568" />
+            <SolidColorBrush x:Key="AppBorderBrush" Color="#D7DEE5" />
+            <SolidColorBrush x:Key="AppToolbarBackgroundBrush" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="AppTableHeaderBackgroundBrush" Color="#F1F5F9" />
+            <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
+            <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
+
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#002E44" />
+                    <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AppForegroundBrush" Color="#1F2933" />
+                    <SolidColorBrush x:Key="AppSecondaryForegroundBrush" Color="#4A5568" />
+                    <SolidColorBrush x:Key="AppToolbarBackgroundBrush" Color="#FAFAFA" />
+                    <SolidColorBrush x:Key="AppTableHeaderBackgroundBrush" Color="#F1F5F9" />
+                    <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#FAFAFA" />
+                    <SolidColorBrush x:Key="AppBorderBrush" Color="#D7DEE5" />
+                    <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
+                    <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#1F1F1F" />
+                    <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#F7FAFC" />
+                    <SolidColorBrush x:Key="AppForegroundBrush" Color="#F7FAFC" />
+                    <SolidColorBrush x:Key="AppSecondaryForegroundBrush" Color="#CBD5E1" />
+                    <SolidColorBrush x:Key="AppToolbarBackgroundBrush" Color="#333333" />
+                    <SolidColorBrush x:Key="AppTableHeaderBackgroundBrush" Color="#2A2A2A" />
+                    <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#2A2A2A" />
+                    <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#333333" />
+                    <SolidColorBrush x:Key="AppBorderBrush" Color="#4A4A4A" />
+                    <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
+                    <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
