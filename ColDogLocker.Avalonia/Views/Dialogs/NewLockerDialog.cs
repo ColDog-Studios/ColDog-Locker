@@ -189,23 +189,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 Directory.CreateDirectory(defaultBasePath);
                 return defaultBasePath;
             }
-            catch (UnauthorizedAccessException)
-            {
-                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            }
-            catch (IOException)
-            {
-                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            }
-            catch (ArgumentException)
-            {
-                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            }
-            catch (NotSupportedException)
-            {
-                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            }
-            catch (PathTooLongException)
+            catch
             {
                 return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             }
