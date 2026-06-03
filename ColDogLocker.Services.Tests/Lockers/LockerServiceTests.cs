@@ -116,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public static TestDirectory Create(string name)
             {
-                var parent = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}");
+                var parent = System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}");
                 var path = System.IO.Path.Combine(parent, name);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
