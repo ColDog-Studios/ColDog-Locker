@@ -31,7 +31,7 @@ namespace ColDogStudios.ColDogLocker.Services.Security
         private const int TagSize = 16;
         private const int KeySize = 32;
         private const int Pbkdf2Iterations = 210000;
-        private static readonly byte[] _magic = Encoding.ASCII.GetBytes("CDLENC2");
+        private static readonly byte[] _magic = Encoding.ASCII.GetBytes("CDLENC");
 
         // Encrypt all files and subdirectories in a directory
         public static void EncryptDirectory(string directory, string password)
