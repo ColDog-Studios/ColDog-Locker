@@ -420,7 +420,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                     size += CalculateDirectorySize(child);
                 }
             }
-            catch
+            catch (UnauthorizedAccessException)
+            {
+                return size;
+            }
+            catch (IOException)
+            {
+                return size;
+            }
+            catch (System.Security.SecurityException)
             {
                 return size;
             }
