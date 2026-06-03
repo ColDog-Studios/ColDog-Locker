@@ -17,6 +17,7 @@
 
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using Microsoft.Data.Sqlite;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 {
@@ -196,7 +197,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             {
                 Directory = directory;
                 Path = System.IO.Path.Combine(directory, "lockers.db");
-                ConnectionString = $"Data Source={Path}";
+                ConnectionString = $"Data Source={Path};Pooling=False";
                 System.IO.Directory.CreateDirectory(directory);
             }
 
@@ -218,9 +219,27 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public void Dispose()
             {
-                if (System.IO.Directory.Exists(Directory))
+                SqliteConnection.ClearAllPools();
+
+                for (var attempt = 1; attempt <= 5; attempt++)
                 {
-                    System.IO.Directory.Delete(Directory, recursive: true);
+                    try
+                    {
+                        if (System.IO.Directory.Exists(Directory))
+                        {
+                            System.IO.Directory.Delete(Directory, recursive: true);
+                        }
+
+                        return;
+                    }
+                    catch (IOException) when (attempt < 5)
+                    {
+                        Thread.Sleep(100);
+                    }
+                    catch (UnauthorizedAccessException) when (attempt < 5)
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
             }
         }
