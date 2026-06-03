@@ -58,7 +58,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 }
 
                 var lockerName = nameBox.Text?.Trim();
-                if (!string.IsNullOrWhiteSpace(lockerName) && Path.IsPathRooted(lockerName))
+                if (!string.IsNullOrWhiteSpace(lockerName))
                 {
                     lockerName = Path.GetFileName(lockerName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
                 }
