@@ -381,3 +381,9 @@ localhost.key
 
 # NuGet personal access tokens
 nuget.config
+
+# ColDog Locker local test artifacts
+cli-e2e-work/
+cli-publish/
+test-locker-path.txt
+ColDog Studios/
