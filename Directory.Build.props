@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <!-- Shared Version Information - Edit version here only -->
-        <Version>0.6.1-alpha</Version>
+        <Version>0.7.0-alpha</Version>
         <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
         <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
         <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
