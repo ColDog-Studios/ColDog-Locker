@@ -165,20 +165,8 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     return;
                 }
 
-                // Update locker name if changed
-                if (NameTextBox.Text != _locker.LockerName)
-                {
-                    _locker.LockerName = NameTextBox.Text;
-                }
-
-                // Update locker location if changed and unlocked
-                if (LocationTextBox.Text != _locker.LockerLocation && !_locker.IsLocked)
-                {
-                    _locker.LockerLocation = LocationTextBox.Text;
-                }
-
-                // Save to database
-                LockerRepository.UpdateLocker(_locker);
+                var newLocation = _locker.IsLocked ? _locker.LockerLocation : LocationTextBox.Text;
+                LockerService.UpdateLockerMetadata(_locker, NameTextBox.Text.Trim(), newLocation.Trim());
 
                 MessageDialog.ShowInformation("Locker properties saved successfully.", "Success", this);
                 _hasChanges = false;

@@ -233,7 +233,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 // Delete directory if requested
                 if (deleteDirectory && Directory.Exists(locker.LockerLocation))
                 {
-                    Directory.Delete(locker.LockerLocation, true);
+                    LockerService.DeleteLockerDirectory(locker);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
                     Console.ResetColor();

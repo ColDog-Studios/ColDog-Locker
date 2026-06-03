@@ -29,6 +29,37 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         }
 
         [Fact]
+        public void AddLocker_WithInvalidName_ShouldThrowArgumentException()
+        {
+            var locker = new LockerModel("bad/name", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+
+            var exception = Assert.Throws<ArgumentException>(() => LockerService.AddLocker(locker));
+
+            Assert.Contains("Locker name must be a valid file name", exception.Message);
+        }
+
+        [Fact]
+        public void AddLocker_WithProtectedPath_ShouldThrowUnauthorizedAccessException()
+        {
+            var locker = new LockerModel(
+                "Protected",
+                "hash",
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
+            Assert.Throws<UnauthorizedAccessException>(() => LockerService.AddLocker(locker));
+        }
+
+        [Fact]
+        public void DeleteLockerDirectory_WithMismatchedDirectoryName_ShouldThrowUnauthorizedAccessException()
+        {
+            using var directory = TestDirectory.CreateAllowed("ActualDirectory");
+            var locker = new LockerModel("MetadataName", "hash", directory.Path);
+
+            Assert.Throws<UnauthorizedAccessException>(() => LockerService.DeleteLockerDirectory(locker));
+            Assert.True(Directory.Exists(directory.Path));
+        }
+
+        [Fact]
         public void Verify_MissingDirectory_ShouldReturnInvalidResult()
         {
             var locker = new LockerModel("Missing", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
@@ -117,6 +148,16 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             public static TestDirectory Create(string name)
             {
                 var parent = System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}");
+                var path = System.IO.Path.Combine(parent, name);
+                Directory.CreateDirectory(path);
+                return new TestDirectory(path);
+            }
+
+            public static TestDirectory CreateAllowed(string name)
+            {
+                var parent = System.IO.Path.Combine(
+                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+                    $"cdlocker-tests-{Guid.NewGuid():N}");
                 var path = System.IO.Path.Combine(parent, name);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);

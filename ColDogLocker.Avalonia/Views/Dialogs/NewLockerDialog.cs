@@ -157,9 +157,25 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 return "Locker name is required.";
             }
 
+            var trimmedName = name.Trim();
+            if (Path.IsPathRooted(trimmedName) ||
+                trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                trimmedName.Contains(Path.DirectorySeparatorChar) ||
+                trimmedName.Contains(Path.AltDirectorySeparatorChar) ||
+                trimmedName is "." or "..")
+            {
+                return "Locker name must be a valid file name, not a path.";
+            }
+
             if (string.IsNullOrWhiteSpace(location))
             {
                 return "Locker location is required.";
+            }
+
+            var pathValidationError = LockerPathValidator.ValidatePath(location);
+            if (pathValidationError != null)
+            {
+                return pathValidationError;
             }
 
             var passwordError = PasswordFilter.ValidatePassword(password ?? string.Empty);
