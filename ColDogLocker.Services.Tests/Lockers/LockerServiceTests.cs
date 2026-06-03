@@ -49,7 +49,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             using var directory = TestDirectory.Create("Unlocked");
             File.WriteAllText(Path.Join(directory.Path, "file.txt"), "content");
             var childDirectory = Directory.CreateDirectory(Path.Combine(directory.Path, "child"));
-            File.WriteAllText(Path.Combine(childDirectory.FullName, "nested.txt"), "content");
+            File.WriteAllText(Path.Join(childDirectory.FullName, "nested.txt"), "content");
             var locker = new LockerModel("Unlocked", "hash", directory.Path);
 
             var result = LockerService.Verify(locker);
