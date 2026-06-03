@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import shutil
 import subprocess
 import sys
@@ -29,14 +31,55 @@ class CliE2E:
     def __init__(self, cli: Path, work_dir: Path | None = None) -> None:
         self.cli = cli
         self.results: list[Result] = []
-        self.base_dir = work_dir if work_dir is not None else Path.home() / "Documents" / "ColDog Locker"
+        self.base_dir = (work_dir if work_dir is not None else Path.home() / "Documents" / "ColDog Locker").resolve()
+        self.app_data_dir = self.base_dir / ".app-data"
         self.test_dir = self.base_dir / f"e2e-test-locker-{uuid.uuid4()}"
         self.locker_dir = self.test_dir / LOCKER_NAME
         self.password = PASSWORD
+        self.env = self.create_cli_environment()
+        self.seed_settings()
+
+    def create_cli_environment(self) -> dict[str, str]:
+        env = os.environ.copy()
+        env["LOCALAPPDATA"] = str(self.app_data_dir / "local")
+        env["APPDATA"] = str(self.app_data_dir / "roaming")
+        env["USERPROFILE"] = str(self.app_data_dir / "user-profile")
+        env["HOME"] = str(self.app_data_dir / "home")
+        env["XDG_DATA_HOME"] = str(self.app_data_dir / "xdg-data")
+        env["XDG_CONFIG_HOME"] = str(self.app_data_dir / "xdg-config")
+        return env
+
+    def seed_settings(self) -> None:
+        settings = {
+            "DevMode": False,
+            "AutoUpdate": False,
+            "UpdateChannel": 0,
+            "DatabaseVacuumInterval": 30,
+            "LastDatabaseVacuum": None,
+            "LogLevel": "Info",
+            "LogFormat": "json",
+            "MaxFileSizeMb": 10,
+            "MaxRetainedFiles": 9,
+            "EnableFileLogging": True,
+            "EnableCompression": False,
+            "IncludeTimestamps": True,
+            "IncludeThreadId": False,
+            "DateTimeFormat": "UTC",
+            "AsyncLogging": True,
+            "AppTheme": "Auto",
+            "EnableAnimations": True,
+            "DefaultLockerLocation": str(self.base_dir),
+            "DefaultGuiViewMode": 0,
+        }
+
+        for data_root in (self.app_data_dir / "local", self.app_data_dir / "xdg-data"):
+            settings_dir = data_root / "ColDog Studios" / "ColDog Locker"
+            settings_dir.mkdir(parents=True, exist_ok=True)
+            (settings_dir / "settings.json").write_text(json.dumps(settings, indent=2), encoding="utf-8")
 
     def run_cli(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
         command = [str(self.cli), *args]
-        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        completed = subprocess.run(command, capture_output=True, text=True, check=False, env=self.env)
         if check and completed.returncode != 0:
             raise AssertionError(
                 f"Command failed with exit code {completed.returncode}: {' '.join(command)}\n"
@@ -257,6 +300,9 @@ class CliE2E:
 
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir, ignore_errors=True)
+
+        if self.app_data_dir.exists():
+            shutil.rmtree(self.app_data_dir, ignore_errors=True)
 
     def run(self) -> int:
         tests = [
