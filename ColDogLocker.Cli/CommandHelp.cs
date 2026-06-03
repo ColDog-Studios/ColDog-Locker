@@ -44,7 +44,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine();
 
             Console.WriteLine("LOCKER MANAGEMENT:");
-            Console.WriteLine("  change-password <name>                 Change locker password");
+            Console.WriteLine("  change-password <name> [options]       Change locker password");
             Console.WriteLine("  verify <name>                          Verify locker integrity");
             Console.WriteLine();
 
@@ -149,20 +149,26 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                 case "change-password":
                     Console.WriteLine("CHANGE LOCKER PASSWORD:");
-                    Console.WriteLine("  cdlocker change-password <Locker Name>");
+                    Console.WriteLine("  cdlocker change-password <Locker Name> [--old-password <old> --new-password <new>]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Changes the password for an existing locker. The locker must be unlocked");
                     Console.WriteLine("  to change its password. You will be prompted to enter the current password");
-                    Console.WriteLine("  for verification, then provide a new password that meets security requirements.");
+                    Console.WriteLine("  for verification, then provide a new password that meets security requirements");
+                    Console.WriteLine("  unless both password options are supplied for automation.");
+                    Console.WriteLine();
+                    Console.WriteLine("OPTIONS:");
+                    Console.WriteLine("  --old-password <password>    Current password (for automation, use cautiously)");
+                    Console.WriteLine("  --new-password <password>    New password (for automation, use cautiously)");
                     Console.WriteLine();
                     Console.WriteLine("REQUIREMENTS:");
                     Console.WriteLine("  - Locker must be unlocked");
                     Console.WriteLine("  - Must provide correct current password");
-                    Console.WriteLine("  - New password must meet requirements (8+ characters, uppercase, lowercase, digit, special char)");
+                    Console.WriteLine("  - New password must meet requirements (12+ characters, uppercase, lowercase, digit, special char)");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker change-password MyLocker");
+                    Console.WriteLine("  cdlocker change-password MyLocker --old-password OldPass123! --new-password NewPass123!");
                     break;
 
                 case "verify":

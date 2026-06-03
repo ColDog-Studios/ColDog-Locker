@@ -130,6 +130,14 @@ cdlocker unlock MyLocker
 cdlocker change-password MyLocker
 ```
 
+For automation, provide both the current and new password:
+
+```bash
+cdlocker change-password MyLocker --old-password "Old-Strong-Password-123!" --new-password "New-Strong-Password-123!"
+```
+
+Prefer the interactive prompt for normal use. Shell history, scripts, logs, or process monitors may expose command-line passwords.
+
 Files are decrypted while the locker is unlocked. Changing the password updates the stored password hash. The new password is used the next time the locker is locked.
 
 ## Remove a Locker

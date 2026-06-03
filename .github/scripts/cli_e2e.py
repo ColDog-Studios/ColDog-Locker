@@ -14,6 +14,7 @@ from pathlib import Path
 
 LOCKER_NAME = "E2ETestLocker"
 PASSWORD = "E2E-tst@5044$!"
+NEW_PASSWORD = "E2E-new@5044$!"
 WRONG_PASSWORD = "WrongPassword123!"
 
 
@@ -31,6 +32,7 @@ class CliE2E:
         self.base_dir = work_dir if work_dir is not None else Path.home() / "Documents" / "ColDog Locker"
         self.test_dir = self.base_dir / f"e2e-test-locker-{uuid.uuid4()}"
         self.locker_dir = self.test_dir / LOCKER_NAME
+        self.password = PASSWORD
 
     def run_cli(self, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
         command = [str(self.cli), *args]
@@ -82,6 +84,7 @@ class CliE2E:
         expectations = {
             "new": "CREATE NEW LOCKER",
             "settings": "MANAGE SETTINGS",
+            "change-password": "CHANGE LOCKER PASSWORD",
             "verify": "VERIFY LOCKER",
             "db-info": "DATABASE INFORMATION",
         }
@@ -128,7 +131,7 @@ class CliE2E:
 
     def create_locker(self) -> None:
         self.base_dir.mkdir(parents=True, exist_ok=True)
-        completed = self.run_cli("new", LOCKER_NAME, "--path", str(self.test_dir), "--password", PASSWORD)
+        completed = self.run_cli("new", LOCKER_NAME, "--path", str(self.test_dir), "--password", self.password)
         print(self.output(completed))
         if not self.locker_dir.is_dir():
             raise AssertionError(f"Locker directory was not created: {self.locker_dir}")
@@ -148,7 +151,7 @@ class CliE2E:
         self.expect_contains(text, LOCKER_NAME, "Created locker was not listed.")
 
     def lock_locker(self) -> None:
-        completed = self.run_cli("lock", LOCKER_NAME, "--password", PASSWORD)
+        completed = self.run_cli("lock", LOCKER_NAME, "--password", self.password)
         print(self.output(completed))
 
     def verify_locked(self) -> None:
@@ -165,7 +168,7 @@ class CliE2E:
         self.expect_not_contains(unlocked, LOCKER_NAME, "Locked locker was unexpectedly shown by list --unlocked.")
 
     def unlock_locker(self) -> None:
-        completed = self.run_cli("unlock", LOCKER_NAME, "--password", PASSWORD)
+        completed = self.run_cli("unlock", LOCKER_NAME, "--password", self.password)
         print(self.output(completed))
 
     def list_filters_unlocked(self) -> None:
@@ -192,6 +195,27 @@ class CliE2E:
         self.expect_contains(text, "Overall: VALID", "verify did not report a valid locker.")
         self.expect_contains(text, "3 file(s), 1 folder(s)", "verify did not report expected file and folder counts.")
 
+    def change_password(self) -> None:
+        completed = self.run_cli(
+            "change-password",
+            LOCKER_NAME,
+            "--old-password",
+            self.password,
+            "--new-password",
+            NEW_PASSWORD,
+        )
+        print(self.output(completed))
+        self.expect_contains(self.output(completed), "Password changed successfully", "change-password did not report success.")
+
+        old_password_result = self.run_cli("lock", LOCKER_NAME, "--password", self.password, check=False)
+        if old_password_result.returncode == 0:
+            raise AssertionError("Lock succeeded with the old password after password change.")
+
+        self.password = NEW_PASSWORD
+        self.run_cli("lock", LOCKER_NAME, "--password", self.password)
+        self.run_cli("unlock", LOCKER_NAME, "--password", self.password)
+        self.verify_files_intact()
+
     def missing_locker_errors(self) -> None:
         for command in ("status", "verify"):
             completed = self.run_cli(command, "MissingE2ELocker", check=False)
@@ -201,11 +225,11 @@ class CliE2E:
             self.expect_contains(text, "not found", f"{command} MissingE2ELocker did not report not found.")
 
     def unlock_with_wrong_password(self) -> None:
-        self.run_cli("lock", LOCKER_NAME, "--password", PASSWORD)
+        self.run_cli("lock", LOCKER_NAME, "--password", self.password)
         completed = self.run_cli("unlock", LOCKER_NAME, "--password", WRONG_PASSWORD, check=False)
         if completed.returncode == 0:
             raise AssertionError("Unlock succeeded with the wrong password.")
-        self.run_cli("unlock", LOCKER_NAME, "--password", PASSWORD)
+        self.run_cli("unlock", LOCKER_NAME, "--password", self.password)
 
     def lock_with_wrong_password(self) -> None:
         completed = self.run_cli("lock", LOCKER_NAME, "--password", WRONG_PASSWORD, check=False)
@@ -228,7 +252,7 @@ class CliE2E:
 
         completed = self.run_cli("status", LOCKER_NAME, check=False)
         if completed.returncode == 0:
-            self.run_cli("unlock", LOCKER_NAME, "--password", PASSWORD, check=False)
+            self.run_cli("unlock", LOCKER_NAME, "--password", self.password, check=False)
             self.run_cli("remove", LOCKER_NAME, "--force", check=False)
 
         if self.test_dir.exists():
@@ -252,6 +276,7 @@ class CliE2E:
             ("List Filters Unlocked", self.list_filters_unlocked),
             ("Verify Files Intact", self.verify_files_intact),
             ("Verify Command", self.verify_command),
+            ("Change Password", self.change_password),
             ("Missing Locker Errors", self.missing_locker_errors),
             ("Unlock with Wrong Password", self.unlock_with_wrong_password),
             ("Lock with Wrong Password", self.lock_with_wrong_password),

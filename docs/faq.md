@@ -72,9 +72,9 @@ No. Locking encrypts file contents in place and replaces each plaintext file wit
 
 Yes. Always keep backups of important data. Backups protect you from forgotten passwords, interrupted writes, hardware failure, accidental deletion, and software bugs.
 
-## Is `--password` safe?
+## Are command-line password options safe?
 
-It is intended for automation, not normal interactive use. Command-line passwords may be visible in shell history, scripts, logs, or process lists. Prefer the prompt when using ColDog Locker manually.
+Options such as `--password`, `--old-password`, and `--new-password` are intended for automation, not normal interactive use. Command-line passwords may be visible in shell history, scripts, logs, or process lists. Prefer the prompt when using ColDog Locker manually.
 
 ## Why does `cdlocker` show help instead of opening the GUI?
 
