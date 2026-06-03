@@ -15,6 +15,7 @@
 **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -303,7 +304,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 return valueFactory();
             }
-            catch
+            catch (InvalidOperationException)
+            {
+                return "Unknown";
+            }
+            catch (NotSupportedException)
+            {
+                return "Unknown";
+            }
+            catch (ArgumentException)
             {
                 return "Unknown";
             }
