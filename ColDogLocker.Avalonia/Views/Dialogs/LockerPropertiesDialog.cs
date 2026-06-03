@@ -22,6 +22,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using System.IO;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -190,7 +191,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                     .ShowDialog<object?>(this);
                 Close(true);
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
+            {
+                await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
+                    .ShowDialog<object?>(this);
+            }
+            catch (IOException ex)
             {
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
