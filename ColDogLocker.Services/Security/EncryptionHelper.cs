@@ -71,25 +71,29 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             aes.Key = keyAndIv[..32];
             aes.IV = keyAndIv[32..];
 
+            var encryptedFile = inputFile + ".enc";
+
             // Open input file and create encrypted output file
-            using FileStream fsIn = new(inputFile, FileMode.Open);
-            using FileStream fsCrypt = new(inputFile + ".enc", FileMode.Create);
-            // Write the salt at the beginning of the encrypted file
-            fsCrypt.Write(salt, 0, salt.Length);
-
-            using CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write);
-            var buffer = new byte[BufferSize];
-            int read;
-
-            // Read from input file and write encrypted data to output file
-            while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
+            using (FileStream fsIn = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream fsCrypt = new(encryptedFile, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                cs.Write(buffer, 0, read);
+                // Write the salt at the beginning of the encrypted file
+                fsCrypt.Write(salt, 0, salt.Length);
+
+                using CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write);
+                var buffer = new byte[BufferSize];
+                int read;
+
+                // Read from input file and write encrypted data to output file
+                while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    cs.Write(buffer, 0, read);
+                }
             }
 
             // Replace original file with encrypted file
             File.Delete(inputFile);
-            File.Move(inputFile + ".enc", inputFile);
+            File.Move(encryptedFile, inputFile);
         }
 
         // Decrypt all files and subdirectories in a directory
@@ -129,41 +133,45 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             // Create AES decryption object
             using var aes = Aes.Create();
 
+            var decryptedFile = inputFile + ".dec";
+
             // Open encrypted input file and read the salt
-            using FileStream fsCrypt = new(inputFile, FileMode.Open);
-            // Verify file is large enough to contain salt
-            if (fsCrypt.Length < SaltSize)
+            using (FileStream fsCrypt = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                throw new InvalidDataException("File is too small to contain encryption data.");
-            }
+                // Verify file is large enough to contain salt
+                if (fsCrypt.Length < SaltSize)
+                {
+                    throw new InvalidDataException("File is too small to contain encryption data.");
+                }
 
-            // Read the salt from the beginning of the file
-            var salt = new byte[SaltSize];
-            var bytesRead = fsCrypt.Read(salt, 0, salt.Length);
-            if (bytesRead != SaltSize)
-            {
-                throw new InvalidDataException("Unable to read salt from encrypted file.");
-            }
+                // Read the salt from the beginning of the file
+                var salt = new byte[SaltSize];
+                var bytesRead = fsCrypt.Read(salt, 0, salt.Length);
+                if (bytesRead != SaltSize)
+                {
+                    throw new InvalidDataException("Unable to read salt from encrypted file.");
+                }
 
-            // Generate key and IV from password using the stored salt
-            var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
-            aes.Key = keyAndIv[..32];
-            aes.IV = keyAndIv[32..];
+                // Generate key and IV from password using the stored salt
+                var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
+                aes.Key = keyAndIv[..32];
+                aes.IV = keyAndIv[32..];
 
-            using CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read);
-            using FileStream fsOut = new(inputFile + ".dec", FileMode.Create);
-            var buffer = new byte[BufferSize];
-            int read;
+                using CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read);
+                using FileStream fsOut = new(decryptedFile, FileMode.Create, FileAccess.Write, FileShare.None);
+                var buffer = new byte[BufferSize];
+                int read;
 
-            // Read from encrypted file and write decrypted data to output file
-            while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                fsOut.Write(buffer, 0, read);
+                // Read from encrypted file and write decrypted data to output file
+                while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    fsOut.Write(buffer, 0, read);
+                }
             }
 
             // Replace encrypted file with decrypted file
             File.Delete(inputFile);
-            File.Move(inputFile + ".dec", inputFile);
+            File.Move(decryptedFile, inputFile);
         }
 
         // Improved password hashing using bcrypt

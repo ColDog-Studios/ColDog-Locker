@@ -19,7 +19,7 @@
 <h1 align="center">ColDog Locker</h1>
 
   <p align="center">
-    A simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.
+    ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.
     <br />
     <a href="https://github.com/ColDog-Studios/ColDog-Locker"><strong>Explore the docs »</strong></a>
     <br />
@@ -57,7 +57,7 @@
 
 ## About The Project
 
-ColDog Locker is a simple file locker that allows you to encrypt and decrypt the contents of a 'managed' directory with a password.
+ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.
 It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
 
 > [!NOTE]
@@ -121,7 +121,7 @@ dotnet run --project ColDogLocker.Cli
 
 ## Usage
 
-ColDog Locker allows you to manage directories by encrypting and decrypting their contents with a password.
+ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.
 
 > [!NOTE]
 > `dotnet run --project ColDogLocker.Cli` and `cdlocker` can be used interchangeably.
@@ -262,11 +262,13 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Acknowledgments
+## Third-Party Libraries
 
+- [Avalonia UI](https://avaloniaui.net/)
 - [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net)
-- [Microsoft .NET](https://dotnet.microsoft.com/)
+- [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm)
 - [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
+- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

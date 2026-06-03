@@ -32,11 +32,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static void InitializeDatabase()
         {
+            InitializeDatabase(_connectionString);
+        }
+
+        internal static void InitializeDatabase(string connectionString)
+        {
             try
             {
                 Logger.Log(LogLevel.Debug, "Initializing database");
 
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -66,11 +71,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static List<LockerModel> GetAllLockers()
         {
+            return GetAllLockers(_connectionString);
+        }
+
+        internal static List<LockerModel> GetAllLockers(string connectionString)
+        {
             var lockers = new List<LockerModel>();
 
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -103,9 +113,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static LockerModel? GetLockerByGuid(string guid)
         {
+            return GetLockerByGuid(guid, _connectionString);
+        }
+
+        internal static LockerModel? GetLockerByGuid(string guid, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -136,9 +151,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static LockerModel? GetLockerByName(string name)
         {
+            return GetLockerByName(name, _connectionString);
+        }
+
+        internal static LockerModel? GetLockerByName(string name, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -169,9 +189,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static void InsertLocker(LockerModel locker)
         {
+            InsertLocker(locker, _connectionString);
+        }
+
+        internal static void InsertLocker(LockerModel locker, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -206,9 +231,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static void UpdateLocker(LockerModel locker)
         {
+            UpdateLocker(locker, _connectionString);
+        }
+
+        internal static void UpdateLocker(LockerModel locker, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -249,9 +279,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static void DeleteLocker(string guid)
         {
+            DeleteLocker(guid, _connectionString);
+        }
+
+        internal static void DeleteLocker(string guid, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -280,9 +315,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static bool LockerExists(string name)
         {
+            return LockerExists(name, _connectionString);
+        }
+
+        internal static bool LockerExists(string name, string connectionString)
+        {
             try
             {
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
@@ -304,26 +344,31 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static long VacuumDatabase()
         {
+            return VacuumDatabase(_databasePath, _connectionString);
+        }
+
+        internal static long VacuumDatabase(string databasePath, string connectionString)
+        {
             try
             {
                 long sizeBefore = 0;
                 long sizeAfter = 0;
 
-                if (File.Exists(_databasePath))
+                if (File.Exists(databasePath))
                 {
-                    sizeBefore = new FileInfo(_databasePath).Length;
+                    sizeBefore = new FileInfo(databasePath).Length;
                 }
 
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 var command = connection.CreateCommand();
                 command.CommandText = "VACUUM";
                 command.ExecuteNonQuery();
 
-                if (File.Exists(_databasePath))
+                if (File.Exists(databasePath))
                 {
-                    sizeAfter = new FileInfo(_databasePath).Length;
+                    sizeAfter = new FileInfo(databasePath).Length;
                 }
 
                 var reclaimed = sizeBefore - sizeAfter;
@@ -343,21 +388,26 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// </summary>
         public static DatabaseInfo GetDatabaseInfo()
         {
+            return GetDatabaseInfo(_databasePath, _connectionString);
+        }
+
+        internal static DatabaseInfo GetDatabaseInfo(string databasePath, string connectionString)
+        {
             try
             {
-                var info = new DatabaseInfo { Path = _databasePath, Exists = File.Exists(_databasePath) };
+                var info = new DatabaseInfo { Path = databasePath, Exists = File.Exists(databasePath) };
 
                 if (!info.Exists)
                 {
                     return info;
                 }
 
-                var fileInfo = new FileInfo(_databasePath);
+                var fileInfo = new FileInfo(databasePath);
                 info.SizeBytes = fileInfo.Length;
                 info.Created = fileInfo.CreationTime;
                 info.LastModified = fileInfo.LastWriteTime;
 
-                using var connection = new SqliteConnection(_connectionString);
+                using var connection = new SqliteConnection(connectionString);
                 connection.Open();
 
                 // Get locker count

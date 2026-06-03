@@ -56,6 +56,8 @@ Changing a password requires:
 - The current password must be entered correctly.
 - The new password must pass the password filter.
 
+The CLI can accept `--old-password` and `--new-password` for automation, but interactive prompts are preferred for normal use because command-line arguments may expose secrets.
+
 Because files are already plaintext while a locker is unlocked, changing the password updates only the stored password hash. Files are encrypted with the new password the next time the locker is locked.
 
 ## Password Requirements
@@ -149,7 +151,7 @@ ColDog Locker does not protect against:
 ## Recommended User Practices
 
 - Use strong, unique passwords for each locker.
-- Prefer interactive password prompts over `--password`.
+- Prefer interactive password prompts over command-line password options.
 - Keep tested backups of important files.
 - Do not run ColDog Locker with elevated privileges unless absolutely required.
 - Avoid editing locked locker contents outside ColDog Locker.

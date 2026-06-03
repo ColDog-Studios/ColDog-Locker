@@ -39,6 +39,10 @@
             <SolidColorBrush x:Key="AppTableHeaderBackgroundBrush" Color="#F1F5F9" />
             <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="AppButtonBackgroundBrush" Color="#0077B6" />
+            <SolidColorBrush x:Key="AppButtonHoverBackgroundBrush" Color="#0096DC" />
+            <SolidColorBrush x:Key="AppButtonPressedBackgroundBrush" Color="#002E44" />
+            <SolidColorBrush x:Key="AppButtonForegroundBrush" Color="#FFFFFF" />
             <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
             <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
 
@@ -53,6 +57,10 @@
                     <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#FFFFFF" />
                     <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#FAFAFA" />
                     <SolidColorBrush x:Key="AppBorderBrush" Color="#D7DEE5" />
+                    <SolidColorBrush x:Key="AppButtonBackgroundBrush" Color="#0077B6" />
+                    <SolidColorBrush x:Key="AppButtonHoverBackgroundBrush" Color="#0096DC" />
+                    <SolidColorBrush x:Key="AppButtonPressedBackgroundBrush" Color="#002E44" />
+                    <SolidColorBrush x:Key="AppButtonForegroundBrush" Color="#FFFFFF" />
                     <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
                     <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
                 </ResourceDictionary>
@@ -66,6 +74,10 @@
                     <SolidColorBrush x:Key="AppCardBackgroundBrush" Color="#2A2A2A" />
                     <SolidColorBrush x:Key="AppStatusBackgroundBrush" Color="#333333" />
                     <SolidColorBrush x:Key="AppBorderBrush" Color="#4A4A4A" />
+                    <SolidColorBrush x:Key="AppButtonBackgroundBrush" Color="#0077B6" />
+                    <SolidColorBrush x:Key="AppButtonHoverBackgroundBrush" Color="#0096DC" />
+                    <SolidColorBrush x:Key="AppButtonPressedBackgroundBrush" Color="#005F91" />
+                    <SolidColorBrush x:Key="AppButtonForegroundBrush" Color="#FFFFFF" />
                     <SolidColorBrush x:Key="UnlockedStatusBrush" Color="#0077B6" />
                     <SolidColorBrush x:Key="LockedStatusBrush" Color="#FF6923" />
                 </ResourceDictionary>
@@ -75,5 +87,52 @@
 
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="Button.accent-button">
+            <Setter Property="Background" Value="{DynamicResource AppButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.accent-button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.accent-button:pressed">
+            <Setter Property="Background" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button">
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button:pointerover PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button:pressed">
+            <Setter Property="Background" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="Button.tool-button:pressed PathIcon">
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="ToggleButton:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="ToggleButton:pressed">
+            <Setter Property="Background" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
     </Application.Styles>
 </Application>

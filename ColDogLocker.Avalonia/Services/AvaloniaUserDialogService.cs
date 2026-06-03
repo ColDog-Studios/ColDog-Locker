@@ -20,16 +20,24 @@ using Avalonia.Controls.ApplicationLifetimes;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
     public sealed class AvaloniaUserDialogService : IUserDialogService
     {
         private readonly IAppThemeService _themeService;
+        private readonly IPlatformService _platformService;
+        private readonly UpdateWorkflow _updateWorkflow;
 
-        public AvaloniaUserDialogService(IAppThemeService themeService)
+        public AvaloniaUserDialogService(
+            IAppThemeService themeService,
+            IPlatformService platformService,
+            UpdateWorkflow updateWorkflow)
         {
             _themeService = themeService;
+            _platformService = platformService;
+            _updateWorkflow = updateWorkflow;
         }
 
         public Task ShowMessageAsync(string title, string message)
@@ -69,7 +77,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public async Task ShowSettingsAsync()
         {
-            var theme = await ShowDialogAsync<string>(new SettingsDialog(_themeService));
+            var theme = await ShowDialogAsync<string>(new SettingsDialog(_themeService, _platformService));
             if (!string.IsNullOrWhiteSpace(theme))
             {
                 _themeService.SetTheme(theme);
@@ -78,7 +86,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task ShowAboutAsync()
         {
-            return ShowDialogAsync(new AboutDialog());
+            return ShowDialogAsync(new AboutDialog(_platformService, _updateWorkflow));
         }
 
         public Task ShowDevInfoAsync()

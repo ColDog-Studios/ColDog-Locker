@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>ColDogStudios.ColDogLocker.Avalonia.Tests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ColDogLocker.Avalonia\ColDogLocker.Avalonia.csproj"/>
+    </ItemGroup>
+
+</Project>

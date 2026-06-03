@@ -540,16 +540,45 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
         public static int ChangePassword(string[] args)
         {
-            // Usage: cdlocker change-password <Locker Name>
+            // Usage: cdlocker change-password <Locker Name> [--old-password <password> --new-password <password>]
 
             if (args.Length < 2)
             {
                 Console.Error.WriteLine("Error: Locker name is required.");
-                Console.WriteLine("Usage: cdlocker change-password <Locker Name>");
+                Console.WriteLine("Usage: cdlocker change-password <Locker Name> [--old-password <password> --new-password <password>]");
                 return 1;
             }
 
             var lockerName = args[1];
+            string? providedOldPassword = null;
+            string? providedNewPassword = null;
+
+            for (var i = 2; i < args.Length; i++)
+            {
+                if (args[i] == "--old-password" && i + 1 < args.Length)
+                {
+                    providedOldPassword = args[i + 1];
+                    i++;
+                }
+                else if (args[i] == "--new-password" && i + 1 < args.Length)
+                {
+                    providedNewPassword = args[i + 1];
+                    i++;
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Error: Unknown or incomplete option '{args[i]}'.");
+                    Console.WriteLine("Usage: cdlocker change-password <Locker Name> [--old-password <password> --new-password <password>]");
+                    return 1;
+                }
+            }
+
+            var useProvidedPasswords = providedOldPassword != null || providedNewPassword != null;
+            if (useProvidedPasswords && (string.IsNullOrEmpty(providedOldPassword) || string.IsNullOrEmpty(providedNewPassword)))
+            {
+                Console.Error.WriteLine("Error: Both --old-password and --new-password are required for non-interactive password changes.");
+                return 1;
+            }
 
             // Find the locker
             var locker = LockerService.Lockers.FirstOrDefault(l =>
@@ -568,54 +597,69 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
-            // Get old password
-            Console.Write("Enter current password: ");
-            var oldPassword = ConsoleHelper.ReadPassword();
-
-            if (string.IsNullOrEmpty(oldPassword))
-            {
-                Console.Error.WriteLine("Error: Password cannot be empty.");
-                return 1;
-            }
-
-            //TODO: Use Application.Validation.PasswordFilter for requirements
-            // Get new password
-            Console.WriteLine("\nPassword Requirements:");
-            Console.WriteLine("  - At least 10 characters");
-            Console.WriteLine("  - At least one uppercase letter");
-            Console.WriteLine("  - At least one lowercase letter");
-            Console.WriteLine("  - At least one digit");
-            Console.WriteLine("  - At least one special character");
-            Console.WriteLine();
-
+            string oldPassword;
             string newPassword;
-            while (true)
-            {
-                Console.Write("Enter new password: ");
-                newPassword = ConsoleHelper.ReadPassword();
 
-                if (string.IsNullOrEmpty(newPassword))
-                {
-                    Console.WriteLine("Password cannot be empty.");
-                    continue;
-                }
+            if (useProvidedPasswords)
+            {
+                oldPassword = providedOldPassword!;
+                newPassword = providedNewPassword!;
 
                 var validationError = PasswordFilter.ValidatePassword(newPassword);
-                if (validationError == null)
+                if (validationError != null)
                 {
-                    break;
+                    Console.Error.WriteLine($"Error: New password validation failed: {validationError}");
+                    return 1;
+                }
+            }
+            else
+            {
+                // Get old password
+                Console.Write("Enter current password: ");
+                oldPassword = ConsoleHelper.ReadPassword();
+
+                if (string.IsNullOrEmpty(oldPassword))
+                {
+                    Console.Error.WriteLine("Error: Password cannot be empty.");
+                    return 1;
                 }
 
-                Console.WriteLine($"Password validation failed: {validationError}");
-            }
+                Console.WriteLine("\nPassword Requirements:");
+                Console.WriteLine("  - At least 12 characters");
+                Console.WriteLine("  - At least one uppercase letter");
+                Console.WriteLine("  - At least one lowercase letter");
+                Console.WriteLine("  - At least one digit");
+                Console.WriteLine("  - At least one special character");
+                Console.WriteLine();
 
-            Console.Write("Confirm new password: ");
-            var confirmPassword = ConsoleHelper.ReadPassword();
+                while (true)
+                {
+                    Console.Write("Enter new password: ");
+                    newPassword = ConsoleHelper.ReadPassword();
 
-            if (newPassword != confirmPassword)
-            {
-                Console.Error.WriteLine("Error: Passwords do not match.");
-                return 1;
+                    if (string.IsNullOrEmpty(newPassword))
+                    {
+                        Console.WriteLine("Password cannot be empty.");
+                        continue;
+                    }
+
+                    var validationError = PasswordFilter.ValidatePassword(newPassword);
+                    if (validationError == null)
+                    {
+                        break;
+                    }
+
+                    Console.WriteLine($"Password validation failed: {validationError}");
+                }
+
+                Console.Write("Confirm new password: ");
+                var confirmPassword = ConsoleHelper.ReadPassword();
+
+                if (newPassword != confirmPassword)
+                {
+                    Console.Error.WriteLine("Error: Passwords do not match.");
+                    return 1;
+                }
             }
 
             // Change password

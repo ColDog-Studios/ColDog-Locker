@@ -128,7 +128,7 @@ Example:
 cdlocker verify MyLocker
 ```
 
-### `cdlocker change-password <name>`
+### `cdlocker change-password <name> [--old-password <password> --new-password <password>]`
 
 Changes a locker's password.
 
@@ -138,10 +138,18 @@ Requirements:
 - The current password must be provided correctly.
 - The new password must meet the active password rules.
 
+Options:
+
+- `--old-password <password>`: provide the current password non-interactively.
+- `--new-password <password>`: provide the replacement password non-interactively.
+
+If either password option is supplied, both are required. Prefer the interactive prompt for normal use because command-line passwords can be exposed through shell history, scripts, logs, or process listings.
+
 Example:
 
 ```bash
 cdlocker change-password MyLocker
+cdlocker change-password MyLocker --old-password "Old-Strong-Password-123!" --new-password "New-Strong-Password-123!"
 ```
 
 ### `cdlocker remove <name> [--force] [--delete]`

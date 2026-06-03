@@ -40,6 +40,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         private static readonly SolidColorBrush DarkTableHeaderBrush = new(Color.Parse("#2A2A2A"));
         private static readonly SolidColorBrush DarkCardBrush = new(Color.Parse("#2A2A2A"));
         private static readonly SolidColorBrush DarkBorderBrush = new(Color.Parse("#4A4A4A"));
+        private static readonly SolidColorBrush DarkButtonPressedBrush = new(Color.Parse("#005F91"));
         private static readonly SolidColorBrush WhiteBrush = new(Color.Parse("#FFFFFF"));
 
         public string CurrentTheme => SettingsManager.Settings.AppTheme;
@@ -82,6 +83,10 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             application.Resources["AppCardBackgroundBrush"] = useDarkSurfaces ? DarkCardBrush : LightCardBrush;
             application.Resources["AppStatusBackgroundBrush"] = useDarkSurfaces ? DarkSurfaceBrush : LightSurfaceBrush;
             application.Resources["AppBorderBrush"] = useDarkSurfaces ? DarkBorderBrush : LightBorderBrush;
+            application.Resources["AppButtonBackgroundBrush"] = BrandAccentBrush;
+            application.Resources["AppButtonHoverBackgroundBrush"] = BrandPrimaryBrush;
+            application.Resources["AppButtonPressedBackgroundBrush"] = useDarkSurfaces ? DarkButtonPressedBrush : BrandDarkBrush;
+            application.Resources["AppButtonForegroundBrush"] = WhiteBrush;
         }
 
         private static string NormalizeTheme(string themeName)

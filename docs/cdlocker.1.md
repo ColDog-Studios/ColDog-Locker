@@ -17,7 +17,7 @@ cdlocker unlock <name> [--password <password>]
 cdlocker list [--locked | --unlocked]
 cdlocker status <name>
 cdlocker verify <name>
-cdlocker change-password <name>
+cdlocker change-password <name> [--old-password <password> --new-password <password>]
 cdlocker remove <name> [--force] [--delete]
 cdlocker settings [<key> [<value>]]
 cdlocker db-info
@@ -59,8 +59,8 @@ Locker metadata is stored in a per-user SQLite database. Settings and logs are s
 `verify <name>`
 : Check that the locker directory and metadata are consistent.
 
-`change-password <name>`
-: Change a locker password. The locker must be unlocked.
+`change-password <name> [--old-password <password> --new-password <password>]`
+: Change a locker password. The locker must be unlocked. Prompts for passwords unless both password options are supplied.
 
 `remove <name>`
 : Remove a locker from metadata. Use `--force` to skip confirmation. Use `--delete` to delete the directory contents too.
@@ -90,6 +90,12 @@ Locker metadata is stored in a per-user SQLite database. Settings and logs are s
 
 `--password <password>`
 : Supply a password on the command line. This is useful for automation but can expose secrets through shell history, scripts, logs, or process listings.
+
+`--old-password <password>`
+: Supply the current password for `change-password`. Must be used with `--new-password`.
+
+`--new-password <password>`
+: Supply the replacement password for `change-password`. Must be used with `--old-password`.
 
 `--locked`
 : Show only locked lockers in `list`.
@@ -149,7 +155,7 @@ cdlocker update --notes
 
 ## SECURITY NOTES
 
-Use strong, unique passwords and keep backups. ColDog Locker cannot recover forgotten passwords. Avoid `--password` for interactive use. System paths, drive roots, profile roots, and top-level user folders are blocked from becoming lockers.
+Use strong, unique passwords and keep backups. ColDog Locker cannot recover forgotten passwords. Avoid command-line password options for interactive use. System paths, drive roots, profile roots, and top-level user folders are blocked from becoming lockers.
 
 ## SEE ALSO
 

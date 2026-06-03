@@ -205,14 +205,20 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                 // Write to temporary file first
                 File.WriteAllText(tempFile, jsonContent);
 
-                // Atomic replacement - if this fails, original file is still intact
-                if (File.Exists(_settingsFile))
+                const int MaxWriteAttempts = 5;
+                const int WriteDelayMs = 100;
+
+                for (var attempt = 1; attempt <= MaxWriteAttempts; attempt++)
                 {
-                    File.Replace(tempFile, _settingsFile, null);
-                }
-                else
-                {
-                    File.Move(tempFile, _settingsFile);
+                    try
+                    {
+                        File.Move(tempFile, _settingsFile, true);
+                        break;
+                    }
+                    catch (Exception) when (attempt < MaxWriteAttempts)
+                    {
+                        Thread.Sleep(WriteDelayMs);
+                    }
                 }
 
                 Logger.Log(LogLevel.Info, "Settings saved successfully.");
