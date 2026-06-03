@@ -177,13 +177,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             try
             {
-                _locker.LockerName = newName;
-                if (!_locker.IsLocked)
-                {
-                    _locker.LockerLocation = newLocation;
-                }
-
-                LockerRepository.UpdateLocker(_locker);
+                var locationToSave = _locker.IsLocked ? _locker.LockerLocation : newLocation;
+                LockerService.UpdateLockerMetadata(_locker, newName, locationToSave);
 
                 _hasChanges = false;
                 _saveButton.IsEnabled = false;
@@ -191,7 +186,17 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                     .ShowDialog<object?>(this);
                 Close(true);
             }
+            catch (ArgumentException ex)
+            {
+                await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
+                    .ShowDialog<object?>(this);
+            }
             catch (UnauthorizedAccessException ex)
+            {
+                await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
+                    .ShowDialog<object?>(this);
+            }
+            catch (InvalidOperationException ex)
             {
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
