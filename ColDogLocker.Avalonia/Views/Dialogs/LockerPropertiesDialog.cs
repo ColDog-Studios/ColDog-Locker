@@ -366,7 +366,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 var value = dateKind == DateKind.Created ? info.CreationTime : info.LastWriteTime;
                 return value.ToString("yyyy-MM-dd HH:mm:ss");
             }
-            catch
+            catch (IOException)
+            {
+                return "Unable to retrieve";
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return "Unable to retrieve";
+            }
+            catch (System.Security.SecurityException)
             {
                 return "Unable to retrieve";
             }
