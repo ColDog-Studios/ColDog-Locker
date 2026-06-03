@@ -391,7 +391,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
                 return FormatBytes(CalculateDirectorySize(new DirectoryInfo(path)));
             }
-            catch
+            catch (UnauthorizedAccessException)
+            {
+                return "Unable to calculate";
+            }
+            catch (IOException)
+            {
+                return "Unable to calculate";
+            }
+            catch (System.Security.SecurityException)
             {
                 return "Unable to calculate";
             }
