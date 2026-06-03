@@ -15,7 +15,10 @@
 **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+using System.Buffers.Binary;
 using System.Security.Cryptography;
+using System.Text;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Security
 {
@@ -23,20 +26,39 @@ namespace ColDogStudios.ColDogLocker.Services.Security
     {
         private const int BufferSize = 81920; // 80KB buffer
         private const int SaltSize = 16; // 16 bytes for salt
+        private const int NoncePrefixSize = 8;
+        private const int NonceSize = 12;
+        private const int TagSize = 16;
+        private const int KeySize = 32;
+        private const int Pbkdf2Iterations = 210000;
+        private static readonly byte[] _magic = Encoding.ASCII.GetBytes("CDLENC2");
 
         // Encrypt all files and subdirectories in a directory
         public static void EncryptDirectory(string directory, string password)
         {
-            // Encrypt each file in the directory
-            foreach (var file in Directory.GetFiles(directory))
-            {
-                EncryptFile(file, password);
-            }
+            var encryptedFiles = new List<string>();
+            var encryptedDirectories = new List<string>();
 
-            // Recursively encrypt each subdirectory
-            foreach (var subDirectory in Directory.GetDirectories(directory))
+            try
             {
-                EncryptDirectory(subDirectory, password);
+                // Encrypt each file in the directory
+                foreach (var file in Directory.GetFiles(directory))
+                {
+                    EncryptFile(file, password);
+                    encryptedFiles.Add(file);
+                }
+
+                // Recursively encrypt each subdirectory
+                foreach (var subDirectory in Directory.GetDirectories(directory))
+                {
+                    EncryptDirectory(subDirectory, password);
+                    encryptedDirectories.Add(subDirectory);
+                }
+            }
+            catch
+            {
+                RollBackEncryptedFiles(encryptedFiles, encryptedDirectories, password);
+                throw;
             }
         }
 
@@ -58,57 +80,77 @@ namespace ColDogStudios.ColDogLocker.Services.Security
                 throw new FileNotFoundException($"Input file not found: {inputFile}");
             }
 
-            // Create AES encryption object
-            using var aes = Aes.Create();
-
             // Generate a random salt for this file
             var salt = new byte[SaltSize];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(salt);
+            var noncePrefix = new byte[NoncePrefixSize];
+            RandomNumberGenerator.Fill(salt);
+            RandomNumberGenerator.Fill(noncePrefix);
 
-            // Generate key and IV from password using the random salt
-            var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
-            aes.Key = keyAndIv[..32];
-            aes.IV = keyAndIv[32..];
+            // Generate key from password using the random salt
+            var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, KeySize);
 
-            var encryptedFile = inputFile + ".enc";
+            var encryptedFile = CreateTempPath(inputFile, ".enc");
 
-            // Open input file and create encrypted output file
-            using (FileStream fsIn = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (FileStream fsCrypt = new(encryptedFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            try
             {
-                // Write the salt at the beginning of the encrypted file
-                fsCrypt.Write(salt, 0, salt.Length);
-
-                using CryptoStream cs = new(fsCrypt, aes.CreateEncryptor(), CryptoStreamMode.Write);
-                var buffer = new byte[BufferSize];
-                int read;
-
-                // Read from input file and write encrypted data to output file
-                while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0)
+                // Open input file and create encrypted output file
+                using (FileStream fsIn = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (FileStream fsCrypt = new(encryptedFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
-                    cs.Write(buffer, 0, read);
-                }
-            }
+                    WriteHeader(fsCrypt, salt, noncePrefix, fsIn.Length);
 
-            // Replace original file with encrypted file
-            File.Delete(inputFile);
-            File.Move(encryptedFile, inputFile);
+                    using var aes = new AesGcm(key, TagSize);
+                    var plainBuffer = new byte[BufferSize];
+                    var cipherBuffer = new byte[BufferSize];
+                    var tag = new byte[TagSize];
+                    var chunkIndex = 0;
+                    int read;
+
+                    while ((read = fsIn.Read(plainBuffer, 0, plainBuffer.Length)) > 0)
+                    {
+                        var nonce = CreateNonce(noncePrefix, chunkIndex);
+                        var aad = CreateAad(fsIn.Length, chunkIndex, read);
+                        aes.Encrypt(nonce, plainBuffer.AsSpan(0, read), cipherBuffer.AsSpan(0, read), tag, aad);
+                        WriteChunk(fsCrypt, read, tag, cipherBuffer.AsSpan(0, read));
+                        chunkIndex++;
+                    }
+                }
+
+                ReplaceFile(encryptedFile, inputFile);
+            }
+            catch
+            {
+                TryDeleteFile(encryptedFile);
+                throw;
+            }
         }
 
         // Decrypt all files and subdirectories in a directory
         public static void DecryptDirectory(string directory, string password)
         {
-            // Decrypt each file in the directory
-            foreach (var file in Directory.GetFiles(directory))
-            {
-                DecryptFile(file, password);
-            }
+            var decryptedFiles = new List<string>();
+            var decryptedDirectories = new List<string>();
 
-            // Recursively decrypt each subdirectory
-            foreach (var subDirectory in Directory.GetDirectories(directory))
+            try
             {
-                DecryptDirectory(subDirectory, password);
+                // Decrypt each file in the directory
+                foreach (var file in Directory.GetFiles(directory))
+                {
+                    DecryptFile(file, password);
+                    decryptedFiles.Add(file);
+                }
+
+                // Recursively decrypt each subdirectory
+                foreach (var subDirectory in Directory.GetDirectories(directory))
+                {
+                    DecryptDirectory(subDirectory, password);
+                    decryptedDirectories.Add(subDirectory);
+                }
+            }
+            catch
+            {
+                RollBackDecryptedFiles(decryptedFiles, decryptedDirectories, password);
+                throw;
             }
         }
 
@@ -130,48 +172,62 @@ namespace ColDogStudios.ColDogLocker.Services.Security
                 throw new FileNotFoundException($"Input file not found: {inputFile}");
             }
 
-            // Create AES decryption object
-            using var aes = Aes.Create();
+            var decryptedFile = CreateTempPath(inputFile, ".dec");
 
-            var decryptedFile = inputFile + ".dec";
-
-            // Open encrypted input file and read the salt
-            using (FileStream fsCrypt = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            try
             {
-                // Verify file is large enough to contain salt
-                if (fsCrypt.Length < SaltSize)
+                // Open encrypted input file and read the authenticated header
+                using (FileStream fsCrypt = new(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (FileStream fsOut = new(decryptedFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 {
-                    throw new InvalidDataException("File is too small to contain encryption data.");
+                    var header = ReadHeader(fsCrypt);
+                    var key = Rfc2898DeriveBytes.Pbkdf2(password, header.Salt, header.Iterations, HashAlgorithmName.SHA256, KeySize);
+
+                    using var aes = new AesGcm(key, TagSize);
+                    var tag = new byte[TagSize];
+                    var cipherBuffer = new byte[BufferSize];
+                    var plainBuffer = new byte[BufferSize];
+                    var chunkIndex = 0;
+                    long bytesWritten = 0;
+
+                    while (fsCrypt.Position < fsCrypt.Length)
+                    {
+                        var chunkLength = ReadChunkLength(fsCrypt);
+                        if (chunkLength <= 0 || chunkLength > BufferSize)
+                        {
+                            throw new InvalidDataException("Encrypted file contains an invalid chunk length.");
+                        }
+
+                        if (bytesWritten + chunkLength > header.OriginalLength)
+                        {
+                            throw new InvalidDataException("Encrypted file contains more data than expected.");
+                        }
+
+                        ReadExactly(fsCrypt, tag);
+                        ReadExactly(fsCrypt, cipherBuffer.AsSpan(0, chunkLength));
+
+                        var nonce = CreateNonce(header.NoncePrefix, chunkIndex);
+                        var aad = CreateAad(header.OriginalLength, chunkIndex, chunkLength);
+                        aes.Decrypt(nonce, cipherBuffer.AsSpan(0, chunkLength), tag, plainBuffer.AsSpan(0, chunkLength), aad);
+                        fsOut.Write(plainBuffer, 0, chunkLength);
+
+                        bytesWritten += chunkLength;
+                        chunkIndex++;
+                    }
+
+                    if (bytesWritten != header.OriginalLength)
+                    {
+                        throw new InvalidDataException("Encrypted file ended before all expected data was read.");
+                    }
                 }
 
-                // Read the salt from the beginning of the file
-                var salt = new byte[SaltSize];
-                var bytesRead = fsCrypt.Read(salt, 0, salt.Length);
-                if (bytesRead != SaltSize)
-                {
-                    throw new InvalidDataException("Unable to read salt from encrypted file.");
-                }
-
-                // Generate key and IV from password using the stored salt
-                var keyAndIv = Rfc2898DeriveBytes.Pbkdf2(password, salt, 10000, HashAlgorithmName.SHA256, 48);
-                aes.Key = keyAndIv[..32];
-                aes.IV = keyAndIv[32..];
-
-                using CryptoStream cs = new(fsCrypt, aes.CreateDecryptor(), CryptoStreamMode.Read);
-                using FileStream fsOut = new(decryptedFile, FileMode.Create, FileAccess.Write, FileShare.None);
-                var buffer = new byte[BufferSize];
-                int read;
-
-                // Read from encrypted file and write decrypted data to output file
-                while ((read = cs.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    fsOut.Write(buffer, 0, read);
-                }
+                ReplaceFile(decryptedFile, inputFile);
             }
-
-            // Replace encrypted file with decrypted file
-            File.Delete(inputFile);
-            File.Move(decryptedFile, inputFile);
+            catch
+            {
+                TryDeleteFile(decryptedFile);
+                throw;
+            }
         }
 
         // Improved password hashing using bcrypt
@@ -196,5 +252,218 @@ namespace ColDogStudios.ColDogLocker.Services.Security
 
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
+
+        private static void WriteHeader(Stream stream, byte[] salt, byte[] noncePrefix, long originalLength)
+        {
+            stream.Write(_magic);
+            stream.Write(salt);
+            stream.Write(noncePrefix);
+
+            Span<byte> numberBuffer = stackalloc byte[8];
+            BinaryPrimitives.WriteInt64LittleEndian(numberBuffer, originalLength);
+            stream.Write(numberBuffer);
+
+            numberBuffer = stackalloc byte[4];
+            BinaryPrimitives.WriteInt32LittleEndian(numberBuffer, Pbkdf2Iterations);
+            stream.Write(numberBuffer);
+        }
+
+        private static EncryptedFileHeader ReadHeader(Stream stream)
+        {
+            var magic = new byte[_magic.Length];
+            ReadExactly(stream, magic);
+            if (!magic.SequenceEqual(_magic))
+            {
+                throw new InvalidDataException("File is not a supported ColDog Locker encrypted file.");
+            }
+
+            var salt = new byte[SaltSize];
+            var noncePrefix = new byte[NoncePrefixSize];
+            ReadExactly(stream, salt);
+            ReadExactly(stream, noncePrefix);
+
+            Span<byte> numberBuffer = stackalloc byte[8];
+            ReadExactly(stream, numberBuffer);
+            var originalLength = BinaryPrimitives.ReadInt64LittleEndian(numberBuffer);
+            if (originalLength < 0)
+            {
+                throw new InvalidDataException("Encrypted file contains an invalid original length.");
+            }
+
+            numberBuffer = stackalloc byte[4];
+            ReadExactly(stream, numberBuffer);
+            var iterations = BinaryPrimitives.ReadInt32LittleEndian(numberBuffer);
+            if (iterations <= 0)
+            {
+                throw new InvalidDataException("Encrypted file contains an invalid key derivation setting.");
+            }
+
+            return new EncryptedFileHeader(salt, noncePrefix, originalLength, iterations);
+        }
+
+        private static void WriteChunk(Stream stream, int plaintextLength, byte[] tag, ReadOnlySpan<byte> ciphertext)
+        {
+            Span<byte> lengthBuffer = stackalloc byte[4];
+            BinaryPrimitives.WriteInt32LittleEndian(lengthBuffer, plaintextLength);
+            stream.Write(lengthBuffer);
+            stream.Write(tag);
+            stream.Write(ciphertext);
+        }
+
+        private static int ReadChunkLength(Stream stream)
+        {
+            Span<byte> lengthBuffer = stackalloc byte[4];
+            ReadExactly(stream, lengthBuffer);
+            return BinaryPrimitives.ReadInt32LittleEndian(lengthBuffer);
+        }
+
+        private static byte[] CreateNonce(byte[] noncePrefix, int chunkIndex)
+        {
+            var nonce = new byte[NonceSize];
+            noncePrefix.CopyTo(nonce, 0);
+            BinaryPrimitives.WriteInt32LittleEndian(nonce.AsSpan(NoncePrefixSize), chunkIndex);
+            return nonce;
+        }
+
+        private static byte[] CreateAad(long originalLength, int chunkIndex, int plaintextLength)
+        {
+            var aad = new byte[_magic.Length + 8 + 4 + 4];
+            _magic.CopyTo(aad, 0);
+            BinaryPrimitives.WriteInt64LittleEndian(aad.AsSpan(_magic.Length), originalLength);
+            BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(_magic.Length + 8), chunkIndex);
+            BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(_magic.Length + 12), plaintextLength);
+            return aad;
+        }
+
+        private static void ReadExactly(Stream stream, Span<byte> buffer)
+        {
+            var totalRead = 0;
+            while (totalRead < buffer.Length)
+            {
+                var read = stream.Read(buffer[totalRead..]);
+                if (read == 0)
+                {
+                    throw new EndOfStreamException("Encrypted file ended unexpectedly.");
+                }
+
+                totalRead += read;
+            }
+        }
+
+        private static string CreateTempPath(string inputFile, string suffix)
+        {
+            var directory = Path.GetDirectoryName(inputFile) ?? Directory.GetCurrentDirectory();
+            var fileName = Path.GetFileName(inputFile);
+            return Path.Combine(directory, $".{fileName}.{Guid.NewGuid():N}{suffix}.tmp");
+        }
+
+        private static void ReplaceFile(string sourceFile, string destinationFile)
+        {
+            try
+            {
+                File.Replace(sourceFile, destinationFile, null, true);
+            }
+            catch (PlatformNotSupportedException)
+            {
+                File.Move(sourceFile, destinationFile, true);
+            }
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch
+            {
+                // A failed temp-file cleanup should not hide the original encryption error.
+            }
+        }
+
+        private static void RollBackEncryptedFiles(
+            IReadOnlyList<string> encryptedFiles,
+            IReadOnlyList<string> encryptedDirectories,
+            string password)
+        {
+            foreach (var directory in encryptedDirectories.Reverse())
+            {
+                TryDecryptDirectory(directory, password);
+            }
+
+            foreach (var file in encryptedFiles.Reverse())
+            {
+                TryDecryptFile(file, password);
+            }
+        }
+
+        private static void RollBackDecryptedFiles(
+            IReadOnlyList<string> decryptedFiles,
+            IReadOnlyList<string> decryptedDirectories,
+            string password)
+        {
+            foreach (var directory in decryptedDirectories.Reverse())
+            {
+                TryEncryptDirectory(directory, password);
+            }
+
+            foreach (var file in decryptedFiles.Reverse())
+            {
+                TryEncryptFile(file, password);
+            }
+        }
+
+        private static void TryEncryptDirectory(string directory, string password)
+        {
+            try
+            {
+                EncryptDirectory(directory, password);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting directory '{directory}'.", ex);
+            }
+        }
+
+        private static void TryDecryptDirectory(string directory, string password)
+        {
+            try
+            {
+                DecryptDirectory(directory, password);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting directory '{directory}'.", ex);
+            }
+        }
+
+        private static void TryEncryptFile(string file, string password)
+        {
+            try
+            {
+                EncryptFile(file, password);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting file '{file}'.", ex);
+            }
+        }
+
+        private static void TryDecryptFile(string file, string password)
+        {
+            try
+            {
+                DecryptFile(file, password);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting file '{file}'.", ex);
+            }
+        }
+
+        private sealed record EncryptedFileHeader(byte[] Salt, byte[] NoncePrefix, long OriginalLength, int Iterations);
     }
 }
