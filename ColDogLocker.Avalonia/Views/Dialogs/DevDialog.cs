@@ -61,7 +61,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             ArchitectureText.Text = SafeValue(() => $"{RuntimeInformation.OSArchitecture} OS, {RuntimeInformation.ProcessArchitecture} process");
             InstallPathText.Text = SafeValue(() => Process.GetCurrentProcess().MainModule?.FileName ?? AppContext.BaseDirectory);
             ConfigDirText.Text = SafeValue(() => AppPaths.LocalConfig);
-            DatabasePathText.Text = SafeValue(() => Path.Combine(AppPaths.LocalConfig, "lockers.db"));
+            DatabasePathText.Text = SafeValue(() => Path.Join(AppPaths.LocalConfig, "lockers.db"));
             LogFileText.Text = SafeValue(Logger.GetCurrentLogFilePath);
         }
 
