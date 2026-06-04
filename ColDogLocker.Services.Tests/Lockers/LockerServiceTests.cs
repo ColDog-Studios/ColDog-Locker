@@ -60,6 +60,19 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         }
 
         [Fact]
+        public void RemoveLocker_WithLockedLocker_ShouldThrowInvalidOperationException()
+        {
+            var locker = new LockerModel("Locked", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
+            {
+                IsLocked = true
+            };
+
+            var exception = Assert.Throws<InvalidOperationException>(() => LockerService.RemoveLocker(locker));
+
+            Assert.Contains("Unlock the locker before removing it", exception.Message);
+        }
+
+        [Fact]
         public void Verify_MissingDirectory_ShouldReturnInvalidResult()
         {
             var locker = new LockerModel("Missing", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));

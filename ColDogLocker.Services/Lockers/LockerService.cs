@@ -133,6 +133,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// <param name="locker"></param>
         public static void RemoveLocker(LockerModel locker)
         {
+            ArgumentNullException.ThrowIfNull(locker);
+
+            if (locker.IsLocked)
+            {
+                throw new InvalidOperationException("Unlock the locker before removing it.");
+            }
+
             // Remove the locker from the database and in-memory list
             LockerRepository.DeleteLocker(locker.Guid);
             Lockers.Remove(locker);
