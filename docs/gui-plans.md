@@ -6,14 +6,14 @@ ColDog Locker currently has multiple user interfaces with different maturity lev
 
 | Interface | Status | Notes |
 | --- | --- | --- |
-| WPF GUI | Functional Windows GUI | Primary graphical interface today. |
-| Avalonia GUI | Prototype | Cross-platform direction, but not feature-complete. |
+| Avalonia GUI | Active migration target | Default GUI launched by `cdlocker gui`; remaining work is refinement and parity validation. |
+| WPF GUI | Legacy Windows GUI | Kept temporarily as a reference until the Avalonia migration is ready to fully replace it. |
 | TUI | Functional terminal menu | Useful where GUI support is unavailable. |
 | CLI | Most complete command surface | Best reference for automation and exact behavior. |
 
 ## WPF GUI
 
-The WPF GUI is the current Windows-first graphical app.
+The WPF GUI is the older Windows-first graphical app. It remains in the solution for now as a reference during the Avalonia migration.
 
 Implemented capabilities include:
 
@@ -37,30 +37,27 @@ Known UI issue:
 
 ## Avalonia GUI
 
-The Avalonia project exists as the cross-platform GUI direction.
+The Avalonia project is the active graphical interface and cross-platform GUI direction.
 
-Current limitations:
+Current migration focus:
 
-- The app shell and menus exist, but locker operations are mostly TODOs or logging placeholders.
-- Shared initialization for settings, logging, and database setup is commented out.
-- Locker loading is not wired.
-- The Linux GUI launcher expects `ColDogLocker.Avalonia.exe`, while the Avalonia project currently builds an assembly named `ColDogLocker`; the launcher/output naming needs to be reconciled.
+- Validate feature parity against the WPF reference.
+- Refine migrated dialogs and interaction polish.
+- Continue replacing platform-specific assumptions with cross-platform behavior.
 
-Avalonia should eventually replace the WPF-specific icon and platform assumptions, but it is not yet at WPF feature parity.
+The Avalonia project builds the GUI executable as `ColDogLocker.exe` on Windows and `ColDogLocker` on Unix-like platforms.
 
 ## GUI Launcher
 
-The CLI uses the `ColDogLocker.Gui` launcher abstraction:
+The CLI owns the GUI launcher:
 
-- Windows: launches the WPF GUI.
-- Linux: attempts to launch Avalonia.
+- Windows: launches the Avalonia GUI executable.
+- Linux: attempts to launch the Avalonia GUI executable.
 - macOS: currently unsupported and directs users to the TUI.
 
 ## Next GUI Work
 
 1. Replace Segoe Fluent Icons with redistributable icon assets or a shared icon library.
-2. Fix Avalonia executable naming or launcher lookup.
-3. Enable shared initialization in Avalonia.
-4. Wire Avalonia locker loading.
-5. Port core WPF workflows to Avalonia: new, lock, unlock, remove, properties, open location, settings, updates, and dialogs.
-6. Decide whether WPF remains a Windows-specific app or becomes a legacy/compatibility frontend after Avalonia reaches parity.
+2. Validate Avalonia parity for new, lock, unlock, remove, properties, open location, settings, updates, and dialogs.
+3. Polish Avalonia-only behavior and layout details.
+4. Remove the WPF project once Avalonia is fully accepted as the replacement.

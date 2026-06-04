@@ -24,8 +24,8 @@ Launches the graphical interface.
 
 Current behavior:
 
-- Windows launches the WPF GUI executable, `ColDogLocker.exe`.
-- Linux attempts to launch the Avalonia GUI executable.
+- Windows launches the Avalonia GUI executable, `ColDogLocker.exe`.
+- Linux attempts to launch the Avalonia GUI executable, `ColDogLocker`.
 - macOS reports that GUI launching is not available yet and suggests the TUI.
 
 ### `cdlocker tui`

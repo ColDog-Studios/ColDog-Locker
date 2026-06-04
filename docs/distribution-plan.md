@@ -30,8 +30,8 @@ This differs from older framework-dependent, separate-DLL planning.
 | Artifact | Project | Purpose |
 | --- | --- | --- |
 | `cdlocker` / `cdlocker.exe` | `ColDogLocker.Cli` | CLI, TUI launcher, GUI launcher, automation surface. |
-| `ColDogLocker.exe` | `ColDogLocker.Gui.WPF` | Windows WPF GUI. |
-| `ColDogLocker` | `ColDogLocker.Avalonia` | Experimental Avalonia GUI output. |
+| `ColDogLocker.exe` / `ColDogLocker` | `ColDogLocker.Avalonia` | Active graphical interface. |
+| `ColDogLocker.exe` | `ColDogLocker.Gui.WPF` | Legacy Windows WPF GUI kept temporarily as a migration reference. |
 
 The `Application` and `Infrastructure` DLLs from older planning docs are not part of the current solution.
 
@@ -39,19 +39,19 @@ The `Application` and `Infrastructure` DLLs from older planning docs are not par
 
 ### Windows
 
-Windows should be the first packaged release target because the WPF GUI is the most complete GUI.
+Windows should be the first packaged release target because it is the best-tested desktop target.
 
 Recommended package:
 
 - MSI installer for `win-x64`.
 - Optional `win-arm64` once tested.
-- Install the CLI and WPF GUI together.
+- Install the CLI and Avalonia GUI together.
 - Add Start Menu entry for the GUI.
 - Optionally add install directory to `PATH` for `cdlocker`.
 
 ### Linux
 
-Linux packaging is useful for CLI/TUI first, with Avalonia labeled experimental until feature parity improves.
+Linux packaging is useful for CLI/TUI first, with Avalonia GUI packaging enabled once platform testing is complete.
 
 Possible packages:
 
@@ -102,7 +102,7 @@ ColDog Locker\
 └── README.md
 ```
 
-If a framework-dependent WPF build is used for the GUI, include the required DLLs and runtime dependencies in the app directory. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
+In the recommended package, `ColDogLocker.exe` is the Avalonia GUI. If the legacy WPF app is packaged temporarily, keep it in a separate folder because it uses the same executable name. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
 
 ## User Data
 
@@ -167,7 +167,7 @@ dotnet test
 3. Test on a clean machine or VM for each target.
 4. Confirm `cdlocker --version`.
 5. Confirm `cdlocker new`, `lock`, `unlock`, `verify`, and `remove`.
-6. Confirm WPF GUI workflows on Windows.
+6. Confirm Avalonia GUI workflows on Windows.
 7. Confirm TUI workflows on non-GUI environments.
 8. Confirm update asset naming and SHA-256 digest availability.
 9. Create a GitHub Release with clear stable/unstable intent.
@@ -175,8 +175,8 @@ dotnet test
 
 ## Open Distribution Decisions
 
-- Whether Windows releases should bundle WPF as framework-dependent or self-contained.
 - Whether CLI and GUI should be installed as one package or split packages.
-- Whether Linux should start as CLI/TUI-only until Avalonia reaches parity.
+- Whether WPF should be packaged at all while it remains as a temporary legacy project.
+- Whether Linux should start as CLI/TUI-only until Avalonia receives enough platform testing.
 - Whether ARM64 packages are supported now or only published after hardware/VM testing.
 - Whether macOS is intentionally unsupported for the current release line.

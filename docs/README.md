@@ -18,4 +18,4 @@ This directory contains the working documentation for ColDog Locker.
 
 ## Current Status
 
-ColDog Locker is pre-release software. The CLI, TUI, and Windows WPF GUI are implemented, while the Avalonia GUI exists as an early cross-platform direction. Release packaging and installer work are still in progress.
+ColDog Locker is pre-release software. The CLI, TUI, and Avalonia GUI are implemented, while the WPF GUI remains temporarily as a legacy migration reference. Release packaging and installer work are still in progress.

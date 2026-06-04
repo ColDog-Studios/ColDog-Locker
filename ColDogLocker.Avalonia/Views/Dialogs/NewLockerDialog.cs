@@ -16,6 +16,9 @@
 */
 
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Validation;
@@ -24,130 +27,162 @@ using System.IO;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
-    public sealed class NewLockerDialog : Window
+    public sealed partial class NewLockerDialog : Window
     {
+        private readonly string _defaultBasePath;
+        private bool _isCustomPath;
+        private bool _isUpdatingLocation;
+
         public NewLockerDialog()
         {
-            Title = "New Locker";
-            Width = 560;
-            CanResize = false;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            InitializeComponent();
 
-            var defaultBasePath = GetDefaultBasePath();
-            var isCustomPath = false;
-            var isUpdatingLocation = false;
+            _defaultBasePath = GetDefaultBasePath();
 
-            var nameBox = new TextBox { PlaceholderText = "Locker name" };
-            var locationBox = new TextBox { PlaceholderText = "Folder path" };
-            var passwordBox = new TextBox { PasswordChar = '*', PlaceholderText = "Password" };
-            var confirmBox = new TextBox { PasswordChar = '*', PlaceholderText = "Confirm password" };
-            var errorText = new TextBlock { Foreground = global::Avalonia.Media.Brushes.Firebrick, TextWrapping = global::Avalonia.Media.TextWrapping.Wrap };
-
-            void SetLocation(string value)
+            NameBox.TextChanged += (_, _) =>
             {
-                isUpdatingLocation = true;
-                locationBox.Text = value;
-                isUpdatingLocation = false;
-            }
-
-            void UpdateDefaultLocation()
-            {
-                if (isCustomPath)
-                {
-                    return;
-                }
-
-                var lockerName = nameBox.Text?.Trim();
-                if (!string.IsNullOrWhiteSpace(lockerName))
-                {
-                    lockerName = Path.GetFileName(lockerName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                }
-
-                SetLocation(string.IsNullOrWhiteSpace(lockerName)
-                    ? string.Empty
-                    : Path.Combine(defaultBasePath, lockerName));
-            }
-
-            nameBox.TextChanged += (_, _) => UpdateDefaultLocation();
-            locationBox.TextChanged += (_, _) =>
-            {
-                if (!isUpdatingLocation && locationBox.IsFocused)
-                {
-                    isCustomPath = true;
-                }
+                UpdateDefaultLocation();
+                UpdateCreateButtonState();
             };
-
-            var browseButton = DialogHelpers.Button("Browse");
-            browseButton.Click += async (_, _) =>
+            LocationBox.TextChanged += (_, _) =>
             {
-                var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+                if (!_isUpdatingLocation && LocationBox.IsFocused)
                 {
-                    Title = "Select folder to lock",
-                    AllowMultiple = false
-                });
+                    _isCustomPath = true;
+                }
 
-                if (folders.Count > 0)
+                UpdateCreateButtonState();
+            };
+            PasswordBox.TextChanged += (_, _) =>
+            {
+                UpdatePasswordRequirements();
+                UpdateCreateButtonState();
+            };
+            ConfirmBox.TextChanged += (_, _) => UpdateCreateButtonState();
+            BrowseButton.Click += BrowseButton_Click;
+            CreateButton.Click += CreateButton_Click;
+            CancelButton.Click += CancelButton_Click;
+
+            UpdatePasswordRequirements();
+            UpdateCreateButtonState();
+        }
+
+        private void SetLocation(string value)
+        {
+            _isUpdatingLocation = true;
+            LocationBox.Text = value;
+            _isUpdatingLocation = false;
+        }
+
+        private void UpdateDefaultLocation()
+        {
+            if (_isCustomPath)
+            {
+                return;
+            }
+
+            var lockerName = NameBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(lockerName))
+            {
+                lockerName = Path.GetFileName(lockerName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            }
+
+            SetLocation(string.IsNullOrWhiteSpace(lockerName)
+                ? string.Empty
+                : Path.Combine(_defaultBasePath, lockerName));
+        }
+
+        private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
+        {
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Select folder to lock",
+                AllowMultiple = false
+            });
+
+            if (folders.Count <= 0)
+            {
+                return;
+            }
+
+            var selectedPath = folders[0].TryGetLocalPath() ?? folders[0].Path.LocalPath;
+            _isCustomPath = true;
+            SetLocation(selectedPath);
+
+            var selectedName = GetFolderName(selectedPath);
+            if (!string.IsNullOrWhiteSpace(selectedName))
+            {
+                NameBox.Text = selectedName;
+            }
+
+            UpdateCreateButtonState();
+        }
+
+        private void CreateButton_Click(object? sender, RoutedEventArgs e)
+        {
+            var validationError = Validate(NameBox.Text, LocationBox.Text, PasswordBox.Text, ConfirmBox.Text);
+            if (validationError != null)
+            {
+                ErrorText.Text = validationError;
+                return;
+            }
+
+            Close(new NewLockerRequest
+            {
+                LockerName = NameBox.Text!.Trim(),
+                Location = LocationBox.Text!.Trim(),
+                Password = PasswordBox.Text!
+            });
+        }
+
+        private void CancelButton_Click(object? sender, RoutedEventArgs e)
+        {
+            Close(null);
+        }
+
+        private void UpdateCreateButtonState()
+        {
+            var validationError = Validate(NameBox.Text, LocationBox.Text, PasswordBox.Text, ConfirmBox.Text);
+            CreateButton.IsEnabled = validationError == null;
+            if (validationError == null || string.IsNullOrWhiteSpace(ErrorText.Text))
+            {
+                ErrorText.Text = string.Empty;
+            }
+        }
+
+        private void UpdatePasswordRequirements()
+        {
+            PasswordRequirementsPanel.Children.Clear();
+
+            foreach (var requirement in PasswordFilter.GetPasswordRequirements(PasswordBox.Text ?? string.Empty))
+            {
+                var brush = requirement.IsMet ? Brushes.ForestGreen : Brushes.Gray;
+                var row = new StackPanel
                 {
-                    var selectedPath = folders[0].TryGetLocalPath() ?? folders[0].Path.LocalPath;
-                    isCustomPath = true;
-                    SetLocation(selectedPath);
-
-                    var selectedName = GetFolderName(selectedPath);
-                    if (!string.IsNullOrWhiteSpace(selectedName))
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 8,
+                    Children =
                     {
-                        nameBox.Text = selectedName;
+                        new TextBlock
+                        {
+                            Text = requirement.IsMet ? "✓" : "○",
+                            Width = 18,
+                            FontSize = 14,
+                            Foreground = brush,
+                            VerticalAlignment = VerticalAlignment.Center
+                        },
+                        new TextBlock
+                        {
+                            Text = requirement.Description,
+                            FontSize = 12,
+                            Foreground = brush,
+                            VerticalAlignment = VerticalAlignment.Center
+                        }
                     }
-                }
-            };
+                };
 
-            var createButton = DialogHelpers.Button("Create");
-            createButton.Click += (_, _) =>
-            {
-                var validationError = Validate(nameBox.Text, locationBox.Text, passwordBox.Text, confirmBox.Text);
-                if (validationError != null)
-                {
-                    errorText.Text = validationError;
-                    return;
-                }
-
-                Close(new NewLockerRequest
-                {
-                    LockerName = nameBox.Text!.Trim(),
-                    Location = locationBox.Text!.Trim(),
-                    Password = passwordBox.Text!
-                });
-            };
-
-            var cancelButton = DialogHelpers.Button("Cancel");
-            cancelButton.Click += (_, _) => Close(null);
-
-            var locationPanel = new Grid
-            {
-                ColumnDefinitions =
-                {
-                    new ColumnDefinition(GridLength.Star),
-                    new ColumnDefinition(GridLength.Auto)
-                },
-                ColumnSpacing = 8
-            };
-            locationPanel.Children.Add(locationBox);
-            Grid.SetColumn(browseButton, 1);
-            locationPanel.Children.Add(browseButton);
-
-            Content = new StackPanel
-            {
-                Margin = new global::Avalonia.Thickness(18),
-                Spacing = 14,
-                Children =
-                {
-                    DialogHelpers.Field("Name", nameBox),
-                    DialogHelpers.Field("Location", locationPanel),
-                    DialogHelpers.Field("Password", passwordBox),
-                    DialogHelpers.Field("Confirm Password", confirmBox),
-                    errorText,
-                    DialogHelpers.Buttons(cancelButton, createButton)
-                }
-            };
+                PasswordRequirementsPanel.Children.Add(row);
+            }
         }
 
         private static string? Validate(string? name, string? location, string? password, string? confirmPassword)

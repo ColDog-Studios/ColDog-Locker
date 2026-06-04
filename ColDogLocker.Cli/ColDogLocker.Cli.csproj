@@ -39,7 +39,6 @@
     <ItemGroup>
         <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj"/>
         <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj"/>
-        <ProjectReference Include="..\ColDogLocker.Gui\ColDogLocker.Gui.csproj"/>
         <ProjectReference Include="..\ColDogLocker.Tui\ColDogLocker.Tui.csproj"/>
     </ItemGroup>
 

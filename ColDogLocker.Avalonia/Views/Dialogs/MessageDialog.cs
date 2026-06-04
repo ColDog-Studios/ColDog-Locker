@@ -16,7 +16,6 @@
 */
 
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Avalonia.Media;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
@@ -29,63 +28,44 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         Confirmation
     }
 
-    public sealed class MessageDialog : Window
+    public sealed partial class MessageDialog : Window
     {
-        public MessageDialog(string title, string message, MessageDialogKind kind)
+        private MessageDialogKind _kind;
+
+        public MessageDialog()
         {
+            InitializeComponent();
+
+            OkButton.Click += OkButton_Click;
+            CancelButton.Click += CancelButton_Click;
+            Configure("Message", string.Empty, MessageDialogKind.Information);
+        }
+
+        public MessageDialog(string title, string message, MessageDialogKind kind)
+            : this()
+        {
+            Configure(title, message, kind);
+        }
+
+        private void Configure(string title, string message, MessageDialogKind kind)
+        {
+            _kind = kind;
             Title = title;
-            Width = 520;
-            MinHeight = 180;
-            CanResize = false;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            MessageText.Text = message;
+            DialogIcon.Data = IconData(kind);
+            DialogIcon.Foreground = IconBrush(kind);
+            OkButton.Content = kind == MessageDialogKind.Confirmation ? "Yes" : "OK";
+            CancelButton.IsVisible = kind == MessageDialogKind.Confirmation;
+        }
 
-            var okButton = DialogHelpers.Button(kind == MessageDialogKind.Confirmation ? "Yes" : "OK");
-            okButton.Click += (_, _) => Close(kind != MessageDialogKind.Error);
+        private void OkButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            Close(_kind != MessageDialogKind.Error);
+        }
 
-            var panel = new StackPanel
-            {
-                Margin = new global::Avalonia.Thickness(18),
-                Spacing = 18
-            };
-
-            var messageContent = new Grid
-            {
-                ColumnDefinitions = new ColumnDefinitions("Auto,*"),
-                ColumnSpacing = 12
-            };
-
-            var icon = new PathIcon
-            {
-                Width = 28,
-                Height = 28,
-                Data = IconData(kind),
-                Foreground = IconBrush(kind),
-                VerticalAlignment = VerticalAlignment.Top
-            };
-            messageContent.Children.Add(icon);
-
-            var scrollViewer = new ScrollViewer
-            {
-                MaxHeight = 360,
-                Content = DialogHelpers.Body(message)
-            };
-            Grid.SetColumn(scrollViewer, 1);
-            messageContent.Children.Add(scrollViewer);
-
-            panel.Children.Add(messageContent);
-
-            if (kind == MessageDialogKind.Confirmation)
-            {
-                var cancelButton = DialogHelpers.Button("No");
-                cancelButton.Click += (_, _) => Close(false);
-                panel.Children.Add(DialogHelpers.Buttons(cancelButton, okButton));
-            }
-            else
-            {
-                panel.Children.Add(DialogHelpers.Buttons(okButton));
-            }
-
-            Content = panel;
+        private void CancelButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            Close(false);
         }
 
         private static Geometry IconData(MessageDialogKind kind)

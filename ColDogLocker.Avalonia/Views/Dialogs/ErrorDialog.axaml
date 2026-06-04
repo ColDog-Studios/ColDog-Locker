@@ -1,0 +1,143 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="640"
+        d:DesignHeight="560"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.ErrorDialog"
+        Title="Error"
+        Width="640"
+        Height="560"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.detail-label">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style Selector="TextBlock.monospace">
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.78" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="15">
+            <Border Grid.Column="0"
+                    Width="42"
+                    Height="42"
+                    Background="#E81123"
+                    CornerRadius="21"
+                    VerticalAlignment="Top">
+                <TextBlock Text="!"
+                           Foreground="White"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="5">
+                <TextBlock x:Name="ErrorTitleText"
+                           Text="An Error Occurred"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           TextWrapping="Wrap" />
+                <TextBlock x:Name="ErrorMessageText"
+                           FontSize="14"
+                           Opacity="0.78"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+
+        <Expander Grid.Row="1"
+                  Header="Technical Details"
+                  IsExpanded="False">
+            <Border Padding="10"
+                    Margin="0,10,0,0"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Classes="detail-label" Text="Exception Type:" />
+                        <TextBlock x:Name="ExceptionTypeText"
+                                   Classes="monospace"
+                                   Margin="0,0,0,10" />
+                        <TextBlock Classes="detail-label" Text="Stack Trace:" />
+                        <TextBlock x:Name="StackTraceText" Classes="monospace" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Expander>
+
+        <Border Grid.Row="2"
+                Padding="10"
+                Background="#F3F4F6"
+                BorderBrush="#D4D8DD"
+                BorderThickness="1"
+                CornerRadius="4">
+            <TextBox x:Name="FullErrorTextBox"
+                     IsReadOnly="True"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Foreground="#1F2933"
+                     FontFamily="Consolas"
+                     FontSize="11"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
+        </Border>
+
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="CopyStatusText"
+                       Grid.Column="0"
+                       VerticalAlignment="Center"
+                       Opacity="0.75" />
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+                <Button x:Name="CopyErrorButton"
+                        Classes="accent-button"
+                        Content="Copy Error"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center"
+                        ToolTip.Tip="Copy error details to clipboard" />
+                <Button x:Name="OpenLogsButton"
+                        Classes="accent-button"
+                        Content="Open Logs Folder"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center"
+                        ToolTip.Tip="Open the logs folder" />
+                <Button x:Name="OkButton"
+                        Classes="accent-button"
+                        Content="OK"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

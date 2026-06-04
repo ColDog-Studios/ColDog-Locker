@@ -87,7 +87,12 @@
                 </MenuItem.Header>
                 <MenuItem Header="_Dev Info" Command="{Binding ShowDevInfoCommand}" />
                 <Separator />
-                <MenuItem Header="Test _Error Dialog" Command="{Binding TestErrorDialogCommand}" />
+                <MenuItem Header="Test Message _Info" Command="{Binding TestMessageInfoDialogCommand}" />
+                <MenuItem Header="Test Message _Warning" Command="{Binding TestMessageWarningDialogCommand}" />
+                <MenuItem Header="Test Message _Error" Command="{Binding TestMessageErrorDialogCommand}" />
+                <Separator />
+                <MenuItem Header="Test Detailed _Error Dialog" Command="{Binding TestErrorDialogCommand}" />
+                <MenuItem Header="Test _Progress Dialog" Command="{Binding TestProgressDialogCommand}" />
             </MenuItem>
             <MenuItem Classes="top-menu">
                 <MenuItem.Header>
@@ -194,7 +199,7 @@
                                             <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
                                             <MenuItem Header="Properties" Click="ContextProperties_Click" />
                                             <Separator />
-                                            <MenuItem Header="Remove" Click="ContextRemove_Click" />
+                                            <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
                                         </ContextMenu>
                                     </Border.ContextMenu>
                                     <Grid ColumnDefinitions="2*,*,*,*,3*" ColumnSpacing="12">
@@ -242,7 +247,7 @@
                                         <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
                                         <MenuItem Header="Properties" Click="ContextProperties_Click" />
                                         <Separator />
-                                        <MenuItem Header="Remove" Click="ContextRemove_Click" />
+                                        <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <StackPanel Spacing="8">

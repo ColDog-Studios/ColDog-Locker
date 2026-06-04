@@ -32,5 +32,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         Task ShowSettingsAsync();
         Task ShowAboutAsync();
         Task ShowDevInfoAsync();
+        Task ShowProgressTestAsync();
     }
 }
