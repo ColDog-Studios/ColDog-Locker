@@ -134,11 +134,15 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
         // Async logging support
         private static readonly Queue<LogEntry> _logQueue = new();
+        private static readonly AutoResetEvent _logQueued = new(false);
+        private static readonly Lock _workerStateLock = new();
         private static Thread? _logWorkerThread;
         private static bool _workerRunning;
 
         static Logger()
         {
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => StopLogWorker();
+
             if (_asyncLogging)
             {
                 StartLogWorker();
@@ -189,19 +193,22 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
         private static void StartLogWorker()
         {
-            if (_workerRunning)
+            lock (_workerStateLock)
             {
-                return;
-            }
+                if (_workerRunning)
+                {
+                    return;
+                }
 
-            _workerRunning = true;
-            _logWorkerThread = new Thread(LogWorkerLoop) { IsBackground = true };
-            _logWorkerThread.Start();
+                _workerRunning = true;
+                _logWorkerThread = new Thread(LogWorkerLoop) { IsBackground = true };
+                _logWorkerThread.Start();
+            }
         }
 
         private static void LogWorkerLoop()
         {
-            while (_workerRunning)
+            while (true)
             {
                 LogEntry? entry = null;
                 lock (_logQueue)
@@ -216,10 +223,35 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 {
                     WriteLogEntry(entry);
                 }
+                else if (!_workerRunning)
+                {
+                    break;
+                }
                 else
                 {
-                    Thread.Sleep(50);
+                    _logQueued.WaitOne(50);
                 }
+            }
+        }
+
+        private static void StopLogWorker()
+        {
+            Thread? workerThread;
+            lock (_workerStateLock)
+            {
+                if (!_workerRunning)
+                {
+                    return;
+                }
+
+                _workerRunning = false;
+                workerThread = _logWorkerThread;
+                _logQueued.Set();
+            }
+
+            if (workerThread != null && workerThread != Thread.CurrentThread)
+            {
+                workerThread.Join(TimeSpan.FromSeconds(2));
             }
         }
 
@@ -294,6 +326,8 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 {
                     _logQueue.Enqueue(logEntry);
                 }
+
+                _logQueued.Set();
             }
             else
             {
@@ -518,10 +552,38 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
         public static void SetAsyncLogging(bool enabled)
         {
+            if (_asyncLogging && !enabled)
+            {
+                StopLogWorker();
+            }
+
             _asyncLogging = enabled;
             if (_asyncLogging && !_workerRunning)
             {
                 StartLogWorker();
+            }
+        }
+
+        public static void Flush()
+        {
+            if (!_asyncLogging)
+            {
+                return;
+            }
+
+            var deadline = DateTime.UtcNow.AddSeconds(2);
+            while (DateTime.UtcNow < deadline)
+            {
+                lock (_logQueue)
+                {
+                    if (_logQueue.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                _logQueued.Set();
+                Thread.Sleep(20);
             }
         }
     }

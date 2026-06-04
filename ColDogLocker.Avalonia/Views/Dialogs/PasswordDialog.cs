@@ -16,49 +16,41 @@
 */
 
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
-    public sealed class PasswordDialog : Window
+    public sealed partial class PasswordDialog : Window
     {
-        public PasswordDialog(string title)
+        public PasswordDialog()
         {
-            Title = title;
-            Width = 420;
-            CanResize = false;
-            WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            InitializeComponent();
 
-            var passwordBox = new TextBox
-            {
-                PasswordChar = '*',
-                PlaceholderText = "Password"
-            };
-
-            var okButton = DialogHelpers.Button("OK");
-            okButton.IsEnabled = false;
-            okButton.Click += (_, _) => Close(passwordBox.Text ?? string.Empty);
-
-            passwordBox.PropertyChanged += (_, args) =>
+            OkButton.Click += OkButton_Click;
+            CancelButton.Click += CancelButton_Click;
+            PasswordBox.PropertyChanged += (_, args) =>
             {
                 if (args.Property == TextBox.TextProperty)
                 {
-                    okButton.IsEnabled = !string.IsNullOrWhiteSpace(passwordBox.Text);
+                    OkButton.IsEnabled = !string.IsNullOrWhiteSpace(PasswordBox.Text);
                 }
             };
+        }
 
-            var cancelButton = DialogHelpers.Button("Cancel");
-            cancelButton.Click += (_, _) => Close(null);
+        public PasswordDialog(string title)
+            : this()
+        {
+            Title = title;
+        }
 
-            Content = new StackPanel
-            {
-                Margin = new global::Avalonia.Thickness(18),
-                Spacing = 16,
-                Children =
-                {
-                    DialogHelpers.Field("Password", passwordBox),
-                    DialogHelpers.Buttons(cancelButton, okButton)
-                }
-            };
+        private void OkButton_Click(object? sender, RoutedEventArgs e)
+        {
+            Close(PasswordBox.Text ?? string.Empty);
+        }
+
+        private void CancelButton_Click(object? sender, RoutedEventArgs e)
+        {
+            Close(null);
         }
     }
 }

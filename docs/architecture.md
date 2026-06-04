@@ -8,11 +8,10 @@ ColDog Locker is a .NET 10 solution split into core domain code, shared services
 | --- | --- |
 | `ColDogLocker.Core` | Domain models, validation, path constants, and version helpers. |
 | `ColDogLocker.Services` | Locker operations, SQLite persistence, encryption, settings, logging, file watching, updates, and startup initialization. |
-| `ColDogLocker.Cli` | Main command-line entry point and command routing. |
+| `ColDogLocker.Cli` | Main command-line entry point, command routing, TUI launcher, and Avalonia GUI launcher. |
 | `ColDogLocker.Tui` | Terminal menu interface. |
-| `ColDogLocker.Gui` | Cross-project GUI launcher abstraction used by the CLI. |
-| `ColDogLocker.Gui.WPF` | Windows WPF graphical interface. |
-| `ColDogLocker.Avalonia` | Early Avalonia graphical interface for cross-platform direction. |
+| `ColDogLocker.Avalonia` | Active graphical interface and cross-platform GUI direction. |
+| `ColDogLocker.Gui.WPF` | Legacy Windows WPF graphical interface kept temporarily during the Avalonia migration. |
 | `ColDogLocker.Core.Tests` | Unit tests for core models, validators, and versioning. |
 | `ColDogLocker.Services.Tests` | Unit tests for services, logging, locker filtering, updates, and encryption. |
 
@@ -28,11 +27,9 @@ Services
 +-----------+-----------+-----------+-----------+
 |           |           |           |           |
 Cli         Tui         Gui.WPF     Avalonia
-  |
-Gui launcher abstraction
 ```
 
-The CLI references `Core`, `Services`, `Gui`, and `Tui`. The GUI implementations use `Core` and `Services` directly.
+The CLI references `Core`, `Services`, and `Tui`, and owns the GUI launcher used by `cdlocker gui`. The GUI implementations use `Core` and `Services` directly.
 
 ## Startup Flow
 
@@ -142,4 +139,4 @@ Build metadata is generated through MSBuild properties such as `FileVersion`, `I
 
 - SQLite is already the active locker metadata store.
 - The CLI is the most complete command surface and should be treated as the reference behavior for docs.
-- The WPF GUI is the current Windows GUI; Avalonia is the cross-platform direction but is not yet feature-complete.
+- Avalonia is the active GUI migration target. WPF remains in the solution only as a temporary legacy reference until it is removed.

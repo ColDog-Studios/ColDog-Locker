@@ -35,6 +35,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Models
         [ObservableProperty] private long _size;
 
         public string StatusText => IsLocked ? "Locked" : "Unlocked";
+        public bool CanRemove => !IsLocked;
         public Geometry StatusIconData => IsLocked ? LockedIcon.Value : UnlockedIcon.Value;
         public IBrush StatusBrush => IsLocked ? LockedBrush : UnlockedBrush;
         public string SizeText => FormatBytes(Size);
@@ -42,6 +43,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Models
         partial void OnIsLockedChanged(bool value)
         {
             OnPropertyChanged(nameof(StatusText));
+            OnPropertyChanged(nameof(CanRemove));
             OnPropertyChanged(nameof(StatusIconData));
             OnPropertyChanged(nameof(StatusBrush));
         }

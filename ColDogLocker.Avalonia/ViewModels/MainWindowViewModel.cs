@@ -68,6 +68,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         public bool HasSelection => SelectedLocker != null;
         public bool CanLockSelected => SelectedLocker is { IsLocked: false };
         public bool CanUnlockSelected => SelectedLocker is { IsLocked: true };
+        public bool CanRemoveSelected => SelectedLocker is { IsLocked: false };
         public bool IsListView => !IsGridView;
         public Geometry ToggleViewIconData => IsGridView ? ListIcon : GridIcon;
         public IReadOnlyList<string> SortColumns { get; } = ["Name", "Status", "Modified", "Size", "Location"];
@@ -145,11 +146,17 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             });
         }
 
-        [RelayCommand(CanExecute = nameof(HasSelection))]
+        [RelayCommand(CanExecute = nameof(CanRemoveSelected))]
         private async Task RemoveSelectedAsync()
         {
             if (SelectedLocker == null)
             {
+                return;
+            }
+
+            if (SelectedLocker.IsLocked)
+            {
+                await _dialogs.ShowWarningAsync("Remove Locker", "Unlock the locker before removing it.");
                 return;
             }
 
@@ -232,12 +239,49 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         }
 
         [RelayCommand]
+        private Task TestMessageInfoDialogAsync()
+        {
+            return _dialogs.ShowMessageAsync(
+                "Test Information Message",
+                "This is a MessageDialog information test.");
+        }
+
+        [RelayCommand]
+        private Task TestMessageWarningDialogAsync()
+        {
+            return _dialogs.ShowWarningAsync(
+                "Test Warning Message",
+                "This is a MessageDialog warning test.");
+        }
+
+        [RelayCommand]
+        private Task TestMessageErrorDialogAsync()
+        {
+            return _dialogs.ShowErrorAsync(
+                "Test Error Message",
+                "This is a simple MessageDialog error test without exception details.");
+        }
+
+        [RelayCommand]
         private async Task TestErrorDialogAsync()
         {
-            await _dialogs.ShowErrorAsync(
-                "Test Error Dialog",
-                "This is a test error dialog.",
-                new InvalidOperationException("Test exception"));
+            try
+            {
+                throw new InvalidOperationException("Test exception");
+            }
+            catch (Exception ex)
+            {
+                await _dialogs.ShowErrorAsync(
+                    "Test Error Dialog",
+                    "This is a test error dialog.",
+                    ex);
+            }
+        }
+
+        [RelayCommand]
+        private Task TestProgressDialogAsync()
+        {
+            return _dialogs.ShowProgressTestAsync();
         }
 
         [RelayCommand]
@@ -440,6 +484,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             OnPropertyChanged(nameof(HasSelection));
             OnPropertyChanged(nameof(CanLockSelected));
             OnPropertyChanged(nameof(CanUnlockSelected));
+            OnPropertyChanged(nameof(CanRemoveSelected));
             LockSelectedCommand.NotifyCanExecuteChanged();
             UnlockSelectedCommand.NotifyCanExecuteChanged();
             RemoveSelectedCommand.NotifyCanExecuteChanged();

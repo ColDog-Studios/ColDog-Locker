@@ -55,7 +55,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia
             var services = new ServiceCollection();
             services.AddSingleton<IUpdateService>(_ => GitHubUpdateService.CreateDefault());
             services.AddSingleton<IUpdateWorkflowMessageFormatter, DefaultUpdateWorkflowMessageFormatter>();
-            services.AddSingleton<IUpdateDialogHost, AvaloniaUpdateDialogHost>();
+            services.AddSingleton<AvaloniaUpdateDialogHost>();
+            services.AddSingleton<IUpdateDialogHost>(provider => provider.GetRequiredService<AvaloniaUpdateDialogHost>());
             services.AddSingleton<UpdateWorkflow>();
             services.AddSingleton<IPlatformService, DesktopPlatformService>();
             services.AddSingleton<IAppThemeService, AvaloniaThemeService>();

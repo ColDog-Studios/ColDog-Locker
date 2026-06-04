@@ -18,7 +18,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
-using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
@@ -28,15 +27,18 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
     {
         private readonly IAppThemeService _themeService;
         private readonly IPlatformService _platformService;
+        private readonly AvaloniaUpdateDialogHost _updateDialogHost;
         private readonly UpdateWorkflow _updateWorkflow;
 
         public AvaloniaUserDialogService(
             IAppThemeService themeService,
             IPlatformService platformService,
+            AvaloniaUpdateDialogHost updateDialogHost,
             UpdateWorkflow updateWorkflow)
         {
             _themeService = themeService;
             _platformService = platformService;
+            _updateDialogHost = updateDialogHost;
             _updateWorkflow = updateWorkflow;
         }
 
@@ -47,7 +49,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task ShowErrorAsync(string title, string message, Exception? exception = null)
         {
-            return ShowDialogAsync(new MessageDialog(title, exception == null ? message : $"{message}\n\n{exception}", MessageDialogKind.Error));
+            Window dialog = exception == null
+                ? new MessageDialog(title, message, MessageDialogKind.Error)
+                : new ErrorDialog(title, message, exception, _platformService);
+
+            return ShowDialogAsync(dialog);
         }
 
         public Task ShowWarningAsync(string title, string message)
@@ -86,18 +92,38 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task ShowAboutAsync()
         {
-            return ShowDialogAsync(new AboutDialog(_platformService, _updateWorkflow));
+            return ShowDialogAsync(new AboutDialog(_platformService, _updateWorkflow, _updateDialogHost));
         }
 
         public Task ShowDevInfoAsync()
         {
-            var message =
-                $"Version: {AppInfo.SemanticVersion}\n" +
-                $"Config: {AppPaths.LocalConfig}\n" +
-                $"Base directory: {AppContext.BaseDirectory}\n" +
-                $".NET: {Environment.Version}\n" +
-                $"OS: {Environment.OSVersion}";
-            return ShowDialogAsync(new MessageDialog("Developer Info", message, MessageDialogKind.Information));
+            return ShowDialogAsync(new DevDialog(_platformService));
+        }
+
+        public async Task ShowProgressTestAsync()
+        {
+            var dialog = new ProgressDialog("Test Progress Dialog");
+            dialog.SetIndeterminate("Preparing progress dialog test...");
+
+            var progressTask = RunProgressTestAsync(dialog);
+            await ShowDialogAsync(dialog);
+            await progressTask;
+        }
+
+        private static async Task RunProgressTestAsync(ProgressDialog dialog)
+        {
+            await Task.Delay(650);
+
+            const int total = 5;
+            for (var current = 1; current <= total; current++)
+            {
+                dialog.UpdateProgress(current, total, $"Processing test item {current} of {total}...");
+                await Task.Delay(550);
+            }
+
+            dialog.Complete("Progress dialog test complete.");
+            await Task.Delay(900);
+            dialog.Close();
         }
 
         private static Window Owner

@@ -636,6 +636,14 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Logging
             Assert.Null(exception);
         }
 
+        [Fact]
+        public void Logger_Flush_ShouldNotThrow()
+        {
+            // Act & Assert
+            var exception = Record.Exception(Logger.Flush);
+            Assert.Null(exception);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]

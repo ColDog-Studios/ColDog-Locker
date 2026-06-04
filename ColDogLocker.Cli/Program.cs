@@ -19,7 +19,6 @@ using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Logging;
-using ColDogStudios.ColDogLocker.Gui;
 using ColDogStudios.ColDogLocker.Services.Startup;
 using ColDogStudios.ColDogLocker.Tui;
 
@@ -95,27 +94,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static int LaunchGui()
         {
-            try
-            {
-                var launcher = GuiLauncher.CreateLauncher();
-                return launcher.Launch(Array.Empty<string>());
-            }
-            catch (PlatformNotSupportedException ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Error.WriteLine($"GUI not available: {ex.Message}");
-                Console.ResetColor();
-                Logger.Log(LogLevel.Warning, $"GUI not available: {ex.Message}");
-                return 1;
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine($"Error launching GUI: {ex.Message}");
-                Console.ResetColor();
-                Logger.Log(LogLevel.Error, $"Error launching GUI {ex}");
-                return 1;
-            }
+            return GuiLauncher.Launch(Array.Empty<string>());
         }
 
         private static int LaunchTui()

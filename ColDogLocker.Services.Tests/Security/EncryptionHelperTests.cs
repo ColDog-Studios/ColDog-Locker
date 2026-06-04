@@ -16,6 +16,7 @@
 */
 
 using ColDogStudios.ColDogLocker.Services.Security;
+using System.Security.Cryptography;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 {
@@ -248,6 +249,44 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         #region File Operation Exception Tests
 
         [Fact]
+        public void EncryptFile_ThenDecryptFile_ShouldRestoreOriginalContent()
+        {
+            // Arrange
+            using var directory = TestDirectory.Create();
+            var filePath = Path.Combine(directory.Path, "secret.bin");
+            var originalBytes = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
+            File.WriteAllBytes(filePath, originalBytes);
+
+            // Act
+            EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
+            var encryptedBytes = File.ReadAllBytes(filePath);
+            EncryptionHelper.DecryptFile(filePath, "CorrectHorseBatteryStaple123!");
+
+            // Assert
+            Assert.NotEqual(originalBytes, encryptedBytes);
+            Assert.Equal(originalBytes, File.ReadAllBytes(filePath));
+        }
+
+        [Fact]
+        public void DecryptFile_WithTamperedCiphertext_ShouldThrowAndPreserveEncryptedFile()
+        {
+            // Arrange
+            using var directory = TestDirectory.Create();
+            var filePath = Path.Combine(directory.Path, "secret.txt");
+            File.WriteAllText(filePath, "sensitive content");
+            EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
+
+            var tamperedBytes = File.ReadAllBytes(filePath);
+            tamperedBytes[^1] ^= 0x01;
+            File.WriteAllBytes(filePath, tamperedBytes);
+
+            // Act & Assert
+            Assert.ThrowsAny<CryptographicException>(() =>
+                EncryptionHelper.DecryptFile(filePath, "CorrectHorseBatteryStaple123!"));
+            Assert.Equal(tamperedBytes, File.ReadAllBytes(filePath));
+        }
+
+        [Fact]
         public void EncryptFile_WithNullFilePath_ShouldThrowArgumentException()
         {
             // Act & Assert
@@ -344,5 +383,30 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         }
 
         #endregion
+
+        private sealed class TestDirectory : IDisposable
+        {
+            private TestDirectory(string path)
+            {
+                Path = path;
+            }
+
+            public string Path { get; }
+
+            public static TestDirectory Create()
+            {
+                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-encryption-tests-{Guid.NewGuid():N}");
+                Directory.CreateDirectory(path);
+                return new TestDirectory(path);
+            }
+
+            public void Dispose()
+            {
+                if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, recursive: true);
+                }
+            }
+        }
     }
 }

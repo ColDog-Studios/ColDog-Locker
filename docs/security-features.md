@@ -8,41 +8,66 @@ This document describes the current implementation, not an aspirational design.
 
 | Area | Current Implementation |
 | --- | --- |
-| File encryption | .NET AES with key and IV derived per file |
-| Key derivation | PBKDF2-HMAC-SHA256, 10,000 iterations |
-| Per-file salt | 16 random bytes stored at the start of each encrypted file |
+| File encryption | Versioned AES-GCM file format with per-chunk authentication tags |
+| Key derivation | PBKDF2-HMAC-SHA256, 210,000 iterations |
+| Per-file salt | 16 random bytes stored in the encrypted file header |
 | Password storage | BCrypt hash, cost factor 14 |
 | Locker metadata | Per-user SQLite database |
 | Settings | Per-user JSON file |
 | Path protection | Blocks drive roots, system paths, app data paths, and top-level user folders |
+| Operation safety | Temporary-file replacement and best-effort rollback for interrupted lock/unlock operations |
 
 ## File Encryption
 
-When a locker is locked, ColDog Locker recursively encrypts each file in the locker directory.
+When a locker is locked, ColDog Locker recursively encrypts each file in the locker directory using a versioned `CDLENC` file format.
 
 For each file:
 
 1. Generate a random 16-byte salt.
-2. Use PBKDF2-HMAC-SHA256 with 10,000 iterations to derive 48 bytes from the locker password and salt.
-3. Use the first 32 derived bytes as the AES key.
-4. Use the remaining 16 derived bytes as the AES IV.
-5. Write the salt at the beginning of the encrypted file.
-6. Write encrypted content to a temporary `.enc` file.
-7. Delete the plaintext file and move the encrypted file into its place.
+2. Generate a random nonce prefix.
+3. Use PBKDF2-HMAC-SHA256 with 210,000 iterations to derive a 256-bit AES key from the locker password and salt.
+4. Write a header containing the format marker, salt, nonce prefix, original file length, and key derivation settings.
+5. Encrypt file content in chunks with AES-GCM.
+6. Store an authentication tag for each encrypted chunk.
+7. Write encrypted output to a temporary file.
+8. Replace the original file only after encryption completes.
 
-When unlocking, ColDog Locker reads the first 16 bytes as the salt, derives the same key and IV, decrypts to a temporary `.dec` file, deletes the encrypted file, and moves the decrypted file into place.
+When unlocking, ColDog Locker reads the encrypted file header, derives the same key, verifies each AES-GCM authentication tag, decrypts to a temporary file, and replaces the encrypted file only after the full file has been authenticated and decrypted.
 
 ## Important Crypto Caveats
 
-The current implementation does not store a separate authentication tag or MAC for each encrypted file. That means the encrypted file format is focused on confidentiality, not strong tamper detection.
+The current file format provides authenticated encryption for file contents.
 
 Practical effects:
 
-- A wrong password will usually fail during decryption, but the file format does not provide explicit authenticated integrity.
-- A modified encrypted file may not always be detected as a deliberate tamper event before decryption is attempted.
+- A wrong password fails during authenticated decryption.
+- Modified encrypted chunks fail authentication before plaintext replacement.
+- Tamper detection is per encrypted file, not a complete locker-level manifest.
 - Backups matter. Keep copies of important data outside the locker workflow.
 
-Future improvements should consider authenticated encryption, such as AES-GCM, or an encrypt-then-MAC format.
+Future improvements should consider a locker-level state marker or manifest that cross-checks the database, directory state, and expected encrypted files.
+
+## Operation Safety
+
+Lock and unlock operations are designed to avoid updating locker metadata until the filesystem operation completes.
+
+During lock:
+
+1. The existing locker path and locker name are validated.
+2. Files are encrypted in place using temporary-file replacement.
+3. The locker directory is renamed to its locked form.
+4. Hidden/system attributes are applied where supported.
+5. SQLite metadata is updated last.
+
+During unlock:
+
+1. The existing locker path and locker name are validated.
+2. Files are authenticated and decrypted in place using temporary-file replacement.
+3. Hidden/system attributes are removed where supported.
+4. The locker directory is renamed to its unlocked form.
+5. SQLite metadata is updated last.
+
+If a lock or unlock operation fails partway through, ColDog Locker attempts a best-effort rollback and logs rollback failures. This reduces inconsistent states but does not replace the need for backups.
 
 ## Password Storage
 
@@ -71,9 +96,11 @@ Passwords must satisfy all of these rules:
 - At least one special character.
 - Must not contain blocked common words such as `password`, `admin`, `locker`, `secret`, `123456`, `qwerty`, or similar entries.
 
-## Path Protection
+## Path and Metadata Protection
 
-ColDog Locker validates locker paths when lockers are created and again before locking. This prevents many accidental or malicious attempts to encrypt important system locations.
+ColDog Locker validates locker paths when lockers are created, updated, locked, unlocked, and deleted. This prevents many accidental or malicious attempts to encrypt or delete important system locations.
+
+Locker names are also validated centrally by the service layer. A locker name must be a valid file name, not an absolute path, relative path, `.` entry, or `..` entry.
 
 Blocked exact roots include:
 
@@ -99,6 +126,8 @@ Documents\ColDog Locker\MyLocker
 Documents\SecureFiles
 D:\Private\Taxes
 ```
+
+Recursive directory deletion is guarded by the same service-layer validation. ColDog Locker refuses to delete locked locker directories and checks that the target directory name matches the locker metadata before recursive deletion.
 
 ## Metadata and Settings Security
 
@@ -127,6 +156,8 @@ Settings are stored as JSON at:
 
 Settings writes use a temporary-file replacement flow. If a malformed settings file is detected, ColDog Locker backs it up and reinitializes defaults.
 
+Logger writes can run asynchronously. When asynchronous logging is disabled or the process exits, ColDog Locker attempts to flush queued log entries so recent security-relevant events are not silently dropped.
+
 ## What ColDog Locker Protects Against
 
 ColDog Locker is intended to help with:
@@ -135,6 +166,8 @@ ColDog Locker is intended to help with:
 - Exposure from someone browsing the filesystem while lockers are locked.
 - Password hash disclosure, because plaintext passwords are not stored.
 - Accidental locking of high-risk system or profile locations.
+- Tampering with encrypted file contents while lockers are locked.
+- Some interrupted lock/unlock failure modes through temporary files and best-effort rollback.
 
 ## What ColDog Locker Does Not Protect Against
 
@@ -145,7 +178,7 @@ ColDog Locker does not protect against:
 - A compromised operating system.
 - Physical access while a locker is unlocked.
 - Memory inspection while passwords or derived keys are in use.
-- File tampering with authenticated integrity guarantees.
+- Complete locker-level state tampering when the database and filesystem are both manipulated.
 - Data loss from interrupted operations, hardware failure, or missing backups.
 
 ## Recommended User Practices

@@ -1,0 +1,147 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="650"
+        d:DesignHeight="700"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.DevDialog"
+        Title="Developer Information"
+        Width="650"
+        Height="700"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="Border.info-section">
+            <Setter Property="Padding" Value="15" />
+            <Setter Property="Margin" Value="0,0,0,15" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+        <Style Selector="TextBlock.info-label">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Opacity" Value="0.78" />
+            <Setter Property="Margin" Value="0,0,10,8" />
+        </Style>
+        <Style Selector="TextBlock.info-value">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="20">
+            <StackPanel>
+                <Border Classes="info-section">
+                    <StackPanel>
+                        <TextBlock Classes="section-title" Text="Build Information" />
+                        <Grid ColumnDefinitions="150,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="info-label" Text="Version:" />
+                            <TextBlock x:Name="VersionText" Grid.Row="0" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="info-label" Text="Build Number:" />
+                            <TextBlock x:Name="BuildNumberText" Grid.Row="1" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="info-label" Text="Build Date:" />
+                            <TextBlock x:Name="BuildDateText" Grid.Row="2" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="info-label" Text="Build Time:" />
+                            <TextBlock x:Name="BuildTimeText" Grid.Row="3" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="4" Grid.Column="0" Classes="info-label" Text="Full Version:" />
+                            <TextBlock x:Name="FullVersionText" Grid.Row="4" Grid.Column="1" Classes="info-value" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="info-section">
+                    <StackPanel>
+                        <TextBlock Classes="section-title" Text="System Information" />
+                        <Grid ColumnDefinitions="150,*"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="info-label" Text="OS:" />
+                            <TextBlock x:Name="OsText" Grid.Row="0" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="info-label" Text=".NET Version:" />
+                            <TextBlock x:Name="RuntimeText" Grid.Row="1" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="info-label" Text="CPU Cores:" />
+                            <TextBlock x:Name="ProcessorCountText" Grid.Row="2" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="3" Grid.Column="0" Classes="info-label" Text="Managed Memory:" />
+                            <TextBlock x:Name="ManagedMemoryText" Grid.Row="3" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="4" Grid.Column="0" Classes="info-label" Text="Working Set:" />
+                            <TextBlock x:Name="WorkingSetText" Grid.Row="4" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="5" Grid.Column="0" Classes="info-label" Text="Architecture:" />
+                            <TextBlock x:Name="ArchitectureText" Grid.Row="5" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="6" Grid.Column="0" Classes="info-label" Text="Install Path:" />
+                            <TextBlock x:Name="InstallPathText" Grid.Row="6" Grid.Column="1" Classes="info-value" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="info-section">
+                    <StackPanel>
+                        <TextBlock Classes="section-title" Text="Application Paths" />
+                        <Grid ColumnDefinitions="150,*"
+                              RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Classes="info-label" Text="Config Directory:" />
+                            <TextBlock x:Name="ConfigDirText" Grid.Row="0" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Classes="info-label" Text="Database Path:" />
+                            <TextBlock x:Name="DatabasePathText" Grid.Row="1" Grid.Column="1" Classes="info-value" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Classes="info-label" Text="Log File:" />
+                            <TextBlock x:Name="LogFileText" Grid.Row="2" Grid.Column="1" Classes="info-value" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="1"
+                BorderThickness="0,1,0,0"
+                Padding="20">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="CopyStatusText"
+                           Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Opacity="0.75" />
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Spacing="8">
+                    <Button x:Name="CopyButton"
+                            Classes="accent-button"
+                            Content="Copy to Clipboard"
+                            MinWidth="92"
+                            Padding="14,6"
+                            HorizontalContentAlignment="Center" />
+                    <Button x:Name="CloseButton"
+                            Classes="accent-button"
+                            Content="Close"
+                            MinWidth="92"
+                            Padding="14,6"
+                            HorizontalContentAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

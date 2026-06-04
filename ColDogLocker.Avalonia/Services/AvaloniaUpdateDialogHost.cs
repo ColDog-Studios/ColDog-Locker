@@ -24,6 +24,21 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
     public sealed class AvaloniaUpdateDialogHost : IUpdateDialogHost
     {
+        private readonly AsyncLocal<Window?> _ownerOverride = new();
+        private readonly IPlatformService _platformService;
+
+        public AvaloniaUpdateDialogHost(IPlatformService platformService)
+        {
+            _platformService = platformService;
+        }
+
+        public IDisposable UseOwner(Window owner)
+        {
+            var previousOwner = _ownerOverride.Value;
+            _ownerOverride.Value = owner;
+            return new OwnerScope(this, previousOwner);
+        }
+
         public Task ShowMessageAsync(UpdateDialogMessage message, CancellationToken cancellationToken = default)
         {
             return ShowDialogAsync(new MessageDialog(message.Title, message.Message, MessageDialogKind.Information));
@@ -36,16 +51,22 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task ShowErrorAsync(UpdateDialogError error, CancellationToken cancellationToken = default)
         {
-            var message = error.Exception == null
-                ? error.Message
-                : $"{error.Message}\n\n{error.Exception}";
-            return ShowDialogAsync(new MessageDialog(error.Title, message, MessageDialogKind.Error));
+            Window dialog = error.Exception == null
+                ? new MessageDialog(error.Title, error.Message, MessageDialogKind.Error)
+                : new ErrorDialog(error.Title, error.Message, error.Exception, _platformService);
+
+            return ShowDialogAsync(dialog);
         }
 
-        private static Window Owner
+        private Window Owner
         {
             get
             {
+                if (_ownerOverride.Value is { } owner)
+                {
+                    return owner;
+                }
+
                 if (global::Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
                     desktop.MainWindow is { } mainWindow)
                 {
@@ -56,14 +77,38 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             }
         }
 
-        private static async Task ShowDialogAsync(Window dialog)
+        private async Task ShowDialogAsync(Window dialog)
         {
             await dialog.ShowDialog<object?>(Owner);
         }
 
-        private static Task<T?> ShowDialogAsync<T>(Window dialog)
+        private Task<T?> ShowDialogAsync<T>(Window dialog)
         {
             return dialog.ShowDialog<T?>(Owner);
+        }
+
+        private sealed class OwnerScope : IDisposable
+        {
+            private readonly AvaloniaUpdateDialogHost _host;
+            private readonly Window? _previousOwner;
+            private bool _disposed;
+
+            public OwnerScope(AvaloniaUpdateDialogHost host, Window? previousOwner)
+            {
+                _host = host;
+                _previousOwner = previousOwner;
+            }
+
+            public void Dispose()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _host._ownerOverride.Value = _previousOwner;
+                _disposed = true;
+            }
         }
     }
 }

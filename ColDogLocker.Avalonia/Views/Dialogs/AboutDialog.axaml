@@ -1,0 +1,178 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="540"
+        d:DesignHeight="660"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.AboutDialog"
+        Title="About ColDog Locker"
+        Width="540"
+        Height="660"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="Button.resource-button">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="MinWidth" Value="92" />
+            <Setter Property="Padding" Value="14,6" />
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.info-label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.info-value">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Opacity" Value="0.78" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Padding="30" BorderThickness="0,0,0,1">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <Image Source="/Assets/cdlIcon.ico"
+                               Width="112"
+                               Height="112" />
+                        <TextBlock Text="ColDog Locker"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock x:Name="VersionText"
+                                   FontSize="14"
+                                   Opacity="0.75"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Margin="30,20" Spacing="18">
+                    <TextBlock Text="ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers."
+                               FontSize="13"
+                               Opacity="0.78"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+
+                    <Border Padding="15"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Copyright (C) 2026 ColDog Studios"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="Licensed under the GNU General Public License v3.0"
+                                       FontSize="12"
+                                       Opacity="0.75"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="section-title" Text="Resources" />
+                        <Button x:Name="DocumentationButton"
+                                Classes="accent-button resource-button"
+                                Content="Documentation" />
+                        <Button x:Name="GitHubButton"
+                                Classes="accent-button resource-button"
+                                Content="GitHub Repository" />
+                        <Button x:Name="ReportIssueButton"
+                                Classes="accent-button resource-button"
+                                Content="Report an Issue" />
+                        <Button x:Name="ContactSupportButton"
+                                Classes="accent-button resource-button"
+                                Content="Contact Support" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="section-title" Text="Third-Party Libraries" />
+                        <TextBlock FontSize="12"
+                                   Opacity="0.78"
+                                   TextWrapping="Wrap"
+                                   Text="Avalonia - MIT License&#x0a;Cross-platform UI framework&#x0a;&#x0a;BCrypt.Net-Next - MIT License&#x0a;Password hashing and verification&#x0a;&#x0a;CommunityToolkit.Mvvm - MIT License&#x0a;MVVM helpers and source generators&#x0a;&#x0a;Microsoft.Data.Sqlite - MIT License&#x0a;Lightweight database engine&#x0a;&#x0a;Microsoft.Extensions.DependencyInjection - MIT License&#x0a;Dependency injection container&#x0a;&#x0a;Newtonsoft.Json - MIT License&#x0a;JSON serialization and deserialization" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="section-title" Text="System Information" />
+                        <Grid ColumnDefinitions="130,*"
+                              RowDefinitions="Auto,Auto,Auto"
+                              ColumnSpacing="10"
+                              RowSpacing="8">
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Classes="info-label"
+                                       Text="Operating System:" />
+                            <TextBlock x:Name="OperatingSystemText"
+                                       Grid.Row="0"
+                                       Grid.Column="1"
+                                       Classes="info-value"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Classes="info-label"
+                                       Text=".NET Runtime:" />
+                            <TextBlock x:Name="RuntimeText"
+                                       Grid.Row="1"
+                                       Grid.Column="1"
+                                       Classes="info-value"
+                                       TextTrimming="CharacterEllipsis" />
+
+                            <TextBlock Grid.Row="2"
+                                       Grid.Column="0"
+                                       Classes="info-label"
+                                       Text="Installation Path:" />
+                            <TextBlock x:Name="InstallationPathText"
+                                       Grid.Row="2"
+                                       Grid.Column="1"
+                                       Classes="info-value"
+                                       TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="1" Padding="18">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+                <Button x:Name="CheckForUpdatesButton"
+                        Classes="accent-button"
+                        Content="Check for Updates"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center" />
+                <Button x:Name="CloseButton"
+                        Classes="accent-button"
+                        Content="Close"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

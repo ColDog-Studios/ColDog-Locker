@@ -1,0 +1,100 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="560"
+        d:DesignHeight="350"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.NewLockerDialog"
+        Title="New Locker"
+        Width="560"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="18" Spacing="14">
+        <StackPanel Spacing="4">
+            <TextBlock Text="Name"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <TextBox x:Name="NameBox" PlaceholderText="Locker name" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Location"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox x:Name="LocationBox"
+                         Grid.Column="0"
+                         PlaceholderText="Folder path" />
+                <Button x:Name="BrowseButton"
+                        Grid.Column="1"
+                        Classes="accent-button"
+                        Content="Browse"
+                        MinWidth="92"
+                        Padding="14,6"
+                        HorizontalContentAlignment="Center" />
+            </Grid>
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Password"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <TextBox x:Name="PasswordBox"
+                     PasswordChar="*"
+                     PlaceholderText="Password" />
+            <StackPanel x:Name="PasswordRequirementsPanel"
+                        Margin="0,4,0,0"
+                        Spacing="2" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Confirm Password"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <TextBox x:Name="ConfirmBox"
+                     PasswordChar="*"
+                     PlaceholderText="Confirm password" />
+        </StackPanel>
+
+        <TextBlock x:Name="ErrorText"
+                   Foreground="Firebrick"
+                   TextWrapping="Wrap" />
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button x:Name="CancelButton"
+                    Classes="accent-button"
+                    Content="Cancel"
+                    MinWidth="92"
+                    Padding="14,6"
+                    HorizontalContentAlignment="Center" />
+            <Button x:Name="CreateButton"
+                    Classes="accent-button"
+                    Content="Create"
+                    IsEnabled="False"
+                    MinWidth="92"
+                    Padding="14,6"
+                    HorizontalContentAlignment="Center" />
+        </StackPanel>
+    </StackPanel>
+</Window>

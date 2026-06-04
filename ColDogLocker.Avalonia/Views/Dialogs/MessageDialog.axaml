@@ -1,0 +1,67 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="500"
+        d:DesignHeight="180"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.MessageDialog"
+        Title="Message"
+        Width="500"
+        MinHeight="180"
+        MaxHeight="480"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="18" Spacing="18">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <PathIcon x:Name="DialogIcon"
+                      Width="28"
+                      Height="28"
+                      VerticalAlignment="Top" />
+
+            <ScrollViewer Grid.Column="1"
+                          MaxHeight="360"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="MessageText"
+                           MaxWidth="560"
+                           TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Grid>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button x:Name="CancelButton"
+                    Classes="accent-button"
+                    Content="No"
+                    MinWidth="92"
+                    Padding="14,6"
+                    HorizontalContentAlignment="Center" />
+            <Button x:Name="OkButton"
+                    Classes="accent-button"
+                    Content="OK"
+                    MinWidth="92"
+                    Padding="14,6"
+                    HorizontalContentAlignment="Center" />
+        </StackPanel>
+    </StackPanel>
+</Window>

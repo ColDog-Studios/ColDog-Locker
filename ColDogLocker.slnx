@@ -5,7 +5,6 @@
     <Project Path="ColDogLocker.Core.Tests/ColDogLocker.Core.Tests.csproj" />
     <Project Path="ColDogLocker.Core/ColDogLocker.Core.csproj" />
     <Project Path="ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj" Id="16cced71-e057-4a5e-9649-b580f104945c" />
-    <Project Path="ColDogLocker.Gui/ColDogLocker.Gui.csproj" />
     <Project Path="ColDogLocker.Services.Tests\ColDogLocker.Services.Tests.csproj" />
     <Project Path="ColDogLocker.Services\ColDogLocker.Services.csproj" />
     <Project Path="ColDogLocker.Tui/ColDogLocker.Tui.csproj" />
