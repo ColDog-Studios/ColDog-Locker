@@ -13,8 +13,8 @@ ColDogLocker.slnx
 The shared build configuration is in `Directory.Build.props`:
 
 - Target framework: `.NET 10`
-- Runtime identifiers: `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-musl-x64`, `linux-musl-arm64`
-- Version source: `0.5.0-alpha`
+- Runtime identifiers: `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-musl-x64`, `linux-musl-arm64`, `osx-x64`, `osx-arm64`
+- Version source: the `Version` property in `Directory.Build.props`
 
 The CLI project is configured so RID-based publishes are:
 
@@ -39,29 +39,45 @@ The `Application` and `Infrastructure` DLLs from older planning docs are not par
 
 ### Windows
 
-Windows should be the first packaged release target because it is the best-tested desktop target.
+Windows local packaging is implemented through WiX MSI builds for `win-x64` and `win-arm64`.
 
-Recommended package:
+Implemented package behavior:
 
-- MSI installer for `win-x64`.
-- Optional `win-arm64` once tested.
 - Install the CLI and Avalonia GUI together.
-- Add Start Menu entry for the GUI.
-- Optionally add install directory to `PATH` for `cdlocker`.
+- Install per-machine only under `Program Files`.
+- Add the install directory to the machine `PATH` for `cdlocker`.
+- Add a Start Menu entry for the GUI.
+- Offer the desktop shortcut as an optional per-user MSI feature, not through `Public\Desktop`.
+- Do not split CLI and GUI into separate installers.
 
 ### Linux
 
-Linux packaging is useful for CLI/TUI first, with Avalonia GUI packaging enabled once platform testing is complete.
+Linux local packaging is implemented for `linux-x64` and `linux-arm64`.
 
-Possible packages:
+Implemented packages:
 
 - `.deb` for Debian/Ubuntu-family distributions.
 - `.rpm` for Fedora/RHEL/openSUSE-family distributions.
-- Tarball for generic CLI/TUI use if installers are not ready.
+- The CLI and Avalonia GUI are installed together under `/opt/coldog-locker`.
+- `/usr/bin/cdlocker` links to `/opt/coldog-locker/cdlocker`.
+- `/usr/share/applications/coldog-locker.desktop` launches the Avalonia GUI from desktop menus.
+- `/usr/share/applications/cdlocker.desktop` opens the terminal interface with `cdlocker tui`.
+- `/usr/share/icons/hicolor/256x256/apps/coldog-locker.png` provides the desktop menu icon.
+- Do not split CLI and GUI into separate packages.
 
 ### macOS
 
-macOS GUI launching is not implemented. Treat macOS as future work unless a CLI/TUI-only package is intentionally produced and tested.
+macOS local packaging is implemented as an experimental unsigned `.pkg` for `osx-x64` and `osx-arm64`.
+
+Experimental package behavior:
+
+- Install the CLI and Avalonia GUI together.
+- Install the GUI app bundle under `/Applications/ColDog Locker.app`.
+- Install the CLI command as `/usr/local/bin/cdlocker`.
+- Do not split CLI and GUI into separate packages.
+- Do not treat macOS packages as supported release artifacts until macOS validation, signing, and notarization decisions are revisited.
+
+The current CLI still reports macOS GUI launching as unsupported. Launch the experimental GUI directly from `/Applications/ColDog Locker.app` when testing the `.pkg`.
 
 ## Publish Commands
 
@@ -71,6 +87,17 @@ CLI examples:
 dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r win-x64
 dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -r linux-x64
 ```
+
+Installer packages are built through:
+
+```bash
+dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=x64
+dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=x64 -p:Configuration=Release
+dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=x64 -p:Configuration=Release
+dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=x64 -p:Configuration=Release
+```
+
+See [Local Packaging](packaging.md) for prerequisites, exact commands, and output paths.
 
 WPF GUI:
 
@@ -86,13 +113,13 @@ dotnet publish ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj -c Release -r 
 
 ## Installer Layout
 
-Suggested Windows install directory:
+Windows install directory:
 
 ```text
-C:\Program Files\ColDog Studios\ColDog Locker\
+C:\Program Files\ColDogStudios\ColDogLocker\
 ```
 
-Suggested contents:
+Windows contents:
 
 ```text
 ColDog Locker\
@@ -106,7 +133,7 @@ In the recommended package, `ColDogLocker.exe` is the Avalonia GUI. If the legac
 
 ## User Data
 
-User data is per-user and must remain outside Program Files:
+User data is per-user and remains outside Program Files and `/opt`:
 
 ```text
 %LOCALAPPDATA%\ColDog Studios\ColDog Locker\
@@ -115,7 +142,9 @@ User data is per-user and must remain outside Program Files:
 └── logs\
 ```
 
-Uninstallers should preserve this data by default. If data removal is offered, it should be an explicit unchecked option.
+The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `1`. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal leaves per-user app data in place, and Debian purge removes reserved system config/data directories if future versions add them.
+
+The experimental macOS `.pkg` does not provide a native uninstall checkbox. Remove `/Applications/ColDog Locker.app` and `/usr/local/bin/cdlocker` manually during testing.
 
 ## Updates
 
@@ -135,10 +164,12 @@ Release assets should use names that the update selector can match by OS, archit
 Suggested names:
 
 ```text
-ColDogLocker-0.5.0-alpha-win-x64.msi
-ColDogLocker-0.5.0-alpha-win-arm64.msi
-ColDogLocker-0.5.0-alpha-linux-x64.deb
-ColDogLocker-0.5.0-alpha-linux-x64.rpm
+ColDogLocker-<version>-win-x64.msi
+ColDogLocker-<version>-win-arm64.msi
+ColDogLocker-<version>-linux-x64.deb
+ColDogLocker-<version>-linux-x64.rpm
+ColDogLocker-<version>-macos-x64.pkg
+ColDogLocker-<version>-macos-arm64.pkg
 ```
 
 ## Code Signing
@@ -147,6 +178,7 @@ Current expected state:
 
 - No code signing.
 - SmartScreen warnings may appear on Windows.
+- Gatekeeper warnings should be expected for unsigned, unnotarized experimental macOS packages.
 - Antivirus false positives are possible because the app encrypts files.
 
 Future stable releases should consider:
@@ -163,20 +195,26 @@ Future stable releases should consider:
 dotnet test
 ```
 
+CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E testing is not implemented yet.
+
 2. Publish target artifacts.
 3. Test on a clean machine or VM for each target.
 4. Confirm `cdlocker --version`.
 5. Confirm `cdlocker new`, `lock`, `unlock`, `verify`, and `remove`.
 6. Confirm Avalonia GUI workflows on Windows.
-7. Confirm TUI workflows on non-GUI environments.
-8. Confirm update asset naming and SHA-256 digest availability.
-9. Create a GitHub Release with clear stable/unstable intent.
-10. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
+7. Confirm Linux desktop menu entries for `ColDogLocker` and `cdlocker`.
+8. Confirm TUI workflows on non-GUI environments.
+9. Validate RPM layout locally on Fedora:
+
+```bash
+scripts/test-rpm-package.sh
+```
+
+10. Confirm update asset naming and SHA-256 digest availability.
+11. Create a GitHub Release with clear stable/unstable intent.
+12. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
 
 ## Open Distribution Decisions
 
-- Whether CLI and GUI should be installed as one package or split packages.
-- Whether WPF should be packaged at all while it remains as a temporary legacy project.
-- Whether Linux should start as CLI/TUI-only until Avalonia receives enough platform testing.
-- Whether ARM64 packages are supported now or only published after hardware/VM testing.
-- Whether macOS is intentionally unsupported for the current release line.
+- Whether macOS should remain experimental/unsigned or be promoted later with Developer ID signing and notarization.
+- Whether Linux GUI package dependencies should be declared explicitly once clean distro VM testing identifies the minimum native library set.

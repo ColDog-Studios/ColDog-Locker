@@ -1,0 +1,96 @@
+<Project DefaultTargets="Build" ToolsVersion="Current">
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <PackageArchitecture Condition="'$(PackageArchitecture)' == ''">x64</PackageArchitecture>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'x64'">osx-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'arm64'">osx-arm64</RuntimeIdentifier>
+
+    <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
+    <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
+    <PublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)'))</PublishRoot>
+    <CliPublishRoot>$([MSBuild]::NormalizeDirectory('$(PublishRoot)', 'cli'))</CliPublishRoot>
+    <GuiPublishRoot>$([MSBuild]::NormalizeDirectory('$(PublishRoot)', 'gui'))</GuiPublishRoot>
+    <PackageRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'work', 'macos-pkg-$(PackageArchitecture)', 'root'))</PackageRoot>
+    <AppBundleRoot>$([MSBuild]::NormalizeDirectory('$(PackageRoot)', 'Applications', 'ColDog Locker.app'))</AppBundleRoot>
+    <AppContentsRoot>$([MSBuild]::NormalizeDirectory('$(AppBundleRoot)', 'Contents'))</AppContentsRoot>
+    <AppMacOsRoot>$([MSBuild]::NormalizeDirectory('$(AppContentsRoot)', 'MacOS'))</AppMacOsRoot>
+    <AppResourcesRoot>$([MSBuild]::NormalizeDirectory('$(AppContentsRoot)', 'Resources'))</AppResourcesRoot>
+    <PackageIdentifier>com.coldogstudios.coldog-locker</PackageIdentifier>
+    <BundleIdentifier>com.coldogstudios.coldog-locker</BundleIdentifier>
+    <BundleExecutable>ColDogLocker</BundleExecutable>
+    <PackageVersionBase>$(Version.Split('-')[0])</PackageVersionBase>
+    <PackageFileBase>ColDogLocker-$(Version)-macos-$(PackageArchitecture)</PackageFileBase>
+    <PackageOutput>$(DistRoot)$(PackageFileBase).pkg</PackageOutput>
+    <InfoPlistXmlDeclaration>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</InfoPlistXmlDeclaration>
+  </PropertyGroup>
+
+  <Target Name="ValidatePackageProperties">
+    <Error Condition="'$(RuntimeIdentifier)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+  </Target>
+
+  <!-- Experimental unsigned macOS package: CLI and Avalonia GUI ship together. -->
+  <Target Name="PublishInstallerApps" DependsOnTargets="ValidatePackageProperties">
+    <RemoveDir Directories="$(CliPublishRoot);$(GuiPublishRoot)" />
+    <MakeDir Directories="$(CliPublishRoot);$(GuiPublishRoot);$(DistRoot)" />
+
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishDir="$(CliPublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(GuiPublishRoot)"' />
+  </Target>
+
+  <Target Name="StageMacPackage" DependsOnTargets="PublishInstallerApps">
+    <RemoveDir Directories="$(PackageRoot)" />
+    <MakeDir Directories="$(AppMacOsRoot);$(AppResourcesRoot);$(PackageRoot)usr/local/bin" />
+
+    <ItemGroup>
+      <GuiPublishedFiles Include="$(GuiPublishRoot)**/*" />
+      <InfoPlistLines Include="&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;" />
+      <InfoPlistLines Include="&lt;plist version=&quot;1.0&quot;&gt;" />
+      <InfoPlistLines Include="&lt;dict&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleDevelopmentRegion&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;en&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleDisplayName&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;ColDog Locker&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleExecutable&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;$(BundleExecutable)&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleIdentifier&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;$(BundleIdentifier)&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleInfoDictionaryVersion&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;6.0&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleName&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;ColDog Locker&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundlePackageType&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;APPL&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleShortVersionString&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;$(PackageVersionBase)&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;CFBundleVersion&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;$(FileVersion)&lt;/string&gt;" />
+      <InfoPlistLines Include="  &lt;key&gt;LSMinimumSystemVersion&lt;/key&gt;" />
+      <InfoPlistLines Include="  &lt;string&gt;12.0&lt;/string&gt;" />
+      <InfoPlistLines Include="&lt;/dict&gt;" />
+      <InfoPlistLines Include="&lt;/plist&gt;" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(GuiPublishedFiles)"
+      DestinationFiles="@(GuiPublishedFiles->'$(AppMacOsRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="$(CliPublishRoot)cdlocker" DestinationFolder="$(PackageRoot)usr/local/bin" />
+    <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(AppResourcesRoot)" />
+    <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(AppResourcesRoot)" />
+    <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(AppResourcesRoot)" />
+    <WriteLinesToFile File="$(AppContentsRoot)Info.plist" Lines="$(InfoPlistXmlDeclaration);@(InfoPlistLines)" Overwrite="true" />
+    <WriteLinesToFile File="$(AppContentsRoot)PkgInfo" Lines="APPL????" Overwrite="true" />
+    <Exec Command='chmod 755 "$(PackageRoot)usr/local/bin/cdlocker" "$(AppMacOsRoot)$(BundleExecutable)"' />
+  </Target>
+
+  <Target Name="BuildPkg" DependsOnTargets="StageMacPackage">
+    <Exec Command='command -v pkgbuild' />
+    <Exec Command='rm -f "$(PackageOutput)"' />
+    <Exec Command='pkgbuild --root "$(PackageRoot)" --identifier "$(PackageIdentifier)" --version "$(PackageVersionBase)" --install-location "/" --ownership recommended "$(PackageOutput)"' />
+    <Message Importance="high" Text="Built $(PackageOutput)" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="BuildPkg" />
+</Project>

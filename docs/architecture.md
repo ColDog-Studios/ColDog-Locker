@@ -130,10 +130,10 @@ Shared version metadata is defined in `Directory.Build.props`.
 Current version source:
 
 ```xml
-<Version>0.5.0-alpha</Version>
+<Version>...</Version>
 ```
 
-Build metadata is generated through MSBuild properties such as `FileVersion`, `InformationalVersion`, and `AssemblyVersion`.
+The literal version changes in `Directory.Build.props`; do not duplicate it as another source of truth. Build metadata is generated through MSBuild properties such as `FileVersion`, `InformationalVersion`, and `AssemblyVersion`.
 
 ## Notes for Maintainers
 

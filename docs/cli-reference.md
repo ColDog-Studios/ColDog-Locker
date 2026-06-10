@@ -1,6 +1,6 @@
 # CLI Reference
 
-The CLI executable is `cdlocker` on Linux and `cdlocker.exe` on Windows. When running from source, use:
+The CLI executable is `cdlocker.exe` on Windows and `cdlocker` on Linux/macOS. When running from source, use:
 
 ```bash
 dotnet run --project ColDogLocker.Cli -- <command>

@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <!-- Shared Version Information - Edit version here only -->
-        <Version>0.7.0-alpha</Version>
+        <Version>0.8.0-alpha</Version>
         <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
         <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
         <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
@@ -11,7 +11,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <Nullable>enable</Nullable>
-        <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <TargetFramework>net10.0</TargetFramework>
 
         <!-- Product Information -->
