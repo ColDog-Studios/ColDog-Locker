@@ -1,4 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package
     Name="ColDog Locker"
@@ -13,14 +14,31 @@
     <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of ColDog Locker is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
-    <Property Id="ARPCONTACT" Value="support@coldogstudios.com" />
+    <Property Id="ARPCONTACT" Value="contact@coldogstudios.com" />
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ColDog-Studios/ColDog-Locker" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ColDog-Studios/ColDog-Locker/releases" />
     <Property Id="REMOVE_USER_DATA_ON_UNINSTALL" Value="1" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerBmp)" />
+
+    <Icon Id="ProductIcon" SourceFile="$(var.PublishRoot)cdlIcon.ico" />
+
+    <netfx:DotNetCompatibilityCheck
+      Property="DOTNET10_RUNTIME_COMPATIBLE"
+      RuntimeType="core"
+      Platform="$(var.DotNetPlatform)"
+      Version="10.0.0"
+      RollForward="latestMinor" />
+
+    <Launch
+      Condition="Installed OR DOTNET10_RUNTIME_COMPATIBLE"
+      Message="ColDog Locker requires the .NET 10 Runtime for $(var.PackageArchitecture). Install .NET 10 from https://dotnet.microsoft.com/download/dotnet/10.0 and run this installer again." />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="CompanyFolder" Name="ColDogStudios">
-        <Directory Id="INSTALLFOLDER" Name="ColDogLocker">
+      <Directory Id="CompanyFolder" Name="ColDog Studios">
+        <Directory Id="INSTALLFOLDER" Name="ColDog Locker">
           <Component Id="CliExecutableComponent" Guid="*" Bitness="always64">
             <File Id="CliExecutable" Source="$(var.PublishRoot)cdlocker.exe" KeyPath="yes" />
           </Component>
@@ -45,9 +63,9 @@
     </StandardDirectory>
 
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ApplicationProgramsFolder" Name="ColDogLocker">
+      <Directory Id="ApplicationProgramsFolder" Name="ColDog Locker">
         <Component Id="StartMenuShortcutComponent" Guid="*" Bitness="always64">
-          <Shortcut Id="StartMenuShortcut" Name="ColDog Locker" Target="[#GuiExecutable]" WorkingDirectory="INSTALLFOLDER" />
+          <Shortcut Id="StartMenuShortcut" Name="ColDog Locker" Target="[INSTALLFOLDER]ColDogLocker.exe" WorkingDirectory="INSTALLFOLDER" />
           <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
           <RegistryValue Root="HKCU" Key="Software\ColDog Studios\ColDog Locker" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
         </Component>
@@ -56,7 +74,7 @@
 
     <StandardDirectory Id="DesktopFolder">
       <Component Id="DesktopShortcutComponent" Guid="*" Bitness="always64">
-        <Shortcut Id="DesktopShortcut" Name="ColDog Locker" Target="[#GuiExecutable]" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="DesktopShortcut" Name="ColDog Locker" Target="[INSTALLFOLDER]ColDogLocker.exe" WorkingDirectory="INSTALLFOLDER" />
         <RegistryValue Root="HKCU" Key="Software\ColDog Studios\ColDog Locker" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </StandardDirectory>
@@ -85,6 +103,14 @@
       <ComponentRef Id="IconComponent" />
       <ComponentRef Id="MachinePathComponent" />
       <ComponentRef Id="StartMenuShortcutComponent" />
+      <Files Include="$(var.PublishRoot)**" Directory="INSTALLFOLDER">
+        <Exclude Files="$(var.PublishRoot)**\*.pdb" />
+        <Exclude Files="$(var.PublishRoot)cdlocker.exe" />
+        <Exclude Files="$(var.PublishRoot)ColDogLocker.exe" />
+        <Exclude Files="$(var.PublishRoot)README.md" />
+        <Exclude Files="$(var.PublishRoot)LICENSE" />
+        <Exclude Files="$(var.PublishRoot)cdlIcon.ico" />
+      </Files>
     </Feature>
 
     <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Description="Create a shortcut on the installing user's desktop." Level="2">
@@ -95,6 +121,34 @@
       <ComponentRef Id="RemoveUserDataOptionComponent" />
     </Feature>
 
-    <ui:WixUI Id="WixUI_FeatureTree" />
+    <UI>
+      <Dialog Id="DesktopShortcutDlg" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Desktop Shortcut" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Choose whether setup creates a desktop shortcut." />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+
+        <Control Id="DesktopShortcutCheckBox" Type="CheckBox" X="20" Y="85" Width="315" Height="17" Property="CREATE_DESKTOP_SHORTCUT" CheckBoxValue="1" Text="Create a desktop shortcut" />
+        <Control Id="DesktopShortcutNote" Type="Text" X="38" Y="108" Width="300" Height="28" Text="This controls only the shortcut on the installing user's desktop. The Start Menu shortcut is always installed." />
+
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg" />
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <Publish Event="AddLocal" Value="DesktopShortcutFeature" Condition='CREATE_DESKTOP_SHORTCUT = "1"' />
+          <Publish Event="Remove" Value="DesktopShortcutFeature" Condition='CREATE_DESKTOP_SHORTCUT &lt;&gt; "1"' />
+          <Publish Event="NewDialog" Value="InstallDirDlg" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="DesktopShortcutDlg" Order="3" Condition='LicenseAccepted = "1"' />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="DesktopShortcutDlg" Order="3" Condition="1" />
+    </UI>
+
+    <ui:WixUI Id="WixUI_InstallDir" />
   </Package>
 </Wix>

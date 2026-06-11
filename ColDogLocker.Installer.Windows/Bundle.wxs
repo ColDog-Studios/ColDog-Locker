@@ -1,0 +1,50 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+  <Bundle
+    Name="ColDog Locker"
+    Manufacturer="ColDog Studios"
+    Version="$(var.MsiVersion)"
+    UpgradeCode="BA11CB8E-05D1-45FD-9943-3EF8602561CA"
+    IconSourceFile="$(var.IconIco)"
+    AboutUrl="https://github.com/ColDog-Studios/ColDog-Locker"
+    UpdateUrl="https://github.com/ColDog-Studios/ColDog-Locker/releases">
+
+    <BootstrapperApplication>
+      <bal:WixInternalUIBootstrapperApplication
+        Theme="standard"
+        LogoFile="$(var.LogoPng)" />
+    </BootstrapperApplication>
+
+    <netfx:DotNetCoreSearch
+      Variable="DOTNET10_RUNTIME_VERSION"
+      RuntimeType="core"
+      Platform="$(var.DotNetPlatform)"
+      MajorVersion="10" />
+
+    <Chain>
+      <ExePackage
+        Id="DotNet10Runtime"
+        DisplayName=".NET 10 Runtime"
+        PerMachine="yes"
+        Permanent="yes"
+        Vital="yes"
+        DetectCondition="DOTNET10_RUNTIME_VERSION"
+        InstallArguments="/install /quiet /norestart"
+        RepairArguments="/repair /quiet /norestart"
+        bal:PrereqPackage="yes">
+        <ExePackagePayload
+          Name="$(var.DotNetRuntimeFileName)"
+          DownloadUrl="$(var.DotNetRuntimeDownloadUrl)"
+          Hash="$(var.DotNetRuntimeSha512)"
+          Size="$(var.DotNetRuntimeSize)" />
+      </ExePackage>
+
+      <MsiPackage
+        Id="ColDogLockerMsi"
+        SourceFile="$(var.MsiPackagePath)"
+        bal:PrimaryPackageType="default"
+        Vital="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

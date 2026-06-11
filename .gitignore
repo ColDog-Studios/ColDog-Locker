@@ -358,6 +358,7 @@ launchSettings.json
 
 # Windows Installer XML Toolset
 *.wixproj
+!ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
 *.wixpdb
 *.wixlib
 

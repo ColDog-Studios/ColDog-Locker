@@ -1,0 +1,93 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PackageArchitecture Condition="'$(PackageArchitecture)' == ''">x64</PackageArchitecture>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'arm64'">win-arm64</RuntimeIdentifier>
+    <Platform Condition="'$(PackageArchitecture)' == 'x64'">x64</Platform>
+    <Platform Condition="'$(PackageArchitecture)' == 'arm64'">arm64</Platform>
+    <DotNetPlatform Condition="'$(PackageArchitecture)' == 'x64'">x64</DotNetPlatform>
+    <DotNetPlatform Condition="'$(PackageArchitecture)' == 'arm64'">arm64</DotNetPlatform>
+    <!-- WiX remote EXE payloads are pinned so Burn can verify the downloaded runtime. -->
+    <DotNetRuntimeVersion>10.0.9</DotNetRuntimeVersion>
+    <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'x64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-x64.exe</DotNetRuntimeFileName>
+    <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'arm64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-arm64.exe</DotNetRuntimeFileName>
+    <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'x64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
+    <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'arm64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'x64'">b1fc25347750b6dbfa91fdf2f6d3615cc370582b299328bea6e09218f19386088d5170e739a16caab04ffa0a0a1aa5ae301ea542f3604b62c40da88e82d06093</DotNetRuntimeSha512>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'arm64'">99aa9aebd5224cb908971bf3426df2e33c6134e5b954b7c69e43fb7e7d3cf81d7e1b2a4adcaf5538376aadff4471eae44f22844430608ceec7f8e7ab871c4323</DotNetRuntimeSha512>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'x64'">30548720</DotNetRuntimeSize>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28385256</DotNetRuntimeSize>
+
+    <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
+    <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
+    <InstallerPublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)', 'app'))</InstallerPublishRoot>
+    <InstallerPublishPath>$([System.Text.RegularExpressions.Regex]::Replace('$(InstallerPublishRoot)', '[\\/]$', ''))</InstallerPublishPath>
+    <PackageFileBase>ColDogLocker-$(Version)-win-$(PackageArchitecture)</PackageFileBase>
+    <MsiVersion>$(Version.Split('-')[0])</MsiVersion>
+    <FullVersion>$(InformationalVersion)</FullVersion>
+    <MsiPackagePath>$([MSBuild]::NormalizePath('$(DistRoot)', '$(PackageFileBase).msi'))</MsiPackagePath>
+    <BundleSourceMsiPath>$(MsiPackagePath).bundle-source</BundleSourceMsiPath>
+    <LicenseRtf>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'License.rtf'))</LicenseRtf>
+    <BannerBmp>$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'Banner.bmp'))</BannerBmp>
+    <LogoPng>$([MSBuild]::NormalizePath('$(RepoRoot)', 'resources', 'cdlIcon.png'))</LogoPng>
+    <IconIco>$([MSBuild]::NormalizePath('$(RepoRoot)', 'resources', 'cdlIcon.ico'))</IconIco>
+
+    <OutputName Condition="'$(BuildSetupBundleOnly)' != 'true'">$(PackageFileBase)</OutputName>
+    <OutputName Condition="'$(BuildSetupBundleOnly)' == 'true'">$(PackageFileBase)-setup</OutputName>
+    <OutputType Condition="'$(BuildSetupBundleOnly)' != 'true'">Package</OutputType>
+    <OutputType Condition="'$(BuildSetupBundleOnly)' == 'true'">Bundle</OutputType>
+    <OutputPath>$(DistRoot)</OutputPath>
+    <SuppressIces>$(SuppressIces);ICE61</SuppressIces>
+    <DefineConstants>$(DefineConstants);PublishRoot=$(InstallerPublishRoot);LicenseRtf=$(LicenseRtf);BannerBmp=$(BannerBmp);MsiVersion=$(MsiVersion);FullVersion=$(FullVersion);PackageArchitecture=$(PackageArchitecture);DotNetPlatform=$(DotNetPlatform);DotNetRuntimeFileName=$(DotNetRuntimeFileName);DotNetRuntimeDownloadUrl=$(DotNetRuntimeDownloadUrl);DotNetRuntimeSha512=$(DotNetRuntimeSha512);DotNetRuntimeSize=$(DotNetRuntimeSize);MsiPackagePath=$(MsiPackagePath);LogoPng=$(LogoPng);IconIco=$(IconIco)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Product.wxs" Condition="'$(BuildSetupBundleOnly)' != 'true'" />
+    <Compile Include="Bundle.wxs" Condition="'$(BuildSetupBundleOnly)' == 'true'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Bal.wixext" />
+    <PackageReference Include="WixToolset.Netfx.wixext" />
+    <PackageReference Include="WixToolset.UI.wixext" />
+  </ItemGroup>
+
+  <Target Name="ValidatePackageProperties">
+    <Error Condition="'$(RuntimeIdentifier)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(DotNetPlatform)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(DotNetRuntimeFileName)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(DotNetRuntimeDownloadUrl)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(DotNetRuntimeSha512)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(DotNetRuntimeSize)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+  </Target>
+
+  <!-- Publish both entrypoints into one package root; packages are split by OS/arch only, not by CLI vs GUI. -->
+  <Target Name="PublishInstallerApps" DependsOnTargets="ValidatePackageProperties" BeforeTargets="CoreCompile" Condition="'$(BuildSetupBundleOnly)' != 'true'">
+    <RemoveDir Directories="$(InstallerPublishRoot)" />
+    <MakeDir Directories="$(InstallerPublishRoot);$(DistRoot)" />
+
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:PublishSingleFile=false -p:PublishTrimmed=false -p:PublishDir="$(InstallerPublishPath)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:PublishSingleFile=false -p:PublishDir="$(InstallerPublishPath)"' />
+
+    <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(InstallerPublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(InstallerPublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(InstallerPublishRoot)" />
+  </Target>
+
+  <Target Name="ValidateBundleInputs" DependsOnTargets="ValidatePackageProperties" BeforeTargets="CoreCompile" Condition="'$(BuildSetupBundleOnly)' == 'true'">
+    <Error Condition="!Exists('$(MsiPackagePath)')" Text="Expected MSI was not built: $(MsiPackagePath)" />
+  </Target>
+
+  <Target Name="BuildSetupBundle" AfterTargets="Build" Condition="'$(BuildSetupBundleOnly)' != 'true' and '$(BuildSetupBundle)' != 'false'">
+    <Copy SourceFiles="$(MsiPackagePath)" DestinationFiles="$(BundleSourceMsiPath)" />
+    <MSBuild
+      Projects="$(MSBuildProjectFullPath)"
+      Targets="Build"
+      Properties="Configuration=$(Configuration);PackageArchitecture=$(PackageArchitecture);BuildSetupBundleOnly=true;BuildSetupBundle=false;UseSharedCompilation=false" />
+    <Copy SourceFiles="$(BundleSourceMsiPath)" DestinationFiles="$(MsiPackagePath)" />
+    <Delete Files="$(BundleSourceMsiPath)" />
+  </Target>
+</Project>

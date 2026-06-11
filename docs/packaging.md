@@ -7,6 +7,7 @@ ColDog Locker packages are built from the current MSBuild version metadata in `D
 | OS | Format | Architectures | Install scope |
 | --- | --- | --- | --- |
 | Windows | `.msi` through WiX | `x64`, `arm64` | Per-machine only |
+| Windows | `.exe` setup bundle through WiX Burn | `x64`, `arm64` | Per-machine only |
 | Linux | `.deb` | `x64`, `arm64` | System package |
 | Linux | `.rpm` | `x64`, `arm64` | System package |
 | macOS | `.pkg` through `pkgbuild` | `x64`, `arm64` | System package, experimental |
@@ -28,8 +29,8 @@ The legacy WPF project is not packaged.
 ## Prerequisites
 
 - .NET SDK 10.
-- WiX 6 is restored through `WixToolset.Sdk` and NuGet when building `.msi`.
-- A Windows host for `.msi`; WiX restores on Linux but MSI build execution is Windows-only.
+- WiX 6 is restored through `WixToolset.Sdk` and NuGet when building Windows installers.
+- A Windows host for `.msi` and `.exe` setup bundles; WiX restores on Linux but Windows installer build execution is Windows-only.
 - `ar`, `tar`, and `gzip` for `.deb`.
 - `rpmbuild` for `.rpm`.
 - A native or compatible RPM build host for arm64 RPMs.
@@ -63,11 +64,18 @@ Manual CI packaging is available from the `Packages` workflow in GitHub Actions.
 
 The macOS package job is opt-in and defaults off because those packages are experimental and unsigned.
 
-Windows MSI:
+Windows MSI and setup EXE:
 
-```powershell
+```bash
 dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=x64
 dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=arm64
+```
+
+Windows MSI only:
+
+```bash
+dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=x64 -p:BuildSetupBundle=false
+dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=arm64 -p:BuildSetupBundle=false
 ```
 
 Linux DEB:
@@ -106,6 +114,8 @@ Expected package output:
 ```text
 artifacts/packages/dist/ColDogLocker-<version>-win-x64.msi
 artifacts/packages/dist/ColDogLocker-<version>-win-arm64.msi
+artifacts/packages/dist/ColDogLocker-<version>-win-x64-setup.exe
+artifacts/packages/dist/ColDogLocker-<version>-win-arm64-setup.exe
 artifacts/packages/dist/ColDogLocker-<version>-linux-x64.deb
 artifacts/packages/dist/ColDogLocker-<version>-linux-arm64.deb
 artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
@@ -121,10 +131,14 @@ Publish output, staging trees, generated Debian control files, and generated RPM
 The MSI installs per-machine under:
 
 ```text
-C:\Program Files\ColDogStudios\ColDogLocker\
+C:\Program Files\ColDog Studios\ColDog Locker\
 ```
 
 It adds that install directory to the machine `PATH`, which exposes `cdlocker.exe` as `cdlocker` from new command prompts after installation.
+
+The MSI is framework-dependent and requires the .NET 10 Runtime for the target architecture. If the runtime is missing, direct MSI installation is blocked with a link to the .NET 10 download page.
+
+The setup EXE is the recommended Windows installer for normal users. It checks for the .NET 10 Core Runtime, downloads and installs the pinned Microsoft runtime package if needed, then launches the MSI UI. The EXE does not embed the .NET runtime, so its size stays close to the MSI plus bootstrapper overhead. Update `DotNetRuntimeVersion`, `DotNetRuntimeDownloadUrl`, `DotNetRuntimeSha512`, and `DotNetRuntimeSize` in `ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj` when moving to a newer .NET 10 runtime package.
 
 The desktop shortcut is an optional MSI feature and targets the installing user's desktop through `DesktopFolder`; it is not placed in `Public\Desktop`.
 
