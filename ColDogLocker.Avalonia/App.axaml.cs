@@ -21,6 +21,7 @@ using Avalonia.Markup.Xaml;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Avalonia.ViewModels;
 using ColDogStudios.ColDogLocker.Avalonia.Views;
+using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Services.Startup;
 using ColDogStudios.ColDogLocker.Services.Updates;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,14 +37,16 @@ namespace ColDogStudios.ColDogLocker.Avalonia
             AvaloniaXamlLoader.Load(this);
         }
 
-        public override async void OnFrameworkInitializationCompleted()
+        public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                await Initialization.InitializeAsync();
+                SettingsManager.LoadSettings();
                 _serviceProvider = ConfigureServices();
                 _serviceProvider.GetRequiredService<IAppThemeService>().ApplySavedTheme();
-                desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                mainWindow.Opened += async (_, _) => await mainWindow.InitializeAsync(Initialization.InitializeAsync);
+                desktop.MainWindow = mainWindow;
                 desktop.Exit += (_, _) => _serviceProvider.Dispose();
             }
 

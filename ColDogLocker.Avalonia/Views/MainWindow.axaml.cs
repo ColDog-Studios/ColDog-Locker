@@ -34,7 +34,18 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
             : this()
         {
             DataContext = viewModel;
-            Opened += async (_, _) => await viewModel.InitializeAsync();
+        }
+
+        public async Task InitializeAsync(Func<Task> appInitialization)
+        {
+            ArgumentNullException.ThrowIfNull(appInitialization);
+
+            if (DataContext is not MainWindowViewModel viewModel)
+            {
+                return;
+            }
+
+            await viewModel.InitializeAsync(appInitialization);
         }
 
         private void Exit_Click(object? sender, RoutedEventArgs e)
