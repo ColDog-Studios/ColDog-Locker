@@ -47,7 +47,9 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Environment
         public void LocalConfig_ShouldBeInLocalApplicationData()
         {
             // Arrange
-            var expectedBasePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+            var expectedBasePath = GetExpectedSpecialFolderBase(
+                System.Environment.SpecialFolder.LocalApplicationData,
+                System.Environment.SpecialFolder.UserProfile);
 
             // Act
             var localConfig = AppPaths.LocalConfig;
@@ -78,10 +80,12 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Environment
         }
 
         [Fact]
-        public void CdlDir_ShouldBeInMyDocuments()
+        public void CdlDir_ShouldBeInMyDocumentsOrUserProfileFallback()
         {
             // Arrange
-            var expectedBasePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+            var expectedBasePath = GetExpectedSpecialFolderBase(
+                System.Environment.SpecialFolder.MyDocuments,
+                System.Environment.SpecialFolder.UserProfile);
 
             // Act
             var cdlDir = AppPaths.CdlDir;
@@ -142,6 +146,25 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Environment
 
             // Assert
             Assert.EndsWith("ColDog Locker", cdlDir);
+        }
+
+        private static string GetExpectedSpecialFolderBase(
+            System.Environment.SpecialFolder preferredFolder,
+            System.Environment.SpecialFolder fallbackFolder)
+        {
+            var path = System.Environment.GetFolderPath(preferredFolder);
+            if (!string.IsNullOrWhiteSpace(path) && Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            path = System.Environment.GetFolderPath(fallbackFolder);
+            if (!string.IsNullOrWhiteSpace(path) && Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            return Path.GetFullPath(".");
         }
     }
 }

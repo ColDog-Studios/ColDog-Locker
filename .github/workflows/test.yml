@@ -67,6 +67,43 @@ jobs:
         name: unit-test-results-linux
         path: '**/test-results.trx'
 
+  unit-tests-macos:
+    name: Unit Tests (macOS - ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Run Unit Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v7
+      if: always()
+      with:
+        name: unit-test-results-macos-${{ matrix.arch }}
+        path: '**/test-results.trx'
+
   build-cli-windows:
     name: Build CLI (Windows)
     runs-on: windows-latest
@@ -135,6 +172,39 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: cli-linux-${{ matrix.distro }}
+        path: ./cli-publish/
+
+  build-cli-macos:
+    name: Build CLI (macOS - ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish CLI
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c Release -o ./cli-publish
+
+    - name: Upload CLI Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: cli-macos-${{ matrix.arch }}
         path: ./cli-publish/
 
   cli-e2e-tests-windows:
@@ -213,10 +283,53 @@ jobs:
     - name: Run CLI E2E Tests
       run: python3 .github/scripts/cli_e2e.py --cli "$CLI_PATH" --work-dir "$CLI_E2E_WORK_DIR"
 
+  cli-e2e-tests-macos:
+    name: CLI E2E Tests (macOS - ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [unit-tests-macos, build-cli-macos]
+    if: always()
+    env:
+      CLI_PATH: ./cli-publish/cdlocker
+      CLI_E2E_WORK_DIR: ./cli-e2e-work
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.x'
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Download CLI Artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: cli-macos-${{ matrix.arch }}
+        path: ./cli-publish/
+
+    - name: Make CLI Executable
+      run: chmod +x "$CLI_PATH"
+
+    - name: Run CLI E2E Tests
+      run: python3 .github/scripts/cli_e2e.py --cli "$CLI_PATH" --work-dir "$CLI_E2E_WORK_DIR"
+
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [unit-tests, unit-tests-linux, cli-e2e-tests-windows, cli-e2e-tests-linux]
+    needs: [unit-tests, unit-tests-linux, unit-tests-macos, cli-e2e-tests-windows, cli-e2e-tests-linux, cli-e2e-tests-macos]
     if: always()
 
     steps:
@@ -229,13 +342,17 @@ jobs:
         echo ""
         echo "Unit Tests (Windows): ${{ needs.unit-tests.result }}"
         echo "Unit Tests (Linux): ${{ needs.unit-tests-linux.result }}"
+        echo "Unit Tests (macOS): ${{ needs.unit-tests-macos.result }}"
         echo "CLI E2E Tests (Windows): ${{ needs.cli-e2e-tests-windows.result }}"
         echo "CLI E2E Tests (Linux): ${{ needs.cli-e2e-tests-linux.result }}"
+        echo "CLI E2E Tests (macOS): ${{ needs.cli-e2e-tests-macos.result }}"
         echo ""
 
         if [ "${{ needs.unit-tests.result }}" = "failure" ] || \
+           [ "${{ needs.unit-tests-macos.result }}" = "failure" ] || \
            [ "${{ needs.cli-e2e-tests-windows.result }}" = "failure" ] || \
-           [ "${{ needs.cli-e2e-tests-linux.result }}" = "failure" ]; then
+           [ "${{ needs.cli-e2e-tests-linux.result }}" = "failure" ] || \
+           [ "${{ needs.cli-e2e-tests-macos.result }}" = "failure" ]; then
           echo "Some critical tests failed."
           exit 1
         fi

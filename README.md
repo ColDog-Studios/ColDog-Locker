@@ -61,7 +61,10 @@ ColDog Locker is a desktop app for securely locking, unlocking, and managing enc
 It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
 
 > [!NOTE]
-> ColDog Locker is still in development and does not currently have an official supported release
+> ColDog Locker is still in development. Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet.
+
+> [!WARNING]
+> macOS `.pkg` builds are experimental, unsigned, unnotarized, and untested. They are provided for local validation only and should not be treated as official macOS support.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -74,8 +77,7 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 ## Getting Started
 
-There are currently no official release binaries available yet.
-You can build from source following the instructions below.
+Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and experimental macOS validation. You can also build from source following the instructions below. Installer/package build notes are in [Local Packaging](docs/packaging.md).
 
 ### Prerequisites
 
@@ -125,7 +127,7 @@ ColDog Locker is a desktop app for securely locking, unlocking, and managing enc
 
 > [!NOTE]
 > `dotnet run --project ColDogLocker.Cli` and `cdlocker` can be used interchangeably.
-> On Windows, the compiled executable is `cdlocker.exe`, Linux is `cdlocker`.
+> On Windows, the compiled executable is `cdlocker.exe`; on Linux and macOS it is `cdlocker`.
 
 ### Interactive Modes
 
@@ -214,7 +216,7 @@ cdlocker verify MySecrets
 ```
 
 > [!TIP]
-> For detailed command documentation, use `cdlocker help <command>` or check the `/docs` folder (coming soon).
+> For detailed command documentation, use `cdlocker help <command>` or check the `/docs` folder.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

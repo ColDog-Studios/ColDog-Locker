@@ -61,6 +61,31 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         }
 
         [Fact]
+        public async Task CheckForUpdatesAsync_WindowsReleaseWithMsiAndSetupExe_ShouldPreferMsi()
+        {
+            // Arrange
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>
+                {
+                    ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] = JsonResponse(CreateReleaseJson(
+                        "v1.2.0",
+                        "Windows release",
+                        ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("msi")),
+                        ("ColDogLocker-win-x64-setup.exe", "https://downloads.example/cdl-setup.exe", Sha256Digest("setup"))))
+                },
+                currentVersion: "1.1.0",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+
+            // Act
+            var result = await service.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.True(result.CanDownload);
+            Assert.Equal("https://downloads.example/cdl.msi", result.DownloadUrl);
+            Assert.Equal("ColDogLocker-win-x64.msi", result.InstallerFileName);
+        }
+
+        [Fact]
         public async Task CheckForUpdatesAsync_CurrentVersionIsLatest_ShouldReturnNoUpdate()
         {
             // Arrange
@@ -187,6 +212,37 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             Assert.True(result.UpdateAvailable);
             Assert.Equal("1.3.0", result.LatestVersion);
             Assert.Equal("https://downloads.example/stable.msi", result.DownloadUrl);
+        }
+
+        [Fact]
+        public async Task CheckForUpdatesAsync_UnstableChannel_ShouldAcceptSequentialPrereleaseTag()
+        {
+            // Arrange
+            var releasesJson =
+                $$"""
+                [
+                  {{CreateReleaseObject("v1.3.0-alpha.1", "## Features\n- Sequential prerelease", false, true, ("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", "https://downloads.example/main-alpha.exe", Sha256Digest("main-alpha")))}}
+                ]
+                """;
+
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>
+                {
+                    ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson)
+                },
+                currentVersion: "1.3.0-alpha",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 },
+                channel: UpdateChannel.Unstable);
+
+            // Act
+            var result = await service.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.True(result.UpdateAvailable);
+            Assert.True(result.CanDownload);
+            Assert.Equal("1.3.0-alpha.1", result.LatestVersion);
+            Assert.Equal("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", result.InstallerFileName);
+            Assert.Contains("Sequential prerelease", result.ReleaseNotesMarkdown);
         }
 
         [Fact]

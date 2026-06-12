@@ -1,0 +1,194 @@
+name: Packages
+
+on:
+  # push:
+  #   branches: [ main, test, staging ]
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: Build Windows MSI packages
+        required: true
+        type: boolean
+        default: true
+      build_linux:
+        description: Build Linux DEB/RPM packages
+        required: true
+        type: boolean
+        default: true
+      build_macos:
+        description: Build experimental unsigned macOS PKG packages
+        required: true
+        type: boolean
+        default: false
+      configuration:
+        description: Build configuration
+        required: true
+        type: choice
+        options:
+          - Release
+          - Debug
+        default: Release
+
+jobs:
+  windows-msi:
+    name: Windows Installer (${{ matrix.arch }})
+    runs-on: windows-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore installer project
+      run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
+
+    - name: Build MSI and setup EXE
+      run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ inputs.configuration || 'Release' }}" -p:PackageArchitecture=${{ matrix.arch }} --no-restore
+
+    - name: Upload Windows packages
+      uses: actions/upload-artifact@v7
+      with:
+        name: package-win-${{ matrix.arch }}
+        path: |
+          artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}.msi
+          artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}-setup.exe
+        if-no-files-found: error
+
+  linux-deb:
+    name: Linux DEB (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install package tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y binutils tar gzip
+
+    - name: Build DEB
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
+
+    - name: Upload DEB
+      uses: actions/upload-artifact@v7
+      with:
+        name: package-linux-${{ matrix.arch }}-deb
+        path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.deb
+        if-no-files-found: error
+
+  linux-rpm:
+    name: Linux RPM (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install package tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y rpm tar gzip
+
+    - name: Build RPM
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
+
+    - name: Upload RPM
+      uses: actions/upload-artifact@v7
+      with:
+        name: package-linux-${{ matrix.arch }}-rpm
+        path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.rpm
+        if-no-files-found: error
+
+  macos-pkg:
+    name: macOS PKG experimental unsigned (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_macos }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build unsigned PKG
+      run: dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
+
+    - name: Upload PKG
+      uses: actions/upload-artifact@v7
+      with:
+        name: package-macos-${{ matrix.arch }}-pkg
+        path: artifacts/packages/dist/ColDogLocker-*-macos-${{ matrix.arch }}.pkg
+        if-no-files-found: error
+
+  package-summary:
+    name: Package Summary
+    runs-on: ubuntu-latest
+    needs: [ windows-msi, linux-deb, linux-rpm, macos-pkg ]
+    if: always()
+
+    steps:
+    - name: Overall Summary
+      run: |
+        echo "Windows MSI: ${{ needs.windows-msi.result }}"
+        echo "Linux DEB:   ${{ needs.linux-deb.result }}"
+        echo "Linux RPM:   ${{ needs.linux-rpm.result }}"
+        echo "macOS PKG:   ${{ needs.macos-pkg.result }}"
+
+        if [ "${{ needs.windows-msi.result }}" = "failure" ] || \
+           [ "${{ needs.windows-msi.result }}" = "cancelled" ] || \
+           [ "${{ needs.linux-deb.result }}" = "failure" ] || \
+           [ "${{ needs.linux-deb.result }}" = "cancelled" ] || \
+           [ "${{ needs.linux-rpm.result }}" = "failure" ] || \
+           [ "${{ needs.linux-rpm.result }}" = "cancelled" ] || \
+           [ "${{ needs.macos-pkg.result }}" = "failure" ] || \
+           [ "${{ needs.macos-pkg.result }}" = "cancelled" ]; then
+          echo "One or more package jobs failed."
+          exit 1
+        fi
+
+        echo "Package jobs completed."

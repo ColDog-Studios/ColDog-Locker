@@ -53,7 +53,7 @@ The CLI owns the GUI launcher:
 
 - Windows: launches the Avalonia GUI executable.
 - Linux: attempts to launch the Avalonia GUI executable.
-- macOS: currently unsupported and directs users to the TUI.
+- macOS: currently unsupported and directs users to the TUI. Experimental `.pkg` builds install `/Applications/ColDog Locker.app` for direct validation, but that path is not treated as supported GUI launch behavior yet.
 
 ## Next GUI Work
 

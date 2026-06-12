@@ -1,0 +1,185 @@
+<Project DefaultTargets="Build" ToolsVersion="Current">
+  <Import Project="..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <PackageArchitecture Condition="'$(PackageArchitecture)' == ''">x64</PackageArchitecture>
+    <PackageFormat Condition="'$(PackageFormat)' == ''">deb</PackageFormat>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'x64'">linux-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'arm64'">linux-arm64</RuntimeIdentifier>
+    <DebArchitecture Condition="'$(PackageArchitecture)' == 'x64'">amd64</DebArchitecture>
+    <DebArchitecture Condition="'$(PackageArchitecture)' == 'arm64'">arm64</DebArchitecture>
+    <RpmArchitecture Condition="'$(PackageArchitecture)' == 'x64'">x86_64</RpmArchitecture>
+    <RpmArchitecture Condition="'$(PackageArchitecture)' == 'arm64'">aarch64</RpmArchitecture>
+
+    <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
+    <PublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)', 'app'))</PublishRoot>
+    <StageRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'staging', '$(RuntimeIdentifier)'))</StageRoot>
+    <PackageRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'work', 'linux-$(PackageFormat)-$(PackageArchitecture)', 'root'))</PackageRoot>
+    <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
+    <InstallRoot>opt/coldog-locker</InstallRoot>
+    <UnixInstallRoot>/opt/coldog-locker</UnixInstallRoot>
+    <PackageId>coldog-locker</PackageId>
+    <PackageFileBase>ColDogLocker-$(Version)-linux-$(PackageArchitecture)</PackageFileBase>
+    <PackageVersionBase>$(Version.Split('-')[0])</PackageVersionBase>
+    <DebianVersion>$([System.String]::Copy('$(Version)').Replace('-', '~'))</DebianVersion>
+    <RpmRelease>1</RpmRelease>
+    <RpmRelease Condition="$([System.String]::Copy('$(Version)').Contains('-'))">0.$(Version.Split('-')[1])</RpmRelease>
+  </PropertyGroup>
+
+  <Target Name="ValidatePackageProperties">
+    <Error Condition="'$(RuntimeIdentifier)' == ''" Text="PackageArchitecture must be x64 or arm64." />
+    <Error Condition="'$(PackageFormat)' != 'deb' and '$(PackageFormat)' != 'rpm'" Text="PackageFormat must be deb or rpm." />
+  </Target>
+
+  <!-- Publish both entrypoints into one package root; packages are split by OS/arch only, not by CLI vs GUI. -->
+  <Target Name="PublishInstallerApps" DependsOnTargets="ValidatePackageProperties">
+    <RemoveDir Directories="$(PublishRoot)" />
+    <MakeDir Directories="$(PublishRoot);$(DistRoot)" />
+
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishDir="$(PublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(PublishRoot)"' />
+
+    <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(PublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(PublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(PublishRoot)" />
+    <Exec Command='chmod +x "$(PublishRoot)cdlocker" "$(PublishRoot)ColDogLocker"' />
+  </Target>
+
+  <Target Name="StageLinuxPackage" DependsOnTargets="PublishInstallerApps">
+    <RemoveDir Directories="$(PackageRoot)" />
+    <MakeDir Directories="$(PackageRoot)$(InstallRoot);$(PackageRoot)usr/bin;$(PackageRoot)usr/share/applications;$(PackageRoot)usr/share/icons/hicolor/256x256/apps" />
+
+    <ItemGroup>
+      <PublishedFiles Include="$(PublishRoot)**/*" />
+      <GuiDesktopLines Include="[Desktop Entry]" />
+      <GuiDesktopLines Include="Type=Application" />
+      <GuiDesktopLines Include="Name=ColDog Locker" />
+      <GuiDesktopLines Include="GenericName=ColDog Locker GUI" />
+      <GuiDesktopLines Include="Comment=Manage encrypted file lockers" />
+      <GuiDesktopLines Include="Exec=/opt/coldog-locker/ColDogLocker" />
+      <GuiDesktopLines Include="Icon=coldog-locker" />
+      <GuiDesktopLines Include="Terminal=false" />
+      <GuiDesktopLines Include="Categories=Utilities%3BSecurity%3B" />
+      <GuiDesktopLines Include="StartupNotify=true" />
+      <GuiDesktopLines Include="Keywords=locker%3Bencryption%3Bsecurity%3Bfiles%3B" />
+
+      <CliDesktopLines Include="[Desktop Entry]" />
+      <CliDesktopLines Include="Type=Application" />
+      <CliDesktopLines Include="Name=cdlocker" />
+      <CliDesktopLines Include="GenericName=ColDog Locker CLI" />
+      <CliDesktopLines Include="Comment=Open the ColDog Locker CLI interface" />
+      <CliDesktopLines Include="Exec=/usr/bin/cdlocker tui" />
+      <CliDesktopLines Include="Icon=coldog-locker" />
+      <CliDesktopLines Include="Terminal=true" />
+      <CliDesktopLines Include="Categories=Utilities%3BSecurity%3B" />
+      <CliDesktopLines Include="Keywords=locker%3Bencryption%3Bsecurity%3Bterminal%3Bcli%3B" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(PublishedFiles)"
+      DestinationFiles="@(PublishedFiles->'$(PackageRoot)$(InstallRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.png" DestinationFiles="$(PackageRoot)usr/share/icons/hicolor/256x256/apps/coldog-locker.png" />
+    <WriteLinesToFile File="$(PackageRoot)usr/share/applications/coldog-locker.desktop" Lines="@(GuiDesktopLines)" Overwrite="true" />
+    <WriteLinesToFile File="$(PackageRoot)usr/share/applications/cdlocker.desktop" Lines="@(CliDesktopLines)" Overwrite="true" />
+    <Exec Command='ln -sfn "../../opt/coldog-locker/cdlocker" "$(PackageRoot)usr/bin/cdlocker"' />
+  </Target>
+
+  <Target Name="BuildDeb" DependsOnTargets="StageLinuxPackage" Condition="'$(PackageFormat)' == 'deb'">
+    <PropertyGroup>
+      <DebWorkRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'work', 'linux-deb-$(PackageArchitecture)'))</DebWorkRoot>
+      <DebOutput>$(DistRoot)$(PackageFileBase).deb</DebOutput>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(PackageRoot)DEBIAN" />
+
+    <ItemGroup>
+      <DebControlLines Include="Package: $(PackageId)" />
+      <DebControlLines Include="Version: $(DebianVersion)" />
+      <DebControlLines Include="Section: utils" />
+      <DebControlLines Include="Priority: optional" />
+      <DebControlLines Include="Architecture: $(DebArchitecture)" />
+      <DebControlLines Include="Maintainer: Collin Laney &lt;collin.laney@coldogstudios.com&gt;" />
+      <DebControlLines Include="Homepage: https://github.com/ColDog-Studios/ColDog-Locker" />
+      <DebControlLines Include="Description: Desktop app and CLI for managing encrypted file lockers." />
+      <DebControlLines Include=" ColDog Locker installs the cdlocker command and Avalonia desktop app" />
+      <DebControlLines Include=" under /opt/coldog-locker. Runtime settings, logs, and locker metadata" />
+      <DebControlLines Include=" are stored per user by the application." />
+
+      <DebPostRemoveLines Include="#!/bin/sh" />
+      <DebPostRemoveLines Include="set -e" />
+      <DebPostRemoveLines Include="if [ &quot;$$1&quot; = &quot;purge&quot; ]; then" />
+      <DebPostRemoveLines Include="    rm -rf /etc/coldog-locker /var/lib/coldog-locker" />
+      <DebPostRemoveLines Include="fi" />
+      <DebPostRemoveLines Include="exit 0" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(PackageRoot)DEBIAN/control" Lines="@(DebControlLines)" Overwrite="true" />
+    <WriteLinesToFile File="$(PackageRoot)DEBIAN/postrm" Lines="@(DebPostRemoveLines)" Overwrite="true" />
+    <Exec Command='chmod 755 "$(PackageRoot)DEBIAN/postrm"' />
+    <Exec Command='printf "2.0\n" &gt; "$(DebWorkRoot)debian-binary"' />
+    <Exec Command='tar --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)control.tar.gz" -C "$(PackageRoot)DEBIAN" .' />
+    <Exec Command='tar --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)data.tar.gz" -C "$(PackageRoot)" --exclude=./DEBIAN .' />
+    <Exec Command='rm -f "$(DebOutput)"' />
+    <Exec Command='ar rc "$(DebOutput)" "$(DebWorkRoot)debian-binary" "$(DebWorkRoot)control.tar.gz" "$(DebWorkRoot)data.tar.gz"' />
+    <Message Importance="high" Text="Built $(DebOutput)" />
+  </Target>
+
+  <Target Name="BuildRpm" DependsOnTargets="StageLinuxPackage" Condition="'$(PackageFormat)' == 'rpm'">
+    <PropertyGroup>
+      <RpmWorkRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'work', 'linux-rpm-$(PackageArchitecture)'))</RpmWorkRoot>
+      <RpmTopDir>$([MSBuild]::NormalizeDirectory('$(RpmWorkRoot)', 'rpmbuild'))</RpmTopDir>
+      <RpmSourceRoot>$([MSBuild]::NormalizeDirectory('$(RpmWorkRoot)', '$(PackageId)-$(PackageVersionBase)'))</RpmSourceRoot>
+      <RpmSpec>$(RpmTopDir)SPECS/$(PackageId).spec</RpmSpec>
+      <RpmOutput>$(DistRoot)$(PackageFileBase).rpm</RpmOutput>
+    </PropertyGroup>
+
+    <Exec Command='command -v rpmbuild' />
+    <RemoveDir Directories="$(RpmTopDir);$(RpmSourceRoot)" />
+    <MakeDir Directories="$(RpmTopDir)BUILD;$(RpmTopDir)BUILDROOT;$(RpmTopDir)RPMS;$(RpmTopDir)SOURCES;$(RpmTopDir)SPECS;$(RpmTopDir)SRPMS;$(RpmSourceRoot)" />
+    <Exec Command='cp -a "$(PackageRoot)opt" "$(PackageRoot)usr" "$(RpmSourceRoot)/"' />
+    <Exec Command='tar -czf "$(RpmTopDir)SOURCES/$(PackageId)-$(PackageVersionBase).tar.gz" -C "$(RpmWorkRoot)" "$(PackageId)-$(PackageVersionBase)"' />
+
+    <ItemGroup>
+      <RpmSpecLines Include="%25global debug_package %{nil}" />
+      <RpmSpecLines Include="%25global __os_install_post %{nil}" />
+      <RpmSpecLines Include="Name:           $(PackageId)" />
+      <RpmSpecLines Include="Version:        $(PackageVersionBase)" />
+      <RpmSpecLines Include="Release:        $(RpmRelease)%{?dist}" />
+      <RpmSpecLines Include="Summary:        Desktop app and CLI for managing encrypted file lockers" />
+      <RpmSpecLines Include="License:        GPL-3.0-or-later" />
+      <RpmSpecLines Include="URL:            https://github.com/ColDog-Studios/ColDog-Locker" />
+      <RpmSpecLines Include="Source0:        %{name}-%{version}.tar.gz" />
+      <RpmSpecLines Include="BuildArch:      $(RpmArchitecture)" />
+      <RpmSpecLines Include="AutoReqProv:    no" />
+      <RpmSpecLines Include="%25description" />
+      <RpmSpecLines Include="ColDog Locker installs the cdlocker command and Avalonia desktop app" />
+      <RpmSpecLines Include="under /opt/coldog-locker. Runtime settings, logs, and locker metadata" />
+      <RpmSpecLines Include="are stored per user by the application." />
+      <RpmSpecLines Include="%25prep" />
+      <RpmSpecLines Include="%25setup -q" />
+      <RpmSpecLines Include="%25build" />
+      <RpmSpecLines Include="%25install" />
+      <RpmSpecLines Include="mkdir -p %{buildroot}" />
+      <RpmSpecLines Include="cp -a opt usr %{buildroot}/" />
+      <RpmSpecLines Include="%25files" />
+      <RpmSpecLines Include="/opt/coldog-locker" />
+      <RpmSpecLines Include="/usr/bin/cdlocker" />
+      <RpmSpecLines Include="/usr/share/applications/coldog-locker.desktop" />
+      <RpmSpecLines Include="/usr/share/applications/cdlocker.desktop" />
+      <RpmSpecLines Include="/usr/share/icons/hicolor/256x256/apps/coldog-locker.png" />
+      <RpmSpecLines Include="%25changelog" />
+      <RpmSpecLines Include="%2A Sat Jun 06 2026 Collin Laney &lt;collin.laney@coldogstudios.com&gt; - $(PackageVersionBase)-$(RpmRelease)" />
+      <RpmSpecLines Include="- Local package build." />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(RpmSpec)" Lines="@(RpmSpecLines)" Overwrite="true" />
+    <Exec Command='rpmbuild -bb --target "$(RpmArchitecture)" --define="_topdir $(RpmTopDir.TrimEnd(`/`))" "$(RpmSpec)"' />
+    <Exec Command='rm -f "$(RpmOutput)"' />
+    <Exec Command='cp "$(RpmTopDir)RPMS/$(RpmArchitecture)"/*.rpm "$(RpmOutput)"' />
+    <Message Importance="high" Text="Built $(RpmOutput)" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="BuildDeb;BuildRpm" />
+</Project>

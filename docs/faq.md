@@ -2,7 +2,7 @@
 
 ## Is ColDog Locker ready for production use?
 
-Not yet. It is pre-release software. The core CLI, TUI, and Avalonia GUI exist, but release packaging and cross-platform GUI validation are still in progress.
+Not yet. It is pre-release software. The core CLI, TUI, and Avalonia GUI exist, but release packaging and cross-platform GUI validation are still in progress. Automated prerelease assets include Windows, Linux, and experimental macOS packages. macOS `.pkg` builds are unsigned, unnotarized, and untested.
 
 ## What is a locker?
 
@@ -82,7 +82,7 @@ That is the current CLI behavior. Use `cdlocker gui` to launch the graphical int
 
 ## What GUI should I use?
 
-Use the Avalonia GUI through `cdlocker gui` on supported platforms. The WPF GUI is still in the repository temporarily as a legacy migration reference. On macOS, use the TUI for now.
+Use the Avalonia GUI through `cdlocker gui` on supported platforms. The WPF GUI is still in the repository temporarily as a legacy migration reference. On macOS, `cdlocker gui` is still unsupported; experimental `.pkg` builds install `/Applications/ColDog Locker.app` for direct validation.
 
 ## What does `verify` prove?
 

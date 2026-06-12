@@ -23,11 +23,19 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
     /// </summary>
     public static class AppPaths
     {
+        private static readonly string LocalApplicationData = GetAbsoluteSpecialFolderPath(
+            System.Environment.SpecialFolder.LocalApplicationData,
+            System.Environment.SpecialFolder.UserProfile);
+
+        private static readonly string Documents = GetAbsoluteSpecialFolderPath(
+            System.Environment.SpecialFolder.MyDocuments,
+            System.Environment.SpecialFolder.UserProfile);
+
         /// <summary>
         ///     Local configuration directory
         /// </summary>
         public static readonly string LocalConfig = Path.Combine(
-            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+            LocalApplicationData,
             "ColDog Studios",
             "ColDog Locker"
         );
@@ -36,8 +44,27 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         ///     Default ColDog Locker Directory
         /// </summary>
         public static readonly string CdlDir = Path.Combine(
-            System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments),
+            Documents,
             "ColDog Locker"
         );
+
+        private static string GetAbsoluteSpecialFolderPath(
+            System.Environment.SpecialFolder preferredFolder,
+            System.Environment.SpecialFolder fallbackFolder)
+        {
+            var path = System.Environment.GetFolderPath(preferredFolder);
+            if (!string.IsNullOrWhiteSpace(path) && Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            path = System.Environment.GetFolderPath(fallbackFolder);
+            if (!string.IsNullOrWhiteSpace(path) && Path.IsPathRooted(path))
+            {
+                return path;
+            }
+
+            return Path.GetFullPath(".");
+        }
     }
 }
