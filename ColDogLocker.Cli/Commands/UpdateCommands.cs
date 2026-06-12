@@ -69,6 +69,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
         }
 
+        // TODO: show update notes regardless and remove the --notes flag
         private static void PrintUpdateResult(UpdateCheckResult result, bool showNotes)
         {
             Console.WriteLine($"Current Version: {result.CurrentVersion}");
