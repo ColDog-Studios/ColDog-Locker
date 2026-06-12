@@ -215,13 +215,13 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         }
 
         [Fact]
-        public async Task CheckForUpdatesAsync_UnstableChannel_ShouldAcceptBranchSuffixedPrereleaseTag()
+        public async Task CheckForUpdatesAsync_UnstableChannel_ShouldAcceptSequentialPrereleaseTag()
         {
             // Arrange
             var releasesJson =
                 $$"""
                 [
-                  {{CreateReleaseObject("v1.3.0-alpha.main.123.1", "Main alpha", false, true, ("ColDogLocker-win-x64-setup.exe", "https://downloads.example/main-alpha.exe", Sha256Digest("main-alpha")))}}
+                  {{CreateReleaseObject("v1.3.0-alpha.1", "## Features\n- Sequential prerelease", false, true, ("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", "https://downloads.example/main-alpha.exe", Sha256Digest("main-alpha")))}}
                 ]
                 """;
 
@@ -240,8 +240,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Assert
             Assert.True(result.UpdateAvailable);
             Assert.True(result.CanDownload);
-            Assert.Equal("1.3.0-alpha.main.123.1", result.LatestVersion);
-            Assert.Equal("ColDogLocker-win-x64-setup.exe", result.InstallerFileName);
+            Assert.Equal("1.3.0-alpha.1", result.LatestVersion);
+            Assert.Equal("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", result.InstallerFileName);
+            Assert.Contains("Sequential prerelease", result.ReleaseNotesMarkdown);
         }
 
         [Fact]
