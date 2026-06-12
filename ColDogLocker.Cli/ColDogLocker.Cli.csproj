@@ -9,7 +9,8 @@
         <!-- Single File Publishing - Only applies when explicitly publishing with a RID -->
         <PublishSingleFile Condition="'$(RuntimeIdentifier)' != ''">true</PublishSingleFile>
         <SelfContained Condition="'$(RuntimeIdentifier)' != ''">true</SelfContained>
-        <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">true</PublishTrimmed>
+        <!-- The CLI uses reflection-based JSON paths for updates and structured logging. Keep RID publishes untrimmed unless those paths are made trim-safe. -->
+        <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">false</PublishTrimmed>
         <IncludeNativeLibrariesForSelfExtract Condition="'$(RuntimeIdentifier)' != ''">true</IncludeNativeLibrariesForSelfExtract>
 
         <ApplicationIcon>..\resources\cdlIcon.ico</ApplicationIcon>

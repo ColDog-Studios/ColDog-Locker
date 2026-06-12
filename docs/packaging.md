@@ -42,25 +42,18 @@ Fedora/RHEL example for RPM tooling:
 sudo dnf install rpm-build
 ```
 
-Fedora local RPM validation uses the repository helper:
+Fedora local RPM validation can be done with `rpm` after building the package:
 
 ```bash
-scripts/test-rpm-package.sh
+rpm -qpi artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
+rpm -qpl artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 ```
 
-That builds the current-architecture RPM if needed, checks package metadata and contents, extracts the package to a temporary tree, and runs the packaged `cdlocker --version` without installing system-wide.
-
-To perform a real install/remove smoke test on Fedora:
-
-```bash
-scripts/test-rpm-package.sh --install
-```
-
-The `--install` mode refuses to proceed if `coldog-locker` is already installed.
+For a real install/remove smoke test on Fedora, use a clean machine or VM and run `sudo dnf install ./artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm`, then remove it with `sudo dnf remove coldog-locker`.
 
 ## Build Commands
 
-Manual CI packaging is available from the `Packages` workflow in GitHub Actions. The workflow currently uses only `workflow_dispatch`; the future `push` trigger for `main`, `test`, and `staging` is present but commented out.
+Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated alpha prereleases are published by the `Release` workflow on pushes to `main` and `test`.
 
 The macOS package job is opt-in and defaults off because those packages are experimental and unsigned.
 
@@ -92,12 +85,11 @@ dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t
 dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=arm64 -p:Configuration=Release
 ```
 
-Local RPM validation on Fedora:
+Local RPM metadata validation on Fedora:
 
 ```bash
-scripts/test-rpm-package.sh
-scripts/test-rpm-package.sh artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
-scripts/test-rpm-package.sh --install artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
+rpm -qpi artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
+rpm -qpl artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 ```
 
 macOS PKG, experimental unsigned:
@@ -189,7 +181,7 @@ The default locker parent directory remains the user's documents folder as defin
 
 Debian package purge removes reserved system config/data directories if they are added later. Normal package removal leaves per-user app data in place because Debian and RPM package managers do not provide an interactive uninstall checkbox for per-user home directories.
 
-On Fedora, use `scripts/test-rpm-package.sh` to validate the RPM without installing it. Add `--install` only when you want a real `sudo dnf install` / `sudo dnf remove` smoke test.
+On Fedora, use `rpm -qpi` and `rpm -qpl` to validate RPM metadata and installed paths without installing it. Use a clean machine or VM for real `sudo dnf install` / `sudo dnf remove` smoke tests.
 
 ## macOS Package Layout
 

@@ -1,0 +1,234 @@
+name: Release
+
+on:
+  push:
+    branches: [ main, test ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  CONFIGURATION: Release
+
+jobs:
+  version:
+    name: Release Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.metadata.outputs.package_version }}
+      release_version: ${{ steps.metadata.outputs.release_version }}
+      tag_name: ${{ steps.metadata.outputs.tag_name }}
+      release_name: ${{ steps.metadata.outputs.release_name }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Compute release metadata
+      id: metadata
+      shell: bash
+      run: |
+        python3 <<'PY' >> "$GITHUB_OUTPUT"
+        import os
+        import re
+        import xml.etree.ElementTree as ET
+
+        version = ET.parse("Directory.Build.props").getroot().find(".//Version").text.strip()
+        branch = os.environ["GITHUB_REF_NAME"]
+        safe_branch = re.sub(r"[^0-9A-Za-z-]+", "-", branch).strip("-").lower() or "manual"
+        run_number = os.environ["GITHUB_RUN_NUMBER"]
+        run_attempt = os.environ["GITHUB_RUN_ATTEMPT"]
+
+        if "-" in version:
+            release_version = f"{version}.{safe_branch}.{run_number}.{run_attempt}"
+        else:
+            release_version = f"{version}-{safe_branch}.{run_number}.{run_attempt}"
+
+        print(f"package_version={version}")
+        print(f"release_version={release_version}")
+        print(f"tag_name=v{release_version}")
+        print(f"release_name=ColDog Locker {release_version}")
+        PY
+
+  tests:
+    name: Release Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+
+    - name: Run tests
+      run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" --verbosity normal
+
+  windows-packages:
+    name: Windows Packages (${{ matrix.arch }})
+    runs-on: windows-latest
+    needs: [ version, tests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore installer project
+      run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
+
+    - name: Build MSI and setup EXE
+      run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ env.CONFIGURATION }}" -p:PackageArchitecture=${{ matrix.arch }} --no-restore
+
+    - name: Upload Windows packages
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-win-${{ matrix.arch }}
+        path: |
+          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-win-${{ matrix.arch }}.msi
+          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-win-${{ matrix.arch }}-setup.exe
+        if-no-files-found: error
+
+  linux-deb:
+    name: Linux DEB (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    needs: [ version, tests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ x64, arm64 ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install package tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y binutils tar gzip
+
+    - name: Build DEB
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}"
+
+    - name: Upload DEB
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-linux-${{ matrix.arch }}-deb
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-linux-${{ matrix.arch }}.deb
+        if-no-files-found: error
+
+  linux-rpm:
+    name: Linux RPM (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [ version, tests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install package tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y rpm tar gzip
+
+    - name: Build RPM
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}"
+
+    - name: Upload RPM
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-linux-${{ matrix.arch }}-rpm
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-linux-${{ matrix.arch }}.rpm
+        if-no-files-found: error
+
+  publish:
+    name: Publish Prerelease
+    runs-on: ubuntu-latest
+    needs: [ version, tests, windows-packages, linux-deb, linux-rpm ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Download package artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: release-*
+        path: release-assets
+        merge-multiple: true
+
+    - name: Generate checksums
+      shell: bash
+      run: |
+        cd release-assets
+        find . -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+        find . -maxdepth 1 -type f -printf '%f\n' | sort
+
+    - name: Write release notes
+      shell: bash
+      env:
+        PACKAGE_VERSION: ${{ needs.version.outputs.package_version }}
+        RELEASE_VERSION: ${{ needs.version.outputs.release_version }}
+      run: |
+        cat > release-notes.md <<EOF
+        Automated alpha prerelease from \`${GITHUB_REF_NAME}\`.
+
+        - Source commit: \`${GITHUB_SHA}\`
+        - Package version: \`${PACKAGE_VERSION}\`
+        - Release version: \`${RELEASE_VERSION}\`
+
+        Windows and Linux package assets are attached. macOS packages are not included in automated releases yet.
+        EOF
+
+    - name: Create GitHub prerelease
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG_NAME: ${{ needs.version.outputs.tag_name }}
+        RELEASE_NAME: ${{ needs.version.outputs.release_name }}
+      run: |
+        gh release create "$TAG_NAME" release-assets/* \
+          --target "$GITHUB_SHA" \
+          --title "$RELEASE_NAME" \
+          --notes-file release-notes.md \
+          --prerelease

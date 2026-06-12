@@ -31,7 +31,7 @@ on:
 
 jobs:
   windows-msi:
-    name: Windows MSI (${{ matrix.arch }})
+    name: Windows Installer (${{ matrix.arch }})
     runs-on: windows-latest
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
     strategy:
@@ -51,14 +51,16 @@ jobs:
     - name: Restore installer project
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
 
-    - name: Build MSI
+    - name: Build MSI and setup EXE
       run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ inputs.configuration || 'Release' }}" -p:PackageArchitecture=${{ matrix.arch }} --no-restore
 
-    - name: Upload MSI
+    - name: Upload Windows packages
       uses: actions/upload-artifact@v7
       with:
         name: package-win-${{ matrix.arch }}
-        path: artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}.msi
+        path: |
+          artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}.msi
+          artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}-setup.exe
         if-no-files-found: error
 
   linux-deb:

@@ -1,76 +1,59 @@
-# Release Automation Plan
+# Release Automation
 
-This is the intended shape for future CI release automation. It is not wired into workflows yet.
+Release automation is wired through `.github/workflows/release.yml`.
 
-Package artifact CI is wired through `.github/workflows/package.yml` as a manual workflow. Its future `push` trigger is intentionally commented out until release automation is ready.
+Current alpha policy:
 
-The workflow has an opt-in macOS package job for experimental unsigned `.pkg` artifacts. That job defaults off and should stay excluded from supported release automation until macOS validation, signing, and notarization decisions are revisited.
+- Pushes to `main` publish an automated prerelease.
+- Pushes to `test` publish an automated prerelease.
+- `workflow_dispatch` can publish the same prerelease flow manually.
+- macOS packages remain excluded from automated releases because they are unsigned, unnotarized, and experimental.
 
-## Branch Model
+## Version And Tags
 
-Use branch pushes, not pull request events, as the release trigger:
+The workflow reads `Version` from `Directory.Build.props`.
 
-- `main`: create a production GitHub Release.
-- `test` or `staging`: create a prerelease GitHub Release.
-
-With branch protection, a push to `main` normally means an accepted pull request was merged. If direct pushes are allowed, they will trigger the same release workflow.
-
-## Version Source
-
-The workflow should read `Version` from `Directory.Build.props` and use it as the release version source.
-
-Recommended tag names:
+Automated prerelease tags include the source branch and workflow run identifiers so repeated alpha builds do not collide:
 
 ```text
-v<version>
-v<version-with-prerelease>
+v<version>.<branch>.<run-number>.<run-attempt>
+v<version>-<branch>.<run-number>.<run-attempt>
 ```
 
-For repeated prerelease builds from a staging branch, the workflow needs either:
+If `Version` already contains a prerelease label, the branch/run suffix is appended to that label. For example, `0.8.0-alpha` on `main` becomes:
 
-- A unique version in `Directory.Build.props` for each prerelease, or
-- A CI suffix in the staging tag and asset names, such as `v<version>.42`.
+```text
+v0.8.0-alpha.main.123.1
+```
 
-Git tags and release asset names must be unique. Reusing the same version for repeated staging releases will conflict unless the workflow deletes/replaces the existing prerelease, which is not a good default.
+If `Version` is stable-shaped, the workflow still publishes a prerelease by adding a prerelease suffix. For example, `0.8.0` on `test` becomes:
 
-## Production Release Flow
+```text
+v0.8.0-test.123.1
+```
 
-For `main`:
+Package filenames still use the MSBuild `Version` value, so assets keep the app/package version while release tags stay unique during alpha testing.
 
-1. Check out the merge commit.
+## Automated Flow
+
+For `main`, `test`, and manual dispatch:
+
+1. Check out the triggering commit.
 2. Read `Version` from `Directory.Build.props`.
-3. Fail if tag `v<Version>` or a release for that tag already exists.
-4. Run tests.
-5. Build package artifacts for Windows and Linux.
-6. Create tag `v<Version>` at the merge commit.
-7. Create a GitHub Release for the tag.
-8. Generate release notes from merged pull requests.
-9. Upload `.msi`, `.deb`, and `.rpm` assets.
-10. Mark the release as latest.
+3. Run `dotnet test` in `Release`.
+4. Build Windows x64 and arm64 `.msi` plus setup `.exe` installers.
+5. Build Linux x64 and arm64 `.deb` packages.
+6. Build Linux x64 and arm64 `.rpm` packages.
+7. Download all package artifacts into one release asset directory.
+8. Generate `SHA256SUMS.txt`.
+9. Create a GitHub prerelease for the unique tag.
+10. Upload `.msi`, `.exe`, `.deb`, `.rpm`, and `SHA256SUMS.txt` assets.
 
-The release job needs `contents: write` permissions.
-
-## Staging Prerelease Flow
-
-For `test` or `staging`:
-
-1. Check out the staging commit.
-2. Read `Version` from `Directory.Build.props`.
-3. Add a unique CI suffix if the branch can publish more than one prerelease per version.
-4. Run tests.
-5. Build package artifacts.
-6. Create a staging tag.
-7. Create a GitHub prerelease.
-8. Generate release notes.
-9. Upload package assets.
-
-Prereleases should not be marked as latest. GitHub does not allow drafts or prereleases to be latest releases.
-
-GitHub-hosted macOS runners are available for manual package validation and automated tests. The test workflow runs unit and CLI E2E jobs on `macos-15-intel` for x64 and `macos-15` for arm64. GUI E2E coverage still needs deliberate design before it should be considered a supported release gate.
+The release job uses `contents: write` so it can create tags and GitHub Releases.
 
 ## Current Package Build Entrypoints
 
-Windows MSI:
+Windows MSI and setup EXE:
 
 ```powershell
 dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c Release -p:PackageArchitecture=x64
@@ -92,3 +75,13 @@ macOS PKG, experimental unsigned:
 dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=x64 -p:Configuration=Release
 dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=arm64 -p:Configuration=Release
 ```
+
+## Release Validation
+
+After the prerelease is published:
+
+1. Confirm all expected Windows and Linux assets are attached.
+2. Confirm GitHub shows `sha256:` digests for package assets.
+3. Confirm `cdlocker update --notes` sees the prerelease when the app is on the unstable update channel.
+4. Confirm `cdlocker update --download` downloads and verifies the matching package. On Windows, this should be the `.msi` asset when both `.msi` and setup `.exe` assets are attached.
+5. Test installers on clean Windows and Linux machines or VMs before treating the prerelease as broadly usable.

@@ -553,8 +553,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             var extensionScore = platform.OperatingSystem switch
             {
-                UpdateOperatingSystem.Windows when name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) => 60,
-                UpdateOperatingSystem.Windows when name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) => 50,
+                UpdateOperatingSystem.Windows when name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) => 70,
+                UpdateOperatingSystem.Windows when name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Deb &&
                                              name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Rpm &&

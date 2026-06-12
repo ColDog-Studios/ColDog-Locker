@@ -160,14 +160,19 @@ Current behavior:
 - The installer must still be run manually.
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
+On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
 
 Suggested names:
 
 ```text
 ColDogLocker-<version>-win-x64.msi
 ColDogLocker-<version>-win-arm64.msi
+ColDogLocker-<version>-win-x64-setup.exe
+ColDogLocker-<version>-win-arm64-setup.exe
 ColDogLocker-<version>-linux-x64.deb
+ColDogLocker-<version>-linux-arm64.deb
 ColDogLocker-<version>-linux-x64.rpm
+ColDogLocker-<version>-linux-arm64.rpm
 ColDogLocker-<version>-macos-x64.pkg
 ColDogLocker-<version>-macos-arm64.pkg
 ```
@@ -204,15 +209,9 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 6. Confirm Avalonia GUI workflows on Windows.
 7. Confirm Linux desktop menu entries for `ColDogLocker` and `cdlocker`.
 8. Confirm TUI workflows on non-GUI environments.
-9. Validate RPM layout locally on Fedora:
-
-```bash
-scripts/test-rpm-package.sh
-```
-
+9. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
 10. Confirm update asset naming and SHA-256 digest availability.
-11. Create a GitHub Release with clear stable/unstable intent.
-12. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
+11. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
 
 ## Open Distribution Decisions
 
