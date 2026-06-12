@@ -36,8 +36,8 @@
     <RemoveDir Directories="$(CliPublishRoot);$(GuiPublishRoot)" />
     <MakeDir Directories="$(CliPublishRoot);$(GuiPublishRoot);$(DistRoot)" />
 
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishDir="$(CliPublishRoot)"' />
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(GuiPublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishDir="$(CliPublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(GuiPublishRoot)"' />
   </Target>
 
   <Target Name="StageMacPackage" DependsOnTargets="PublishInstallerApps">

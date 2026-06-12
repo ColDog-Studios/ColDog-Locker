@@ -69,8 +69,8 @@
     <RemoveDir Directories="$(InstallerPublishRoot)" />
     <MakeDir Directories="$(InstallerPublishRoot);$(DistRoot)" />
 
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:PublishSingleFile=false -p:PublishTrimmed=false -p:PublishDir="$(InstallerPublishPath)"' />
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:PublishSingleFile=false -p:PublishDir="$(InstallerPublishPath)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=false -p:PublishTrimmed=false -p:PublishDir="$(InstallerPublishPath)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=false -p:PublishDir="$(InstallerPublishPath)"' />
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(InstallerPublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(InstallerPublishRoot)" />
@@ -86,7 +86,7 @@
     <MSBuild
       Projects="$(MSBuildProjectFullPath)"
       Targets="Build"
-      Properties="Configuration=$(Configuration);PackageArchitecture=$(PackageArchitecture);BuildSetupBundleOnly=true;BuildSetupBundle=false;UseSharedCompilation=false" />
+      Properties="Configuration=$(Configuration);PackageArchitecture=$(PackageArchitecture);Version=$(Version);InformationalVersion=$(InformationalVersion);BuildSetupBundleOnly=true;BuildSetupBundle=false;UseSharedCompilation=false" />
     <Copy SourceFiles="$(BundleSourceMsiPath)" DestinationFiles="$(MsiPackagePath)" />
     <Delete Files="$(BundleSourceMsiPath)" />
   </Target>

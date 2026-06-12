@@ -38,8 +38,8 @@
     <RemoveDir Directories="$(PublishRoot)" />
     <MakeDir Directories="$(PublishRoot);$(DistRoot)" />
 
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishDir="$(PublishRoot)"' />
-    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(PublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Cli/ColDogLocker.Cli.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishDir="$(PublishRoot)"' />
+    <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(PublishRoot)"' />
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(PublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(PublishRoot)" />
