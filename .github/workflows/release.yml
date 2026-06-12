@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [ main, test ]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,10 @@ concurrency:
 env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
+  TEST_PROJECTS: |
+    ColDogLocker.Core.Tests/ColDogLocker.Core.Tests.csproj
+    ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj
+    ColDogLocker.Avalonia.Tests/ColDogLocker.Avalonia.Tests.csproj
 
 jobs:
   version:
@@ -25,6 +29,7 @@ jobs:
       release_version: ${{ steps.metadata.outputs.release_version }}
       tag_name: ${{ steps.metadata.outputs.tag_name }}
       release_name: ${{ steps.metadata.outputs.release_name }}
+      release_flags: ${{ steps.metadata.outputs.release_flags }}
 
     steps:
     - name: Checkout code
@@ -33,27 +38,49 @@ jobs:
     - name: Compute release metadata
       id: metadata
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
+        {
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases" --jq '.[].tag_name'
+          git ls-remote --tags --refs origin 'v*' | awk '{print $2}' | sed 's#refs/tags/##'
+        } | sort -u > existing-release-refs.txt
+
         python3 <<'PY' >> "$GITHUB_OUTPUT"
-        import os
         import re
         import xml.etree.ElementTree as ET
+        from pathlib import Path
 
         version = ET.parse("Directory.Build.props").getroot().find(".//Version").text.strip()
-        branch = os.environ["GITHUB_REF_NAME"]
-        safe_branch = re.sub(r"[^0-9A-Za-z-]+", "-", branch).strip("-").lower() or "manual"
-        run_number = os.environ["GITHUB_RUN_NUMBER"]
-        run_attempt = os.environ["GITHUB_RUN_ATTEMPT"]
+        existing_refs = Path("existing-release-refs.txt").read_text(encoding="utf-8").splitlines()
 
         if "-" in version:
-            release_version = f"{version}.{safe_branch}.{run_number}.{run_attempt}"
+            base_version, prerelease = version.split("-", 1)
+            prerelease_label = prerelease.split(".", 1)[0].lower()
+            if prerelease_label not in {"alpha", "beta", "rc"}:
+                raise SystemExit(f"Unsupported prerelease label '{prerelease_label}'. Expected alpha, beta, or rc.")
+
+            pattern = re.compile(rf"^v{re.escape(base_version)}-{re.escape(prerelease_label)}\.(\d+)$")
+            existing_sequences = [
+                int(match.group(1))
+                for ref in existing_refs
+                if (match := pattern.match(ref))
+            ]
+            next_sequence = max(existing_sequences, default=0) + 1
+            release_version = f"{base_version}-{prerelease_label}.{next_sequence}"
+            release_flags = "--prerelease"
         else:
-            release_version = f"{version}-{safe_branch}.{run_number}.{run_attempt}"
+            release_version = version
+            release_flags = ""
+            tag_name = f"v{release_version}"
+            if tag_name in existing_refs:
+                raise SystemExit(f"Release tag '{tag_name}' already exists. Bump Version before publishing a stable release.")
 
         print(f"package_version={version}")
         print(f"release_version={release_version}")
         print(f"tag_name=v{release_version}")
-        print(f"release_name=ColDog Locker {release_version}")
+        print(f"release_name={release_version}")
+        print(f"release_flags={release_flags}")
         PY
 
   tests:
@@ -70,13 +97,28 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore dependencies
-      run: dotnet restore
+      shell: bash
+      run: |
+        while IFS= read -r project; do
+          [ -n "$project" ] || continue
+          dotnet restore "$project" -m:1
+        done <<< "${TEST_PROJECTS}"
 
     - name: Build
-      run: dotnet build --no-restore --configuration "${{ env.CONFIGURATION }}"
+      shell: bash
+      run: |
+        while IFS= read -r project; do
+          [ -n "$project" ] || continue
+          dotnet build "$project" --no-restore --configuration "${{ env.CONFIGURATION }}" -m:1 -p:UseSharedCompilation=false
+        done <<< "${TEST_PROJECTS}"
 
     - name: Run tests
-      run: dotnet test --no-build --configuration "${{ env.CONFIGURATION }}" --verbosity normal
+      shell: bash
+      run: |
+        while IFS= read -r project; do
+          [ -n "$project" ] || continue
+          dotnet test "$project" --no-build --configuration "${{ env.CONFIGURATION }}" --verbosity normal
+        done <<< "${TEST_PROJECTS}"
 
   windows-packages:
     name: Windows Packages (${{ matrix.arch }})
@@ -100,15 +142,15 @@ jobs:
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
 
     - name: Build MSI and setup EXE
-      run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ env.CONFIGURATION }}" -p:PackageArchitecture=${{ matrix.arch }} --no-restore
+      run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ env.CONFIGURATION }}" -p:PackageArchitecture=${{ matrix.arch }} -p:Version=${{ needs.version.outputs.release_version }} --no-restore
 
     - name: Upload Windows packages
       uses: actions/upload-artifact@v7
       with:
         name: release-win-${{ matrix.arch }}
         path: |
-          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-win-${{ matrix.arch }}.msi
-          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-win-${{ matrix.arch }}-setup.exe
+          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-win-${{ matrix.arch }}.msi
+          artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-win-${{ matrix.arch }}-setup.exe
         if-no-files-found: error
 
   linux-deb:
@@ -135,13 +177,13 @@ jobs:
         sudo apt-get install -y binutils tar gzip
 
     - name: Build DEB
-      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}"
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
 
     - name: Upload DEB
       uses: actions/upload-artifact@v7
       with:
         name: release-linux-${{ matrix.arch }}-deb
-        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-linux-${{ matrix.arch }}.deb
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.deb
         if-no-files-found: error
 
   linux-rpm:
@@ -172,23 +214,57 @@ jobs:
         sudo apt-get install -y rpm tar gzip
 
     - name: Build RPM
-      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}"
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
 
     - name: Upload RPM
       uses: actions/upload-artifact@v7
       with:
         name: release-linux-${{ matrix.arch }}-rpm
-        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.package_version }}-linux-${{ matrix.arch }}.rpm
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.rpm
         if-no-files-found: error
 
-  publish:
-    name: Publish Prerelease
-    runs-on: ubuntu-latest
-    needs: [ version, tests, windows-packages, linux-deb, linux-rpm ]
+  macos-pkg:
+    name: macOS PKG (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [ version, tests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+          - arch: arm64
+            runner: macos-15
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Build unsigned PKG
+      run: dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
+
+    - name: Upload PKG
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-macos-${{ matrix.arch }}-pkg
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-macos-${{ matrix.arch }}.pkg
+        if-no-files-found: error
+
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: [ version, tests, windows-packages, linux-deb, linux-rpm, macos-pkg ]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
 
     - name: Download package artifacts
       uses: actions/download-artifact@v8
@@ -197,38 +273,63 @@ jobs:
         path: release-assets
         merge-multiple: true
 
-    - name: Generate checksums
+    - name: List release assets
       shell: bash
       run: |
-        cd release-assets
-        find . -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
-        find . -maxdepth 1 -type f -printf '%f\n' | sort
+        find release-assets -maxdepth 1 -type f -printf '%f\n' | sort
 
-    - name: Write release notes
+    - name: Setup Node
+      uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+
+    - name: Generate release notes
       shell: bash
       env:
-        PACKAGE_VERSION: ${{ needs.version.outputs.package_version }}
         RELEASE_VERSION: ${{ needs.version.outputs.release_version }}
       run: |
-        cat > release-notes.md <<EOF
-        Automated alpha prerelease from \`${GITHUB_REF_NAME}\`.
-
-        - Source commit: \`${GITHUB_SHA}\`
-        - Package version: \`${PACKAGE_VERSION}\`
-        - Release version: \`${RELEASE_VERSION}\`
-
-        Windows and Linux package assets are attached. macOS packages are not included in automated releases yet.
+        cat > package.json <<EOF
+        {
+          "name": "coldog-locker",
+          "version": "${RELEASE_VERSION}",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/${GITHUB_REPOSITORY}.git"
+          }
+        }
         EOF
 
-    - name: Create GitHub prerelease
+        npm install --no-save --no-audit --no-fund \
+          conventional-changelog@7.2.0 \
+          conventional-changelog-conventionalcommits@9.3.1
+
+        npx conventional-changelog \
+          --config .github/conventional-changelog.config.mjs \
+          --tag-prefix v \
+          --release-count 1 \
+          --outfile release-notes.md
+
+        if [ ! -s release-notes.md ]; then
+          cat > release-notes.md <<EOF
+        ## ${RELEASE_VERSION}
+
+        No conventional commit entries were found for this release.
+        EOF
+        fi
+
+    - name: Create GitHub release
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         TAG_NAME: ${{ needs.version.outputs.tag_name }}
         RELEASE_NAME: ${{ needs.version.outputs.release_name }}
+        RELEASE_FLAGS: ${{ needs.version.outputs.release_flags }}
       run: |
-        gh release create "$TAG_NAME" release-assets/* \
+        args=(gh release create "$TAG_NAME" release-assets/* \
           --target "$GITHUB_SHA" \
           --title "$RELEASE_NAME" \
-          --notes-file release-notes.md \
-          --prerelease
+          --notes-file release-notes.md)
+        if [ -n "$RELEASE_FLAGS" ]; then
+          args+=("$RELEASE_FLAGS")
+        fi
+        "${args[@]}"
