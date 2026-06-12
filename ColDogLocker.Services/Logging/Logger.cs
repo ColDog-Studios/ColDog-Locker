@@ -339,10 +339,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         {
             try
             {
-                if (!Directory.Exists(_logDirectory))
-                {
-                    Directory.CreateDirectory(_logDirectory);
-                }
+                EnsureLogDirectory();
 
                 RotateLogFileIfNeeded();
 
@@ -369,10 +366,28 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             }
             catch (Exception ex)
             {
+                TryWriteFallbackLog(logEntry, ex);
+            }
+        }
+
+        private static void EnsureLogDirectory()
+        {
+            Directory.CreateDirectory(_logDirectory);
+        }
+
+        private static void TryWriteFallbackLog(LogEntry logEntry, Exception loggerException)
+        {
+            try
+            {
+                EnsureLogDirectory();
                 var fallbackFileName = Path.GetFileName($"fallback_{_sessionId}.txt");
                 var fallbackPath = Path.Combine(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
-                    $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {ex.Message}){Environment.NewLine}");
+                    $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {loggerException.Message}){Environment.NewLine}");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"An exception occurred while writing fallback log entries: {ex}");
             }
         }
 
@@ -488,6 +503,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
                 lock (_lockObject)
                 {
+                    EnsureLogDirectory();
                     var line = _logFormat.Equals("json", StringComparison.InvariantCultureIgnoreCase)
                         ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                         : FormatPlainText(logEntry);
