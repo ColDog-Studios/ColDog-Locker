@@ -2,6 +2,8 @@
 
 ColDog Locker packages are built from the current MSBuild version metadata in `Directory.Build.props`. The installer projects inherit that metadata at build time, so package names and metadata follow the same `Version`, `FileVersion`, `InformationalVersion`, and `AssemblyVersion` values used by the app.
 
+Release automation passes the computed release version with `-p:Version=<release-version>` so prerelease sequence tags, package names, and the app-reported version stay aligned. Local package builds can use the same property override when validating a release candidate.
+
 ## Supported Packages
 
 | OS | Format | Architectures | Install scope |
@@ -53,9 +55,9 @@ For a real install/remove smoke test on Fedora, use a clean machine or VM and ru
 
 ## Build Commands
 
-Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated alpha prereleases are published by the `Release` workflow on pushes to `main` and `test`.
+Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated releases are published by the `Release` workflow on pushes to `main` and by manual dispatch.
 
-The macOS package job is opt-in and defaults off because those packages are experimental and unsigned.
+The manual `Packages` workflow still keeps the macOS package job opt-in because those packages are experimental and unsigned. The automated `Release` workflow includes macOS `.pkg` assets so update checks can see the same platform matrix as Windows and Linux.
 
 Windows MSI and setup EXE:
 

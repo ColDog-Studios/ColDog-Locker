@@ -16,8 +16,8 @@ This directory contains the working documentation for ColDog Locker.
 - [GUI Status and Plans](gui-plans.md) - current WPF/Avalonia/TUI status and UI direction.
 - [Distribution Plan](distribution-plan.md) - build, publish, packaging, update, and installer notes.
 - [Local Packaging](packaging.md) - local package build and validation commands.
-- [Release Automation Plan](release-automation.md) - intended release CI shape.
+- [Release Automation](release-automation.md) - current release CI shape.
 
 ## Current Status
 
-ColDog Locker is pre-release software. The CLI, TUI, and Avalonia GUI are implemented, while the WPF GUI remains temporarily as a legacy migration reference. Windows and Linux package projects are available for local builds, manual package CI, and automated alpha prereleases from `main` and `test`. macOS `.pkg` builds are experimental, unsigned, unnotarized, and untested. CI covers unit and CLI E2E tests on Windows, Linux, and macOS; GUI E2E validation is still future work.
+ColDog Locker is pre-release software. The CLI, TUI, and Avalonia GUI are implemented, while the WPF GUI remains temporarily as a legacy migration reference. Windows, Linux, and experimental macOS package projects are available for local builds, manual package CI, and automated releases from `main`. macOS `.pkg` builds are unsigned, unnotarized, and untested. CI covers unit and CLI E2E tests on Windows, Linux, and macOS; GUI E2E validation is still future work.

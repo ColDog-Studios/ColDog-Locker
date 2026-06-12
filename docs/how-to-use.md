@@ -221,7 +221,7 @@ cdlocker update --download
 
 Downloaded installers still need to be run manually.
 
-macOS update downloads remain experimental. macOS `.pkg` builds are unsigned, unnotarized, untested, and not treated as official support.
+macOS update checks can report available releases, but automatic macOS downloads are disabled. Experimental macOS `.pkg` builds are unsigned, unnotarized, untested, and not treated as official support.
 
 ## Data Locations
 

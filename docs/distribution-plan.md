@@ -75,7 +75,7 @@ Experimental package behavior:
 - Install the GUI app bundle under `/Applications/ColDog Locker.app`.
 - Install the CLI command as `/usr/local/bin/cdlocker`.
 - Do not split CLI and GUI into separate packages.
-- Do not treat macOS packages as supported release artifacts until macOS validation, signing, and notarization decisions are revisited.
+- Treat macOS release assets as experimental until macOS validation, signing, and notarization decisions are revisited.
 
 The current CLI still reports macOS GUI launching as unsupported. Launch the experimental GUI directly from `/Applications/ColDog Locker.app` when testing the `.pkg`.
 
@@ -161,6 +161,7 @@ Current behavior:
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
 On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
+Conventional Commit release notes are generated during release publishing and rendered by update checks when users request notes.
 
 Suggested names:
 
@@ -208,10 +209,11 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 5. Confirm `cdlocker new`, `lock`, `unlock`, `verify`, and `remove`.
 6. Confirm Avalonia GUI workflows on Windows.
 7. Confirm Linux desktop menu entries for `ColDogLocker` and `cdlocker`.
-8. Confirm TUI workflows on non-GUI environments.
-9. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
-10. Confirm update asset naming and SHA-256 digest availability.
-11. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
+8. Confirm experimental macOS `.pkg` install, `/usr/local/bin/cdlocker`, and `/Applications/ColDog Locker.app`.
+9. Confirm TUI workflows on non-GUI environments.
+10. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
+11. Confirm update asset naming and SHA-256 digest availability.
+12. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
 
 ## Open Distribution Decisions
 

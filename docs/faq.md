@@ -2,7 +2,7 @@
 
 ## Is ColDog Locker ready for production use?
 
-Not yet. It is pre-release software. The core CLI, TUI, and Avalonia GUI exist, but release packaging and cross-platform GUI validation are still in progress. Windows and Linux packages are the active installer targets; macOS `.pkg` builds are experimental, unsigned, unnotarized, and untested.
+Not yet. It is pre-release software. The core CLI, TUI, and Avalonia GUI exist, but release packaging and cross-platform GUI validation are still in progress. Automated prerelease assets include Windows, Linux, and experimental macOS packages. macOS `.pkg` builds are unsigned, unnotarized, and untested.
 
 ## What is a locker?
 
