@@ -37,7 +37,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Logging Settings Prompts
             Console.WriteLine("\nLogging Settings:");
-            Console.Write($"Minimum Log Level (Debug/Info/Success/Warning/Error/Fatal) [Current: {SettingsManager.Settings.LogLevel}]: ");
+            Console.Write($"Minimum Log Level (Debug/Info/Warning/Error/Fatal) [Current: {SettingsManager.Settings.LogLevel}]: ");
             var logLevelInput = Console.ReadLine();
             var logLevel = string.IsNullOrWhiteSpace(logLevelInput) ? SettingsManager.Settings.LogLevel : logLevelInput;
 
@@ -53,47 +53,15 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 maxFileSizeMb = parsedSize;
             }
 
-            Console.Write($"Max Retained Log Files [Current: {SettingsManager.Settings.MaxRetainedFiles}]: ");
-            var maxRetainedInput = Console.ReadLine();
-            var maxRetainedFiles = SettingsManager.Settings.MaxRetainedFiles;
-            if (!string.IsNullOrWhiteSpace(maxRetainedInput) && int.TryParse(maxRetainedInput, out var parsedRetained) && parsedRetained > 0)
-            {
-                maxRetainedFiles = parsedRetained;
-            }
-
             Console.Write($"Enable File Logging? (y/N) [Current: {(SettingsManager.Settings.EnableFileLogging ? "Yes" : "No")}] ");
             var enableFileLoggingInput = Console.ReadLine();
             var enableFileLogging = string.IsNullOrWhiteSpace(enableFileLoggingInput)
                 ? SettingsManager.Settings.EnableFileLogging
                 : enableFileLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
 
-            Console.Write($"Enable Compression? (y/N) [Current: {(SettingsManager.Settings.EnableCompression ? "Yes" : "No")}] ");
-            var enableCompressionInput = Console.ReadLine();
-            var enableCompression = string.IsNullOrWhiteSpace(enableCompressionInput)
-                ? SettingsManager.Settings.EnableCompression
-                : enableCompressionInput.Equals("y", StringComparison.OrdinalIgnoreCase);
-
-            Console.Write($"Include Timestamps? (y/N) [Current: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}] ");
-            var includeTimestampsInput = Console.ReadLine();
-            var includeTimestamps = string.IsNullOrWhiteSpace(includeTimestampsInput)
-                ? SettingsManager.Settings.IncludeTimestamps
-                : includeTimestampsInput.Equals("y", StringComparison.OrdinalIgnoreCase);
-
-            Console.Write($"Include Thread ID? (y/N) [Current: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}] ");
-            var includeThreadIdInput = Console.ReadLine();
-            var includeThreadId = string.IsNullOrWhiteSpace(includeThreadIdInput)
-                ? SettingsManager.Settings.IncludeThreadId
-                : includeThreadIdInput.Equals("y", StringComparison.OrdinalIgnoreCase);
-
-            Console.Write($"Date/Time Format (UTC/Local) [Current: {SettingsManager.Settings.DateTimeFormat}]: ");
-            var dateTimeFormatInput = Console.ReadLine();
-            var dateTimeFormat = string.IsNullOrWhiteSpace(dateTimeFormatInput) ? SettingsManager.Settings.DateTimeFormat : dateTimeFormatInput;
-
-            Console.Write($"Enable Async Logging? (y/N) [Current: {(SettingsManager.Settings.AsyncLogging ? "Yes" : "No")}] ");
-            var asyncLoggingInput = Console.ReadLine();
-            var asyncLogging = string.IsNullOrWhiteSpace(asyncLoggingInput)
-                ? SettingsManager.Settings.AsyncLogging
-                : asyncLoggingInput.Equals("y", StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine("Log retention is fixed at the active log plus 4 rotated files.");
+            Console.WriteLine("Timestamps use UTC ISO-8601. Async logging is always enabled.");
+            Console.WriteLine("Thread IDs are included when Dev Mode is enabled.");
 
             // Prompt the user to enable or disable auto updates
             Console.Write($"Enable Auto Update? (y/N) [Current: {(SettingsManager.Settings.AutoUpdate ? "Yes" : "No")}]: ");
@@ -129,13 +97,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 LogLevel = logLevel,
                 LogFormat = logFormat,
                 MaxFileSizeMb = maxFileSizeMb,
-                MaxRetainedFiles = maxRetainedFiles,
                 EnableFileLogging = enableFileLogging,
-                EnableCompression = enableCompression,
-                IncludeTimestamps = includeTimestamps,
-                IncludeThreadId = includeThreadId,
-                DateTimeFormat = dateTimeFormat,
-                AsyncLogging = asyncLogging,
                 AutoUpdate = autoUpdate,
                 UpdateChannel = updateChannel
             };
@@ -152,13 +114,11 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             Console.WriteLine($"  Log Level: {SettingsManager.Settings.LogLevel}");
             Console.WriteLine($"  Log Format: {SettingsManager.Settings.LogFormat}");
             Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
-            Console.WriteLine($"  Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
             Console.WriteLine($"  File Logging: {(SettingsManager.Settings.EnableFileLogging ? "Enabled" : "Disabled")}");
-            Console.WriteLine($"  Compression: {(SettingsManager.Settings.EnableCompression ? "Enabled" : "Disabled")}");
-            Console.WriteLine($"  Include Timestamps: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}");
-            Console.WriteLine($"  Include Thread ID: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}");
-            Console.WriteLine($"  Date/Time Format: {SettingsManager.Settings.DateTimeFormat}");
-            Console.WriteLine($"  Async Logging: {(SettingsManager.Settings.AsyncLogging ? "Enabled" : "Disabled")}");
+            Console.WriteLine("  Log Retention: Active log plus 4 rotated files");
+            Console.WriteLine("  Timestamps: UTC ISO-8601");
+            Console.WriteLine("  Async Logging: Enabled");
+            Console.WriteLine("  Thread IDs: Enabled with Dev Mode");
             Console.WriteLine($"  Auto Update: {(SettingsManager.Settings.AutoUpdate ? "Enabled" : "Disabled")}");
             Console.WriteLine($"  Update Channel: {SettingsManager.Settings.UpdateChannel}");
 

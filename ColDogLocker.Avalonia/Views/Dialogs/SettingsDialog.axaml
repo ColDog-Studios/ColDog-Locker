@@ -20,14 +20,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        d:DesignWidth="680"
+        d:DesignWidth="650"
         d:DesignHeight="620"
         x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.SettingsDialog"
         Title="Settings"
-        Width="680"
+        Width="650"
         Height="620"
-        MinWidth="620"
-        MinHeight="520"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 
@@ -51,7 +49,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="TextBlock.settings-tab-header">
-            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontSize" Value="20" />
         </Style>
         <Style Selector="ComboBox.narrow">
             <Setter Property="Width" Value="160" />
@@ -88,18 +86,23 @@
                                             Padding="14,6"
                                             HorizontalContentAlignment="Center" />
                                 </Grid>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="OpenDefaultLocationButton"
+                                            Classes="accent-button"
+                                            Content="Open Folder"
+                                            MinWidth="92"
+                                            Padding="14,6"
+                                            HorizontalContentAlignment="Center" />
+                                    <Button x:Name="ResetDefaultLocationButton"
+                                            Classes="accent-button"
+                                            Content="Reset Location"
+                                            MinWidth="92"
+                                            Padding="14,6"
+                                            HorizontalContentAlignment="Center" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
 
-            <TabItem>
-                <TabItem.Header>
-                    <TextBlock Classes="settings-tab-header" Text="Appearance" />
-                </TabItem.Header>
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="section-title" Text="Theme" />
@@ -120,6 +123,7 @@
                                              GroupName="DefaultView" />
                             </StackPanel>
                         </Border>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -133,7 +137,14 @@
                         <Border Classes="settings-section">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="section-title" Text="Update Checks" />
-                                <CheckBox x:Name="AutoUpdateCheckBox" Content="Enable Auto Update" />
+                                <CheckBox x:Name="AutoUpdateCheckBox" Content="Check for updates automatically" />
+                                <Button x:Name="CheckForUpdatesButton"
+                                        Classes="accent-button"
+                                        Content="Check Now"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="92"
+                                        Padding="14,6"
+                                        HorizontalContentAlignment="Center" />
                             </StackPanel>
                         </Border>
 
@@ -162,15 +173,25 @@
 
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Classes="settings-tab-header" Text="Logging" />
+                    <TextBlock Classes="settings-tab-header" Text="Diagnostics" />
                 </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
                             <StackPanel Spacing="8">
-                                <TextBlock Classes="section-title" Text="Basic Logging Options" />
+                                <TextBlock Classes="section-title" Text="Diagnostic Logging" />
                                 <CheckBox x:Name="DevModeCheckBox" Content="Enable dev mode" />
+                                <TextBlock Classes="section-description"
+                                           Margin="22,0,0,0"
+                                           Text="Adds source caller details and thread IDs to log entries." />
                                 <CheckBox x:Name="EnableFileLoggingCheckBox" Content="Enable file logging" />
+                                <Button x:Name="OpenLogsFolderButton"
+                                        Classes="accent-button"
+                                        Content="Open Logs Folder"
+                                        HorizontalAlignment="Left"
+                                        MinWidth="92"
+                                        Padding="14,6"
+                                        HorizontalContentAlignment="Center" />
                             </StackPanel>
                         </Border>
 
@@ -180,6 +201,8 @@
                                 <TextBlock Classes="section-description"
                                            Text="Only log messages at or above this level." />
                                 <ComboBox x:Name="LogLevelBox" Classes="narrow" />
+                                <TextBlock x:Name="LogLevelDescriptionText"
+                                           Classes="section-description" />
                             </StackPanel>
                         </Border>
 
@@ -201,50 +224,18 @@
                                     <TextBlock Classes="field-label" Text="Max file size (MB)" />
                                     <TextBox x:Name="MaxFileSizeTextBox" Classes="narrow" />
                                 </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <TextBlock Classes="field-label" Text="Max retained files" />
-                                    <TextBox x:Name="MaxRetainedFilesTextBox" Classes="narrow" />
-                                </StackPanel>
-                                <CheckBox x:Name="EnableCompressionCheckBox"
-                                          Content="Compress rotated log files (.gz)" />
+                                <TextBlock Classes="section-description"
+                                           Text="ColDog Locker keeps the active log plus four rotated log files." />
                             </StackPanel>
                         </Border>
 
-                        <Border Classes="settings-section">
-                            <StackPanel Spacing="8">
-                                <TextBlock Classes="section-title" Text="Advanced Options" />
-                                <CheckBox x:Name="IncludeTimestampsCheckBox"
-                                          Content="Include timestamps in log entries" />
-                                <CheckBox x:Name="IncludeThreadIdCheckBox"
-                                          Content="Include thread ID in log entries" />
-                                <StackPanel Spacing="4">
-                                    <TextBlock Classes="field-label" Text="Date/time format" />
-                                    <ComboBox x:Name="DateTimeFormatBox" Classes="narrow" />
-                                </StackPanel>
-                                <CheckBox x:Name="AsyncLoggingCheckBox"
-                                          Content="Enable asynchronous logging" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Classes="settings-section">
-                            <StackPanel Spacing="8">
-                                <TextBlock Classes="section-title" Text="Logs" />
-                                <Button x:Name="OpenLogsFolderButton"
-                                        Classes="accent-button"
-                                        Content="Open Logs Folder"
-                                        HorizontalAlignment="Left"
-                                        MinWidth="92"
-                                        Padding="14,6"
-                                        HorizontalContentAlignment="Center" />
-                            </StackPanel>
-                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock Classes="settings-tab-header" Text="Database" />
+                    <TextBlock Classes="settings-tab-header" Text="Advanced" />
                 </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
@@ -268,39 +259,17 @@
                                            Text="Manually optimize database and reclaim unused space." />
                             </StackPanel>
                         </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>
-
-            <TabItem>
-                <TabItem.Header>
-                    <TextBlock Classes="settings-tab-header" Text="Advanced" />
-                </TabItem.Header>
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20" Spacing="18">
-                        <Border Classes="settings-section">
-                            <StackPanel Spacing="8">
-                                <TextBlock Classes="section-title" Text="Performance" />
-                                <CheckBox x:Name="EnableAnimationsCheckBox"
-                                          Content="Enable UI animations" />
-                                <TextBlock Classes="section-description"
-                                           Margin="22,0,0,0"
-                                           Text="Disable for better performance on slower systems." />
-                            </StackPanel>
-                        </Border>
 
                         <Border Classes="settings-section">
                             <StackPanel Spacing="8">
                                 <TextBlock Classes="section-title" Text="Data Management" />
-                                <Button x:Name="ClearCacheButton"
+                                <Button x:Name="OpenSettingsFolderButton"
                                         Classes="accent-button"
-                                        Content="Clear Application Cache"
+                                        Content="Open Settings Folder"
                                         HorizontalAlignment="Left"
                                         MinWidth="92"
                                         Padding="14,6"
                                         HorizontalContentAlignment="Center" />
-                                <TextBlock Classes="section-description"
-                                           Text="Removes temporary files and cached data when implemented." />
                                 <Button x:Name="ResetSettingsButton"
                                         Classes="accent-button"
                                         Content="Reset All Settings"
@@ -321,12 +290,6 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Spacing="8">
-                <Button x:Name="RestoreDefaultsButton"
-                        Classes="accent-button"
-                        Content="Restore Defaults"
-                        MinWidth="92"
-                        Padding="14,6"
-                        HorizontalContentAlignment="Center" />
                 <Button x:Name="CancelButton"
                         Classes="accent-button"
                         Content="Cancel"
@@ -336,6 +299,7 @@
                 <Button x:Name="SaveButton"
                         Classes="accent-button"
                         Content="Save"
+                        IsEnabled="False"
                         MinWidth="92"
                         Padding="14,6"
                         HorizontalContentAlignment="Center" />

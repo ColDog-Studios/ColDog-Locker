@@ -16,7 +16,6 @@
 */
 
 using System.Diagnostics.CodeAnalysis;
-using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Services.Configuration;
@@ -90,7 +89,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
     /// <summary>
     ///     Static logger for ColDog Locker. Writes structured log entries to disk in either JSON (NDJSON) or plain text format.
-    ///     Supports async buffered writing, log rotation, optional compression, and runtime configuration reloading.
+    ///     Supports async buffered writing, log rotation, and runtime configuration reloading.
     ///
     ///     USAGE:
     ///
@@ -120,13 +119,8 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         private static LogLevel _minLogLevel = LogLevel.Info;
         private static string _logFormat = "json";
         private static int _maxFileSizeMb = 10;
-        private static int _maxRetainedFiles = 9;
+        private const int MaxRetainedLogFiles = 4;
         private static bool _enableFileLogging = true;
-        private static bool _enableCompression;
-        private static bool _includeTimestamps = true;
-        private static bool _includeThreadId;
-        private static string _dateTimeFormat = "UTC";
-        private static bool _asyncLogging;
         private static bool _devMode;
 
         private static readonly string _appVersion = AppInfo.SemanticVersion;
@@ -142,11 +136,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         static Logger()
         {
             AppDomain.CurrentDomain.ProcessExit += (_, _) => StopLogWorker();
-
-            if (_asyncLogging)
-            {
-                StartLogWorker();
-            }
+            StartLogWorker();
         }
 
         /// <summary>
@@ -156,7 +146,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         public static void ReloadConfig()
         {
             LoadConfigFromSettings();
-            if (_asyncLogging && !_workerRunning)
+            if (!_workerRunning)
             {
                 StartLogWorker();
             }
@@ -176,19 +166,12 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             _minLogLevel = parsedLevel;
             _logFormat = s.LogFormat;
             _maxFileSizeMb = s.MaxFileSizeMb > 0 ? s.MaxFileSizeMb : 10;
-            _maxRetainedFiles = s.MaxRetainedFiles > 0 ? s.MaxRetainedFiles : 9;
             _enableFileLogging = s.EnableFileLogging;
-            _enableCompression = s.EnableCompression;
-            _includeTimestamps = s.IncludeTimestamps;
-            _includeThreadId = s.IncludeThreadId;
-            _dateTimeFormat = s.DateTimeFormat;
-            _asyncLogging = s.AsyncLogging;
             _devMode = s.DevMode;
 
             Log(LogLevel.Debug, $"Logger initialized. Level={_minLogLevel}, Format={_logFormat}, MaxSizeMB={_maxFileSizeMb}, " +
-                                $"MaxRetained={_maxRetainedFiles}, FileLogging={_enableFileLogging}, Compression={_enableCompression}, " +
-                                $"Timestamps={_includeTimestamps}, ThreadId={_includeThreadId}, DateTimeFormat={_dateTimeFormat}, " +
-                                $"Async={_asyncLogging}, DevMode={_devMode}");
+                                $"MaxRetained={MaxRetainedLogFiles}, FileLogging={_enableFileLogging}, TimestampFormat=UtcIso8601, " +
+                                $"Async=True, DevMode={_devMode}");
         }
 
         private static void StartLogWorker()
@@ -289,27 +272,16 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             {
                 Level = level.ToString().ToUpperInvariant(),
                 Message = message,
+                Timestamp = DateTime.UtcNow.ToString("o"),
                 SessionId = _sessionId,
                 AppVersion = _appVersion,
                 Environment = _environment
             };
 
-            if (_includeTimestamps)
-            {
-                var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase)
-                    ? DateTime.Now
-                    : DateTime.UtcNow;
-                logEntry.Timestamp = now.ToString("o");
-            }
-
-            if (_includeThreadId)
-            {
-                logEntry.ThreadId = Environment.CurrentManagedThreadId;
-            }
-
             if (_devMode)
             {
                 logEntry.Caller = new CallerInfo { Method = memberName, File = Path.GetFileName(filePath), Line = lineNumber };
+                logEntry.ThreadId = Environment.CurrentManagedThreadId;
             }
 
             if (exception != null)
@@ -320,19 +292,12 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 };
             }
 
-            if (_asyncLogging)
+            lock (_logQueue)
             {
-                lock (_logQueue)
-                {
-                    _logQueue.Enqueue(logEntry);
-                }
+                _logQueue.Enqueue(logEntry);
+            }
 
-                _logQueued.Set();
-            }
-            else
-            {
-                WriteLogEntry(logEntry);
-            }
+            _logQueued.Set();
         }
 
         private static void WriteLogEntry(LogEntry logEntry)
@@ -395,14 +360,14 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         {
             var parts = new List<string>();
 
-            if (_includeTimestamps && entry.Timestamp != null)
+            if (entry.Timestamp != null)
             {
                 parts.Add($"[{entry.Timestamp}]");
             }
 
             parts.Add($"[{entry.Level}]");
 
-            if (_includeThreadId && entry.ThreadId.HasValue)
+            if (entry.ThreadId.HasValue)
             {
                 parts.Add($"[Thread:{entry.ThreadId}]");
             }
@@ -443,34 +408,15 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             var rotatedName = Path.Combine(_logDirectory, $"cdl_{timestamp}.log");
             File.Move(_logFilePath, rotatedName);
 
-            if (_enableCompression)
-            {
-                CompressFile(rotatedName);
-            }
-
             // Delete oldest files beyond the retained limit
-            var pattern = _enableCompression ? "cdl_*.log.gz" : "cdl_*.log";
-            var logFiles = Directory.GetFiles(_logDirectory, pattern)
+            var logFiles = Directory.GetFiles(_logDirectory, "cdl_*.log")
                 .OrderByDescending(File.GetCreationTimeUtc)
                 .ToList();
 
-            for (var i = _maxRetainedFiles; i < logFiles.Count; i++)
+            for (var i = MaxRetainedLogFiles; i < logFiles.Count; i++)
             {
                 File.Delete(logFiles[i]);
             }
-        }
-
-        private static void CompressFile(string filePath)
-        {
-            var compressedPath = filePath + ".gz";
-            using var originalStream = File.OpenRead(filePath);
-            using var compressedStream = File.Create(compressedPath);
-            using var gzip = new GZipStream(
-                compressedStream, CompressionLevel.Optimal);
-            originalStream.CopyTo(gzip);
-            // Dispose order: gzip must flush before we delete
-            gzip.Dispose();
-            File.Delete(filePath);
         }
 
         // Direct write used internally to avoid re-entering the public Log() method
@@ -483,20 +429,13 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 {
                     Level = level,
                     Message = message,
+                    Timestamp = DateTime.UtcNow.ToString("o"),
                     SessionId = _sessionId,
                     AppVersion = _appVersion,
                     Environment = _environment
                 };
 
-                if (_includeTimestamps)
-                {
-                    var now = _dateTimeFormat.Equals("LOCAL", StringComparison.InvariantCultureIgnoreCase)
-                        ? DateTime.Now
-                        : DateTime.UtcNow;
-                    logEntry.Timestamp = now.ToString("o");
-                }
-
-                if (_includeThreadId)
+                if (_devMode)
                 {
                     logEntry.ThreadId = Environment.CurrentManagedThreadId;
                 }
@@ -559,34 +498,10 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         public static void SetLogLevel(LogLevel level) { _minLogLevel = level; }
         public static void SetLogFormat(string format) { _logFormat = format; }
         public static void SetMaxFileSizeMb(int mb) { _maxFileSizeMb = mb; }
-        public static void SetMaxRetainedFiles(int count) { _maxRetainedFiles = count; }
         public static void SetEnableFileLogging(bool enabled) { _enableFileLogging = enabled; }
-        public static void SetEnableCompression(bool enabled) { _enableCompression = enabled; }
-        public static void SetIncludeTimestamps(bool enabled) { _includeTimestamps = enabled; }
-        public static void SetIncludeThreadId(bool enabled) { _includeThreadId = enabled; }
-        public static void SetDateTimeFormat(string format) { _dateTimeFormat = format; }
-
-        public static void SetAsyncLogging(bool enabled)
-        {
-            if (_asyncLogging && !enabled)
-            {
-                StopLogWorker();
-            }
-
-            _asyncLogging = enabled;
-            if (_asyncLogging && !_workerRunning)
-            {
-                StartLogWorker();
-            }
-        }
 
         public static void Flush()
         {
-            if (!_asyncLogging)
-            {
-                return;
-            }
-
             var deadline = DateTime.UtcNow.AddSeconds(2);
             while (DateTime.UtcNow < deadline)
             {

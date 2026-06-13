@@ -520,25 +520,6 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Logging
         }
 
         [Fact]
-        public void Logger_SetMaxRetainedFiles_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetMaxRetainedFiles(15));
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData(1)]
-        [InlineData(5)]
-        [InlineData(20)]
-        public void Logger_SetMaxRetainedFiles_WithVariousCounts_ShouldNotThrow(int count)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetMaxRetainedFiles(count));
-            Assert.Null(exception);
-        }
-
-        [Fact]
         public void Logger_SetEnableFileLogging_ShouldNotThrow()
         {
             // Act & Assert
@@ -557,100 +538,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Logging
         }
 
         [Fact]
-        public void Logger_SetEnableCompression_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetEnableCompression(true));
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Logger_SetEnableCompression_WithVariousValues_ShouldNotThrow(bool enabled)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetEnableCompression(enabled));
-            Assert.Null(exception);
-        }
-
-        [Fact]
-        public void Logger_SetIncludeTimestamps_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetIncludeTimestamps(false));
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Logger_SetIncludeTimestamps_WithVariousValues_ShouldNotThrow(bool enabled)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetIncludeTimestamps(enabled));
-            Assert.Null(exception);
-        }
-
-        [Fact]
-        public void Logger_SetIncludeThreadId_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetIncludeThreadId(true));
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Logger_SetIncludeThreadId_WithVariousValues_ShouldNotThrow(bool enabled)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetIncludeThreadId(enabled));
-            Assert.Null(exception);
-        }
-
-        [Fact]
-        public void Logger_SetDateTimeFormat_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDateTimeFormat("UTC"));
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData("UTC")]
-        [InlineData("LOCAL")]
-        public void Logger_SetDateTimeFormat_WithVariousFormats_ShouldNotThrow(string format)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetDateTimeFormat(format));
-            Assert.Null(exception);
-        }
-
-        [Fact]
-        public void Logger_SetAsyncLogging_ShouldNotThrow()
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetAsyncLogging(false));
-            Assert.Null(exception);
-        }
-
-        [Fact]
         public void Logger_Flush_ShouldNotThrow()
         {
             // Act & Assert
             var exception = Record.Exception(Logger.Flush);
-            Assert.Null(exception);
-        }
-
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public void Logger_SetAsyncLogging_WithVariousValues_ShouldNotThrow(bool enabled)
-        {
-            // Act & Assert
-            var exception = Record.Exception(() => Logger.SetAsyncLogging(enabled));
             Assert.Null(exception);
         }
 
