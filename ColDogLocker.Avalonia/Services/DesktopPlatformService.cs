@@ -75,17 +75,42 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         {
             if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS())
             {
-                Process.Start(new ProcessStartInfo { FileName = target, UseShellExecute = true });
+                StartProcess(new ProcessStartInfo { FileName = target, UseShellExecute = true });
                 return;
             }
 
             if (OperatingSystem.IsLinux())
             {
-                Process.Start("xdg-open", target);
+                var startInfo = new ProcessStartInfo { FileName = "xdg-open", UseShellExecute = false };
+                startInfo.ArgumentList.Add(target);
+                StartLinuxLauncher(startInfo);
                 return;
             }
 
             throw new PlatformNotSupportedException("No launcher is available for this platform.");
+        }
+
+        private static void StartProcess(ProcessStartInfo startInfo)
+        {
+            if (Process.Start(startInfo) == null)
+            {
+                throw new InvalidOperationException($"Failed to launch '{startInfo.FileName}'.");
+            }
+        }
+
+        private static void StartLinuxLauncher(ProcessStartInfo startInfo)
+        {
+            startInfo.RedirectStandardError = true;
+            using var process = Process.Start(startInfo)
+                ?? throw new InvalidOperationException($"Failed to launch '{startInfo.FileName}'.");
+
+            if (process.WaitForExit(1000) && process.ExitCode != 0)
+            {
+                var error = process.StandardError.ReadToEnd().Trim();
+                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
+                    ? $"{startInfo.FileName} exited with code {process.ExitCode}."
+                    : error);
+            }
         }
     }
 }
