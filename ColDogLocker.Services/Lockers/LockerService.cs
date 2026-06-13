@@ -165,7 +165,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             // Safety check: Validate path is not protected (in case database was tampered with)
-            var pathValidationError = LockerPathValidator.ValidatePath(locker.LockerLocation);
+            var pathValidationError = LockerPathFilter.ValidatePath(locker.LockerLocation);
             if (pathValidationError != null)
             {
                 Logger.Log(LogLevel.Fatal, $"Security violation: Attempted to lock protected directory {locker.LockerLocation}");
@@ -463,7 +463,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new ArgumentException(nameValidationError, nameof(locker));
             }
 
-            var pathValidationError = LockerPathValidator.ValidatePath(locker.LockerLocation);
+            var pathValidationError = LockerPathFilter.ValidatePath(locker.LockerLocation);
             if (pathValidationError != null)
             {
                 Logger.Log(LogLevel.Fatal, $"Security violation: Unsafe locker path rejected: {locker.LockerLocation}");

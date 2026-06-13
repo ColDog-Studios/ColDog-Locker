@@ -250,7 +250,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var password = "ValidPass123!";
 
             // Act
-            var requirements = PasswordFilter.GetPasswordRequirements(password);
+            var requirements = PasswordFilter.Validate(password);
 
             // Assert
             Assert.NotEmpty(requirements);
@@ -264,7 +264,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var password = string.Empty;
 
             // Act
-            var requirements = PasswordFilter.GetPasswordRequirements(password);
+            var requirements = PasswordFilter.Validate(password);
 
             // Assert
             Assert.NotEmpty(requirements);
@@ -284,7 +284,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var password = "Short1!";
 
             // Act
-            var requirements = PasswordFilter.GetPasswordRequirements(password);
+            var requirements = PasswordFilter.Validate(password);
 
             // Assert
             var lengthRequirement = requirements.First(r => r.Description.Contains("12 characters"));
@@ -298,7 +298,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var password = "Password123!";
 
             // Act
-            var requirements = PasswordFilter.GetPasswordRequirements(password);
+            var requirements = PasswordFilter.Validate(password);
 
             // Assert
             var commonWordRequirement = requirements.First(r => r.Description.Contains("common word"));

@@ -82,7 +82,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         ///     Useful for displaying dynamic password requirement indicators in UI.
         /// </summary>
         public static List<PasswordRequirement>
-            GetPasswordRequirements(string password) // TODO: change function name to Validate so calling is PasswordFilter.Validate(password)
+            Validate(string password)
         {
             var requirements = new List<PasswordRequirement>();
 

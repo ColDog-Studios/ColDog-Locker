@@ -31,7 +31,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         }
     }
 
-    public class LockerPathValidatorTests
+    public class LockerPathFilterTests
     {
         [Fact]
         public void ValidatePath_WithAllowedPath_ShouldReturnNull()
@@ -40,7 +40,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var safePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "ColDog Locker", "TestLocker");
 
             // Act
-            var result = LockerPathValidator.ValidatePath(safePath);
+            var result = LockerPathFilter.ValidatePath(safePath);
 
             // Assert - Should be allowed now (subdirectories of Documents are OK)
             Assert.Null(result);
@@ -53,7 +53,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var drivePath = "C:\\";
 
             // Act
-            var result = LockerPathValidator.ValidatePath(drivePath);
+            var result = LockerPathFilter.ValidatePath(drivePath);
 
             // Assert
             Assert.NotNull(result);
@@ -67,7 +67,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var windowsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(windowsPath);
+            var result = LockerPathFilter.ValidatePath(windowsPath);
 
             // Assert
             Assert.NotNull(result);
@@ -81,7 +81,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var programFilesPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(programFilesPath);
+            var result = LockerPathFilter.ValidatePath(programFilesPath);
 
             // Assert
             Assert.NotNull(result);
@@ -95,7 +95,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var userProfilePath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(userProfilePath);
+            var result = LockerPathFilter.ValidatePath(userProfilePath);
 
             // Assert
             Assert.NotNull(result);
@@ -109,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var documentsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(documentsPath);
+            var result = LockerPathFilter.ValidatePath(documentsPath);
 
             // Assert - Should block (Documents is under %USERPROFILE%)
             Assert.NotNull(result);
@@ -122,7 +122,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var desktopPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(desktopPath);
+            var result = LockerPathFilter.ValidatePath(desktopPath);
 
             // Assert - Should block (Desktop is under %USERPROFILE%)
             Assert.NotNull(result);
@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var appDataPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData");
 
             // Act
-            var result = LockerPathValidator.ValidatePath(appDataPath);
+            var result = LockerPathFilter.ValidatePath(appDataPath);
 
             // Assert - Should block the exact AppData folder
             Assert.NotNull(result);
@@ -149,7 +149,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var appDataSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData", "MyHiddenLocker");
 
             // Act
-            var result = LockerPathValidator.ValidatePath(appDataSubPath);
+            var result = LockerPathFilter.ValidatePath(appDataSubPath);
 
             // Assert - Should be allowed (not under Roaming/Local)
             Assert.Null(result);
@@ -162,7 +162,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var appDataRoaming = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
 
             // Act
-            var result = LockerPathValidator.ValidatePath(appDataRoaming);
+            var result = LockerPathFilter.ValidatePath(appDataRoaming);
 
             // Assert - Should block
             Assert.NotNull(result);
@@ -175,7 +175,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var userProfileSub = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "MyLocker");
 
             // Act
-            var result = LockerPathValidator.ValidatePath(userProfileSub);
+            var result = LockerPathFilter.ValidatePath(userProfileSub);
 
             // Assert - Should be allowed
             Assert.Null(result);
@@ -188,7 +188,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
             var windowsSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows), "System32");
 
             // Act
-            var result = LockerPathValidator.ValidatePath(windowsSubPath);
+            var result = LockerPathFilter.ValidatePath(windowsSubPath);
 
             // Assert
             Assert.NotNull(result);
@@ -199,7 +199,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithEmptyPath_ShouldReturnError()
         {
             // Act
-            var result = LockerPathValidator.ValidatePath(string.Empty);
+            var result = LockerPathFilter.ValidatePath(string.Empty);
 
             // Assert
             Assert.NotNull(result);
@@ -210,7 +210,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithNullPath_ShouldReturnError()
         {
             // Act
-            var result = LockerPathValidator.ValidatePath(null!);
+            var result = LockerPathFilter.ValidatePath(null!);
 
             // Assert
             Assert.NotNull(result);
@@ -221,7 +221,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void GetProtectedPaths_ShouldReturnNonEmptyList()
         {
             // Act
-            var protectedPaths = LockerPathValidator.GetProtectedPaths();
+            var protectedPaths = LockerPathFilter.GetProtectedPaths();
 
             // Assert
             Assert.NotNull(protectedPaths);

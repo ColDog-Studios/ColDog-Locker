@@ -74,7 +74,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 : Path.Combine(AppPaths.CdlDir, lockerName);
 
             // Validate path is not protected
-            var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
+            var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
             if (pathValidationError != null)
             {
                 Console.Error.WriteLine($"Error: {pathValidationError}");
@@ -107,7 +107,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             {
                 // Prompt for password
                 Console.WriteLine("Password Requirements:");
-                foreach (var requirement in PasswordFilter.GetPasswordRequirements(string.Empty))
+                foreach (var requirement in PasswordFilter.Validate(string.Empty))
                 {
                     Console.WriteLine($"  - {requirement.Description}");
                 }

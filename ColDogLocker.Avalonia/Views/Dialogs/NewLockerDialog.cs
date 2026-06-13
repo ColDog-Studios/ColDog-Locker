@@ -154,7 +154,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             PasswordRequirementsPanel.Children.Clear();
 
-            foreach (var requirement in PasswordFilter.GetPasswordRequirements(PasswordBox.Text ?? string.Empty))
+            foreach (var requirement in PasswordFilter.Validate(PasswordBox.Text ?? string.Empty))
             {
                 var brush = requirement.IsMet ? Brushes.ForestGreen : Brushes.Gray;
                 var row = new StackPanel
@@ -207,7 +207,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 return "Locker location is required.";
             }
 
-            var pathValidationError = LockerPathValidator.ValidatePath(location);
+            var pathValidationError = LockerPathFilter.ValidatePath(location);
             if (pathValidationError != null)
             {
                 return pathValidationError;

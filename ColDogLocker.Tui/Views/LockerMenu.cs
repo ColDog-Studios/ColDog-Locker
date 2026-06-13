@@ -60,7 +60,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 "\nPassword Requirements:\n" +
                 string.Join(
                     Environment.NewLine,
-                    PasswordFilter.GetPasswordRequirements(string.Empty)
+                    PasswordFilter.Validate(string.Empty)
                         .Select(requirement => $" - {requirement.Description}")) +
                 Environment.NewLine;
 
@@ -102,7 +102,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             // Validate locker path is not protected
             Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");
-            var pathValidationError = LockerPathValidator.ValidatePath(lockerLocation);
+            var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
             if (pathValidationError != null)
             {
                 Logger.Log(LogLevel.Error, $"Locker path validation failed: {pathValidationError}");
