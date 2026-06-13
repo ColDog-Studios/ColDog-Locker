@@ -207,11 +207,7 @@ Check for updates:
 cdlocker update
 ```
 
-Show release notes when an update is available:
-
-```bash
-cdlocker update --notes
-```
+Release notes are shown automatically when available.
 
 Download and verify a matching installer when one is available:
 

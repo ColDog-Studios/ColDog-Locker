@@ -228,14 +228,15 @@ Runs SQLite `VACUUM`, updates the last-vacuum timestamp in settings, and reports
 
 ## Update Commands
 
-### `cdlocker update [--download] [--notes]`
+### `cdlocker update [--download]`
 
 Checks GitHub Releases for an update matching the configured channel and current platform.
 
 Options:
 
-- `--notes`: print release notes when an update is available.
 - `--download`: download and verify a matching installer package when available.
+
+Release notes are printed automatically when available.
 
 The command downloads the installer only. It does not install the update automatically.
 
