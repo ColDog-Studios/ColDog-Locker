@@ -20,11 +20,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        d:DesignWidth="650"
+        d:DesignWidth="750"
         d:DesignHeight="700"
         x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.DevDialog"
         Title="Developer Information"
-        Width="650"
+        Width="750"
         Height="700"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
