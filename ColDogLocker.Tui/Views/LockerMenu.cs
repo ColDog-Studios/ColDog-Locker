@@ -56,14 +56,13 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.WriteLine("\nLocker name cannot be empty. Please try again.");
             }
 
-            //TODO: Get this messsage from ColDogLocker.Application.Validation.PasswordFilter
             var passwordSecurityMessage =
                 "\nPassword Requirements:\n" +
-                " - At least 12 characters long\n" +
-                " - At least an upper-case letter\n" +
-                " - At least a lower-case letter\n" +
-                " - At least a number\n" +
-                " - At least a special character (!@#$%^&*)\n";
+                string.Join(
+                    Environment.NewLine,
+                    PasswordFilter.GetPasswordRequirements(string.Empty)
+                        .Select(requirement => $" - {requirement.Description}")) +
+                Environment.NewLine;
 
             string? password;
             while (true)
@@ -113,18 +112,33 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 return;
             }
 
-            //TODO: Ensure hashing and creation is validated properly
+            if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
+            {
+                Logger.Log(LogLevel.Warning, $"Locker creation failed: duplicate locker name {lockerName}");
+                Console.Write($"\nLocker '{lockerName}' already exists. Press Enter to continue...");
+                Console.ReadLine();
+                return;
+            }
 
-            // Hash the password
-            Logger.Log(LogLevel.Debug, "Hashing locker password");
-            var passwordHash = EncryptionHelper.HashPassword(password);
-            Logger.Log(LogLevel.Debug, "Locker password hashed successfully");
+            try
+            {
+                // Hash the password
+                Logger.Log(LogLevel.Debug, "Hashing locker password");
+                var passwordHash = EncryptionHelper.HashPassword(password);
+                Logger.Log(LogLevel.Debug, "Locker password hashed successfully");
 
-            // Create the locker
-            Logger.Log(LogLevel.Debug, $"Creating locker: {lockerName} at {lockerLocation}");
-            var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
-            LockerService.AddLocker(locker);
-            Logger.Log(LogLevel.Info, $"Locker created successfully: {lockerName}");
+                // Create the locker
+                Logger.Log(LogLevel.Debug, $"Creating locker: {lockerName} at {lockerLocation}");
+                var locker = new LockerModel(lockerName, passwordHash, lockerLocation);
+                LockerService.AddLocker(locker);
+                Logger.Log(LogLevel.Info, $"Locker created successfully: {lockerName}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"Locker creation failed: {lockerName}", ex);
+                Console.Write($"\nError creating locker: {ex.Message}. Press Enter to continue...");
+                Console.ReadLine();
+            }
         }
 
         // Remove an existing locker /////////////////////////////////////////////////////////////////////////////

@@ -105,14 +105,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             else
             {
-                //TODO: Get this message from ColDogLocker.Application.Validation.PasswordFilter
                 // Prompt for password
                 Console.WriteLine("Password Requirements:");
-                Console.WriteLine("  - At least 12 characters");
-                Console.WriteLine("  - At least one uppercase letter");
-                Console.WriteLine("  - At least one lowercase letter");
-                Console.WriteLine("  - At least one digit");
-                Console.WriteLine("  - At least one special character");
+                foreach (var requirement in PasswordFilter.GetPasswordRequirements(string.Empty))
+                {
+                    Console.WriteLine($"  - {requirement.Description}");
+                }
                 Console.WriteLine();
 
                 while (true)
