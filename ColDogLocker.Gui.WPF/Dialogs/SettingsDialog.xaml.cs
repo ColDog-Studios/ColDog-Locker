@@ -64,7 +64,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
             DevModeCheckBox.IsChecked = SettingsManager.Settings.DevMode;
             DbVacuumIntervalTextBox.Text = SettingsManager.Settings.DatabaseVacuumInterval.ToString();
-            EnableAnimationsCheckBox.IsChecked = SettingsManager.Settings.EnableAnimations;
 
             // Load logging options
             LogLevelComboBox.SelectedItem = LogLevelComboBox.Items.Cast<ComboBoxItem>()
@@ -72,14 +71,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             LogFormatComboBox.SelectedItem = LogFormatComboBox.Items.Cast<ComboBoxItem>()
                 .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.LogFormat) ?? LogFormatComboBox.Items[0];
             MaxFileSizeTextBox.Text = SettingsManager.Settings.MaxFileSizeMb.ToString();
-            MaxRetainedFilesTextBox.Text = SettingsManager.Settings.MaxRetainedFiles.ToString();
             EnableFileLoggingCheckBox.IsChecked = SettingsManager.Settings.EnableFileLogging;
-            EnableCompressionCheckBox.IsChecked = SettingsManager.Settings.EnableCompression;
-            IncludeTimestampsCheckBox.IsChecked = SettingsManager.Settings.IncludeTimestamps;
-            IncludeThreadIdCheckBox.IsChecked = SettingsManager.Settings.IncludeThreadId;
-            DateTimeFormatComboBox.SelectedItem = DateTimeFormatComboBox.Items.Cast<ComboBoxItem>()
-                .FirstOrDefault(item => item.Content.ToString() == SettingsManager.Settings.DateTimeFormat) ?? DateTimeFormatComboBox.Items[0];
-            AsyncLoggingCheckBox.IsChecked = SettingsManager.Settings.AsyncLogging;
 
             // Load update channel
             switch (SettingsManager.Settings.UpdateChannel)
@@ -280,17 +272,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                     SettingsManager.Settings.MaxFileSizeMb = maxFileSize;
                 }
 
-                if (int.TryParse(MaxRetainedFilesTextBox.Text, out var maxRetained))
-                {
-                    SettingsManager.Settings.MaxRetainedFiles = maxRetained;
-                }
-
                 SettingsManager.Settings.EnableFileLogging = EnableFileLoggingCheckBox.IsChecked ?? true;
-                SettingsManager.Settings.EnableCompression = EnableCompressionCheckBox.IsChecked ?? false;
-                SettingsManager.Settings.IncludeTimestamps = IncludeTimestampsCheckBox.IsChecked ?? true;
-                SettingsManager.Settings.IncludeThreadId = IncludeThreadIdCheckBox.IsChecked ?? false;
-                SettingsManager.Settings.DateTimeFormat = (DateTimeFormatComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "UTC";
-                SettingsManager.Settings.AsyncLogging = AsyncLoggingCheckBox.IsChecked ?? true;
 
                 // Apply logging settings to logger
                 Logger.ReloadConfig();
@@ -299,8 +281,6 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
                 {
                     SettingsManager.Settings.DatabaseVacuumInterval = Math.Clamp(vacuumInterval, 7, 90);
                 }
-
-                SettingsManager.Settings.EnableAnimations = EnableAnimationsCheckBox.IsChecked ?? true;
 
                 // Save update channel
                 if (StableChannelRadio.IsChecked == true)

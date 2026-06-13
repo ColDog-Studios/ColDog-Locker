@@ -73,20 +73,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Play scale-in animation if animations are enabled
-            if (SettingsManager.Settings.EnableAnimations)
+            // Play scale-in animation
+            try
             {
-                try
+                if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
-                    {
-                        storyboard.Begin(this);
-                    }
+                    storyboard.Begin(this);
                 }
-                catch
-                {
-                    // Animation failed, continue without it
-                }
+            }
+            catch
+            {
+                // Animation failed, continue without it
             }
 
             // Don't initialize list view columns here since the view is not visible yet
