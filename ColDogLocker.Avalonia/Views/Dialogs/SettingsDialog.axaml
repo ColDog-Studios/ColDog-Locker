@@ -50,6 +50,9 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <Style Selector="TextBlock.settings-tab-header">
+            <Setter Property="FontSize" Value="18" />
+        </Style>
         <Style Selector="ComboBox.narrow">
             <Setter Property="Width" Value="160" />
             <Setter Property="HorizontalAlignment" Value="Left" />
@@ -62,7 +65,10 @@
 
     <Grid RowDefinitions="*,Auto">
         <TabControl Grid.Row="0" Margin="16,16,16,0">
-            <TabItem Header="General">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="General" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
@@ -88,7 +94,10 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Appearance">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="Appearance" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
@@ -115,7 +124,10 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Updates">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="Updates" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
@@ -148,7 +160,10 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Logging">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="Logging" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
@@ -227,7 +242,10 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Database">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="Database" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
@@ -254,7 +272,10 @@
                 </ScrollViewer>
             </TabItem>
 
-            <TabItem Header="Advanced">
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Classes="settings-tab-header" Text="Advanced" />
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="20" Spacing="18">
                         <Border Classes="settings-section">
