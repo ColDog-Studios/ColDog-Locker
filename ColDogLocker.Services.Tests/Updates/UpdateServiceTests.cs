@@ -108,6 +108,60 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         }
 
         [Fact]
+        public async Task CheckForUpdatesAsync_StableChannelWithoutLatestRelease_ShouldReturnNoUpdate()
+        {
+            // Arrange
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>
+                {
+                    ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
+                        new HttpResponseMessage(HttpStatusCode.NotFound)
+                },
+                currentVersion: "0.10.0-beta",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+
+            // Act
+            var result = await service.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.False(result.UpdateAvailable);
+            Assert.False(result.CanDownload);
+            Assert.Equal("0.10.0-beta", result.CurrentVersion);
+            Assert.Equal("0.10.0-beta", result.LatestVersion);
+            Assert.Contains("up to date", result.UserMessage, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task CheckForUpdatesAsync_CurrentVersionNewerThanLatestPrerelease_ShouldReturnNoUpdate()
+        {
+            // Arrange
+            var releasesJson =
+                $$"""
+                [
+                  {{CreateReleaseObject("v0.9.0-alpha.1", "Older prerelease", false, true, ("ColDogLocker-0.9.0-alpha.1-win-x64-setup.exe", "https://downloads.example/alpha.exe", Sha256Digest("alpha")))}}
+                ]
+                """;
+
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>
+                {
+                    ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson)
+                },
+                currentVersion: "0.10.0-beta",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 },
+                channel: UpdateChannel.Unstable);
+
+            // Act
+            var result = await service.CheckForUpdatesAsync();
+
+            // Assert
+            Assert.False(result.UpdateAvailable);
+            Assert.False(result.CanDownload);
+            Assert.Equal("0.10.0-beta", result.CurrentVersion);
+            Assert.Equal("0.9.0-alpha.1", result.LatestVersion);
+        }
+
+        [Fact]
         public async Task CheckForUpdatesAsync_MacOsUpdate_ShouldReturnManualUpdateInstructions()
         {
             // Arrange

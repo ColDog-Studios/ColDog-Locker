@@ -284,7 +284,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 if (release == null)
                 {
                     Logger.Log(LogLevel.Warning, "No GitHub releases were returned for the selected update channel.");
-                    throw new UpdateException(UpdateFailureKind.NoReleases, "No published releases were found for the selected update channel.");
+                    return CreateNoReleaseResult(
+                        platform,
+                        currentVersionText,
+                        "ColDog Locker is up to date. No published releases were found for the selected update channel.");
                 }
 
                 var latestVersionText = NormalizeVersion(release.TagName);
@@ -525,6 +528,23 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 ReleaseNotesMarkdown = release.Body,
                 UserMessage = userMessage,
                 ManualUpdateInstructions = manualInstructions
+            };
+        }
+
+        private static UpdateCheckResult CreateNoReleaseResult(
+            UpdatePlatform platform,
+            string currentVersion,
+            string userMessage)
+        {
+            return new UpdateCheckResult
+            {
+                UpdateAvailable = false,
+                CanDownload = false,
+                IsSupportedPlatform = platform.SupportsAutomaticUpdates,
+                CurrentVersion = currentVersion,
+                LatestVersion = currentVersion,
+                PlatformName = platform.DisplayName,
+                UserMessage = userMessage
             };
         }
 

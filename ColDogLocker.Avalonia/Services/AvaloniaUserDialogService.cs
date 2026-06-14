@@ -93,7 +93,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task ShowAboutAsync()
         {
-            return ShowDialogAsync(new AboutDialog(_platformService, _updateWorkflow, _updateDialogHost));
+            return ShowDialogAsync(new AboutDialog(_platformService));
         }
 
         public Task ShowDevInfoAsync()
