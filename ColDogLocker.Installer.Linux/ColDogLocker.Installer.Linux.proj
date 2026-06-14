@@ -61,7 +61,7 @@
       <GuiDesktopLines Include="Exec=/opt/coldog-locker/ColDogLocker" />
       <GuiDesktopLines Include="Icon=coldog-locker" />
       <GuiDesktopLines Include="Terminal=false" />
-      <GuiDesktopLines Include="Categories=Utilities%3BSecurity%3B" />
+      <GuiDesktopLines Include="Categories=Utility%3BSecurity%3B" />
       <GuiDesktopLines Include="StartupNotify=true" />
       <GuiDesktopLines Include="Keywords=locker%3Bencryption%3Bsecurity%3Bfiles%3B" />
 
@@ -73,7 +73,7 @@
       <CliDesktopLines Include="Exec=/usr/bin/cdlocker tui" />
       <CliDesktopLines Include="Icon=coldog-locker" />
       <CliDesktopLines Include="Terminal=true" />
-      <CliDesktopLines Include="Categories=Utilities%3BSecurity%3B" />
+      <CliDesktopLines Include="Categories=Utility%3BSecurity%3B" />
       <CliDesktopLines Include="Keywords=locker%3Bencryption%3Bsecurity%3Bterminal%3Bcli%3B" />
     </ItemGroup>
 
