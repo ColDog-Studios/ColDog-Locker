@@ -160,12 +160,6 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         Spacing="8">
-                <Button x:Name="CheckForUpdatesButton"
-                        Classes="accent-button"
-                        Content="Check for Updates"
-                        MinWidth="92"
-                        Padding="14,6"
-                        HorizontalContentAlignment="Center" />
                 <Button x:Name="CloseButton"
                         Classes="accent-button"
                         Content="Close"
