@@ -55,7 +55,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine();
 
             Console.WriteLine("OTHER:");
-            Console.WriteLine("  update [--download] [--notes]          Check for updates");
+            Console.WriteLine("  update [--download]                    Check for updates");
             Console.WriteLine("  help [command]                         Show help information");
             Console.WriteLine("  --version, -v                          Show version information");
             Console.WriteLine();
@@ -259,7 +259,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                 case "update":
                     Console.WriteLine("CHECK FOR UPDATES:");
-                    Console.WriteLine("  cdlocker update [--download] [--notes]");
+                    Console.WriteLine("  cdlocker update [--download]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Checks GitHub Releases for a newer version matching the configured");
@@ -267,11 +267,9 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
                     Console.WriteLine("  --download    Download and verify the matching installer package");
-                    Console.WriteLine("  --notes       Print markdown release notes when an update is available");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker update");
-                    Console.WriteLine("  cdlocker update --notes");
                     Console.WriteLine("  cdlocker update --download");
                     break;
 

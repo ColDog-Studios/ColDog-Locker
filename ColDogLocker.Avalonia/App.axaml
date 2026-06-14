@@ -30,8 +30,8 @@
         <ResourceDictionary>
             <SolidColorBrush x:Key="AppPrimaryBrush" Color="#0096DC" />
             <SolidColorBrush x:Key="AppAccentBrush" Color="#0077B6" />
-            <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#002E44" />
-            <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#F0F0F0" />
+            <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#1F2933" />
             <SolidColorBrush x:Key="AppForegroundBrush" Color="#1F2933" />
             <SolidColorBrush x:Key="AppSecondaryForegroundBrush" Color="#4A5568" />
             <SolidColorBrush x:Key="AppBorderBrush" Color="#D7DEE5" />
@@ -48,8 +48,8 @@
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#002E44" />
-                    <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AppMenuBackgroundBrush" Color="#F0F0F0" />
+                    <SolidColorBrush x:Key="AppMenuForegroundBrush" Color="#1F2933" />
                     <SolidColorBrush x:Key="AppForegroundBrush" Color="#1F2933" />
                     <SolidColorBrush x:Key="AppSecondaryForegroundBrush" Color="#4A5568" />
                     <SolidColorBrush x:Key="AppToolbarBackgroundBrush" Color="#FAFAFA" />

@@ -134,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
                     if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
                     {
-                        Console.WriteLine("Release Notes:");
+                        Console.WriteLine("Release Notes:\n");
                         Console.WriteLine(result.ReleaseNotesMarkdown.Trim());
                         Console.WriteLine();
                     }

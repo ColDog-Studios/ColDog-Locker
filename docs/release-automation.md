@@ -86,6 +86,6 @@ After the release is published:
 
 1. Confirm all expected Windows, Linux, and macOS assets are attached.
 2. Confirm GitHub shows digest metadata for package assets.
-3. Confirm `cdlocker update --notes` renders the generated Conventional Commit release notes when the app is on the matching update channel.
+3. Confirm `cdlocker update` renders the generated Conventional Commit release notes when the app is on the matching update channel.
 4. Confirm `cdlocker update --download` downloads and verifies the matching package. On Windows, this should be the `.msi` asset when both `.msi` and setup `.exe` assets are attached.
 5. Test installers on clean Windows, Linux, and macOS machines or VMs before treating the release as broadly usable.

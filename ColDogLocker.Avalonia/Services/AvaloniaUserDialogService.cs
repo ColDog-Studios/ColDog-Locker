@@ -83,7 +83,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public async Task ShowSettingsAsync()
         {
-            var theme = await ShowDialogAsync<string>(new SettingsDialog(_themeService, _platformService));
+            var theme = await ShowDialogAsync<string>(
+                new SettingsDialog(_themeService, _platformService, _updateWorkflow, _updateDialogHost));
             if (!string.IsNullOrWhiteSpace(theme))
             {
                 _themeService.SetTheme(theme);

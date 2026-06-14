@@ -36,15 +36,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Configuration
             Assert.Equal("Info", settings.LogLevel);
             Assert.Equal("json", settings.LogFormat);
             Assert.Equal(10, settings.MaxFileSizeMb);
-            Assert.Equal(9, settings.MaxRetainedFiles);
             Assert.True(settings.EnableFileLogging);
-            Assert.False(settings.EnableCompression);
-            Assert.True(settings.IncludeTimestamps);
-            Assert.False(settings.IncludeThreadId);
-            Assert.Equal("UTC", settings.DateTimeFormat);
-            Assert.True(settings.AsyncLogging);
             Assert.Equal("Auto", settings.AppTheme);
-            Assert.True(settings.EnableAnimations);
             Assert.Equal(AppPaths.CdlDir, settings.DefaultLockerLocation);
             Assert.Equal(GuiViewMode.Grid, settings.DefaultGuiViewMode);
         }
@@ -63,15 +56,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Configuration
                 LogLevel = "Debug",
                 LogFormat = "text",
                 MaxFileSizeMb = 25,
-                MaxRetainedFiles = 3,
                 EnableFileLogging = false,
-                EnableCompression = true,
-                IncludeTimestamps = false,
-                IncludeThreadId = true,
-                DateTimeFormat = "Local",
-                AsyncLogging = false,
                 AppTheme = "Dark",
-                EnableAnimations = false,
                 DefaultLockerLocation = "/tmp/lockers",
                 DefaultGuiViewMode = GuiViewMode.List
             };
@@ -88,15 +74,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Configuration
             Assert.Equal("Debug", deserialized.LogLevel);
             Assert.Equal("text", deserialized.LogFormat);
             Assert.Equal(25, deserialized.MaxFileSizeMb);
-            Assert.Equal(3, deserialized.MaxRetainedFiles);
             Assert.False(deserialized.EnableFileLogging);
-            Assert.True(deserialized.EnableCompression);
-            Assert.False(deserialized.IncludeTimestamps);
-            Assert.True(deserialized.IncludeThreadId);
-            Assert.Equal("Local", deserialized.DateTimeFormat);
-            Assert.False(deserialized.AsyncLogging);
             Assert.Equal("Dark", deserialized.AppTheme);
-            Assert.False(deserialized.EnableAnimations);
             Assert.Equal("/tmp/lockers", deserialized.DefaultLockerLocation);
             Assert.Equal(GuiViewMode.List, deserialized.DefaultGuiViewMode);
         }

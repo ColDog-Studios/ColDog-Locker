@@ -180,7 +180,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
             }
 
             // Validate path is not protected
-            var pathValidationError = LockerPathValidator.ValidatePath(LocationTextBox.Text);
+            var pathValidationError = LockerPathFilter.ValidatePath(LocationTextBox.Text);
             if (pathValidationError != null)
             {
                 LocationErrorText.Text = pathValidationError;
@@ -260,7 +260,7 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
         {
             PasswordRequirementsPanel.Children.Clear();
 
-            var requirements = PasswordFilter.GetPasswordRequirements(password);
+            var requirements = PasswordFilter.Validate(password);
 
             foreach (var requirement in requirements)
             {

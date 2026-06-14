@@ -25,12 +25,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
         public static int Update(string[] args)
         {
             var download = args.Any(arg => arg.Equals("--download", StringComparison.OrdinalIgnoreCase));
-            var showNotes = args.Any(arg => arg.Equals("--notes", StringComparison.OrdinalIgnoreCase));
 
             try
             {
                 var result = UpdateService.CheckForUpdatesAsync().GetAwaiter().GetResult();
-                PrintUpdateResult(result, showNotes);
+                PrintUpdateResult(result);
 
                 if (!result.UpdateAvailable)
                 {
@@ -69,7 +68,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
         }
 
-        private static void PrintUpdateResult(UpdateCheckResult result, bool showNotes)
+        private static void PrintUpdateResult(UpdateCheckResult result)
         {
             Console.WriteLine($"Current Version: {result.CurrentVersion}");
             Console.WriteLine($"Latest Version: {result.LatestVersion}");
@@ -96,7 +95,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine(result.ManualUpdateInstructions);
             }
 
-            if (showNotes && !string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
+            if (!string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown))
             {
                 Console.WriteLine();
                 Console.WriteLine("Release Notes:");

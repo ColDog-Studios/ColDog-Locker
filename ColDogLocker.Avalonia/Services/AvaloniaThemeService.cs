@@ -17,6 +17,7 @@
 
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using ColDogStudios.ColDogLocker.Services.Configuration;
 
@@ -27,8 +28,10 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         private static readonly SolidColorBrush BrandPrimaryBrush = new(Color.Parse("#0096DC"));
         private static readonly SolidColorBrush BrandAccentBrush = new(Color.Parse("#0077B6"));
         private static readonly SolidColorBrush BrandDarkBrush = new(Color.Parse("#002E44"));
+        private static readonly SolidColorBrush BrandHoverBrush = new(Color.Parse("#1AA8E8"));
         private static readonly SolidColorBrush LightForegroundBrush = new(Color.Parse("#1F2933"));
         private static readonly SolidColorBrush LightSecondaryForegroundBrush = new(Color.Parse("#4A5568"));
+        private static readonly SolidColorBrush LightMenuBrush = new(Color.Parse("#F0F0F0"));
         private static readonly SolidColorBrush LightSurfaceBrush = new(Color.Parse("#FAFAFA"));
         private static readonly SolidColorBrush LightTableHeaderBrush = new(Color.Parse("#F1F5F9"));
         private static readonly SolidColorBrush LightCardBrush = new(Color.Parse("#FFFFFF"));
@@ -42,6 +45,14 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         private static readonly SolidColorBrush DarkBorderBrush = new(Color.Parse("#4A4A4A"));
         private static readonly SolidColorBrush DarkButtonPressedBrush = new(Color.Parse("#005F91"));
         private static readonly SolidColorBrush WhiteBrush = new(Color.Parse("#FFFFFF"));
+        private static readonly SolidColorBrush CdsForegroundBrush = new(Color.Parse("#1A2332"));
+        private static readonly SolidColorBrush CdsSecondaryForegroundBrush = new(Color.Parse("#334E63"));
+        private static readonly SolidColorBrush CdsToolbarBrush = new(Color.Parse("#E8F2F8"));
+        private static readonly SolidColorBrush CdsTableHeaderBrush = new(Color.Parse("#D6ECFA"));
+        private static readonly SolidColorBrush CdsCardBrush = new(Color.Parse("#FAFCFD"));
+        private static readonly SolidColorBrush CdsStatusBrush = new(Color.Parse("#EEF3F8"));
+        private static readonly SolidColorBrush CdsBorderBrush = new(Color.Parse("#B9D5E8"));
+        private Application? _subscribedApplication;
 
         public string CurrentTheme => SettingsManager.Settings.AppTheme;
 
@@ -62,20 +73,50 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
                 return;
             }
 
+            SubscribeToThemeChanges(application);
+
             application.RequestedThemeVariant = normalizedTheme switch
             {
                 "Light" => ThemeVariant.Light,
                 "Dark" => ThemeVariant.Dark,
-                "CDS" => ThemeVariant.Default,
+                "CDS" => ThemeVariant.Light,
                 _ => ThemeVariant.Default
             };
 
-            var useDarkSurfaces = normalizedTheme == "Dark" ||
-                (normalizedTheme == "Auto" && application.ActualThemeVariant == ThemeVariant.Dark);
+            ApplyThemeResources(application, normalizedTheme);
+        }
+
+        private void SubscribeToThemeChanges(Application application)
+        {
+            if (ReferenceEquals(_subscribedApplication, application))
+            {
+                return;
+            }
+
+            if (_subscribedApplication != null)
+            {
+                _subscribedApplication.ActualThemeVariantChanged -= Application_ActualThemeVariantChanged;
+            }
+
+            application.ActualThemeVariantChanged += Application_ActualThemeVariantChanged;
+            _subscribedApplication = application;
+        }
+
+        private static void ApplyThemeResources(Application application, string normalizedTheme)
+        {
+            if (normalizedTheme == "CDS")
+            {
+                ApplyCdsResources(application);
+                return;
+            }
+
+            var useDarkSurfaces = ShouldUseDarkSurfaces(application, normalizedTheme);
             application.Resources["AppPrimaryBrush"] = BrandPrimaryBrush;
             application.Resources["AppAccentBrush"] = BrandAccentBrush;
-            application.Resources["AppMenuBackgroundBrush"] = useDarkSurfaces ? DarkMenuBrush : BrandDarkBrush;
-            application.Resources["AppMenuForegroundBrush"] = WhiteBrush;
+            application.Resources["AppMenuBackgroundBrush"] = useDarkSurfaces ? DarkMenuBrush : LightMenuBrush;
+            application.Resources["AppMenuForegroundBrush"] = useDarkSurfaces
+                ? WhiteBrush
+                : LightForegroundBrush;
             application.Resources["AppForegroundBrush"] = useDarkSurfaces ? DarkForegroundBrush : LightForegroundBrush;
             application.Resources["AppSecondaryForegroundBrush"] = useDarkSurfaces ? DarkSecondaryForegroundBrush : LightSecondaryForegroundBrush;
             application.Resources["AppToolbarBackgroundBrush"] = useDarkSurfaces ? DarkSurfaceBrush : LightSurfaceBrush;
@@ -89,12 +130,63 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             application.Resources["AppButtonForegroundBrush"] = WhiteBrush;
         }
 
+        private static void ApplyCdsResources(Application application)
+        {
+            application.Resources["AppPrimaryBrush"] = BrandPrimaryBrush;
+            application.Resources["AppAccentBrush"] = BrandAccentBrush;
+            application.Resources["AppMenuBackgroundBrush"] = BrandDarkBrush;
+            application.Resources["AppMenuForegroundBrush"] = WhiteBrush;
+            application.Resources["AppForegroundBrush"] = CdsForegroundBrush;
+            application.Resources["AppSecondaryForegroundBrush"] = CdsSecondaryForegroundBrush;
+            application.Resources["AppToolbarBackgroundBrush"] = CdsToolbarBrush;
+            application.Resources["AppTableHeaderBackgroundBrush"] = CdsTableHeaderBrush;
+            application.Resources["AppCardBackgroundBrush"] = CdsCardBrush;
+            application.Resources["AppStatusBackgroundBrush"] = CdsStatusBrush;
+            application.Resources["AppBorderBrush"] = CdsBorderBrush;
+            application.Resources["AppButtonBackgroundBrush"] = BrandPrimaryBrush;
+            application.Resources["AppButtonHoverBackgroundBrush"] = BrandHoverBrush;
+            application.Resources["AppButtonPressedBackgroundBrush"] = BrandAccentBrush;
+            application.Resources["AppButtonForegroundBrush"] = WhiteBrush;
+        }
+
+        private void Application_ActualThemeVariantChanged(object? sender, EventArgs e)
+        {
+            var application = Application.Current;
+            if (application == null)
+            {
+                return;
+            }
+
+            ApplyThemeResources(application, NormalizeTheme(SettingsManager.Settings.AppTheme));
+        }
+
+        private static bool ShouldUseDarkSurfaces(Application application, string normalizedTheme)
+        {
+            if (normalizedTheme == "Dark")
+            {
+                return true;
+            }
+
+            if (normalizedTheme != "Auto")
+            {
+                return false;
+            }
+
+            return application.PlatformSettings?.GetColorValues().ThemeVariant switch
+            {
+                PlatformThemeVariant.Dark => true,
+                PlatformThemeVariant.Light => false,
+                _ => application.ActualThemeVariant == ThemeVariant.Dark
+            };
+        }
+
         private static string NormalizeTheme(string themeName)
         {
             return themeName switch
             {
                 "Light" => "Light",
                 "Dark" => "Dark",
+                "ColDog Studios" => "CDS",
                 "CDS" => "CDS",
                 _ => "Auto"
             };

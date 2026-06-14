@@ -38,13 +38,11 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"  Log Level: {SettingsManager.Settings.LogLevel}");
                 Console.WriteLine($"  Log Format: {SettingsManager.Settings.LogFormat}");
                 Console.WriteLine($"  Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
-                Console.WriteLine($"  Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
                 Console.WriteLine($"  File Logging: {(SettingsManager.Settings.EnableFileLogging ? "Enabled" : "Disabled")}");
-                Console.WriteLine($"  Compression: {(SettingsManager.Settings.EnableCompression ? "Enabled" : "Disabled")}");
-                Console.WriteLine($"  Include Timestamps: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}");
-                Console.WriteLine($"  Include Thread ID: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}");
-                Console.WriteLine($"  Date/Time Format: {SettingsManager.Settings.DateTimeFormat}");
-                Console.WriteLine($"  Async Logging: {(SettingsManager.Settings.AsyncLogging ? "Enabled" : "Disabled")}");
+                Console.WriteLine("  Log Retention: Active log plus 4 rotated files");
+                Console.WriteLine("  Timestamps: UTC ISO-8601");
+                Console.WriteLine("  Async Logging: Enabled");
+                Console.WriteLine("  Thread IDs: Enabled with Dev Mode");
                 Console.WriteLine($"  Auto Update: {SettingsManager.Settings.AutoUpdate}");
                 Console.WriteLine($"  Update Channel: {SettingsManager.Settings.UpdateChannel}");
                 Console.WriteLine($"  Database Vacuum Interval: {SettingsManager.Settings.DatabaseVacuumInterval} days");
@@ -71,26 +69,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     case "max-file-size":
                         Console.WriteLine($"Max File Size: {SettingsManager.Settings.MaxFileSizeMb} MB");
                         return 0;
-                    case "max-retained-files":
-                        Console.WriteLine($"Max Retained Files: {SettingsManager.Settings.MaxRetainedFiles}");
-                        return 0;
                     case "file-logging":
                         Console.WriteLine($"File Logging: {(SettingsManager.Settings.EnableFileLogging ? "Enabled" : "Disabled")}");
-                        return 0;
-                    case "compression":
-                        Console.WriteLine($"Compression: {(SettingsManager.Settings.EnableCompression ? "Enabled" : "Disabled")}");
-                        return 0;
-                    case "include-timestamps":
-                        Console.WriteLine($"Include Timestamps: {(SettingsManager.Settings.IncludeTimestamps ? "Yes" : "No")}");
-                        return 0;
-                    case "include-thread-id":
-                        Console.WriteLine($"Include Thread ID: {(SettingsManager.Settings.IncludeThreadId ? "Yes" : "No")}");
-                        return 0;
-                    case "date-time-format":
-                        Console.WriteLine($"Date/Time Format: {SettingsManager.Settings.DateTimeFormat}");
-                        return 0;
-                    case "async-logging":
-                        Console.WriteLine($"Async Logging: {(SettingsManager.Settings.AsyncLogging ? "Enabled" : "Disabled")}");
                         return 0;
                     case "auto-update" or "autoupdate":
                         Console.WriteLine($"Auto Update: {SettingsManager.Settings.AutoUpdate}");
@@ -103,7 +83,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         return 0;
                     default:
                         Console.Error.WriteLine($"Error: Unknown setting '{key}'.");
-                        Console.WriteLine("Available settings: debug, auto-update, update-channel, db-vacuum-interval");
+                        Console.WriteLine("Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
                         return 1;
                 }
             }
@@ -160,20 +140,6 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
                         Console.Error.WriteLine("Error: Invalid value. Must be a positive integer.");
                         return 1;
-                    case "max-retained-files":
-                        if (int.TryParse(value, out var maxRetained) && maxRetained > 0)
-                        {
-                            SettingsManager.Settings.MaxRetainedFiles = maxRetained;
-                            Logger.SetMaxRetainedFiles(maxRetained);
-                            SettingsManager.SaveSettings();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Max retained files set to: {maxRetained}");
-                            Console.ResetColor();
-                            return 0;
-                        }
-
-                        Console.Error.WriteLine("Error: Invalid value. Must be a positive integer.");
-                        return 1;
                     case "file-logging":
                         if (bool.TryParse(value, out var fileLogging))
                         {
@@ -182,70 +148,6 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             SettingsManager.SaveSettings();
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"File logging set to: {fileLogging}");
-                            Console.ResetColor();
-                            return 0;
-                        }
-
-                        Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
-                        return 1;
-                    case "compression":
-                        if (bool.TryParse(value, out var compression))
-                        {
-                            SettingsManager.Settings.EnableCompression = compression;
-                            Logger.SetEnableCompression(compression);
-                            SettingsManager.SaveSettings();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Compression set to: {compression}");
-                            Console.ResetColor();
-                            return 0;
-                        }
-
-                        Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
-                        return 1;
-                    case "include-timestamps":
-                        if (bool.TryParse(value, out var timestamps))
-                        {
-                            SettingsManager.Settings.IncludeTimestamps = timestamps;
-                            Logger.SetIncludeTimestamps(timestamps);
-                            SettingsManager.SaveSettings();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Include timestamps set to: {timestamps}");
-                            Console.ResetColor();
-                            return 0;
-                        }
-
-                        Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
-                        return 1;
-                    case "include-thread-id":
-                        if (bool.TryParse(value, out var threadId))
-                        {
-                            SettingsManager.Settings.IncludeThreadId = threadId;
-                            Logger.SetIncludeThreadId(threadId);
-                            SettingsManager.SaveSettings();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Include thread ID set to: {threadId}");
-                            Console.ResetColor();
-                            return 0;
-                        }
-
-                        Console.Error.WriteLine("Error: Invalid value. Use 'true' or 'false'.");
-                        return 1;
-                    case "date-time-format":
-                        SettingsManager.Settings.DateTimeFormat = value;
-                        Logger.SetDateTimeFormat(value);
-                        SettingsManager.SaveSettings();
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"Date/time format set to: {value}");
-                        Console.ResetColor();
-                        return 0;
-                    case "async-logging":
-                        if (bool.TryParse(value, out var asyncLogging))
-                        {
-                            SettingsManager.Settings.AsyncLogging = asyncLogging;
-                            Logger.SetAsyncLogging(asyncLogging);
-                            SettingsManager.SaveSettings();
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Async logging set to: {asyncLogging}");
                             Console.ResetColor();
                             return 0;
                         }
@@ -308,7 +210,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     default:
                         Console.Error.WriteLine($"Error: Unknown setting '{key}'.");
                         Console.WriteLine(
-                            "Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, max-retained-files, file-logging, compression, include-timestamps, include-thread-id, date-time-format, async-logging");
+                            "Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
                         return 1;
                 }
             }

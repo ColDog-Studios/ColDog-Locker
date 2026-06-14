@@ -23,7 +23,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
     ///     Validates locker paths to prevent malicious use for ransomware or system damage.
     ///     Ensures critical system directories and user data folders cannot be locked.
     /// </summary>
-    public static class LockerPathValidator // TODO: Rename to LockerPathFilter to be consistent with PasswordFilter
+    public static class LockerPathFilter
     {
         // Paths that block the exact folder AND all subdirectories (system paths)
         private static readonly string[] _systemProtectedPaths;
@@ -31,7 +31,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         // Paths that block ONLY the exact folder, but allow subdirectories (user folders)
         private static readonly string[] _userFolderProtectedPaths;
 
-        static LockerPathValidator()
+        static LockerPathFilter()
         {
             var systemPaths = new List<string>();
             var userFolderPaths = new List<string>();

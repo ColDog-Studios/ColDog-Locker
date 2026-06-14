@@ -352,39 +352,9 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
         public int MaxFileSizeMb { get; set; } = 10;
 
         /// <summary>
-        ///     Gets or sets the number of rotated log files to keep (not counting current).
-        /// </summary>
-        public int MaxRetainedFiles { get; set; } = 9;
-
-        /// <summary>
         ///     Gets or sets whether file logging is enabled.
         /// </summary>
         public bool EnableFileLogging { get; set; } = true;
-
-        /// <summary>
-        ///     Gets or sets whether to compress rotated log files.
-        /// </summary>
-        public bool EnableCompression { get; set; } = false;
-
-        /// <summary>
-        ///     Gets or sets whether to include timestamps in log entries.
-        /// </summary>
-        public bool IncludeTimestamps { get; set; } = true;
-
-        /// <summary>
-        ///     Gets or sets whether to include thread ID in log entries.
-        /// </summary>
-        public bool IncludeThreadId { get; set; } = false;
-
-        /// <summary>
-        ///     Gets or sets the date/time format for timestamps ("UTC" or "Local").
-        /// </summary>
-        public string DateTimeFormat { get; set; } = "UTC";
-
-        /// <summary>
-        ///     Gets or sets whether to enable asynchronous logging.
-        /// </summary>
-        public bool AsyncLogging { get; set; } = true;
 
         // GUI Settings
 
@@ -392,11 +362,6 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
         ///     Gets or sets the application theme name.
         /// </summary>
         public string AppTheme { get; set; } = "Auto";
-
-        /// <summary>
-        ///     Gets or sets a value indicating whether animations are enabled in the GUI.
-        /// </summary>
-        public bool EnableAnimations { get; set; } = true;
 
         /// <summary>
         ///     Gets or sets the default location for new lockers.

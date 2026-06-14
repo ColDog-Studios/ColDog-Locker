@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <!-- Shared Version Information - Edit version here only -->
-        <Version>0.8.0-alpha</Version>
+        <Version>0.9.0-alpha</Version>
         <FileVersion>$(Version.Split('-')[0]).$([System.DateTime]::UtcNow.ToString(MMdd))</FileVersion>
         <InformationalVersion>$(Version)+$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</InformationalVersion>
         <AssemblyVersion>$(Version.Split('-')[0]).0</AssemblyVersion>
@@ -18,7 +18,7 @@
         <Product>ColDog Locker</Product>
         <AssemblyTitle>ColDog Locker</AssemblyTitle>
         <Description>ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.</Description>
-        <Copyright>© Collin Laney. All Rights Reserved.</Copyright>
+        <Copyright>Copyright © 2026 ColDog Studios. Licensed under the GNU GPLv3.</Copyright>
         <Authors>Collin Laney</Authors>
         <Company>ColDog Studios</Company>
 

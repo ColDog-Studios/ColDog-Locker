@@ -22,7 +22,7 @@ cdlocker remove <name> [--force] [--delete]
 cdlocker settings [<key> [<value>]]
 cdlocker db-info
 cdlocker db-vacuum
-cdlocker update [--download] [--notes]
+cdlocker update [--download]
 cdlocker help [command]
 cdlocker --version
 ```
@@ -75,7 +75,7 @@ Locker metadata is stored in a per-user SQLite database. Settings and logs are s
 : Optimize the SQLite database.
 
 `update`
-: Check for releases. Use `--notes` to print release notes and `--download` to download a matching installer.
+: Check for releases. Release notes are printed automatically when available. Use `--download` to download a matching installer.
 
 `help [command]`
 : Show help.
@@ -108,9 +108,6 @@ Locker metadata is stored in a per-user SQLite database. Settings and logs are s
 
 `--delete`
 : Delete the locker directory when removing the locker.
-
-`--notes`
-: Print update release notes when available.
 
 `--download`
 : Download and verify a matching update installer when available.
@@ -150,7 +147,7 @@ cdlocker unlock MyLocker
 cdlocker list --locked
 cdlocker verify MyLocker
 cdlocker settings update-channel stable
-cdlocker update --notes
+cdlocker update
 ```
 
 ## SECURITY NOTES

@@ -161,7 +161,7 @@ Current behavior:
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
 On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
-Conventional Commit release notes are generated during release publishing and rendered by update checks when users request notes.
+Conventional Commit release notes are generated during release publishing and rendered automatically by update checks when available.
 
 Suggested names:
 
@@ -213,7 +213,7 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 9. Confirm TUI workflows on non-GUI environments.
 10. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
 11. Confirm update asset naming and SHA-256 digest availability.
-12. Verify `cdlocker update --notes` and `cdlocker update --download` behavior after publishing.
+12. Verify `cdlocker update` release notes and `cdlocker update --download` behavior after publishing.
 
 ## Open Distribution Decisions
 

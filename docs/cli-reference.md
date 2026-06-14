@@ -196,13 +196,7 @@ Supported keys:
 | `log-level` | logger level name |
 | `log-format` | logger format string/name |
 | `max-file-size` | positive integer, MB |
-| `max-retained-files` | positive integer |
 | `file-logging` | `true`, `false` |
-| `compression` | `true`, `false` |
-| `include-timestamps` | `true`, `false` |
-| `include-thread-id` | `true`, `false` |
-| `date-time-format` | date/time format string |
-| `async-logging` | `true`, `false` |
 | `auto-update` | `true`, `false` |
 | `update-channel` | `stable`, `s`, `unstable`, `u`, `prerelease`, `pre`, `p` |
 | `db-vacuum-interval` | integer from `0` to `365`; `0` disables automatic interval tracking |
@@ -228,14 +222,15 @@ Runs SQLite `VACUUM`, updates the last-vacuum timestamp in settings, and reports
 
 ## Update Commands
 
-### `cdlocker update [--download] [--notes]`
+### `cdlocker update [--download]`
 
 Checks GitHub Releases for an update matching the configured channel and current platform.
 
 Options:
 
-- `--notes`: print release notes when an update is available.
 - `--download`: download and verify a matching installer package when available.
+
+Release notes are printed automatically when available.
 
 The command downloads the installer only. It does not install the update automatically.
 

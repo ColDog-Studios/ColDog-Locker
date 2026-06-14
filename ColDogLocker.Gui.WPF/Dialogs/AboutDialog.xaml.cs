@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media.Animation;
-using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Gui.WPF.Services;
 
@@ -17,20 +16,17 @@ namespace ColDogStudios.ColDogLocker.Gui.WPF.Dialogs
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Play scale-in animation if animations are enabled
-            if (SettingsManager.Settings.EnableAnimations)
+            // Play scale-in animation
+            try
             {
-                try
+                if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
                 {
-                    if (TryFindResource("WindowScaleInAnimation") is Storyboard storyboard)
-                    {
-                        storyboard.Begin(this);
-                    }
+                    storyboard.Begin(this);
                 }
-                catch
-                {
-                    // Animation failed, continue without it
-                }
+            }
+            catch
+            {
+                // Animation failed, continue without it
             }
         }
 

@@ -73,8 +73,24 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         public Geometry ToggleViewIconData => IsGridView ? ListIcon : GridIcon;
         public IReadOnlyList<string> SortColumns { get; } = ["Name", "Status", "Modified", "Size", "Location"];
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(Func<Task> appInitialization)
         {
+            ArgumentNullException.ThrowIfNull(appInitialization);
+
+            await RunWithUiErrorAsync("Startup Error", "Failed to initialize ColDog Locker.", async () =>
+            {
+                IsBusy = true;
+                StatusMessage = "Starting...";
+                try
+                {
+                    await appInitialization();
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            });
+
             await RefreshAsync(showMessage: false);
         }
 
