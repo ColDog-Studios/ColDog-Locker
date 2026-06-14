@@ -156,7 +156,7 @@ Settings are stored as JSON at:
 
 Settings writes use a temporary-file replacement flow. If a malformed settings file is detected, ColDog Locker backs it up and reinitializes defaults.
 
-Logger writes can run asynchronously. When asynchronous logging is disabled or the process exits, ColDog Locker attempts to flush queued log entries so recent security-relevant events are not silently dropped.
+Logger writes run asynchronously and are flushed during normal process shutdown so recent security-relevant events are not silently dropped. Log entries always include UTC ISO-8601 timestamps; thread IDs are included when developer mode is enabled.
 
 ## What ColDog Locker Protects Against
 

@@ -112,8 +112,8 @@ Settings are stored separately as JSON through `SettingsManager`.
 Settings include:
 
 - Developer mode.
-- Logging format, level, retention, size, and async behavior.
-- Compression and timestamp/thread-id logging controls.
+- Logging format, level, maximum file size, and file logging enablement.
+- Fixed logging defaults for retention, UTC ISO-8601 timestamps, asynchronous writes, and developer-mode thread IDs.
 - Auto-update and update channel.
 - Database vacuum interval and last-vacuum timestamp.
 
