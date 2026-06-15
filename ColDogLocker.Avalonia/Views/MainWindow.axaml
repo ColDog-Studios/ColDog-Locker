@@ -20,6 +20,7 @@
         xmlns:vm="using:ColDogStudios.ColDogLocker.Avalonia.ViewModels"
         xmlns:models="using:ColDogStudios.ColDogLocker.Avalonia.Models"
         xmlns:primitives="using:Avalonia.Controls.Primitives"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -39,9 +40,18 @@
         <DockPanel.Styles>
             <Style Selector="MenuItem.top-menu">
                 <Setter Property="Foreground" Value="{DynamicResource AppMenuForegroundBrush}" />
+                <Setter Property="Padding" Value="12,6" />
             </Style>
             <Style Selector="MenuItem.top-menu:pointerover">
                 <Setter Property="Foreground" Value="{DynamicResource AppMenuForegroundBrush}" />
+            </Style>
+            <Style Selector="StackPanel.menu-item-header">
+                <Setter Property="MinHeight" Value="28" />
+            </Style>
+            <Style Selector="StackPanel.menu-item-header materialIcons|MaterialIcon">
+                <Setter Property="Width" Value="18" />
+                <Setter Property="Height" Value="18" />
+                <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
         </DockPanel.Styles>
         <Menu DockPanel.Dock="Top"
@@ -51,56 +61,189 @@
                 <MenuItem.Header>
                     <primitives:AccessText Text="_File" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_New Locker" Command="{Binding CreateLockerCommand}" />
+                <MenuItem Command="{Binding CreateLockerCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="FolderPlus" />
+                            <primitives:AccessText Text="_New Locker" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="E_xit" Click="Exit_Click" />
+                <MenuItem Click="Exit_Click">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="ExitToApp" />
+                            <primitives:AccessText Text="E_xit" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
             <MenuItem Classes="top-menu">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Locker" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Lock" Command="{Binding LockSelectedCommand}" />
-                <MenuItem Header="_Unlock" Command="{Binding UnlockSelectedCommand}" />
+                <MenuItem Command="{Binding LockSelectedCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="Lock" />
+                            <primitives:AccessText Text="_Lock" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding UnlockSelectedCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="LockOpen" />
+                            <primitives:AccessText Text="_Unlock" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="_Remove" Command="{Binding RemoveSelectedCommand}" />
+                <MenuItem Command="{Binding RemoveSelectedCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="Delete" />
+                            <primitives:AccessText Text="_Remove" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="_Properties" Command="{Binding ShowPropertiesCommand}" />
-                <MenuItem Header="_Open Location" Command="{Binding OpenLocationCommand}" />
+                <MenuItem Command="{Binding ShowPropertiesCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="InformationOutline" />
+                            <primitives:AccessText Text="_Properties" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding OpenLocationCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="FolderOpen" />
+                            <primitives:AccessText Text="_Open Location" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
             <MenuItem Classes="top-menu">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_View" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Toggle Grid/List" Command="{Binding ToggleViewCommand}" />
-                <MenuItem Header="_Refresh" Command="{Binding RefreshCommand}" />
+                <MenuItem Command="{Binding ToggleViewCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="{Binding ToggleViewIconKind}" />
+                            <primitives:AccessText Text="_Toggle Grid/List" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding RefreshCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="Refresh" />
+                            <primitives:AccessText Text="_Refresh" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
             <MenuItem Classes="top-menu">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Tools" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Settings" Command="{Binding ShowSettingsCommand}" />
-                <MenuItem Header="_Check for Updates" Command="{Binding CheckForUpdatesCommand}" />
+                <MenuItem Command="{Binding ShowSettingsCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="Cog" />
+                            <primitives:AccessText Text="_Settings" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding CheckForUpdatesCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="Update" />
+                            <primitives:AccessText Text="_Check for Updates" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
             <MenuItem Classes="top-menu" IsVisible="{Binding IsDeveloperMode}">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Developer" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Dev Info" Command="{Binding ShowDevInfoCommand}" />
+                <MenuItem Command="{Binding ShowDevInfoCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="DeveloperBoard" />
+                            <primitives:AccessText Text="_Dev Info" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="Test Message _Info" Command="{Binding TestMessageInfoDialogCommand}" />
-                <MenuItem Header="Test Message _Warning" Command="{Binding TestMessageWarningDialogCommand}" />
-                <MenuItem Header="Test Message _Error" Command="{Binding TestMessageErrorDialogCommand}" />
+                <MenuItem Command="{Binding TestMessageInfoDialogCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="InformationOutline" />
+                            <primitives:AccessText Text="Test Message _Info" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding TestMessageWarningDialogCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="AlertOutline" />
+                            <primitives:AccessText Text="Test Message _Warning" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding TestMessageErrorDialogCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="AlertCircleOutline" />
+                            <primitives:AccessText Text="Test Message _Error" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="Test Detailed _Error Dialog" Command="{Binding TestErrorDialogCommand}" />
-                <MenuItem Header="Test _Progress Dialog" Command="{Binding TestProgressDialogCommand}" />
+                <MenuItem Command="{Binding TestErrorDialogCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="BugOutline" />
+                            <primitives:AccessText Text="Test Detailed _Error Dialog" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding TestProgressDialogCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="ProgressCheck" />
+                            <primitives:AccessText Text="Test _Progress Dialog" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
             <MenuItem Classes="top-menu">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Help" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Documentation" Command="{Binding OpenDocumentationCommand}" />
+                <MenuItem Command="{Binding OpenDocumentationCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="BookOpenPageVariant" />
+                            <primitives:AccessText Text="_Documentation" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="_About" Command="{Binding ShowAboutCommand}" />
+                <MenuItem Command="{Binding ShowAboutCommand}">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="InformationOutline" />
+                            <primitives:AccessText Text="_About" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
@@ -126,42 +269,51 @@
                     Background="{DynamicResource AppToolbarBackgroundBrush}"
                     BorderBrush="{DynamicResource AppBorderBrush}"
                     BorderThickness="0,0,0,1"
-                    Padding="8">
+                    Padding="10">
                 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,220,120,Auto" ColumnSpacing="8">
-                    <Button Grid.Column="0" Classes="tool-button" Width="36" Height="32" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
-                        <PathIcon Width="16" Height="16" Data="M11 4H13V11H20V13H13V20H11V13H4V11H11Z" />
+                    <Button Grid.Column="0" Classes="tool-button" Width="42" Height="38" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderPlus" />
                     </Button>
-                    <Button Grid.Column="1" Classes="tool-button" Width="36" Height="32" Command="{Binding LockSelectedCommand}" ToolTip.Tip="Lock selected locker">
-                        <PathIcon Width="16" Height="16" Data="M7 10V8C7 5.24 9.24 3 12 3S17 5.24 17 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7ZM9 10H15V8C15 6.34 13.66 5 12 5S9 6.34 9 8V10Z" />
+                    <Button Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}" ToolTip.Tip="Lock selected locker">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="Lock" />
                     </Button>
-                    <Button Grid.Column="2" Classes="tool-button" Width="36" Height="32" Command="{Binding UnlockSelectedCommand}" ToolTip.Tip="Unlock selected locker">
-                        <PathIcon Width="16" Height="16" Data="M7 10V8C7 5.24 9.24 3 12 3C14.05 3 15.82 4.23 16.59 6H14.24C13.69 5.39 12.89 5 12 5C10.34 5 9 6.34 9 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7Z" />
+                    <Button Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}" ToolTip.Tip="Unlock selected locker">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="LockOpen" />
                     </Button>
-                    <Button Grid.Column="3" Classes="tool-button" Width="36" Height="32" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="Remove selected locker">
-                        <PathIcon Width="16" Height="16" Data="M9 3H15L16 5H21V7H3V5H8L9 3ZM5 9H19L18 21H6L5 9Z" />
+                    <Button Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="Remove selected locker">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="Delete" />
                     </Button>
                     <Border Grid.Column="4" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
-                    <Button Grid.Column="5" Classes="tool-button" Width="36" Height="32" Command="{Binding OpenLocationCommand}" ToolTip.Tip="Open selected locker in Explorer">
-                        <PathIcon Width="16" Height="16" Data="M3 6C3 4.9 3.9 4 5 4H10L12 6H19C20.1 6 21 6.9 21 8V18C21 19.1 20.1 20 19 20H5C3.9 20 3 19.1 3 18V6Z" />
+                    <Button Grid.Column="5" Classes="tool-button" Width="42" Height="38" Command="{Binding OpenLocationCommand}" ToolTip.Tip="Open selected locker in Explorer">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderOpen" />
                     </Button>
-                    <Button Grid.Column="6" Classes="tool-button" Width="36" Height="32" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="Show selected locker properties">
-                        <PathIcon Width="16" Height="16" Data="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 10H13V17H11V10ZM11 7H13V9H11V7Z" />
+                    <Button Grid.Column="6" Classes="tool-button" Width="42" Height="38" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="Show selected locker properties">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="InformationOutline" />
                     </Button>
-                    <Button Grid.Column="7" Classes="tool-button" Width="36" Height="32" Command="{Binding ToggleViewCommand}" ToolTip.Tip="Toggle grid/list view">
-                        <PathIcon Width="16" Height="16" Data="{Binding ToggleViewIconData}" />
+                    <Button Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}" ToolTip.Tip="Toggle grid/list view">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="{Binding ToggleViewIconKind}" />
                     </Button>
-                    <Button Grid.Column="8" Classes="tool-button" Width="36" Height="32" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
-                        <PathIcon Width="16" Height="16" Data="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.82 16.33 14.6 18 12 18C8.69 18 6 15.31 6 12S8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" />
+                    <Button Grid.Column="8" Classes="tool-button" Width="42" Height="38" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
+                        <materialIcons:MaterialIcon Width="22" Height="22" Kind="Refresh" />
                     </Button>
                     <Border Grid.Column="9" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
                     <TextBox Grid.Column="11"
                              PlaceholderText="Filter lockers"
+                             Height="38"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
                              Text="{Binding SearchText, Mode=TwoWay}" />
                     <ComboBox Grid.Column="12"
+                              Height="38"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
                               ItemsSource="{Binding SortColumns}"
                               SelectedItem="{Binding SortColumn, Mode=TwoWay}" />
                     <ToggleButton Grid.Column="13"
                                   Content="Ascending"
+                                  Height="38"
+                                  VerticalAlignment="Center"
+                                  VerticalContentAlignment="Center"
                                   IsChecked="{Binding SortAscending, Mode=TwoWay}" />
                 </Grid>
             </Border>
@@ -205,7 +357,7 @@
                                     <Grid ColumnDefinitions="2*,*,*,*,3*" ColumnSpacing="12">
                                         <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource AppForegroundBrush}" />
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                            <PathIcon Width="14" Height="14" Data="{Binding StatusIconData}" Foreground="{Binding StatusBrush}" />
+                                            <materialIcons:MaterialIcon Width="16" Height="16" Kind="{Binding StatusIconKind}" Foreground="{Binding StatusBrush}" />
                                             <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AppForegroundBrush}" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="2" Text="{Binding LastModified, StringFormat='{}{0:g}'}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
@@ -262,7 +414,7 @@
                                                 CornerRadius="4"
                                                 Background="{Binding StatusBrush}">
                                             <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <PathIcon Width="12" Height="12" Data="{Binding StatusIconData}" Foreground="White" />
+                                                <materialIcons:MaterialIcon Width="14" Height="14" Kind="{Binding StatusIconKind}" Foreground="White" />
                                                 <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="12" />
                                             </StackPanel>
                                         </Border>

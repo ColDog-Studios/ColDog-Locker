@@ -269,6 +269,7 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 - [Avalonia UI](https://avaloniaui.net/)
 - [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net)
 - [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm)
+- [Material.Icons.Avalonia](https://github.com/SKProCH/Material.Icons)
 - [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)

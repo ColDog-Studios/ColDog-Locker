@@ -19,6 +19,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="ColDogStudios.ColDogLocker.Avalonia.App"
              xmlns:local="using:ColDogStudios.ColDogLocker.Avalonia"
+             xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              RequestedThemeVariant="Default">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -87,6 +88,7 @@
 
     <Application.Styles>
         <FluentTheme />
+        <materialIcons:MaterialIconStyles />
         <Style Selector="Button.accent-button">
             <Setter Property="Background" Value="{DynamicResource AppButtonBackgroundBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource AppButtonBackgroundBrush}" />
@@ -105,7 +107,7 @@
         <Style Selector="Button.tool-button">
             <Setter Property="Foreground" Value="{DynamicResource AppPrimaryBrush}" />
         </Style>
-        <Style Selector="Button.tool-button PathIcon">
+        <Style Selector="Button.tool-button materialIcons|MaterialIcon">
             <Setter Property="Foreground" Value="{DynamicResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.tool-button:pointerover">
@@ -113,7 +115,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
         </Style>
-        <Style Selector="Button.tool-button:pointerover PathIcon">
+        <Style Selector="Button.tool-button:pointerover materialIcons|MaterialIcon">
             <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
         </Style>
         <Style Selector="Button.tool-button:pressed">
@@ -121,8 +123,12 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AppButtonPressedBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
         </Style>
-        <Style Selector="Button.tool-button:pressed PathIcon">
+        <Style Selector="Button.tool-button:pressed materialIcons|MaterialIcon">
             <Setter Property="Foreground" Value="{DynamicResource AppButtonForegroundBrush}" />
+        </Style>
+        <Style Selector="MenuItem materialIcons|MaterialIcon">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
         </Style>
         <Style Selector="ToggleButton:pointerover">
             <Setter Property="Background" Value="{DynamicResource AppButtonHoverBackgroundBrush}" />

@@ -17,6 +17,7 @@
 
 using Avalonia.Controls;
 using Avalonia.Media;
+using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -52,7 +53,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             _kind = kind;
             Title = title;
             MessageText.Text = message;
-            DialogIcon.Data = IconData(kind);
+            DialogIcon.Kind = IconKind(kind);
             DialogIcon.Foreground = IconBrush(kind);
             OkButton.Content = kind == MessageDialogKind.Confirmation ? "Yes" : "OK";
             CancelButton.IsVisible = kind == MessageDialogKind.Confirmation;
@@ -68,15 +69,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             Close(false);
         }
 
-        private static Geometry IconData(MessageDialogKind kind)
+        private static MaterialIconKind IconKind(MessageDialogKind kind)
         {
-            return Geometry.Parse(kind switch
+            return kind switch
             {
-                MessageDialogKind.Error => "M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM7 7L17 17M17 7L7 17",
-                MessageDialogKind.Warning => "M12 3L22 20H2L12 3ZM11 9H13V14H11V9ZM11 16H13V18H11V16Z",
-                MessageDialogKind.Confirmation => "M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 17H13V19H11V17ZM12 5C14.21 5 16 6.79 16 9C16 11.5 13 11.75 13 14H11C11 10.75 14 10.5 14 9C14 7.9 13.1 7 12 7S10 7.9 10 9H8C8 6.79 9.79 5 12 5Z",
-                _ => "M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 10H13V17H11V10ZM11 7H13V9H11V7Z"
-            });
+                MessageDialogKind.Error => MaterialIconKind.AlertCircleOutline,
+                MessageDialogKind.Warning => MaterialIconKind.AlertOutline,
+                MessageDialogKind.Confirmation => MaterialIconKind.HelpCircleOutline,
+                _ => MaterialIconKind.InformationOutline
+            };
         }
 
         private static IBrush IconBrush(MessageDialogKind kind)

@@ -17,15 +17,16 @@
 
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DesignWidth="500"
-        d:DesignHeight="180"
+        d:DesignHeight="120"
         x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.MessageDialog"
         Title="Message"
         Width="500"
-        MinHeight="180"
+        MinHeight="120"
         MaxHeight="480"
         SizeToContent="Height"
         CanResize="False"
@@ -33,10 +34,10 @@
 
     <StackPanel Margin="18" Spacing="18">
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-            <PathIcon x:Name="DialogIcon"
-                      Width="28"
-                      Height="28"
-                      VerticalAlignment="Top" />
+            <materialIcons:MaterialIcon x:Name="DialogIcon"
+                                        Width="32"
+                                        Height="32"
+                                        VerticalAlignment="Top" />
 
             <ScrollViewer Grid.Column="1"
                           MaxHeight="360"

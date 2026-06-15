@@ -22,6 +22,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using Material.Icons;
 using System.IO;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
@@ -30,8 +31,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
     {
         private static readonly IBrush LockedBrush = new SolidColorBrush(Color.Parse("#FF6923"));
         private static readonly IBrush UnlockedBrush = new SolidColorBrush(Color.Parse("#0077B6"));
-        private static readonly Geometry LockedIcon = Geometry.Parse("M7 10V8C7 5.24 9.24 3 12 3S17 5.24 17 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7ZM9 10H15V8C15 6.34 13.66 5 12 5S9 6.34 9 8V10Z");
-        private static readonly Geometry UnlockedIcon = Geometry.Parse("M7 10V8C7 5.24 9.24 3 12 3C14.05 3 15.82 4.23 16.59 6H14.24C13.69 5.39 12.89 5 12 5C10.34 5 9 6.34 9 8V10H18C18.55 10 19 10.45 19 11V20C19 20.55 18.55 21 18 21H6C5.45 21 5 20.55 5 20V11C5 10.45 5.45 10 6 10H7Z");
 
         private LockerModel? _locker;
         private bool _hasChanges;
@@ -42,7 +41,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             BrowseButton.IsEnabled = false;
             SaveButton.IsEnabled = false;
-            StatusIcon.Data = UnlockedIcon;
+            StatusIcon.Kind = MaterialIconKind.LockOpen;
             StatusIcon.Foreground = UnlockedBrush;
             StatusText.Text = "Unlocked";
             StatusText.Foreground = UnlockedBrush;
@@ -67,7 +66,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             ModifiedText.Text = GetDirectoryDate(locker.LockerLocation, dateKind: DateKind.Modified);
 
             var statusBrush = locker.IsLocked ? LockedBrush : UnlockedBrush;
-            StatusIcon.Data = locker.IsLocked ? LockedIcon : UnlockedIcon;
+            StatusIcon.Kind = locker.IsLocked ? MaterialIconKind.Lock : MaterialIconKind.LockOpen;
             StatusIcon.Foreground = statusBrush;
             StatusText.Text = locker.IsLocked ? "Locked" : "Unlocked";
             StatusText.Foreground = statusBrush;
