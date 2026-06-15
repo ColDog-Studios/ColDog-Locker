@@ -29,6 +29,6 @@
         <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 
         <!-- Output all projects to root bin directory -->
-        <OutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutputPath>
+        <BaseOutputPath>$(MSBuildThisFileDirectory)bin\</BaseOutputPath>
     </PropertyGroup>
 </Project>
