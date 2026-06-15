@@ -18,6 +18,7 @@
     <AppContentsRoot>$([MSBuild]::NormalizeDirectory('$(AppBundleRoot)', 'Contents'))</AppContentsRoot>
     <AppMacOsRoot>$([MSBuild]::NormalizeDirectory('$(AppContentsRoot)', 'MacOS'))</AppMacOsRoot>
     <AppResourcesRoot>$([MSBuild]::NormalizeDirectory('$(AppContentsRoot)', 'Resources'))</AppResourcesRoot>
+    <ManPageSource>$(RepoRoot)packaging/man/cdlocker.1</ManPageSource>
     <PackageIdentifier>com.coldogstudios.coldog-locker</PackageIdentifier>
     <BundleIdentifier>com.coldogstudios.coldog-locker</BundleIdentifier>
     <BundleExecutable>ColDogLocker</BundleExecutable>
@@ -42,7 +43,7 @@
 
   <Target Name="StageMacPackage" DependsOnTargets="PublishInstallerApps">
     <RemoveDir Directories="$(PackageRoot)" />
-    <MakeDir Directories="$(AppMacOsRoot);$(AppResourcesRoot);$(PackageRoot)usr/local/bin" />
+    <MakeDir Directories="$(AppMacOsRoot);$(AppResourcesRoot);$(PackageRoot)usr/local/bin;$(PackageRoot)usr/local/share/man/man1" />
 
     <ItemGroup>
       <GuiPublishedFiles Include="$(GuiPublishRoot)**/*" />
@@ -77,11 +78,13 @@
       SourceFiles="@(GuiPublishedFiles)"
       DestinationFiles="@(GuiPublishedFiles->'$(AppMacOsRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="$(CliPublishRoot)cdlocker" DestinationFolder="$(PackageRoot)usr/local/bin" />
+    <Copy SourceFiles="$(ManPageSource)" DestinationFiles="$(PackageRoot)usr/local/share/man/man1/cdlocker.1" />
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(AppResourcesRoot)" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(AppResourcesRoot)" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(AppResourcesRoot)" />
     <WriteLinesToFile File="$(AppContentsRoot)Info.plist" Lines="$(InfoPlistXmlDeclaration);@(InfoPlistLines)" Overwrite="true" />
     <WriteLinesToFile File="$(AppContentsRoot)PkgInfo" Lines="APPL????" Overwrite="true" />
+    <Exec Command='gzip -f -9 "$(PackageRoot)usr/local/share/man/man1/cdlocker.1"' />
     <Exec Command='chmod 755 "$(PackageRoot)usr/local/bin/cdlocker" "$(AppMacOsRoot)$(BundleExecutable)"' />
   </Target>
 

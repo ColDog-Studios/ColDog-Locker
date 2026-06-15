@@ -82,7 +82,7 @@ That is the current CLI behavior. Use `cdlocker gui` to launch the graphical int
 
 ## What GUI should I use?
 
-Use the Avalonia GUI through `cdlocker gui` on supported platforms. The WPF GUI is still in the repository temporarily as a legacy migration reference. On macOS, `cdlocker gui` is still unsupported; experimental `.pkg` builds install `/Applications/ColDog Locker.app` for direct validation.
+Use the Avalonia GUI through `cdlocker gui` on supported platforms. On macOS, `cdlocker gui` is still unsupported; experimental `.pkg` builds install `/Applications/ColDog Locker.app` for direct validation.
 
 ## What does `verify` prove?
 

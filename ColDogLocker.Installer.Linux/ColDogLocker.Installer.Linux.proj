@@ -20,6 +20,7 @@
     <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
     <InstallRoot>opt/coldog-locker</InstallRoot>
     <UnixInstallRoot>/opt/coldog-locker</UnixInstallRoot>
+    <ManPageSource>$(RepoRoot)packaging/man/cdlocker.1</ManPageSource>
     <PackageId>coldog-locker</PackageId>
     <PackageFileBase>ColDogLocker-$(Version)-linux-$(PackageArchitecture)</PackageFileBase>
     <PackageVersionBase>$(Version.Split('-')[0])</PackageVersionBase>
@@ -49,7 +50,7 @@
 
   <Target Name="StageLinuxPackage" DependsOnTargets="PublishInstallerApps">
     <RemoveDir Directories="$(PackageRoot)" />
-    <MakeDir Directories="$(PackageRoot)$(InstallRoot);$(PackageRoot)usr/bin;$(PackageRoot)usr/share/applications;$(PackageRoot)usr/share/icons/hicolor/256x256/apps" />
+    <MakeDir Directories="$(PackageRoot)$(InstallRoot);$(PackageRoot)usr/bin;$(PackageRoot)usr/share/applications;$(PackageRoot)usr/share/icons/hicolor/256x256/apps;$(PackageRoot)usr/share/man/man1" />
 
     <ItemGroup>
       <PublishedFiles Include="$(PublishRoot)**/*" />
@@ -81,8 +82,10 @@
       SourceFiles="@(PublishedFiles)"
       DestinationFiles="@(PublishedFiles->'$(PackageRoot)$(InstallRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.png" DestinationFiles="$(PackageRoot)usr/share/icons/hicolor/256x256/apps/coldog-locker.png" />
+    <Copy SourceFiles="$(ManPageSource)" DestinationFiles="$(PackageRoot)usr/share/man/man1/cdlocker.1" />
     <WriteLinesToFile File="$(PackageRoot)usr/share/applications/coldog-locker.desktop" Lines="@(GuiDesktopLines)" Overwrite="true" />
     <WriteLinesToFile File="$(PackageRoot)usr/share/applications/cdlocker.desktop" Lines="@(CliDesktopLines)" Overwrite="true" />
+    <Exec Command='gzip -f -9 "$(PackageRoot)usr/share/man/man1/cdlocker.1"' />
     <Exec Command='ln -sfn "../../opt/coldog-locker/cdlocker" "$(PackageRoot)usr/bin/cdlocker"' />
   </Target>
 
@@ -169,6 +172,7 @@
       <RpmSpecLines Include="/usr/share/applications/coldog-locker.desktop" />
       <RpmSpecLines Include="/usr/share/applications/cdlocker.desktop" />
       <RpmSpecLines Include="/usr/share/icons/hicolor/256x256/apps/coldog-locker.png" />
+      <RpmSpecLines Include="/usr/share/man/man1/cdlocker.1.gz" />
       <RpmSpecLines Include="%25changelog" />
       <RpmSpecLines Include="%2A Sat Jun 06 2026 Collin Laney &lt;collin.laney@coldogstudios.com&gt; - $(PackageVersionBase)-$(RpmRelease)" />
       <RpmSpecLines Include="- Local package build." />

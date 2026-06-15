@@ -44,6 +44,9 @@ cdlocker terminal
 
 Creates a new locker.
 
+> [!WARNING]
+> The password fields are unsecure and should not be used outside of CI/CD
+
 Options:
 
 - `--path <parent>`: create the locker under this parent directory.
@@ -61,7 +64,6 @@ Examples:
 ```bash
 cdlocker new MyLocker
 cdlocker new Taxes --path "D:\Private"
-cdlocker new BuildSecrets --password "Use-A-Strong-Password-123!"
 ```
 
 ### `cdlocker lock <name> [--password <password>]`
@@ -69,6 +71,9 @@ cdlocker new BuildSecrets --password "Use-A-Strong-Password-123!"
 Locks a locker by verifying the password, renaming the directory with a leading dot, encrypting files recursively, setting hidden/system attributes, and updating locker metadata.
 
 If the locker is already locked, the command exits successfully without changing it.
+
+> [!WARNING]
+> The password fields are unsecure and should not be used outside of CI/CD
 
 Example:
 
@@ -81,6 +86,9 @@ cdlocker lock MyLocker
 Unlocks a locker by verifying the password, renaming the directory back to the locker name, decrypting files recursively, clearing hidden/system attributes, and updating locker metadata.
 
 If the locker is already unlocked, the command exits successfully without changing it.
+
+> [!WARNING]
+> The password fields are unsecure and should not be used outside of CI/CD
 
 Example:
 
@@ -131,6 +139,9 @@ cdlocker verify MyLocker
 ### `cdlocker change-password <name> [--old-password <password> --new-password <password>]`
 
 Changes a locker's password.
+
+> [!WARNING]
+> The password fields are unsecure and should not be used outside of CI/CD
 
 Requirements:
 

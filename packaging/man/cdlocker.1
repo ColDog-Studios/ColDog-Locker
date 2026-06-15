@@ -1,0 +1,220 @@
+.TH CDLOCKER 1 "June 2026" "ColDog Locker" "User Commands"
+.SH NAME
+cdlocker \- manage encrypted ColDog Locker directories
+.SH SYNOPSIS
+.B cdlocker
+.br
+.B cdlocker gui
+.br
+.B cdlocker tui
+.br
+.B cdlocker terminal
+.br
+.B cdlocker new
+.I name
+.RB [ --path
+.IR parent ]
+.RB [ --password
+.IR password ]
+.br
+.B cdlocker lock
+.I name
+.RB [ --password
+.IR password ]
+.br
+.B cdlocker unlock
+.I name
+.RB [ --password
+.IR password ]
+.br
+.B cdlocker list
+.RB [ --locked | --unlocked ]
+.br
+.B cdlocker status
+.I name
+.br
+.B cdlocker verify
+.I name
+.br
+.B cdlocker change-password
+.I name
+.RB [ --old-password
+.I password
+.B --new-password
+.IR password ]
+.br
+.B cdlocker remove
+.I name
+.RB [ --force ]
+.RB [ --delete ]
+.br
+.B cdlocker settings
+.RI [ key
+.RI [ value ]]
+.br
+.B cdlocker db-info
+.br
+.B cdlocker db-vacuum
+.br
+.B cdlocker update
+.RB [ --download ]
+.br
+.B cdlocker help
+.RI [ command ]
+.br
+.B cdlocker --version
+.SH DESCRIPTION
+.B cdlocker
+creates and manages password-protected locker directories. A locker is stored as
+a normal directory while it is unlocked. Locking verifies the locker password,
+encrypts files recursively, renames the directory with a leading dot, marks it
+hidden or system where supported, and updates the local locker database.
+Unlocking reverses that operation.
+.PP
+Locker metadata is stored in a per-user SQLite database. Settings and logs are
+stored under the per-user local app data directory.
+.SH COMMANDS
+.TP
+.B gui
+Launch the graphical interface.
+.TP
+.BR tui ", " terminal
+Launch the terminal user interface.
+.TP
+.BI "new " name
+Create a locker. Use
+.B --path
+to choose the parent directory. Use
+.B --password
+for automation.
+.TP
+.BI "lock " name
+Encrypt and hide a locker. Prompts for a password unless
+.B --password
+is supplied.
+.TP
+.BI "unlock " name
+Decrypt and unhide a locker. Prompts for a password unless
+.B --password
+is supplied.
+.TP
+.B list
+Print all lockers. Use
+.B --locked
+or
+.B --unlocked
+to filter.
+.TP
+.BI "status " name
+Print state, path, GUID, timestamps, and content counts.
+.TP
+.BI "verify " name
+Check that the locker directory and metadata are consistent.
+.TP
+.BI "change-password " name
+Change a locker password. The locker must be unlocked.
+.TP
+.BI "remove " name
+Remove a locker from metadata. Use
+.B --force
+to skip confirmation. Use
+.B --delete
+to delete the directory contents too.
+.TP
+.B settings
+Show all settings, show one setting, or update one setting.
+.TP
+.B db-info
+Print SQLite database information.
+.TP
+.B db-vacuum
+Optimize the SQLite database.
+.TP
+.B update
+Check for releases. Release notes are printed automatically when available. Use
+.B --download
+to download a matching installer.
+.TP
+.B help
+Show help.
+.TP
+.BR --version ", " -v
+Show version and build information.
+.SH OPTIONS
+.TP
+.BI "--path " parent
+Parent directory for a new locker. The locker directory is created as
+.IR parent/name .
+.TP
+.BI "--password " password
+Supply a password on the command line. This is useful for automation but can
+expose secrets through shell history, scripts, logs, or process listings.
+.TP
+.BI "--old-password " password
+Supply the current password for
+.BR change-password .
+Must be used with
+.BR --new-password .
+.TP
+.BI "--new-password " password
+Supply the replacement password for
+.BR change-password .
+Must be used with
+.BR --old-password .
+.TP
+.B --locked
+Show only locked lockers in
+.BR list .
+.TP
+.B --unlocked
+Show only unlocked lockers in
+.BR list .
+.TP
+.B --force
+Skip removal confirmation.
+.TP
+.B --delete
+Delete the locker directory when removing the locker.
+.TP
+.B --download
+Download and verify a matching update installer when available.
+.SH FILES
+.TP
+.I ~/.local/share/ColDog Studios/ColDog Locker/settings.json
+Application settings on many Unix-like systems.
+.TP
+.I ~/.local/share/ColDog Studios/ColDog Locker/lockers.db
+Locker metadata database on many Unix-like systems.
+.TP
+.I ~/.local/share/ColDog Studios/ColDog Locker/logs/
+Application logs on many Unix-like systems.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Error.
+.TP
+.B 2
+Update available but no downloadable installer is available for the current
+platform.
+.SH EXAMPLES
+.EX
+cdlocker new MyLocker
+cdlocker new Taxes --path "$HOME/Private"
+cdlocker lock MyLocker
+cdlocker unlock MyLocker
+cdlocker list --locked
+cdlocker verify MyLocker
+cdlocker settings update-channel stable
+cdlocker update
+.EE
+.SH SECURITY NOTES
+Use strong, unique passwords and keep backups. ColDog Locker cannot recover
+forgotten passwords. Avoid command-line password options for interactive use.
+System paths, drive roots, profile roots, and top-level user folders are blocked
+from becoming lockers.
+.SH SEE ALSO
+Project documentation:
+.I https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs

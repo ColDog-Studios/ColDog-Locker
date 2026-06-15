@@ -21,8 +21,9 @@ The active package contents are:
 - `ColDogLocker.Cli` as `cdlocker` / `cdlocker.exe`.
 - `ColDogLocker.Avalonia` as `ColDogLocker` / `ColDogLocker.exe`.
 - `README.md`, `LICENSE`, and the shared icon.
+- The `cdlocker(1)` man page on Linux and macOS packages.
 
-On macOS, the CLI is installed as `/usr/local/bin/cdlocker` and the GUI is installed as `/Applications/ColDog Locker.app`.
+On macOS, the CLI is installed as `/usr/local/bin/cdlocker`, the man page is installed as `/usr/local/share/man/man1/cdlocker.1.gz`, and the GUI is installed as `/Applications/ColDog Locker.app`.
 
 Each installer/package is intentionally a combined app package. The CLI and GUI are not built or distributed as separate installers.
 
@@ -173,6 +174,12 @@ The desktop icon is installed under:
 /usr/share/icons/hicolor/256x256/apps/coldog-locker.png
 ```
 
+The CLI man page is installed under:
+
+```text
+/usr/share/man/man1/cdlocker.1.gz
+```
+
 The app currently stores runtime data per user through .NET `LocalApplicationData`. On Linux, that normally resolves under the user's local data area, for example:
 
 ```text
@@ -199,6 +206,12 @@ The CLI command is installed under:
 
 ```text
 /usr/local/bin/cdlocker
+```
+
+The CLI man page is installed under:
+
+```text
+/usr/local/share/man/man1/cdlocker.1.gz
 ```
 
 The package installs both the CLI and Avalonia GUI together. The current CLI still reports macOS GUI launching as unsupported, so launch the experimental GUI directly from `/Applications/ColDog Locker.app` when validating it.
