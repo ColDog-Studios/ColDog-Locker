@@ -80,7 +80,7 @@
                             BorderThickness="1"
                             CornerRadius="6">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Copyright (C) 2026 ColDog Studios"
+                            <TextBlock Text="Copyright © 2026 ColDog Studios"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        HorizontalAlignment="Center" />
