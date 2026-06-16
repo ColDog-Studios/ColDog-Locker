@@ -135,7 +135,7 @@ The MSI is framework-dependent and requires the .NET 10 Runtime for the target a
 
 The setup EXE is the recommended Windows installer for normal users. It checks for the .NET 10 Core Runtime, downloads and installs the pinned Microsoft runtime package if needed, then launches the MSI UI. The EXE does not embed the .NET runtime, so its size stays close to the MSI plus bootstrapper overhead. Update `DotNetRuntimeVersion`, `DotNetRuntimeDownloadUrl`, `DotNetRuntimeSha512`, and `DotNetRuntimeSize` in `ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj` when moving to a newer .NET 10 runtime package.
 
-The desktop shortcut is an optional MSI feature and targets the installing user's desktop through `DesktopFolder`; it is not placed in `Public\Desktop`.
+The desktop shortcut is an MSI feature selected by default and targets the installing user's desktop through `DesktopFolder`; it is not placed in `Public\Desktop`. The installer UI still lets the user clear the checkbox.
 
 The Start Menu shortcut is installed by default.
 

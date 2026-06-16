@@ -47,7 +47,7 @@ Implemented package behavior:
 - Install per-machine only under `Program Files`.
 - Add the install directory to the machine `PATH` for `cdlocker`.
 - Add a Start Menu entry for the GUI.
-- Offer the desktop shortcut as an optional per-user MSI feature, not through `Public\Desktop`.
+- Offer the desktop shortcut as a selected-by-default per-user MSI feature, not through `Public\Desktop`.
 - Do not split CLI and GUI into separate installers.
 
 ### Linux
