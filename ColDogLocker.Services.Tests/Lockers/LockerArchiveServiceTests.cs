@@ -61,7 +61,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             var bytes = File.ReadAllBytes(archive.ArchivePath);
             bytes[^1] ^= 0x01;
-            File.WriteAllBytes(archive.ArchivePath, bytes);
+            WriteArchiveBytesForTamperTest(archive.ArchivePath, bytes);
 
             Assert.ThrowsAny<Exception>(() =>
                 LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Combine(workspace.Path, "restored"), locker, Password));
@@ -229,7 +229,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             var bytes = File.ReadAllBytes(archive.ArchivePath);
             const int IterationOffset = 7 + 4 + 16 + 8;
             BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(IterationOffset, 4), 999999);
-            File.WriteAllBytes(archive.ArchivePath, bytes);
+            WriteArchiveBytesForTamperTest(archive.ArchivePath, bytes);
 
             var exception = Assert.Throws<InvalidDataException>(() =>
                 LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Combine(workspace.Path, "restored"), locker, Password));
@@ -254,6 +254,16 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             stream.Position = 0;
             return stream;
+        }
+
+        private static void WriteArchiveBytesForTamperTest(string archivePath, byte[] bytes)
+        {
+            if (File.Exists(archivePath))
+            {
+                File.SetAttributes(archivePath, File.GetAttributes(archivePath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+            }
+
+            File.WriteAllBytes(archivePath, bytes);
         }
 
         private sealed class TestWorkspace : IDisposable
@@ -282,8 +292,24 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             {
                 if (Directory.Exists(Path))
                 {
-                    Directory.Delete(Path, recursive: true);
+                    DeleteDirectory(Path);
                 }
+            }
+
+            private static void DeleteDirectory(string path)
+            {
+                foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                Directory.Delete(path, recursive: true);
             }
         }
     }

@@ -277,8 +277,24 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 var parent = System.IO.Directory.GetParent(Path)?.FullName;
                 if (parent != null && System.IO.Directory.Exists(parent))
                 {
-                    System.IO.Directory.Delete(parent, recursive: true);
+                    DeleteDirectory(parent);
                 }
+            }
+
+            private static void DeleteDirectory(string path)
+            {
+                foreach (var file in System.IO.Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                foreach (var directory in System.IO.Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                System.IO.Directory.Delete(path, recursive: true);
             }
         }
     }

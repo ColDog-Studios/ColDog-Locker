@@ -719,37 +719,41 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                     EnsureDownloadSizeAllowed(contentLength, installerFileName);
                 }
 
-                await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-                await using var targetStream = new FileStream(
-                    tempPath,
-                    FileMode.CreateNew,
-                    FileAccess.Write,
-                    FileShare.None,
-                    bufferSize: 1024 * 128,
-                    FileOptions.Asynchronous | FileOptions.SequentialScan);
-                AppFilePermissions.ApplyPrivateFile(tempPath);
-
-                using var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                var buffer = new byte[1024 * 128];
                 long bytesDownloaded = 0;
+                string actualHash;
 
-                while (true)
+                await using (var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken))
+                await using (var targetStream = new FileStream(
+                                 tempPath,
+                                 FileMode.CreateNew,
+                                 FileAccess.Write,
+                                 FileShare.None,
+                                 bufferSize: 1024 * 128,
+                                 FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
-                    var bytesRead = await responseStream.ReadAsync(buffer, cancellationToken);
-                    if (bytesRead == 0)
+                    AppFilePermissions.ApplyPrivateFile(tempPath);
+
+                    using var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                    var buffer = new byte[1024 * 128];
+
+                    while (true)
                     {
-                        break;
+                        var bytesRead = await responseStream.ReadAsync(buffer, cancellationToken);
+                        if (bytesRead == 0)
+                        {
+                            break;
+                        }
+
+                        bytesDownloaded += bytesRead;
+                        EnsureDownloadSizeAllowed(bytesDownloaded, installerFileName);
+                        hasher.AppendData(buffer, 0, bytesRead);
+                        await targetStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
                     }
 
-                    bytesDownloaded += bytesRead;
-                    EnsureDownloadSizeAllowed(bytesDownloaded, installerFileName);
-                    hasher.AppendData(buffer, 0, bytesRead);
-                    await targetStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                    await targetStream.FlushAsync(cancellationToken);
+                    actualHash = Convert.ToHexStringLower(hasher.GetHashAndReset());
                 }
 
-                await targetStream.FlushAsync(cancellationToken);
-
-                var actualHash = Convert.ToHexStringLower(hasher.GetHashAndReset());
                 if (!actualHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.Log(LogLevel.Error, $"Update digest mismatch for '{installerFileName}'. Expected {expectedHash}, got {actualHash}.");

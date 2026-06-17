@@ -595,7 +595,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 if (File.Exists(filePath))
                 {
-                    File.SetAttributes(filePath, File.GetAttributes(filePath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly);
+                    File.SetAttributes(filePath, File.GetAttributes(filePath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                     File.Delete(filePath);
                 }
             }
@@ -616,15 +616,15 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
                 {
-                    File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly);
+                    File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 }
 
                 foreach (var directory in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
                 {
-                    File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly);
+                    File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 }
 
-                File.SetAttributes(directoryPath, File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly);
+                File.SetAttributes(directoryPath, File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 Directory.Delete(directoryPath, recursive: true);
             }
             catch
