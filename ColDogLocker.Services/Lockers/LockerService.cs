@@ -193,11 +193,15 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             var previousLocation = locker.LockerLocation;
+            var tempLockedLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
             try
             {
-                // Encrypt before renaming so a rename failure does not leave the database pointing at a plaintext directory.
-                EncryptionHelper.EncryptDirectory(previousLocation, password);
-                Directory.Move(previousLocation, newLockerLocation);
+                Directory.CreateDirectory(tempLockedLocation);
+                var archivePath = LockerArchiveService.GetArchivePath(tempLockedLocation);
+                var archive = LockerArchiveService.CreateFromDirectory(previousLocation, archivePath, locker, password);
+
+                Directory.Delete(previousLocation, recursive: true);
+                Directory.Move(tempLockedLocation, newLockerLocation);
 
                 // Set Hidden and System attributes to the locker directory
                 File.SetAttributes(newLockerLocation, File.GetAttributes(newLockerLocation) | FileAttributes.Hidden | FileAttributes.System);
@@ -205,13 +209,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Update the locker status
                 locker.IsLocked = true;
                 locker.LockerLocation = newLockerLocation;
+                locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
+                locker.LockedArchiveSha256 = archive.Sha256;
+                locker.LockedAtUtc = archive.LockedAtUtc;
 
                 // Save the updated locker to database
                 UpdateLocker(locker);
             }
             catch
             {
-                RollBackLockFailure(locker, previousLocation, newLockerLocation, password);
+                RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
                 throw;
             }
 
@@ -229,7 +236,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         /// <exception cref="InvalidOperationException"></exception>
         public static void Unlock(LockerModel locker, string password)
         {
+            Unlock(locker, password, UpdateLocker);
+        }
+
+        internal static void Unlock(LockerModel locker, string password, Action<LockerModel> persistLocker)
+        {
             ArgumentNullException.ThrowIfNull(locker);
+            ArgumentNullException.ThrowIfNull(persistLocker);
             ValidateLockerDefinition(locker);
             if (string.IsNullOrEmpty(password))
             {
@@ -258,26 +271,54 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             var previousLocation = locker.LockerLocation;
+            var previousStorageFormatVersion = locker.StorageFormatVersion;
+            var previousLockedArchiveSha256 = locker.LockedArchiveSha256;
+            var previousLockedAtUtc = locker.LockedAtUtc;
+            var stagingLocation = Path.Combine(lockerDirectory, $"{locker.LockerName}.{Guid.NewGuid():N}.unlocking");
+            var archivePath = LockerArchiveService.GetArchivePath(previousLocation);
+            var archiveVerification = LockerArchiveService.VerifyArchive(archivePath, locker, locker.LockedArchiveSha256);
+            if (!archiveVerification.IsValid)
+            {
+                throw new InvalidDataException(string.Join(" ", archiveVerification.Errors));
+            }
+
             try
             {
-                // Decrypt before renaming; EncryptionHelper rolls back files if a decrypt operation fails.
-                EncryptionHelper.DecryptDirectory(previousLocation, password);
+                LockerArchiveService.ExtractToDirectory(archivePath, stagingLocation, locker, password);
 
-                // Remove Hidden and System attributes from the locker directory
-                File.SetAttributes(previousLocation, File.GetAttributes(previousLocation) & ~FileAttributes.Hidden & ~FileAttributes.System);
-                Directory.Move(previousLocation, newLockerLocation);
+                Directory.Move(stagingLocation, newLockerLocation);
 
                 // Update the locker status
                 locker.IsLocked = false;
                 locker.LockerLocation = newLockerLocation;
+                locker.StorageFormatVersion = null;
+                locker.LockedArchiveSha256 = null;
+                locker.LockedAtUtc = null;
 
                 // Save the updated locker to database
-                UpdateLocker(locker);
+                persistLocker(locker);
             }
             catch
             {
-                RollBackUnlockFailure(locker, previousLocation, newLockerLocation, password);
+                RollBackUnlockFailure(
+                    locker,
+                    previousLocation,
+                    newLockerLocation,
+                    stagingLocation,
+                    previousStorageFormatVersion,
+                    previousLockedArchiveSha256,
+                    previousLockedAtUtc);
                 throw;
+            }
+
+            try
+            {
+                ClearAttributesForDelete(previousLocation);
+                Directory.Delete(previousLocation, recursive: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, $"Unlocked {locker.LockerName}, but failed to remove locked archive directory '{previousLocation}'.", ex);
             }
 
             // Log and display success message
@@ -381,6 +422,28 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     {
                         result.AddWarning("Locked locker directory name should start with period");
                     }
+
+                    var unexpectedEntries = new DirectoryInfo(locker.LockerLocation)
+                        .EnumerateFileSystemInfos()
+                        .Where(entry => !entry.Name.Equals(LockerArchiveService.ArchiveFileName, StringComparison.Ordinal))
+                        .ToList();
+                    if (unexpectedEntries.Count > 0)
+                    {
+                        result.AddError("Locked locker directory contains unexpected entries beside locker.cdl.");
+                    }
+
+                    var archivePath = LockerArchiveService.GetArchivePath(locker.LockerLocation);
+                    var archiveVerification = LockerArchiveService.VerifyArchive(archivePath, locker, locker.LockedArchiveSha256);
+                    result.ArchiveExists = archiveVerification.ArchiveExists;
+                    result.ArchiveHashMatches = archiveVerification.HashMatches;
+                    result.ArchiveMetadataReadable = archiveVerification.MetadataReadable;
+                    result.ArchiveMetadataMatches = archiveVerification.MetadataMatches;
+                    result.ArchiveSha256 = archiveVerification.ActualSha256;
+                    result.LockedAtUtc = archiveVerification.Metadata?.LockedAtUtc ?? locker.LockedAtUtc;
+                    foreach (var error in archiveVerification.Errors)
+                    {
+                        result.AddError(error);
+                    }
                 }
                 else
                 {
@@ -395,6 +458,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     if (dirName.StartsWith('.'))
                     {
                         result.AddWarning("Unlocked locker directory name should not start with period");
+                    }
+
+                    var lockedSibling = Path.Combine(
+                        Path.GetDirectoryName(locker.LockerLocation) ?? string.Empty,
+                        $".{locker.LockerName}");
+                    var leftoverArchivePath = LockerArchiveService.GetArchivePath(lockedSibling);
+                    if (File.Exists(leftoverArchivePath))
+                    {
+                        result.ArchiveExists = true;
+                        result.AddError("Unlocked locker has a leftover locked archive sibling.");
                     }
                 }
 
@@ -491,19 +564,37 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             return null;
         }
 
-        private static void RollBackLockFailure(LockerModel locker, string previousLocation, string newLockerLocation, string password)
+        private static void RollBackLockFailure(
+            LockerModel locker,
+            string previousLocation,
+            string newLockerLocation,
+            string tempLockedLocation,
+            string password)
         {
             try
             {
-                if (Directory.Exists(newLockerLocation) && !Directory.Exists(previousLocation))
+                var rollbackLockedLocation = Directory.Exists(newLockerLocation)
+                    ? newLockerLocation
+                    : tempLockedLocation;
+
+                if (!Directory.Exists(previousLocation) && Directory.Exists(rollbackLockedLocation))
                 {
-                    File.SetAttributes(newLockerLocation, File.GetAttributes(newLockerLocation) & ~FileAttributes.Hidden & ~FileAttributes.System);
-                    Directory.Move(newLockerLocation, previousLocation);
+                    ClearAttributesForDelete(rollbackLockedLocation);
+                    var archivePath = LockerArchiveService.GetArchivePath(rollbackLockedLocation);
+                    if (File.Exists(archivePath))
+                    {
+                        LockerArchiveService.ExtractToDirectory(archivePath, previousLocation, locker, password);
+                    }
                 }
 
-                if (Directory.Exists(previousLocation))
+                if (Directory.Exists(newLockerLocation))
                 {
-                    EncryptionHelper.DecryptDirectory(previousLocation, password);
+                    LockerArchiveService.TryDeleteDirectory(newLockerLocation);
+                }
+
+                if (Directory.Exists(tempLockedLocation))
+                {
+                    LockerArchiveService.TryDeleteDirectory(tempLockedLocation);
                 }
             }
             catch (Exception ex)
@@ -513,24 +604,36 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             locker.IsLocked = false;
             locker.LockerLocation = previousLocation;
+            locker.StorageFormatVersion = null;
+            locker.LockedArchiveSha256 = null;
+            locker.LockedAtUtc = null;
         }
 
-        private static void RollBackUnlockFailure(LockerModel locker, string previousLocation, string newLockerLocation, string password)
+        private static void RollBackUnlockFailure(
+            LockerModel locker,
+            string previousLocation,
+            string newLockerLocation,
+            string stagingLocation,
+            int? previousStorageFormatVersion,
+            string? previousLockedArchiveSha256,
+            DateTime? previousLockedAtUtc)
         {
+            var lockedArchiveStillExists = Directory.Exists(previousLocation);
+
             try
             {
-                var rollbackLocation = Directory.Exists(newLockerLocation) && !Directory.Exists(previousLocation)
-                    ? newLockerLocation
-                    : previousLocation;
-
-                if (Directory.Exists(rollbackLocation))
+                if (Directory.Exists(stagingLocation))
                 {
-                    EncryptionHelper.EncryptDirectory(rollbackLocation, password);
-                    if (rollbackLocation == newLockerLocation)
-                    {
-                        Directory.Move(newLockerLocation, previousLocation);
-                    }
+                    LockerArchiveService.TryDeleteDirectory(stagingLocation);
+                }
 
+                if (lockedArchiveStillExists && Directory.Exists(newLockerLocation))
+                {
+                    LockerArchiveService.TryDeleteDirectory(newLockerLocation);
+                }
+
+                if (lockedArchiveStillExists)
+                {
                     File.SetAttributes(previousLocation, File.GetAttributes(previousLocation) | FileAttributes.Hidden | FileAttributes.System);
                 }
             }
@@ -539,8 +642,42 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 Logger.Log(LogLevel.Error, $"Failed to fully roll back unlock operation for {locker.LockerName}", ex);
             }
 
-            locker.IsLocked = true;
-            locker.LockerLocation = previousLocation;
+            if (lockedArchiveStillExists)
+            {
+                locker.IsLocked = true;
+                locker.LockerLocation = previousLocation;
+                locker.StorageFormatVersion = previousStorageFormatVersion;
+                locker.LockedArchiveSha256 = previousLockedArchiveSha256;
+                locker.LockedAtUtc = previousLockedAtUtc;
+            }
+            else if (Directory.Exists(newLockerLocation))
+            {
+                locker.IsLocked = false;
+                locker.LockerLocation = newLockerLocation;
+                locker.StorageFormatVersion = null;
+                locker.LockedArchiveSha256 = null;
+                locker.LockedAtUtc = null;
+            }
+        }
+
+        private static void ClearAttributesForDelete(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                return;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+            }
+
+            foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+            }
+
+            File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
         }
     }
 
@@ -556,6 +693,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         public bool HasAccess { get; set; }
         public int FileCount { get; set; }
         public int DirectoryCount { get; set; }
+        public bool ArchiveExists { get; set; }
+        public bool ArchiveHashMatches { get; set; }
+        public bool ArchiveMetadataReadable { get; set; }
+        public bool ArchiveMetadataMatches { get; set; }
+        public string? ArchiveSha256 { get; set; }
+        public DateTime? LockedAtUtc { get; set; }
         public List<string> Errors { get; } = [];
         public List<string> Warnings { get; } = [];
 

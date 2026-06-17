@@ -101,7 +101,7 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static IEnumerable<string> GetCandidatePaths()
         {
-            var cliDirectory = AppContext.BaseDirectory;
+            var cliDirectory = Path.GetFullPath(AppContext.BaseDirectory);
             var executableNames = GetExecutableNames();
 
             foreach (var executableName in executableNames)
@@ -109,8 +109,19 @@ namespace ColDogStudios.ColDogLocker.Cli
                 yield return Path.Combine(cliDirectory, executableName);
             }
 
+            var sourceRoot = FindSourceRoot(cliDirectory);
+            if (sourceRoot == null)
+            {
+                yield break;
+            }
+
             foreach (var ancestor in GetAncestorDirectories(cliDirectory))
             {
+                if (!IsWithinSourceRoot(ancestor, sourceRoot))
+                {
+                    continue;
+                }
+
                 foreach (var executableName in executableNames)
                 {
                     yield return Path.Combine(ancestor, "bin", "Debug", executableName);
@@ -122,6 +133,30 @@ namespace ColDogStudios.ColDogLocker.Cli
                     yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Release", "net10.0", executableName);
                 }
             }
+        }
+
+        private static string? FindSourceRoot(string startDirectory)
+        {
+            foreach (var ancestor in GetAncestorDirectories(startDirectory))
+            {
+                if ((File.Exists(Path.Combine(ancestor, "ColDogLocker.sln")) ||
+                     File.Exists(Path.Combine(ancestor, "ColDogLocker.slnx"))) &&
+                    Directory.Exists(Path.Combine(ancestor, "ColDogLocker.Avalonia")) &&
+                    Directory.Exists(Path.Combine(ancestor, "ColDogLocker.Cli")))
+                {
+                    return Path.GetFullPath(ancestor);
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsWithinSourceRoot(string path, string sourceRoot)
+        {
+            var relativePath = Path.GetRelativePath(sourceRoot, Path.GetFullPath(path));
+            return relativePath == "." ||
+                   (!relativePath.StartsWith("..", StringComparison.Ordinal) &&
+                    !Path.IsPathRooted(relativePath));
         }
 
         private static IEnumerable<string> GetExecutableNames()

@@ -78,18 +78,29 @@ Locking a locker:
 
 1. Revalidate the locker path.
 2. Verify the supplied password against the stored BCrypt hash.
-3. Rename the directory from `<name>` to `.<name>`.
-4. Encrypt files recursively.
-5. Mark the directory hidden/system where supported.
-6. Update `IsLocked` and `LockerLocation` in SQLite.
+3. Stream the locker contents into an authenticated encrypted archive at `.<name>/locker.cdl`.
+4. Store the archive SHA-256, storage format version, and locked timestamp in SQLite.
+5. Remove the plaintext locker directory after the archive is created.
+6. Mark the locked directory hidden/system where supported.
+7. Update `IsLocked` and `LockerLocation` in SQLite.
 
 Unlocking reverses the lock operation:
 
 1. Verify the password.
-2. Rename the directory back to `<name>`.
-3. Decrypt files recursively.
-4. Clear hidden/system attributes.
-5. Update metadata.
+2. Verify `locker.cdl` exists and its SHA-256 matches SQLite metadata.
+3. Decrypt and authenticate the archive into a staging directory.
+4. Replace `.<name>` with the restored `<name>` directory.
+5. Clear locked archive metadata.
+6. Update metadata.
+
+Archive hardening rules:
+
+- Do not use legacy ZIP encryption.
+- Do not write a plaintext archive temp file.
+- Reject source links/reparse points when locking.
+- Reject archive entries with absolute paths, traversal segments, backslashes, drive/ADS colons, links, device entries, or other non-file/non-directory types.
+- Enforce archive entry count, path length, and extracted byte limits during unlock.
+- Treat mismatches between archive metadata, SQLite metadata, and the archive SHA-256 as corruption.
 
 ## Persistence
 
@@ -102,6 +113,9 @@ The `Lockers` table contains:
 - `Password`
 - `LockerLocation`
 - `IsLocked`
+- `StorageFormatVersion`
+- `LockedArchiveSha256`
+- `LockedAtUtc`
 - `CreatedAt`
 - `UpdatedAt`
 

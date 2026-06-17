@@ -47,7 +47,7 @@ Implemented package behavior:
 - Install per-machine only under `Program Files`.
 - Add the install directory to the machine `PATH` for `cdlocker`.
 - Add a Start Menu entry for the GUI.
-- Offer the desktop shortcut as an optional per-user MSI feature, not through `Public\Desktop`.
+- Offer the desktop shortcut as a selected-by-default per-user MSI feature, not through `Public\Desktop`.
 - Do not split CLI and GUI into separate installers.
 
 ### Linux
@@ -63,6 +63,7 @@ Implemented packages:
 - `/usr/share/applications/coldog-locker.desktop` launches the Avalonia GUI from desktop menus.
 - `/usr/share/applications/cdlocker.desktop` opens the terminal interface with `cdlocker tui`.
 - `/usr/share/icons/hicolor/256x256/apps/coldog-locker.png` provides the desktop menu icon.
+- `/usr/share/man/man1/cdlocker.1.gz` provides the CLI man page.
 - Do not split CLI and GUI into separate packages.
 
 ### macOS
@@ -74,6 +75,7 @@ Experimental package behavior:
 - Install the CLI and Avalonia GUI together.
 - Install the GUI app bundle under `/Applications/ColDog Locker.app`.
 - Install the CLI command as `/usr/local/bin/cdlocker`.
+- Install the CLI man page as `/usr/local/share/man/man1/cdlocker.1.gz`.
 - Do not split CLI and GUI into separate packages.
 - Treat macOS release assets as experimental until macOS validation, signing, and notarization decisions are revisited.
 

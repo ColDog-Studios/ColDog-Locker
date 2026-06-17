@@ -66,7 +66,8 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
 
             try
             {
-                var mainAndPre = version.Split('-', 2);
+                var versionWithoutBuildMetadata = version.Split('+', 2)[0];
+                var mainAndPre = versionWithoutBuildMetadata.Split('-', 2);
                 var mainParts = mainAndPre[0].Split('.');
 
                 if (mainParts.Length != 3)

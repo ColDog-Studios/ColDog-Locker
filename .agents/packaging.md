@@ -21,8 +21,9 @@ The active package contents are:
 - `ColDogLocker.Cli` as `cdlocker` / `cdlocker.exe`.
 - `ColDogLocker.Avalonia` as `ColDogLocker` / `ColDogLocker.exe`.
 - `README.md`, `LICENSE`, and the shared icon.
+- The `cdlocker(1)` man page on Linux and macOS packages.
 
-On macOS, the CLI is installed as `/usr/local/bin/cdlocker` and the GUI is installed as `/Applications/ColDog Locker.app`.
+On macOS, the CLI is installed as `/usr/local/bin/cdlocker`, the man page is installed as `/usr/local/share/man/man1/cdlocker.1.gz`, and the GUI is installed as `/Applications/ColDog Locker.app`.
 
 Each installer/package is intentionally a combined app package. The CLI and GUI are not built or distributed as separate installers.
 
@@ -134,7 +135,7 @@ The MSI is framework-dependent and requires the .NET 10 Runtime for the target a
 
 The setup EXE is the recommended Windows installer for normal users. It checks for the .NET 10 Core Runtime, downloads and installs the pinned Microsoft runtime package if needed, then launches the MSI UI. The EXE does not embed the .NET runtime, so its size stays close to the MSI plus bootstrapper overhead. Update `DotNetRuntimeVersion`, `DotNetRuntimeDownloadUrl`, `DotNetRuntimeSha512`, and `DotNetRuntimeSize` in `ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj` when moving to a newer .NET 10 runtime package.
 
-The desktop shortcut is an optional MSI feature and targets the installing user's desktop through `DesktopFolder`; it is not placed in `Public\Desktop`.
+The desktop shortcut is an MSI feature selected by default and targets the installing user's desktop through `DesktopFolder`; it is not placed in `Public\Desktop`. The installer UI still lets the user clear the checkbox.
 
 The Start Menu shortcut is installed by default.
 
@@ -173,6 +174,12 @@ The desktop icon is installed under:
 /usr/share/icons/hicolor/256x256/apps/coldog-locker.png
 ```
 
+The CLI man page is installed under:
+
+```text
+/usr/share/man/man1/cdlocker.1.gz
+```
+
 The app currently stores runtime data per user through .NET `LocalApplicationData`. On Linux, that normally resolves under the user's local data area, for example:
 
 ```text
@@ -199,6 +206,12 @@ The CLI command is installed under:
 
 ```text
 /usr/local/bin/cdlocker
+```
+
+The CLI man page is installed under:
+
+```text
+/usr/local/share/man/man1/cdlocker.1.gz
 ```
 
 The package installs both the CLI and Avalonia GUI together. The current CLI still reports macOS GUI launching as unsupported, so launch the experimental GUI directly from `/Applications/ColDog Locker.app` when validating it.

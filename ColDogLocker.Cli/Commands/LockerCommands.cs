@@ -727,6 +727,23 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)");
             }
 
+            if (result.IsLocked)
+            {
+                Console.WriteLine($"[{(result.ArchiveExists ? "OK" : "FAIL")}] Locked archive exists");
+                Console.WriteLine($"[{(result.ArchiveHashMatches ? "OK" : "FAIL")}] Locked archive hash matches database");
+                Console.WriteLine($"[{(result.ArchiveMetadataReadable ? "OK" : "FAIL")}] Locked archive metadata readable");
+                Console.WriteLine($"[{(result.ArchiveMetadataMatches ? "OK" : "FAIL")}] Locked archive metadata matches locker");
+                if (!string.IsNullOrWhiteSpace(result.ArchiveSha256))
+                {
+                    Console.WriteLine($"      Archive SHA-256: {result.ArchiveSha256}");
+                }
+
+                if (result.LockedAtUtc.HasValue)
+                {
+                    Console.WriteLine($"      Locked At: {result.LockedAtUtc.Value.ToUniversalTime():yyyy-MM-dd HH:mm:ss} UTC");
+                }
+            }
+
             // Display errors
             if (result.Errors.Count > 0)
             {

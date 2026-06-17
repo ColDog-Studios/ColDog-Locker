@@ -20,7 +20,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Environment;
-using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -32,8 +31,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private const string ContactSupportUrl = "mailto:support@coldogstudios.com?subject=ColDog%20Locker%20Support";
 
         private IPlatformService? _platformService;
-        private AvaloniaUpdateDialogHost? _updateDialogHost;
-        private UpdateWorkflow? _updateWorkflow;
 
         public AboutDialog()
         {
@@ -46,30 +43,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             CloseButton.Click += CloseButton_Click;
         }
 
-        public AboutDialog(
-            IPlatformService platformService,
-            UpdateWorkflow updateWorkflow,
-            AvaloniaUpdateDialogHost updateDialogHost)
+        public AboutDialog(IPlatformService platformService)
             : this()
         {
             _platformService = platformService;
-            _updateWorkflow = updateWorkflow;
-            _updateDialogHost = updateDialogHost;
 
             DocumentationButton.Click += async (_, _) => await OpenUrlAsync(DocumentationUrl);
             GitHubButton.Click += async (_, _) => await OpenUrlAsync(GitHubUrl);
             ReportIssueButton.Click += async (_, _) => await OpenUrlAsync(ReportIssueUrl);
             ContactSupportButton.Click += async (_, _) => await OpenUrlAsync(ContactSupportUrl);
-            CheckForUpdatesButton.Click += CheckForUpdatesButton_Click;
-        }
-
-        private async void CheckForUpdatesButton_Click(object? sender, RoutedEventArgs e)
-        {
-            if (_updateWorkflow != null && _updateDialogHost != null)
-            {
-                using var ownerScope = _updateDialogHost.UseOwner(this);
-                await _updateWorkflow.RunAsync();
-            }
         }
 
         private void CloseButton_Click(object? sender, RoutedEventArgs e)

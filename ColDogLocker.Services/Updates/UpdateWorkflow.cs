@@ -124,9 +124,13 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
     {
         public UpdateDialogMessage FormatNoUpdate(UpdateCheckResult update)
         {
+            var message = string.IsNullOrWhiteSpace(update.UserMessage)
+                ? "ColDog Locker is up to date."
+                : update.UserMessage.Trim();
+
             return new UpdateDialogMessage(
                 "No Updates Available",
-                $"ColDog Locker is up to date.\n\nCurrent Version: {update.CurrentVersion}\nLatest Version: {update.LatestVersion}");
+                $"{message}\n\nCurrent Version: {update.CurrentVersion}\nLatest Version: {update.LatestVersion}");
         }
 
         public UpdateDialogMessage FormatManualUpdate(UpdateCheckResult update)

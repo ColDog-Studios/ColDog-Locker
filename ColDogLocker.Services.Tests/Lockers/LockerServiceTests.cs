@@ -17,6 +17,7 @@
 
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Security;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 {
@@ -120,15 +121,110 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         }
 
         [Fact]
-        public void Verify_LockedDirectoryWithoutHiddenName_ShouldAddWarning()
+        public void Verify_LockedDirectoryWithoutArchive_ShouldReturnInvalidResult()
         {
             using var directory = TestDirectory.Create("Locked");
             var locker = new LockerModel("Locked", "hash", directory.Path) { IsLocked = true };
 
             var result = LockerService.Verify(locker);
 
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, error => error.Contains("Locked archive does not exist"));
+        }
+
+        [Fact]
+        public void Verify_LockedDirectoryWithArchive_ShouldValidateArchiveMetadata()
+        {
+            using var source = TestDirectory.Create("Source");
+            File.WriteAllText(Path.Join(source.Path, "secret.txt"), "classified");
+            var parent = Directory.GetParent(source.Path)!.FullName;
+            var lockedPath = Path.Combine(parent, "Locked");
+            Directory.CreateDirectory(lockedPath);
+
+            var locker = new LockerModel("Locked", "hash", lockedPath) { IsLocked = true };
+            var archive = LockerArchiveService.CreateFromDirectory(
+                source.Path,
+                LockerArchiveService.GetArchivePath(lockedPath),
+                locker,
+                "CorrectHorseBatteryStaple123!");
+            locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
+            locker.LockedArchiveSha256 = archive.Sha256;
+            locker.LockedAtUtc = archive.LockedAtUtc;
+
+            var result = LockerService.Verify(locker);
+
             Assert.True(result.IsValid);
+            Assert.True(result.ArchiveExists);
+            Assert.True(result.ArchiveHashMatches);
+            Assert.True(result.ArchiveMetadataReadable);
+            Assert.True(result.ArchiveMetadataMatches);
             Assert.Contains(result.Warnings, warning => warning.Contains("Locked locker directory name should start"));
+        }
+
+        [Fact]
+        public void Verify_LockedDirectoryWithExtraEntry_ShouldReturnInvalidResult()
+        {
+            using var source = TestDirectory.Create("Source");
+            File.WriteAllText(Path.Join(source.Path, "secret.txt"), "classified");
+            var parent = Directory.GetParent(source.Path)!.FullName;
+            var lockedPath = Path.Combine(parent, ".Locked");
+            Directory.CreateDirectory(lockedPath);
+
+            var locker = new LockerModel("Locked", "hash", lockedPath) { IsLocked = true };
+            var archive = LockerArchiveService.CreateFromDirectory(
+                source.Path,
+                LockerArchiveService.GetArchivePath(lockedPath),
+                locker,
+                "CorrectHorseBatteryStaple123!");
+            locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
+            locker.LockedArchiveSha256 = archive.Sha256;
+            locker.LockedAtUtc = archive.LockedAtUtc;
+            File.WriteAllText(Path.Combine(lockedPath, "extra.txt"), "unexpected");
+
+            var result = LockerService.Verify(locker);
+
+            Assert.False(result.IsValid);
+            Assert.Contains(result.Errors, error => error.Contains("unexpected entries"));
+        }
+
+        [Fact]
+        public void Unlock_WhenPersistenceFails_ShouldKeepLockedArchiveAndRemovePlaintextTarget()
+        {
+            const string password = "CorrectHorseBatteryStaple123!";
+            using var workspace = TestDirectory.CreateAllowed("Workspace");
+            var sourcePath = Path.Combine(workspace.Path, "source");
+            Directory.CreateDirectory(sourcePath);
+            File.WriteAllText(Path.Combine(sourcePath, "secret.txt"), "classified");
+
+            var lockedPath = Path.Combine(workspace.Path, ".Vault");
+            Directory.CreateDirectory(lockedPath);
+            var unlockedPath = Path.Combine(workspace.Path, "Vault");
+            var locker = new LockerModel("Vault", EncryptionHelper.HashPassword(password), lockedPath)
+            {
+                IsLocked = true
+            };
+            var archive = LockerArchiveService.CreateFromDirectory(
+                sourcePath,
+                LockerArchiveService.GetArchivePath(lockedPath),
+                locker,
+                password);
+            locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
+            locker.LockedArchiveSha256 = archive.Sha256;
+            locker.LockedAtUtc = archive.LockedAtUtc;
+            Directory.Delete(sourcePath, recursive: true);
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                LockerService.Unlock(locker, password, _ => throw new InvalidOperationException("database unavailable")));
+
+            Assert.Contains("database unavailable", exception.Message);
+            Assert.True(Directory.Exists(lockedPath));
+            Assert.True(File.Exists(LockerArchiveService.GetArchivePath(lockedPath)));
+            Assert.False(Directory.Exists(unlockedPath));
+            Assert.True(locker.IsLocked);
+            Assert.Equal(lockedPath, locker.LockerLocation);
+            Assert.Equal(LockerArchiveService.CurrentStorageFormatVersion, locker.StorageFormatVersion);
+            Assert.Equal(archive.Sha256, locker.LockedArchiveSha256);
+            Assert.Equal(archive.LockedAtUtc, locker.LockedAtUtc);
         }
 
         [Fact]
@@ -181,8 +277,24 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 var parent = System.IO.Directory.GetParent(Path)?.FullName;
                 if (parent != null && System.IO.Directory.Exists(parent))
                 {
-                    System.IO.Directory.Delete(parent, recursive: true);
+                    DeleteDirectory(parent);
                 }
+            }
+
+            private static void DeleteDirectory(string path)
+            {
+                foreach (var file in System.IO.Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                foreach (var directory in System.IO.Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                System.IO.Directory.Delete(path, recursive: true);
             }
         }
     }

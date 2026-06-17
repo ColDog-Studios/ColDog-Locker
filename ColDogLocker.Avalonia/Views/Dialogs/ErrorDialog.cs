@@ -15,7 +15,6 @@
 **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia.Controls;
@@ -23,6 +22,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
@@ -85,7 +85,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 var logsPath = Path.GetDirectoryName(Logger.GetCurrentLogFilePath())
                     ?? Path.Combine(AppPaths.LocalConfig, "logs");
-                Directory.CreateDirectory(logsPath);
+                AppFilePermissions.EnsurePrivateDirectory(logsPath);
 
                 if (_platformService != null)
                 {
@@ -93,7 +93,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 }
                 else
                 {
-                    StartWithShell(logsPath);
+                    await new DesktopPlatformService().OpenFolderAsync(logsPath);
                 }
             }
             catch (Exception ex)
@@ -189,46 +189,5 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
         }
 
-        private static void StartWithShell(string target)
-        {
-            if (OperatingSystem.IsWindows() || OperatingSystem.IsMacOS())
-            {
-                StartProcess(new ProcessStartInfo { FileName = target, UseShellExecute = true });
-                return;
-            }
-
-            if (OperatingSystem.IsLinux())
-            {
-                var startInfo = new ProcessStartInfo { FileName = "xdg-open", UseShellExecute = false };
-                startInfo.ArgumentList.Add(target);
-                StartLinuxLauncher(startInfo);
-                return;
-            }
-
-            throw new PlatformNotSupportedException("No launcher is available for this platform.");
-        }
-
-        private static void StartProcess(ProcessStartInfo startInfo)
-        {
-            if (Process.Start(startInfo) == null)
-            {
-                throw new InvalidOperationException($"Failed to launch '{startInfo.FileName}'.");
-            }
-        }
-
-        private static void StartLinuxLauncher(ProcessStartInfo startInfo)
-        {
-            startInfo.RedirectStandardError = true;
-            using var process = Process.Start(startInfo)
-                ?? throw new InvalidOperationException($"Failed to launch '{startInfo.FileName}'.");
-
-            if (process.WaitForExit(1000) && process.ExitCode != 0)
-            {
-                var error = process.StandardError.ReadToEnd().Trim();
-                throw new InvalidOperationException(string.IsNullOrWhiteSpace(error)
-                    ? $"{startInfo.FileName} exited with code {process.ExitCode}."
-                    : error);
-            }
-        }
     }
 }

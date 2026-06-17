@@ -25,15 +25,12 @@ using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Services.Updates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Avalonia.Media;
+using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 {
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private static readonly Geometry GridIcon = Geometry.Parse("M4 5H10V11H4V5ZM14 5H20V11H14V5ZM4 15H10V21H4V15ZM14 15H20V21H14V15Z");
-        private static readonly Geometry ListIcon = Geometry.Parse("M4 6H20V8H4V6ZM4 11H20V13H4V11ZM4 16H20V18H4V16Z");
-
         private readonly IUserDialogService _dialogs;
         private readonly IPlatformService _platformService;
         private readonly UpdateWorkflow _updateWorkflow;
@@ -70,7 +67,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         public bool CanUnlockSelected => SelectedLocker is { IsLocked: true };
         public bool CanRemoveSelected => SelectedLocker is { IsLocked: false };
         public bool IsListView => !IsGridView;
-        public Geometry ToggleViewIconData => IsGridView ? ListIcon : GridIcon;
+        public MaterialIconKind ToggleViewIconKind => IsGridView ? MaterialIconKind.ViewList : MaterialIconKind.ViewGrid;
         public IReadOnlyList<string> SortColumns { get; } = ["Name", "Status", "Modified", "Size", "Location"];
 
         public async Task InitializeAsync(Func<Task> appInitialization)
@@ -335,7 +332,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         partial void OnIsGridViewChanged(bool value)
         {
             OnPropertyChanged(nameof(IsListView));
-            OnPropertyChanged(nameof(ToggleViewIconData));
+            OnPropertyChanged(nameof(ToggleViewIconKind));
         }
 
         private async Task RefreshAsync(bool showMessage)

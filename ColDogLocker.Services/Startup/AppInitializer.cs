@@ -34,9 +34,10 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
             Logger.Log(LogLevel.Debug, "ColDog Locker initialization started.");
 
             // Create CDL directories if they do not already exist
-            if (!Directory.Exists(AppPaths.LocalConfig))
+            var createdLocalConfig = !Directory.Exists(AppPaths.LocalConfig);
+            AppFilePermissions.EnsurePrivateDirectory(AppPaths.LocalConfig);
+            if (createdLocalConfig)
             {
-                Directory.CreateDirectory(AppPaths.LocalConfig);
                 Logger.Log(LogLevel.Debug, $"Created directory: {AppPaths.LocalConfig}");
             }
 
@@ -48,9 +49,10 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
             }
 
             var logsDirectoryPath = Path.Combine(AppPaths.LocalConfig, logsDirectoryName);
-            if (!Directory.Exists(logsDirectoryPath))
+            var createdLogsDirectory = !Directory.Exists(logsDirectoryPath);
+            AppFilePermissions.EnsurePrivateDirectory(logsDirectoryPath);
+            if (createdLogsDirectory)
             {
-                Directory.CreateDirectory(logsDirectoryPath);
                 Logger.Log(LogLevel.Debug, $"Created directory: {logsDirectoryPath}");
             }
 

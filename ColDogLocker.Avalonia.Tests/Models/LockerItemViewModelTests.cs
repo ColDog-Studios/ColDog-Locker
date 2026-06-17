@@ -16,19 +16,21 @@
 */
 
 using ColDogStudios.ColDogLocker.Avalonia.Models;
+using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Models
 {
     public class LockerItemViewModelTests
     {
         [Theory]
-        [InlineData(false, "Unlocked")]
-        [InlineData(true, "Locked")]
-        public void StatusText_ShouldReflectLockState(bool isLocked, string expectedStatus)
+        [InlineData(false, "Unlocked", MaterialIconKind.LockOpen)]
+        [InlineData(true, "Locked", MaterialIconKind.Lock)]
+        public void StatusText_ShouldReflectLockState(bool isLocked, string expectedStatus, MaterialIconKind expectedIconKind)
         {
             var item = new LockerItemViewModel { IsLocked = isLocked };
 
             Assert.Equal(expectedStatus, item.StatusText);
+            Assert.Equal(expectedIconKind, item.StatusIconKind);
             Assert.NotNull(item.StatusBrush);
         }
 
@@ -57,7 +59,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Models
 
             Assert.Contains(nameof(LockerItemViewModel.IsLocked), changedProperties);
             Assert.Contains(nameof(LockerItemViewModel.StatusText), changedProperties);
-            Assert.Contains(nameof(LockerItemViewModel.StatusIconData), changedProperties);
+            Assert.Contains(nameof(LockerItemViewModel.StatusIconKind), changedProperties);
             Assert.Contains(nameof(LockerItemViewModel.StatusBrush), changedProperties);
         }
 

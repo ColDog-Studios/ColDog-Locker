@@ -17,6 +17,7 @@
 
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -75,9 +76,9 @@
                             <StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         Spacing="6">
-                                <PathIcon x:Name="StatusIcon"
-                                          Width="16"
-                                          Height="16" />
+                                <materialIcons:MaterialIcon x:Name="StatusIcon"
+                                                            Width="18"
+                                                            Height="18" />
                                 <TextBlock x:Name="StatusText"
                                            FontWeight="SemiBold" />
                             </StackPanel>

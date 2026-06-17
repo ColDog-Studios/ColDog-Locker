@@ -23,6 +23,7 @@ using System.Text.Json;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Versioning;
 using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Updates
@@ -66,6 +67,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         MissingAsset,
         MissingDigest,
         DigestMismatch,
+        DownloadTooLarge,
+        InvalidDownloadUrl,
         Network,
         Timeout,
         FileSystem,
@@ -209,6 +212,14 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string RepositoryName { get; set; } = "ColDog-Locker";
         public string CurrentVersion { get; set; } = AppInfo.SemanticVersion;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
+        public long MaxDownloadBytes { get; set; } = 1024L * 1024L * 1024L;
+        public IReadOnlyCollection<string> AllowedDownloadHosts { get; set; } =
+        [
+            "github.com",
+            "objects.githubusercontent.com",
+            "github-releases.githubusercontent.com",
+            "release-assets.githubusercontent.com"
+        ];
         public Func<UpdatePlatform> PlatformDetector { get; set; } = UpdatePlatform.Detect;
         public Func<string> DownloadDirectoryProvider { get; set; } =
             () => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
@@ -284,7 +295,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 if (release == null)
                 {
                     Logger.Log(LogLevel.Warning, "No GitHub releases were returned for the selected update channel.");
-                    throw new UpdateException(UpdateFailureKind.NoReleases, "No published releases were found for the selected update channel.");
+                    return CreateNoReleaseResult(
+                        platform,
+                        currentVersionText,
+                        "ColDog Locker is up to date. No published releases were found for the selected update channel.");
                 }
 
                 var latestVersionText = NormalizeVersion(release.TagName);
@@ -379,43 +393,20 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
 
             var expectedHash = ParseSha256Digest(updateInfo.AssetDigest);
+            var downloadUri = ValidateDownloadUri(updateInfo.DownloadUrl);
             var targetPath = GetDownloadPath(updateInfo.InstallerFileName);
             Logger.Log(LogLevel.Info, $"Downloading update asset '{updateInfo.InstallerFileName}'.");
-            Logger.Log(LogLevel.Debug, $"Downloading update from '{updateInfo.DownloadUrl}' to '{targetPath}'.");
+            Logger.Log(LogLevel.Debug, $"Downloading update from '{downloadUri}' to '{targetPath}'.");
 
-            byte[] fileBytes;
-            try
-            {
-                fileBytes = await _httpClient.GetByteArrayAsync(updateInfo.DownloadUrl, cancellationToken);
-            }
-            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
-            {
-                Logger.Log(LogLevel.Warning, $"Download timed out for update asset '{updateInfo.InstallerFileName}'.", ex);
-                throw new UpdateException(UpdateFailureKind.Timeout, "The update download timed out. Please try again later.", ex);
-            }
-            catch (HttpRequestException ex)
-            {
-                Logger.Log(LogLevel.Error, $"Failed to download update asset '{updateInfo.InstallerFileName}'.", ex);
-                throw new UpdateException(UpdateFailureKind.Network, "The update download failed. Please check your network connection and try again.", ex);
-            }
-
-            var actualHash = Convert.ToHexStringLower(SHA256.HashData(fileBytes));
-            if (!actualHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.Log(LogLevel.Error, $"Update digest mismatch for '{updateInfo.InstallerFileName}'. Expected {expectedHash}, got {actualHash}.");
-                throw new UpdateException(UpdateFailureKind.DigestMismatch,
-                    "The downloaded update did not match GitHub's release digest. The file was not saved.");
-            }
-
-            await SaveVerifiedUpdateAsync(targetPath, fileBytes, cancellationToken);
+            var result = await DownloadAndVerifyUpdateAsync(
+                downloadUri,
+                targetPath,
+                expectedHash,
+                updateInfo.InstallerFileName,
+                cancellationToken);
 
             Logger.Log(LogLevel.Info, $"Successfully downloaded and verified update: {targetPath}");
-            return new UpdateDownloadResult
-            {
-                FilePath = targetPath,
-                Sha256 = actualHash,
-                BytesDownloaded = fileBytes.LongLength
-            };
+            return result;
         }
 
         public void Dispose()
@@ -528,6 +519,23 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             };
         }
 
+        private static UpdateCheckResult CreateNoReleaseResult(
+            UpdatePlatform platform,
+            string currentVersion,
+            string userMessage)
+        {
+            return new UpdateCheckResult
+            {
+                UpdateAvailable = false,
+                CanDownload = false,
+                IsSupportedPlatform = platform.SupportsAutomaticUpdates,
+                CurrentVersion = currentVersion,
+                LatestVersion = currentVersion,
+                PlatformName = platform.DisplayName,
+                UserMessage = userMessage
+            };
+        }
+
         private static GitHubAsset? SelectAsset(IEnumerable<GitHubAsset> assets, UpdatePlatform platform)
         {
             var candidates = assets
@@ -634,7 +642,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
 
             var parts = digest.Split(':', 2);
-            if (parts.Length != 2 || !parts[0].Equals("sha256", StringComparison.OrdinalIgnoreCase) || parts[1].Length != 64)
+            if (parts.Length != 2 ||
+                !parts[0].Equals("sha256", StringComparison.OrdinalIgnoreCase) ||
+                parts[1].Length != 64 ||
+                parts[1].Any(static c => !Uri.IsHexDigit(c)))
             {
                 Logger.Log(LogLevel.Warning, $"Unsupported release asset digest format: {digest}");
                 throw new UpdateException(UpdateFailureKind.MissingDigest,
@@ -650,9 +661,41 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return Path.Combine(_options.DownloadDirectoryProvider(), safeFileName);
         }
 
-        private static async Task SaveVerifiedUpdateAsync(
+        private Uri ValidateDownloadUri(string downloadUrl)
+        {
+            if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri) ||
+                !uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                !IsAllowedDownloadHost(uri.Host))
+            {
+                Logger.Log(LogLevel.Warning, $"Rejected unsafe update download URL: {downloadUrl}");
+                throw new UpdateException(UpdateFailureKind.InvalidDownloadUrl,
+                    "The selected update asset has an unsafe download URL. The file was not downloaded.");
+            }
+
+            return uri;
+        }
+
+        private void ValidateFinalDownloadUri(Uri uri)
+        {
+            if (!uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) || !IsAllowedDownloadHost(uri.Host))
+            {
+                Logger.Log(LogLevel.Warning, $"Rejected unsafe update redirect URL: {uri}");
+                throw new UpdateException(UpdateFailureKind.InvalidDownloadUrl,
+                    "The update download redirected to an unsafe URL. The file was not saved.");
+            }
+        }
+
+        private bool IsAllowedDownloadHost(string host)
+        {
+            return _options.AllowedDownloadHosts.Any(allowedHost =>
+                host.Equals(allowedHost, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private async Task<UpdateDownloadResult> DownloadAndVerifyUpdateAsync(
+            Uri downloadUri,
             string targetPath,
-            byte[] fileBytes,
+            string expectedHash,
+            string installerFileName,
             CancellationToken cancellationToken)
         {
             var targetDirectory = Path.GetDirectoryName(targetPath) ?? Directory.GetCurrentDirectory();
@@ -661,7 +704,62 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             try
             {
                 Directory.CreateDirectory(targetDirectory);
-                await File.WriteAllBytesAsync(tempPath, fileBytes, cancellationToken);
+
+                using var request = new HttpRequestMessage(HttpMethod.Get, downloadUri);
+                using var response = await _httpClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                ValidateFinalDownloadUri(response.RequestMessage?.RequestUri ?? downloadUri);
+
+                if (response.Content.Headers.ContentLength is { } contentLength)
+                {
+                    EnsureDownloadSizeAllowed(contentLength, installerFileName);
+                }
+
+                long bytesDownloaded = 0;
+                string actualHash;
+
+                await using (var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken))
+                await using (var targetStream = new FileStream(
+                                 tempPath,
+                                 FileMode.CreateNew,
+                                 FileAccess.Write,
+                                 FileShare.None,
+                                 bufferSize: 1024 * 128,
+                                 FileOptions.Asynchronous | FileOptions.SequentialScan))
+                {
+                    AppFilePermissions.ApplyPrivateFile(tempPath);
+
+                    using var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                    var buffer = new byte[1024 * 128];
+
+                    while (true)
+                    {
+                        var bytesRead = await responseStream.ReadAsync(buffer, cancellationToken);
+                        if (bytesRead == 0)
+                        {
+                            break;
+                        }
+
+                        bytesDownloaded += bytesRead;
+                        EnsureDownloadSizeAllowed(bytesDownloaded, installerFileName);
+                        hasher.AppendData(buffer, 0, bytesRead);
+                        await targetStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                    }
+
+                    await targetStream.FlushAsync(cancellationToken);
+                    actualHash = Convert.ToHexStringLower(hasher.GetHashAndReset());
+                }
+
+                if (!actualHash.Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    Logger.Log(LogLevel.Error, $"Update digest mismatch for '{installerFileName}'. Expected {expectedHash}, got {actualHash}.");
+                    throw new UpdateException(UpdateFailureKind.DigestMismatch,
+                        "The downloaded update did not match GitHub's release digest. The file was not saved.");
+                }
 
                 if (File.Exists(targetPath))
                 {
@@ -671,6 +769,32 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 {
                     File.Move(tempPath, targetPath);
                 }
+
+                AppFilePermissions.ApplyPrivateFile(targetPath);
+
+                return new UpdateDownloadResult
+                {
+                    FilePath = targetPath,
+                    Sha256 = actualHash,
+                    BytesDownloaded = bytesDownloaded
+                };
+            }
+            catch (UpdateException)
+            {
+                TryDeleteTempFile(tempPath);
+                throw;
+            }
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                TryDeleteTempFile(tempPath);
+                Logger.Log(LogLevel.Warning, $"Download timed out for update asset '{installerFileName}'.", ex);
+                throw new UpdateException(UpdateFailureKind.Timeout, "The update download timed out. Please try again later.", ex);
+            }
+            catch (HttpRequestException ex)
+            {
+                TryDeleteTempFile(tempPath);
+                Logger.Log(LogLevel.Error, $"Failed to download update asset '{installerFileName}'.", ex);
+                throw new UpdateException(UpdateFailureKind.Network, "The update download failed. Please check your network connection and try again.", ex);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or OperationCanceledException)
             {
@@ -678,6 +802,18 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 Logger.Log(LogLevel.Error, $"Failed to write update asset to '{targetPath}'.", ex);
                 throw new UpdateException(UpdateFailureKind.FileSystem, "The update was verified but could not be saved to disk.", ex);
             }
+        }
+
+        private void EnsureDownloadSizeAllowed(long bytes, string installerFileName)
+        {
+            if (bytes <= _options.MaxDownloadBytes)
+            {
+                return;
+            }
+
+            Logger.Log(LogLevel.Warning, $"Rejected update asset '{installerFileName}' because it exceeds the configured maximum size.");
+            throw new UpdateException(UpdateFailureKind.DownloadTooLarge,
+                "The update download is larger than the configured safety limit. The file was not saved.");
         }
 
         private static void TryDeleteTempFile(string tempPath)

@@ -20,11 +20,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        d:DesignWidth="560"
-        d:DesignHeight="350"
+        d:DesignWidth="600"
+        d:DesignHeight="500"
         x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.NewLockerDialog"
         Title="New Locker"
-        Width="560"
+        Width="600"
+        Height="500"
         CanResize="False"
         WindowStartupLocation="CenterOwner">
 

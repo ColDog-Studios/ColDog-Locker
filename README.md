@@ -21,7 +21,7 @@
   <p align="center">
     ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.
     <br />
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -77,7 +77,7 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 ## Getting Started
 
-Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and experimental macOS validation. You can also build from source following the instructions below. Installer/package build notes are in [Local Packaging](docs/packaging.md).
+Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and experimental macOS validation. You can also build from source following the instructions below.
 
 ### Prerequisites
 
@@ -131,7 +131,7 @@ ColDog Locker is a desktop app for securely locking, unlocking, and managing enc
 
 ### Interactive Modes
 
-- **GUI (Graphical User Interface)**: Run `cdlocker gui` for a graphical interface (in development)
+- **GUI (Graphical User Interface)**: Run `cdlocker gui` for the Avalonia graphical interface.
 - **TUI (Terminal User Interface)**: Run `cdlocker tui` for an interactive terminal menu
 
 ### Command-Line Interface
@@ -269,6 +269,7 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 - [Avalonia UI](https://avaloniaui.net/)
 - [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net)
 - [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm)
+- [Material.Icons.Avalonia](https://github.com/SKProCH/Material.Icons)
 - [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)

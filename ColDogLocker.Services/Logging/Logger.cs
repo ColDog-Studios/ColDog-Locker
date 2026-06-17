@@ -18,8 +18,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using Newtonsoft.Json;
 
 namespace ColDogStudios.ColDogLocker.Services.Logging
@@ -327,6 +328,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                     }
 
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                    AppFilePermissions.ApplyPrivateFile(_logFilePath);
                 }
             }
             catch (Exception ex)
@@ -337,7 +339,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
         private static void EnsureLogDirectory()
         {
-            Directory.CreateDirectory(_logDirectory);
+            AppFilePermissions.EnsurePrivateDirectory(_logDirectory);
         }
 
         private static void TryWriteFallbackLog(LogEntry logEntry, Exception loggerException)
@@ -349,6 +351,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 var fallbackPath = Path.Combine(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
                     $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {loggerException.Message}){Environment.NewLine}");
+                AppFilePermissions.ApplyPrivateFile(fallbackPath);
             }
             catch (Exception ex)
             {
@@ -447,6 +450,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                         ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                         : FormatPlainText(logEntry);
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
+                    AppFilePermissions.ApplyPrivateFile(_logFilePath);
                 }
             }
             catch (JsonException ex)

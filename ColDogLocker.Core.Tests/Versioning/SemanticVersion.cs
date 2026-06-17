@@ -90,6 +90,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
         [InlineData("1.0.0-rc.2")]
         [InlineData("2.56.789")]
         [InlineData("1.2.3-beta.1")]
+        [InlineData("1.2.3-beta.1+202606142200")]
         public void TryParse_WithValidVersion_ShouldReturnTrueAndParsedVersion(string versionString)
         {
             // Act
@@ -98,6 +99,20 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
             // Assert
             Assert.True(result);
             Assert.NotNull(version);
+        }
+
+        [Fact]
+        public void CompareTo_WithBuildMetadata_ShouldIgnoreBuildMetadata()
+        {
+            // Arrange
+            var version1 = new SemanticVersion("1.2.3-beta.1+202606142200");
+            var version2 = new SemanticVersion("1.2.3-beta.1+202606142300");
+
+            // Act
+            var result = version1.CompareTo(version2);
+
+            // Assert
+            Assert.Equal(0, result);
         }
 
         #endregion

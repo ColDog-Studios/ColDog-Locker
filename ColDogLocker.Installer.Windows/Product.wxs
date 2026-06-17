@@ -18,6 +18,7 @@
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ColDog-Studios/ColDog-Locker" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ColDog-Studios/ColDog-Locker/releases" />
+    <Property Id="CREATE_DESKTOP_SHORTCUT" Value="1" />
     <Property Id="REMOVE_USER_DATA_ON_UNINSTALL" Value="1" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
@@ -113,7 +114,7 @@
       </Files>
     </Feature>
 
-    <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Description="Create a shortcut on the installing user's desktop." Level="2">
+    <Feature Id="DesktopShortcutFeature" Title="Desktop shortcut" Description="Create a shortcut on the installing user's desktop." Level="1">
       <ComponentRef Id="DesktopShortcutComponent" />
     </Feature>
 
