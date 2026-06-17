@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Net;
 using System.Net.Http.Headers;
@@ -109,7 +109,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public bool SupportsAutomaticUpdates
             => OperatingSystem is UpdateOperatingSystem.Windows ||
-            (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
+               (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
 
         public string DisplayName
         {
@@ -152,11 +152,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return new UpdatePlatform
-                {
-                    OperatingSystem = UpdateOperatingSystem.Linux,
-                    LinuxPackageFormat = DetectLinuxPackageFormat()
-                };
+                return new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = DetectLinuxPackageFormat() };
             }
 
             return new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Unsupported };
@@ -213,6 +209,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string CurrentVersion { get; set; } = AppInfo.SemanticVersion;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
         public long MaxDownloadBytes { get; set; } = 1024L * 1024L * 1024L;
+
         public IReadOnlyCollection<string> AllowedDownloadHosts { get; set; } =
         [
             "github.com",
@@ -220,7 +217,9 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             "github-releases.githubusercontent.com",
             "release-assets.githubusercontent.com"
         ];
+
         public Func<UpdatePlatform> PlatformDetector { get; set; } = UpdatePlatform.Detect;
+
         public Func<string> DownloadDirectoryProvider { get; set; } =
             () => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
     }
@@ -250,11 +249,11 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
     public sealed class GitHubUpdateService : IUpdateService, IDisposable
     {
         private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
+        private readonly Func<UpdateChannel> _channelProvider;
+        private readonly bool _disposeHttpClient;
 
         private readonly HttpClient _httpClient;
         private readonly UpdateServiceOptions _options;
-        private readonly Func<UpdateChannel> _channelProvider;
-        private readonly bool _disposeHttpClient;
 
         public GitHubUpdateService(
             HttpClient httpClient,
@@ -270,11 +269,12 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             ConfigureGitHubHeaders(_httpClient);
         }
 
-        public static GitHubUpdateService CreateDefault()
+        public void Dispose()
         {
-            var options = new UpdateServiceOptions();
-            var client = new HttpClient { Timeout = options.Timeout };
-            return new GitHubUpdateService(client, options, disposeHttpClient: true);
+            if (_disposeHttpClient)
+            {
+                _httpClient.Dispose();
+            }
         }
 
         public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
@@ -363,7 +363,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             catch (HttpRequestException ex)
             {
                 Logger.Log(LogLevel.Error, "Update check failed due to a network or GitHub API error.", ex);
-                throw new UpdateException(UpdateFailureKind.Network, "Unable to contact GitHub for update information. Please check your network connection and try again.", ex);
+                throw new UpdateException(UpdateFailureKind.Network,
+                    "Unable to contact GitHub for update information. Please check your network connection and try again.", ex);
             }
             catch (JsonException ex)
             {
@@ -409,12 +410,11 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return result;
         }
 
-        public void Dispose()
+        public static GitHubUpdateService CreateDefault()
         {
-            if (_disposeHttpClient)
-            {
-                _httpClient.Dispose();
-            }
+            var options = new UpdateServiceOptions();
+            var client = new HttpClient { Timeout = options.Timeout };
+            return new GitHubUpdateService(client, options, disposeHttpClient: true);
         }
 
         private async Task<GitHubReleaseDto?> FetchReleaseAsync(CancellationToken cancellationToken)
@@ -437,12 +437,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 .Select(release =>
                 {
                     var parsed = SemanticVersion.TryParse(NormalizeVersion(release.TagName), out var version);
-                    return new
-                    {
-                        Release = release,
-                        Parsed = parsed,
-                        Version = version
-                    };
+                    return new { Release = release, Parsed = parsed, Version = version };
                 })
                 .Where(candidate => candidate.Parsed)
                 .OrderByDescending(candidate => candidate.Version)
@@ -564,9 +559,9 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 UpdateOperatingSystem.Windows when name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) => 70,
                 UpdateOperatingSystem.Windows when name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Deb &&
-                                             name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
+                                                 name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Rpm &&
-                                             name.EndsWith(".rpm", StringComparison.OrdinalIgnoreCase) => 60,
+                                                 name.EndsWith(".rpm", StringComparison.OrdinalIgnoreCase) => 60,
                 _ => -1
             };
 
@@ -728,7 +723,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                                  FileMode.CreateNew,
                                  FileAccess.Write,
                                  FileShare.None,
-                                 bufferSize: 1024 * 128,
+                                 1024 * 128,
                                  FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
                     AppFilePermissions.ApplyPrivateFile(tempPath);
@@ -772,12 +767,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
                 AppFilePermissions.ApplyPrivateFile(targetPath);
 
-                return new UpdateDownloadResult
-                {
-                    FilePath = targetPath,
-                    Sha256 = actualHash,
-                    BytesDownloaded = bytesDownloaded
-                };
+                return new UpdateDownloadResult { FilePath = targetPath, Sha256 = actualHash, BytesDownloaded = bytesDownloaded };
             }
             catch (UpdateException)
             {

@@ -1,25 +1,25 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Services.Lockers;
 using System.Buffers.Binary;
 using System.Formats.Tar;
 using System.Text;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 {
@@ -159,10 +159,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ExtractValidatedTar_WithLinkEntry_ShouldThrow()
         {
             using var workspace = TestWorkspace.Create();
-            using var tarStream = CreateTarStream(new PaxTarEntry(TarEntryType.SymbolicLink, "link")
-            {
-                LinkName = "target.txt"
-            });
+            using var tarStream = CreateTarStream(new PaxTarEntry(TarEntryType.SymbolicLink, "link") { LinkName = "target.txt" });
 
             Assert.Throws<InvalidDataException>(() =>
                 LockerArchiveService.ExtractValidatedTar(tarStream, workspace.CreateDirectory("restore")));
@@ -244,7 +241,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         private static MemoryStream CreateTarStream(params TarEntry[] entries)
         {
             var stream = new MemoryStream();
-            using (var writer = new TarWriter(stream, TarEntryFormat.Pax, leaveOpen: true))
+            using (var writer = new TarWriter(stream, TarEntryFormat.Pax, true))
             {
                 foreach (var entry in entries)
                 {
@@ -276,6 +273,14 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public string Path { get; }
 
+            public void Dispose()
+            {
+                if (Directory.Exists(Path))
+                {
+                    DeleteDirectory(Path);
+                }
+            }
+
             public static TestWorkspace Create()
             {
                 return new TestWorkspace(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-archive-tests-{Guid.NewGuid():N}"));
@@ -286,14 +291,6 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 var path = System.IO.Path.Combine(Path, name);
                 Directory.CreateDirectory(path);
                 return path;
-            }
-
-            public void Dispose()
-            {
-                if (Directory.Exists(Path))
-                {
-                    DeleteDirectory(Path);
-                }
             }
 
             private static void DeleteDirectory(string path)
@@ -309,7 +306,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 }
 
                 File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
     }

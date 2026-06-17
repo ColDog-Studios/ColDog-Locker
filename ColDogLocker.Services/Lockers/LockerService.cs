@@ -1,24 +1,24 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Services.Security;
-using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Logging;
+using ColDogStudios.ColDogLocker.Services.Security;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
@@ -256,7 +256,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 var archivePath = LockerArchiveService.GetArchivePath(tempLockedLocation);
                 var archive = LockerArchiveService.CreateFromDirectory(previousLocation, archivePath, locker, password);
 
-                Directory.Delete(previousLocation, recursive: true);
+                Directory.Delete(previousLocation, true);
                 Directory.Move(tempLockedLocation, newLockerLocation);
 
                 // Set Hidden and System attributes to the locker directory
@@ -370,7 +370,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             try
             {
                 ClearAttributesForDelete(previousLocation);
-                Directory.Delete(previousLocation, recursive: true);
+                Directory.Delete(previousLocation, true);
             }
             catch (Exception ex)
             {
@@ -581,7 +581,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new UnauthorizedAccessException("Locker directory name does not match locker metadata.");
             }
 
-            Directory.Delete(locker.LockerLocation, recursive: true);
+            Directory.Delete(locker.LockerLocation, true);
         }
 
         private static void ValidateLockerDefinition(LockerModel locker)

@@ -1,26 +1,26 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Core.Environment;
-using ColDogStudios.ColDogLocker.Services.Logging;
-using ColDogStudios.ColDogLocker.Core.Models;
 using System.Globalization;
-using Microsoft.Data.Sqlite;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.FileSystem;
+using ColDogStudios.ColDogLocker.Services.Logging;
+using Microsoft.Data.Sqlite;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
@@ -93,7 +93,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -128,7 +129,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
                 command.Parameters.AddWithValue("$guid", guid);
 
                 using var reader = command.ExecuteReader();
@@ -162,7 +164,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
                 command.Parameters.AddWithValue("$name", name);
 
                 using var reader = command.ExecuteReader();

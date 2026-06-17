@@ -1,26 +1,26 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
+using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Logging;
@@ -33,11 +33,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private static readonly string[] ThemeChoices = ["Auto", "Light", "Dark", "ColDog Studios"];
         private static readonly string[] LogLevelChoices = ["Debug", "Info", "Warning", "Error", "Fatal"];
         private static readonly string[] LogFormatChoices = ["json", "text"];
+        private readonly IPlatformService? _platformService;
 
-        private IAppThemeService? _themeService;
-        private IPlatformService? _platformService;
-        private UpdateWorkflow? _updateWorkflow;
-        private AvaloniaUpdateDialogHost? _updateDialogHost;
+        private readonly IAppThemeService? _themeService;
+        private readonly AvaloniaUpdateDialogHost? _updateDialogHost;
+        private readonly UpdateWorkflow? _updateWorkflow;
 
         private bool _hasChanges;
         private bool _isLoading;
@@ -47,7 +47,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             InitializeComponent();
 
             ConfigureControls();
-            LoadCurrentSettings(markClean: true);
+            LoadCurrentSettings(true);
         }
 
         public SettingsDialog(
@@ -138,8 +138,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Select default locker folder",
-                AllowMultiple = false
+                Title = "Select default locker folder", AllowMultiple = false
             });
 
             var folder = folders.FirstOrDefault();
@@ -193,7 +192,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private async void OpenLogsFolder_Click(object? sender, RoutedEventArgs e)
         {
             var logsPath = Path.GetDirectoryName(Logger.GetCurrentLogFilePath())
-                ?? Path.Combine(AppPaths.LocalConfig, "logs");
+                           ?? Path.Combine(AppPaths.LocalConfig, "logs");
             await OpenFolderAsync(logsPath, "Failed to open logs folder");
         }
 
@@ -247,7 +246,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
 
             RestoreDefaultSettings();
-            LoadCurrentSettings(markClean: true);
+            LoadCurrentSettings(true);
             _themeService?.SetTheme(SettingsManager.Settings.AppTheme);
         }
 
@@ -303,8 +302,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             settings.EnableFileLogging = EnableFileLoggingCheckBox.IsChecked == true;
             settings.LogLevel = LogLevelBox.SelectedItem?.ToString() ?? "Info";
             settings.LogFormat = LogFormatBox.SelectedItem?.ToString() ?? "json";
-            settings.MaxFileSizeMb = ReadInt(MaxFileSizeTextBox, defaultValue: 10, min: 1, max: 1024);
-            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, defaultValue: 30, min: 7, max: 90);
+            settings.MaxFileSizeMb = ReadInt(MaxFileSizeTextBox, 10, 1, 1024);
+            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, 30, 7, 90);
         }
 
         private static void RestoreDefaultSettings()
@@ -436,6 +435,5 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 }
             };
         }
-
     }
 }

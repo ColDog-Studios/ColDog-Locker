@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -29,7 +29,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
     public sealed partial class DevDialog : Window
     {
-        private IPlatformService? _platformService;
+        private readonly IPlatformService? _platformService;
 
         public DevDialog()
         {
@@ -56,7 +56,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             OsText.Text = SafeValue(() => Environment.OSVersion.VersionString);
             RuntimeText.Text = SafeValue(() => $".NET {Environment.Version}");
             ProcessorCountText.Text = SafeValue(() => Environment.ProcessorCount.ToString());
-            ManagedMemoryText.Text = SafeValue(() => FormatMegabytes(GC.GetTotalMemory(forceFullCollection: false)));
+            ManagedMemoryText.Text = SafeValue(() => FormatMegabytes(GC.GetTotalMemory(false)));
             WorkingSetText.Text = SafeValue(() => FormatMegabytes(Environment.WorkingSet));
             ArchitectureText.Text = SafeValue(() => $"{RuntimeInformation.OSArchitecture} OS, {RuntimeInformation.ProcessArchitecture} process");
             InstallPathText.Text = SafeValue(() => Process.GetCurrentProcess().MainModule?.FileName ?? AppContext.BaseDirectory);
@@ -96,7 +96,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 return;
             }
 
-            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            var clipboard = GetTopLevel(this)?.Clipboard;
             if (clipboard == null)
             {
                 throw new InvalidOperationException("No clipboard is available.");

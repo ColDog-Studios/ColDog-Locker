@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
@@ -63,10 +63,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         [Fact]
         public void RemoveLocker_WithLockedLocker_ShouldThrowInvalidOperationException()
         {
-            var locker = new LockerModel("Locked", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()))
-            {
-                IsLocked = true
-            };
+            var locker = new LockerModel("Locked", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())) { IsLocked = true };
 
             var exception = Assert.Throws<InvalidOperationException>(() => LockerService.RemoveLocker(locker));
 
@@ -199,10 +196,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             var lockedPath = Path.Combine(workspace.Path, ".Vault");
             Directory.CreateDirectory(lockedPath);
             var unlockedPath = Path.Combine(workspace.Path, "Vault");
-            var locker = new LockerModel("Vault", EncryptionHelper.HashPassword(password), lockedPath)
-            {
-                IsLocked = true
-            };
+            var locker = new LockerModel("Vault", EncryptionHelper.HashPassword(password), lockedPath) { IsLocked = true };
             var archive = LockerArchiveService.CreateFromDirectory(
                 sourcePath,
                 LockerArchiveService.GetArchivePath(lockedPath),
@@ -211,7 +205,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
             locker.LockedArchiveSha256 = archive.Sha256;
             locker.LockedAtUtc = archive.LockedAtUtc;
-            Directory.Delete(sourcePath, recursive: true);
+            Directory.Delete(sourcePath, true);
 
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 LockerService.Unlock(locker, password, _ => throw new InvalidOperationException("database unavailable")));
@@ -230,11 +224,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         [Fact]
         public void LockerVerificationResult_IsValid_ShouldRequireNoErrorsDirectoryAndAccess()
         {
-            var result = new LockerVerificationResult
-            {
-                DirectoryExists = true,
-                HasAccess = true
-            };
+            var result = new LockerVerificationResult { DirectoryExists = true, HasAccess = true };
 
             Assert.True(result.IsValid);
 
@@ -254,6 +244,15 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public string Path { get; }
 
+            public void Dispose()
+            {
+                var parent = Directory.GetParent(Path)?.FullName;
+                if (parent != null && Directory.Exists(parent))
+                {
+                    DeleteDirectory(parent);
+                }
+            }
+
             public static TestDirectory Create(string name)
             {
                 var parent = System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}");
@@ -265,36 +264,27 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             public static TestDirectory CreateAllowed(string name)
             {
                 var parent = System.IO.Path.Combine(
-                    System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile),
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                     $"cdlocker-tests-{Guid.NewGuid():N}");
                 var path = System.IO.Path.Combine(parent, name);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
             }
 
-            public void Dispose()
-            {
-                var parent = System.IO.Directory.GetParent(Path)?.FullName;
-                if (parent != null && System.IO.Directory.Exists(parent))
-                {
-                    DeleteDirectory(parent);
-                }
-            }
-
             private static void DeleteDirectory(string path)
             {
-                foreach (var file in System.IO.Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+                foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
                 {
                     File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 }
 
-                foreach (var directory in System.IO.Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
+                foreach (var directory in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories))
                 {
                     File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 }
 
                 File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
-                System.IO.Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
     }

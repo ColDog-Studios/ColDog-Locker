@@ -274,23 +274,29 @@
                     <Button Grid.Column="0" Classes="tool-button" Width="42" Height="38" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderPlus" />
                     </Button>
-                    <Button Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}" ToolTip.Tip="Lock selected locker">
+                    <Button Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}"
+                            ToolTip.Tip="Lock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Lock" />
                     </Button>
-                    <Button Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}" ToolTip.Tip="Unlock selected locker">
+                    <Button Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}"
+                            ToolTip.Tip="Unlock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="LockOpen" />
                     </Button>
-                    <Button Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="Remove selected locker">
+                    <Button Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}"
+                            ToolTip.Tip="Remove selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Delete" />
                     </Button>
                     <Border Grid.Column="4" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
-                    <Button Grid.Column="5" Classes="tool-button" Width="42" Height="38" Command="{Binding OpenLocationCommand}" ToolTip.Tip="Open selected locker in Explorer">
+                    <Button Grid.Column="5" Classes="tool-button" Width="42" Height="38" Command="{Binding OpenLocationCommand}"
+                            ToolTip.Tip="Open selected locker in Explorer">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderOpen" />
                     </Button>
-                    <Button Grid.Column="6" Classes="tool-button" Width="42" Height="38" Command="{Binding ShowPropertiesCommand}" ToolTip.Tip="Show selected locker properties">
+                    <Button Grid.Column="6" Classes="tool-button" Width="42" Height="38" Command="{Binding ShowPropertiesCommand}"
+                            ToolTip.Tip="Show selected locker properties">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="InformationOutline" />
                     </Button>
-                    <Button Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}" ToolTip.Tip="Toggle grid/list view">
+                    <Button Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}"
+                            ToolTip.Tip="Toggle grid/list view">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="{Binding ToggleViewIconKind}" />
                     </Button>
                     <Button Grid.Column="8" Classes="tool-button" Width="42" Height="38" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
@@ -355,14 +361,18 @@
                                         </ContextMenu>
                                     </Border.ContextMenu>
                                     <Grid ColumnDefinitions="2*,*,*,*,3*" ColumnSpacing="12">
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource AppForegroundBrush}" />
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource AppForegroundBrush}" />
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                            <materialIcons:MaterialIcon Width="16" Height="16" Kind="{Binding StatusIconKind}" Foreground="{Binding StatusBrush}" />
+                                            <materialIcons:MaterialIcon Width="16" Height="16" Kind="{Binding StatusIconKind}"
+                                                                        Foreground="{Binding StatusBrush}" />
                                             <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource AppForegroundBrush}" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{Binding LastModified, StringFormat='{}{0:g}'}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding LastModified, StringFormat='{}{0:g}'}"
+                                                   Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                         <TextBlock Grid.Column="3" Text="{Binding SizeText}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
-                                        <TextBlock Grid.Column="4" Text="{Binding Location}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                                        <TextBlock Grid.Column="4" Text="{Binding Location}" TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -419,9 +429,11 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
-                                    <TextBlock Text="{Binding Location}" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                                    <TextBlock Text="{Binding Location}" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{Binding LastModified, StringFormat='{}{0:g}'}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                                        <TextBlock Text="{Binding LastModified, StringFormat='{}{0:g}'}"
+                                                   Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                         <TextBlock Grid.Column="1" Text="{Binding SizeText}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                     </Grid>
                                 </StackPanel>

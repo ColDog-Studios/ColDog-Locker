@@ -1,20 +1,21 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
+using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -65,32 +66,32 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
 
         private void ContextLock_Click(object? sender, RoutedEventArgs e)
         {
-            ExecuteSelectedCommand(sender, commandSelector: vm => vm.LockSelectedCommand);
+            ExecuteSelectedCommand(sender, vm => vm.LockSelectedCommand);
         }
 
         private void ContextUnlock_Click(object? sender, RoutedEventArgs e)
         {
-            ExecuteSelectedCommand(sender, commandSelector: vm => vm.UnlockSelectedCommand);
+            ExecuteSelectedCommand(sender, vm => vm.UnlockSelectedCommand);
         }
 
         private void ContextOpenLocation_Click(object? sender, RoutedEventArgs e)
         {
-            ExecuteSelectedCommand(sender, commandSelector: vm => vm.OpenLocationCommand);
+            ExecuteSelectedCommand(sender, vm => vm.OpenLocationCommand);
         }
 
         private void ContextProperties_Click(object? sender, RoutedEventArgs e)
         {
-            ExecuteSelectedCommand(sender, commandSelector: vm => vm.ShowPropertiesCommand);
+            ExecuteSelectedCommand(sender, vm => vm.ShowPropertiesCommand);
         }
 
         private void ContextRemove_Click(object? sender, RoutedEventArgs e)
         {
-            ExecuteSelectedCommand(sender, commandSelector: vm => vm.RemoveSelectedCommand);
+            ExecuteSelectedCommand(sender, vm => vm.RemoveSelectedCommand);
         }
 
         private void ExecuteSelectedCommand(
             object? sender,
-            Func<MainWindowViewModel, System.Windows.Input.ICommand> commandSelector)
+            Func<MainWindowViewModel, ICommand> commandSelector)
         {
             if (DataContext is not MainWindowViewModel viewModel)
             {

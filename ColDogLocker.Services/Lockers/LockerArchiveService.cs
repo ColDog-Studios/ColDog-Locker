@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Buffers.Binary;
 using System.Formats.Tar;
@@ -79,8 +79,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 using (var fileStream = new FileStream(archivePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 using (var encryptedStream = new EncryptedArchiveWriteStream(fileStream, password, metadataBytes))
-                using (var gzipStream = new GZipStream(encryptedStream, CompressionLevel.SmallestSize, leaveOpen: false))
-                using (var tarWriter = new TarWriter(gzipStream, TarEntryFormat.Pax, leaveOpen: true))
+                using (var gzipStream = new GZipStream(encryptedStream, CompressionLevel.SmallestSize, false))
+                using (var tarWriter = new TarWriter(gzipStream, TarEntryFormat.Pax, true))
                 {
                     WriteSourceEntries(tarWriter, sourceEntries);
                 }
@@ -132,7 +132,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 result.Metadata = ReadMetadata(archivePath);
                 result.MetadataReadable = true;
-                result.MetadataMatches = MetadataMatches(result.Metadata, locker, compareLockedAtUtc: true);
+                result.MetadataMatches = MetadataMatches(result.Metadata, locker, true);
 
                 if (!result.MetadataMatches)
                 {
@@ -165,12 +165,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 using var fileStream = new FileStream(archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 using var encryptedStream = new EncryptedArchiveReadStream(fileStream, password, out var metadata);
-                if (!MetadataMatches(metadata, locker, compareLockedAtUtc: true))
+                if (!MetadataMatches(metadata, locker, true))
                 {
                     throw new InvalidDataException("Locked archive metadata does not match locker metadata.");
                 }
 
-                using var gzipStream = new GZipStream(encryptedStream, CompressionMode.Decompress, leaveOpen: false);
+                using var gzipStream = new GZipStream(encryptedStream, CompressionMode.Decompress, false);
                 ExtractValidatedTar(gzipStream, destinationDirectory);
             }
             catch
@@ -213,12 +213,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     var relativeName = GetArchiveEntryName(sourceRoot, entry.FullName);
                     if (entry is DirectoryInfo childDirectory)
                     {
-                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, IsDirectory: true, Length: 0, entry.LastWriteTimeUtc));
+                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, true, 0, entry.LastWriteTimeUtc));
                         directories.Push(childDirectory);
                     }
                     else if (entry is FileInfo file)
                     {
-                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, IsDirectory: false, file.Length, file.LastWriteTimeUtc));
+                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, false, file.Length, file.LastWriteTimeUtc));
                     }
                     else
                     {
@@ -241,10 +241,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 if (sourceEntry.IsDirectory)
                 {
-                    var entry = new PaxTarEntry(TarEntryType.Directory, sourceEntry.RelativeName)
-                    {
-                        ModificationTime = sourceEntry.LastWriteTimeUtc
-                    };
+                    var entry = new PaxTarEntry(TarEntryType.Directory, sourceEntry.RelativeName) { ModificationTime = sourceEntry.LastWriteTimeUtc };
                     tarWriter.WriteEntry(entry);
                     continue;
                 }
@@ -258,8 +255,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 var fileEntry = new PaxTarEntry(TarEntryType.RegularFile, sourceEntry.RelativeName)
                 {
-                    DataStream = sourceStream,
-                    ModificationTime = sourceEntry.LastWriteTimeUtc
+                    DataStream = sourceStream, ModificationTime = sourceEntry.LastWriteTimeUtc
                 };
                 tarWriter.WriteEntry(fileEntry);
                 EnsureUnchanged(sourceEntry, new FileInfo(sourceEntry.FullPath));
@@ -272,12 +268,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             Directory.CreateDirectory(destinationRoot);
             EnsureNotReparsePoint(new DirectoryInfo(destinationRoot), "Destination directory");
 
-            using var tarReader = new TarReader(archiveStream, leaveOpen: false);
+            using var tarReader = new TarReader(archiveStream);
             TarEntry? entry;
             var entryCount = 0;
             long totalExtractedBytes = 0;
 
-            while ((entry = tarReader.GetNextEntry(copyData: false)) is not null)
+            while ((entry = tarReader.GetNextEntry()) is not null)
             {
                 entryCount++;
                 if (entryCount > MaxArchiveEntries)
@@ -393,7 +389,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new InvalidDataException("Locked archive contains an unsafe entry path.");
             }
 
-            var segments = entryName.Split('/', StringSplitOptions.None);
+            var segments = entryName.Split('/');
             if (segments.Any(segment => string.IsNullOrWhiteSpace(segment) || segment is "." or ".."))
             {
                 throw new InvalidDataException("Locked archive contains an unsafe entry path.");
@@ -624,8 +620,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.SetAttributes(directory, File.GetAttributes(directory) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 }
 
-                File.SetAttributes(directoryPath, File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
-                Directory.Delete(directoryPath, recursive: true);
+                File.SetAttributes(directoryPath,
+                    File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                Directory.Delete(directoryPath, true);
             }
             catch
             {
@@ -636,10 +633,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         private sealed class EncryptedArchiveWriteStream : Stream
         {
             private readonly Stream _baseStream;
+            private readonly byte[] _buffer = new byte[BufferSize];
+            private readonly byte[] _key;
             private readonly byte[] _metadataBytes;
             private readonly byte[] _noncePrefix;
-            private readonly byte[] _key;
-            private readonly byte[] _buffer = new byte[BufferSize];
             private int _bufferLength;
             private int _chunkIndex;
             private bool _disposed;
@@ -703,9 +700,20 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 base.Dispose(disposing);
             }
 
-            public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-            public override void SetLength(long value) => throw new NotSupportedException();
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
 
             private void WriteBufferedChunk()
             {
@@ -732,13 +740,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         private sealed class EncryptedArchiveReadStream : Stream
         {
             private readonly Stream _baseStream;
+            private readonly byte[] _key;
             private readonly byte[] _metadataBytes;
             private readonly byte[] _noncePrefix;
-            private readonly byte[] _key;
-            private byte[] _plainBuffer = [];
-            private int _plainOffset;
             private int _chunkIndex;
             private bool _endOfArchive;
+            private byte[] _plainBuffer = [];
+            private int _plainOffset;
 
             public EncryptedArchiveReadStream(Stream baseStream, string password, out LockerArchiveMetadata metadata)
             {
@@ -783,9 +791,20 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
             }
 
-            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
 
             private bool LoadNextChunk()
             {

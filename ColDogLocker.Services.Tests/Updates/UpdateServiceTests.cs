@@ -1,21 +1,22 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -39,12 +40,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer")));
 
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] = JsonResponse(releaseJson)
-                },
-                currentVersion: "1.1.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+                new Dictionary<string, HttpResponseMessage> { ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] = JsonResponse(releaseJson) },
+                "1.1.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -73,8 +71,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                         ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("msi")),
                         ("ColDogLocker-win-x64-setup.exe", "https://downloads.example/cdl-setup.exe", Sha256Digest("setup"))))
                 },
-                currentVersion: "1.1.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+                "1.1.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -93,10 +91,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 new Dictionary<string, HttpResponseMessage>
                 {
                     ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
-                        JsonResponse(CreateReleaseJson("v1.2.0", "No changes", ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer"))))
+                        JsonResponse(CreateReleaseJson("v1.2.0", "No changes",
+                            ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer"))))
                 },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -115,10 +114,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 new Dictionary<string, HttpResponseMessage>
                 {
                     ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
-                        new HttpResponseMessage(HttpStatusCode.NotFound)
+                        new(HttpStatusCode.NotFound)
                 },
-                currentVersion: "0.10.0-beta",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+                "0.10.0-beta",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -137,19 +136,16 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Arrange
             var releasesJson =
                 $$"""
-                [
-                  {{CreateReleaseObject("v0.9.0-alpha.1", "Older prerelease", false, true, ("ColDogLocker-0.9.0-alpha.1-win-x64-setup.exe", "https://downloads.example/alpha.exe", Sha256Digest("alpha")))}}
-                ]
-                """;
+                  [
+                    {{CreateReleaseObject("v0.9.0-alpha.1", "Older prerelease", false, true, ("ColDogLocker-0.9.0-alpha.1-win-x64-setup.exe", "https://downloads.example/alpha.exe", Sha256Digest("alpha")))}}
+                  ]
+                  """;
 
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson)
-                },
-                currentVersion: "0.10.0-beta",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 },
-                channel: UpdateChannel.Unstable);
+                new Dictionary<string, HttpResponseMessage> { ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson) },
+                "0.10.0-beta",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 },
+                UpdateChannel.Unstable);
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -169,10 +165,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 new Dictionary<string, HttpResponseMessage>
                 {
                     ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
-                        JsonResponse(CreateReleaseJson("v1.3.0", "Mac release notes", ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer"))))
+                        JsonResponse(CreateReleaseJson("v1.3.0", "Mac release notes",
+                            ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer"))))
                 },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = System.Runtime.InteropServices.Architecture.Arm64 });
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = Architecture.Arm64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -198,12 +195,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                         ("ColDogLocker-linux-x64.rpm", "https://downloads.example/cdl.rpm", Sha256Digest("rpm")),
                         ("ColDogLocker-linux-x64.deb", "https://downloads.example/cdl.deb", Sha256Digest("deb"))))
                 },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform
+                "1.2.0",
+                new UpdatePlatform
                 {
-                    OperatingSystem = UpdateOperatingSystem.Linux,
-                    LinuxPackageFormat = LinuxPackageFormat.Deb,
-                    Architecture = System.Runtime.InteropServices.Architecture.X64
+                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Deb, Architecture = Architecture.X64
                 });
 
             // Act
@@ -225,8 +220,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                     ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
                         JsonResponse(CreateReleaseJson("v1.3.0", "Missing digest", ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", null)))
                 },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 });
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 });
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -243,21 +238,18 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Arrange
             var releasesJson =
                 $$"""
-                [
-                  {{CreateReleaseObject("v1.4.0", "Draft", true, true, ("ColDogLocker-win-x64.msi", "https://downloads.example/draft.msi", Sha256Digest("draft")))}},
-                  {{CreateReleaseObject("v1.3.0-beta.1", "Beta", false, true, ("ColDogLocker-win-x64.msi", "https://downloads.example/beta.msi", Sha256Digest("beta")))}},
-                  {{CreateReleaseObject("v1.3.0", "Stable", false, false, ("ColDogLocker-win-x64.msi", "https://downloads.example/stable.msi", Sha256Digest("stable")))}}
-                ]
-                """;
+                  [
+                    {{CreateReleaseObject("v1.4.0", "Draft", true, true, ("ColDogLocker-win-x64.msi", "https://downloads.example/draft.msi", Sha256Digest("draft")))}},
+                    {{CreateReleaseObject("v1.3.0-beta.1", "Beta", false, true, ("ColDogLocker-win-x64.msi", "https://downloads.example/beta.msi", Sha256Digest("beta")))}},
+                    {{CreateReleaseObject("v1.3.0", "Stable", false, false, ("ColDogLocker-win-x64.msi", "https://downloads.example/stable.msi", Sha256Digest("stable")))}}
+                  ]
+                  """;
 
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson)
-                },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 },
-                channel: UpdateChannel.Unstable);
+                new Dictionary<string, HttpResponseMessage> { ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson) },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 },
+                UpdateChannel.Unstable);
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -274,19 +266,16 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Arrange
             var releasesJson =
                 $$"""
-                [
-                  {{CreateReleaseObject("v1.3.0-alpha.1", "## Features\n- Sequential prerelease", false, true, ("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", "https://downloads.example/main-alpha.exe", Sha256Digest("main-alpha")))}}
-                ]
-                """;
+                  [
+                    {{CreateReleaseObject("v1.3.0-alpha.1", "## Features\n- Sequential prerelease", false, true, ("ColDogLocker-1.3.0-alpha.1-win-x64-setup.exe", "https://downloads.example/main-alpha.exe", Sha256Digest("main-alpha")))}}
+                  ]
+                  """;
 
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson)
-                },
-                currentVersion: "1.3.0-alpha",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = System.Runtime.InteropServices.Architecture.X64 },
-                channel: UpdateChannel.Unstable);
+                new Dictionary<string, HttpResponseMessage> { ["/repos/ColDog-Studios/ColDog-Locker/releases"] = JsonResponse(releasesJson) },
+                "1.3.0-alpha",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = Architecture.X64 },
+                UpdateChannel.Unstable);
 
             // Act
             var result = await service.CheckForUpdatesAsync();
@@ -306,15 +295,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var bytes = Encoding.UTF8.GetBytes("installer payload");
             var tempDirectory = CreateTempDirectory();
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/download/cdl.msi"] = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ByteArrayContent(bytes)
-                    }
-                },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                new Dictionary<string, HttpResponseMessage> { ["/download/cdl.msi"] = new(HttpStatusCode.OK) { Content = new ByteArrayContent(bytes) } },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -339,7 +322,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -351,13 +334,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             using var service = CreateService(
                 new Dictionary<string, HttpResponseMessage>
                 {
-                    ["/download/cdl.msi"] = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ByteArrayContent(Encoding.UTF8.GetBytes("unexpected payload"))
-                    }
+                    ["/download/cdl.msi"] = new(HttpStatusCode.OK) { Content = new ByteArrayContent(Encoding.UTF8.GetBytes("unexpected payload")) }
                 },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -380,7 +360,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -395,15 +375,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             await File.WriteAllBytesAsync(targetPath, oldBytes);
 
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/download/cdl.msi"] = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ByteArrayContent(newBytes)
-                    }
-                },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                new Dictionary<string, HttpResponseMessage> { ["/download/cdl.msi"] = new(HttpStatusCode.OK) { Content = new ByteArrayContent(newBytes) } },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -427,7 +401,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -438,8 +412,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var tempDirectory = CreateTempDirectory();
             using var service = CreateService(
                 new Dictionary<string, HttpResponseMessage>(),
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -462,7 +436,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -473,8 +447,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var tempDirectory = CreateTempDirectory();
             using var service = CreateService(
                 new Dictionary<string, HttpResponseMessage>(),
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -497,7 +471,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -508,15 +482,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var bytes = Encoding.UTF8.GetBytes("installer payload");
             var tempDirectory = CreateTempDirectory();
             using var service = CreateService(
-                new Dictionary<string, HttpResponseMessage>
-                {
-                    ["/download/cdl.msi"] = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ByteArrayContent(bytes)
-                    }
-                },
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                new Dictionary<string, HttpResponseMessage> { ["/download/cdl.msi"] = new(HttpStatusCode.OK) { Content = new ByteArrayContent(bytes) } },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory,
                 maxDownloadBytes: bytes.Length - 1);
 
@@ -540,7 +508,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -551,8 +519,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var tempDirectory = CreateTempDirectory();
             using var service = CreateService(
                 new Dictionary<string, HttpResponseMessage>(),
-                currentVersion: "1.2.0",
-                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                "1.2.0",
+                new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
                 downloadDirectory: tempDirectory);
 
             var updateInfo = new UpdateCheckResult
@@ -575,7 +543,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
             finally
             {
-                Directory.Delete(tempDirectory, recursive: true);
+                Directory.Delete(tempDirectory, true);
             }
         }
 
@@ -587,10 +555,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             string? downloadDirectory = null,
             long? maxDownloadBytes = null)
         {
-            var client = new HttpClient(new StubHttpMessageHandler(responses))
-            {
-                BaseAddress = new Uri("https://api.test")
-            };
+            var client = new HttpClient(new StubHttpMessageHandler(responses)) { BaseAddress = new Uri("https://api.test") };
 
             return new GitHubUpdateService(
                 client,
@@ -604,15 +569,12 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                     DownloadDirectoryProvider = () => downloadDirectory ?? CreateTempDirectory()
                 },
                 () => channel,
-                disposeHttpClient: true);
+                true);
         }
 
         private static HttpResponseMessage JsonResponse(string json)
         {
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
-            };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
         }
 
         private static string CreateReleaseJson(
@@ -621,18 +583,18 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             params (string name, string url, string? digest)[] assets)
         {
             return $$"""
-                   {
-                     "tag_name": "{{tagName}}",
-                     "name": "ColDog Locker {{tagName}}",
-                     "body": {{JsonSerializer.Serialize(body)}},
-                     "html_url": "https://github.example/releases/{{tagName}}",
-                     "draft": false,
-                     "prerelease": {{tagName.Contains('-').ToString().ToLowerInvariant()}},
-                     "assets": [
-                       {{string.Join(",\n    ", assets.Select(CreateAssetObject))}}
-                     ]
-                   }
-                   """;
+                     {
+                       "tag_name": "{{tagName}}",
+                       "name": "ColDog Locker {{tagName}}",
+                       "body": {{JsonSerializer.Serialize(body)}},
+                       "html_url": "https://github.example/releases/{{tagName}}",
+                       "draft": false,
+                       "prerelease": {{tagName.Contains('-').ToString().ToLowerInvariant()}},
+                       "assets": [
+                         {{string.Join(",\n    ", assets.Select(CreateAssetObject))}}
+                       ]
+                     }
+                     """;
         }
 
         private static string CreateReleaseObject(
@@ -643,32 +605,32 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             params (string name, string url, string? digest)[] assets)
         {
             return $$"""
-                   {
-                     "tag_name": "{{tagName}}",
-                     "name": "ColDog Locker {{tagName}}",
-                     "body": {{JsonSerializer.Serialize(body)}},
-                     "html_url": "https://github.example/releases/{{tagName}}",
-                     "draft": {{draft.ToString().ToLowerInvariant()}},
-                     "prerelease": {{prerelease.ToString().ToLowerInvariant()}},
-                     "assets": [
-                       {{string.Join(",\n    ", assets.Select(CreateAssetObject))}}
-                     ]
-                   }
-                   """;
+                     {
+                       "tag_name": "{{tagName}}",
+                       "name": "ColDog Locker {{tagName}}",
+                       "body": {{JsonSerializer.Serialize(body)}},
+                       "html_url": "https://github.example/releases/{{tagName}}",
+                       "draft": {{draft.ToString().ToLowerInvariant()}},
+                       "prerelease": {{prerelease.ToString().ToLowerInvariant()}},
+                       "assets": [
+                         {{string.Join(",\n    ", assets.Select(CreateAssetObject))}}
+                       ]
+                     }
+                     """;
         }
 
         private static string CreateAssetObject((string name, string url, string? digest) asset)
         {
             var digestValue = asset.digest == null ? "null" : JsonSerializer.Serialize(asset.digest);
             return $$"""
-                   {
-                     "name": "{{asset.name}}",
-                     "browser_download_url": "{{asset.url}}",
-                     "digest": {{digestValue}},
-                     "size": 100,
-                     "content_type": "application/octet-stream"
-                   }
-                   """;
+                     {
+                       "name": "{{asset.name}}",
+                       "browser_download_url": "{{asset.url}}",
+                       "digest": {{digestValue}},
+                       "size": 100,
+                       "content_type": "application/octet-stream"
+                     }
+                     """;
         }
 
         private static string Sha256Digest(string content)
@@ -712,8 +674,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
                 {
-                    RequestMessage = request,
-                    Content = new StringContent($"No stubbed response for {path}")
+                    RequestMessage = request, Content = new StringContent($"No stubbed response for {path}")
                 });
             }
         }

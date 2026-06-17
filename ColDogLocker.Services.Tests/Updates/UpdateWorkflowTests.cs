@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using ColDogStudios.ColDogLocker.Services.Updates;
 
@@ -25,12 +25,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         public async Task RunAsync_NoUpdate_ShowsNoUpdateMessage()
         {
             // Arrange
-            var update = new UpdateCheckResult
-            {
-                UpdateAvailable = false,
-                CurrentVersion = "1.2.0",
-                LatestVersion = "1.2.0"
-            };
+            var update = new UpdateCheckResult { UpdateAvailable = false, CurrentVersion = "1.2.0", LatestVersion = "1.2.0" };
             var service = new StubUpdateService { CheckResult = update };
             var host = new RecordingUpdateDialogHost();
             var workflow = new UpdateWorkflow(service, host);
@@ -91,17 +86,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         {
             // Arrange
             var update = CreateDownloadableUpdate();
-            var download = new UpdateDownloadResult
-            {
-                FilePath = @"C:\Downloads\ColDogLocker.msi",
-                BytesDownloaded = 1234,
-                Sha256 = "abc123"
-            };
-            var service = new StubUpdateService
-            {
-                CheckResult = update,
-                DownloadResult = download
-            };
+            var download = new UpdateDownloadResult { FilePath = @"C:\Downloads\ColDogLocker.msi", BytesDownloaded = 1234, Sha256 = "abc123" };
+            var service = new StubUpdateService { CheckResult = update, DownloadResult = download };
             var host = new RecordingUpdateDialogHost { ConfirmDownload = true };
             var workflow = new UpdateWorkflow(service, host);
 
@@ -174,11 +160,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Arrange
             var update = CreateDownloadableUpdate();
             var exception = new UpdateException(UpdateFailureKind.FileSystem, "Could not save installer");
-            var service = new StubUpdateService
-            {
-                CheckResult = update,
-                DownloadException = exception
-            };
+            var service = new StubUpdateService { CheckResult = update, DownloadException = exception };
             var host = new RecordingUpdateDialogHost { ConfirmDownload = true };
             var workflow = new UpdateWorkflow(service, host);
 
