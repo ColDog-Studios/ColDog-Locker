@@ -26,40 +26,38 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
     {
         public Task OpenUrlAsync(string url)
         {
-            StartWithShell(url);
+            var uri = CreateSafeWebUri(url);
+            StartUrlWithShell(uri);
             return Task.CompletedTask;
         }
 
         public Task OpenFolderAsync(string path)
         {
-            if (!Directory.Exists(path))
-            {
-                var parent = Path.GetDirectoryName(path);
-                if (!string.IsNullOrWhiteSpace(parent) && Directory.Exists(parent))
-                {
-                    path = parent;
-                }
-            }
-
-            StartWithShell(path);
+            StartPathWithShell(ResolveExistingPath(path));
             return Task.CompletedTask;
         }
 
         public Task OpenFolderAndSelectAsync(string path)
         {
-            if (OperatingSystem.IsWindows() && Directory.Exists(path))
+            var fullPath = Path.GetFullPath(path);
+
+            if (OperatingSystem.IsWindows() && Directory.Exists(fullPath))
             {
-                Process.Start("explorer.exe", $"\"{path}\"");
+                var startInfo = new ProcessStartInfo { FileName = "explorer.exe", UseShellExecute = false };
+                startInfo.ArgumentList.Add(fullPath);
+                StartProcess(startInfo);
                 return Task.CompletedTask;
             }
 
-            if (OperatingSystem.IsWindows() && File.Exists(path))
+            if (OperatingSystem.IsWindows() && File.Exists(fullPath))
             {
-                Process.Start("explorer.exe", $"/select,\"{path}\"");
+                var startInfo = new ProcessStartInfo { FileName = "explorer.exe", UseShellExecute = false };
+                startInfo.ArgumentList.Add($"/select,{fullPath}");
+                StartProcess(startInfo);
                 return Task.CompletedTask;
             }
 
-            return OpenFolderAsync(path);
+            return OpenFolderAsync(fullPath);
         }
 
         public async Task CopyTextAsync(string text)
@@ -69,6 +67,49 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             {
                 await clipboard.SetTextAsync(text);
             }
+        }
+
+        private static Uri CreateSafeWebUri(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+            {
+                throw new ArgumentException("Only HTTP and HTTPS URLs can be opened.", nameof(url));
+            }
+
+            return uri;
+        }
+
+        private static string ResolveExistingPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Path cannot be empty.", nameof(path));
+            }
+
+            var fullPath = Path.GetFullPath(path);
+            if (Directory.Exists(fullPath) || File.Exists(fullPath))
+            {
+                return fullPath;
+            }
+
+            var parent = Path.GetDirectoryName(fullPath);
+            if (!string.IsNullOrWhiteSpace(parent) && Directory.Exists(parent))
+            {
+                return parent;
+            }
+
+            throw new DirectoryNotFoundException($"No folder exists for '{path}'.");
+        }
+
+        private static void StartUrlWithShell(Uri uri)
+        {
+            StartWithShell(uri.AbsoluteUri);
+        }
+
+        private static void StartPathWithShell(string path)
+        {
+            StartWithShell(path);
         }
 
         private static void StartWithShell(string target)

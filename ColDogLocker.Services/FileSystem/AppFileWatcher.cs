@@ -39,10 +39,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
                 Logger.Log(LogLevel.Debug, "Initializing file watchers");
 
                 // Ensure the directory exists before creating watchers
-                if (!Directory.Exists(AppPaths.LocalConfig))
-                {
-                    Directory.CreateDirectory(AppPaths.LocalConfig);
-                }
+                AppFilePermissions.EnsurePrivateDirectory(AppPaths.LocalConfig);
 
                 // Initialize settings file watcher
                 _settingsWatcher = new FileSystemWatcher

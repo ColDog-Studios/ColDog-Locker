@@ -51,6 +51,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             Assert.Equal("hashed-password", byGuid.Password);
             Assert.Equal("/tmp/Beta", byGuid.LockerLocation);
             Assert.True(byGuid.IsLocked);
+            Assert.Equal(LockerArchiveService.CurrentStorageFormatVersion, byGuid.StorageFormatVersion);
+            Assert.Equal("abc123", byGuid.LockedArchiveSha256);
+            Assert.NotNull(byGuid.LockedAtUtc);
             Assert.NotNull(byName);
             Assert.Equal(locker.Guid, byName.Guid);
             Assert.True(LockerRepository.LockerExists("BETA", database.ConnectionString));
@@ -94,6 +97,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             locker.Password = "new-hash";
             locker.LockerLocation = "/tmp/Updated";
             locker.IsLocked = true;
+            locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
+            locker.LockedArchiveSha256 = "def456";
+            locker.LockedAtUtc = DateTime.UtcNow;
             LockerRepository.UpdateLocker(locker, database.ConnectionString);
 
             var updated = LockerRepository.GetLockerByGuid(locker.Guid, database.ConnectionString);
@@ -103,6 +109,48 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             Assert.Equal("new-hash", updated.Password);
             Assert.Equal("/tmp/Updated", updated.LockerLocation);
             Assert.True(updated.IsLocked);
+            Assert.Equal(LockerArchiveService.CurrentStorageFormatVersion, updated.StorageFormatVersion);
+            Assert.Equal("def456", updated.LockedArchiveSha256);
+            Assert.NotNull(updated.LockedAtUtc);
+        }
+
+        [Fact]
+        public void InitializeDatabase_ShouldMigrateArchiveMetadataColumns()
+        {
+            using var database = TestDatabase.Create();
+            using (var connection = new SqliteConnection(database.ConnectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    CREATE TABLE Lockers (
+                        Guid TEXT PRIMARY KEY,
+                        LockerName TEXT NOT NULL UNIQUE,
+                        Password TEXT NOT NULL,
+                        LockerLocation TEXT NOT NULL,
+                        IsLocked INTEGER NOT NULL DEFAULT 0,
+                        CreatedAt TEXT NOT NULL DEFAULT (datetime('now')),
+                        UpdatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+                    )";
+                command.ExecuteNonQuery();
+            }
+
+            LockerRepository.InitializeDatabase(database.ConnectionString);
+
+            using var migratedConnection = new SqliteConnection(database.ConnectionString);
+            migratedConnection.Open();
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var migratedCommand = migratedConnection.CreateCommand();
+            migratedCommand.CommandText = "PRAGMA table_info(Lockers)";
+            using var reader = migratedCommand.ExecuteReader();
+            while (reader.Read())
+            {
+                columns.Add(reader.GetString(1));
+            }
+
+            Assert.Contains("StorageFormatVersion", columns);
+            Assert.Contains("LockedArchiveSha256", columns);
+            Assert.Contains("LockedAtUtc", columns);
         }
 
         [Fact]
@@ -187,7 +235,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             return new LockerModel(name, "hashed-password", $"/tmp/{name}")
             {
                 Guid = Guid.NewGuid().ToString(),
-                IsLocked = isLocked
+                IsLocked = isLocked,
+                StorageFormatVersion = isLocked ? LockerArchiveService.CurrentStorageFormatVersion : null,
+                LockedArchiveSha256 = isLocked ? "abc123" : null,
+                LockedAtUtc = isLocked ? DateTime.UtcNow : null
             };
         }
 

@@ -18,7 +18,9 @@
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
+using System.Globalization;
 using Microsoft.Data.Sqlite;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
@@ -52,11 +54,18 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         Password TEXT NOT NULL,
                         LockerLocation TEXT NOT NULL,
                         IsLocked INTEGER NOT NULL DEFAULT 0,
+                        StorageFormatVersion INTEGER NULL,
+                        LockedArchiveSha256 TEXT NULL,
+                        LockedAtUtc TEXT NULL,
                         CreatedAt TEXT NOT NULL DEFAULT (datetime('now')),
                         UpdatedAt TEXT NOT NULL DEFAULT (datetime('now'))
                     )";
                 command.ExecuteNonQuery();
+                EnsureColumn(connection, "StorageFormatVersion", "INTEGER NULL");
+                EnsureColumn(connection, "LockedArchiveSha256", "TEXT NULL");
+                EnsureColumn(connection, "LockedAtUtc", "TEXT NULL");
 
+                ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, "Database initialized successfully");
             }
             catch (Exception ex)
@@ -84,17 +93,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked FROM Lockers ORDER BY LockerName";
+                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    var locker = new LockerModel(
-                        reader.GetString(1), // LockerName
-                        reader.GetString(2), // Password
-                        reader.GetString(3) // LockerLocation
-                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
-                    lockers.Add(locker);
+                    lockers.Add(ReadLocker(reader));
                 }
 
                 Logger.Log(LogLevel.Info, $"Loaded {lockers.Count} lockers from database");
@@ -124,17 +128,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked FROM Lockers WHERE Guid = $guid";
+                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
                 command.Parameters.AddWithValue("$guid", guid);
 
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    return new LockerModel(
-                        reader.GetString(1), // LockerName
-                        reader.GetString(2), // Password
-                        reader.GetString(3) // LockerLocation
-                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
+                    return ReadLocker(reader);
                 }
             }
             catch (Exception ex)
@@ -162,17 +162,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
+                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
                 command.Parameters.AddWithValue("$name", name);
 
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    return new LockerModel(
-                        reader.GetString(1), // LockerName
-                        reader.GetString(2), // Password
-                        reader.GetString(3) // LockerLocation
-                    ) { Guid = reader.GetString(0), IsLocked = reader.GetInt32(4) == 1 };
+                    return ReadLocker(reader);
                 }
             }
             catch (Exception ex)
@@ -201,17 +197,21 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO Lockers (Guid, LockerName, Password, LockerLocation, IsLocked)
-                    VALUES ($guid, $name, $password, $location, $isLocked)";
+                    INSERT INTO Lockers (Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc)
+                    VALUES ($guid, $name, $password, $location, $isLocked, $storageFormatVersion, $lockedArchiveSha256, $lockedAtUtc)";
 
                 command.Parameters.AddWithValue("$guid", locker.Guid);
                 command.Parameters.AddWithValue("$name", locker.LockerName);
                 command.Parameters.AddWithValue("$password", locker.Password);
                 command.Parameters.AddWithValue("$location", locker.LockerLocation);
                 command.Parameters.AddWithValue("$isLocked", locker.IsLocked ? 1 : 0);
+                command.Parameters.AddWithValue("$storageFormatVersion", (object?)locker.StorageFormatVersion ?? DBNull.Value);
+                command.Parameters.AddWithValue("$lockedArchiveSha256", (object?)locker.LockedArchiveSha256 ?? DBNull.Value);
+                command.Parameters.AddWithValue("$lockedAtUtc", FormatDateTime(locker.LockedAtUtc));
 
                 command.ExecuteNonQuery();
 
+                ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, $"Inserted locker '{locker.LockerName}' into database");
             }
             catch (SqliteException ex) when (ex.SqliteErrorCode == 19) // SQLITE_CONSTRAINT
@@ -248,6 +248,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         Password = $password,
                         LockerLocation = $location,
                         IsLocked = $isLocked,
+                        StorageFormatVersion = $storageFormatVersion,
+                        LockedArchiveSha256 = $lockedArchiveSha256,
+                        LockedAtUtc = $lockedAtUtc,
                         UpdatedAt = datetime('now')
                     WHERE Guid = $guid";
 
@@ -256,6 +259,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 command.Parameters.AddWithValue("$password", locker.Password);
                 command.Parameters.AddWithValue("$location", locker.LockerLocation);
                 command.Parameters.AddWithValue("$isLocked", locker.IsLocked ? 1 : 0);
+                command.Parameters.AddWithValue("$storageFormatVersion", (object?)locker.StorageFormatVersion ?? DBNull.Value);
+                command.Parameters.AddWithValue("$lockedArchiveSha256", (object?)locker.LockedArchiveSha256 ?? DBNull.Value);
+                command.Parameters.AddWithValue("$lockedAtUtc", FormatDateTime(locker.LockedAtUtc));
 
                 var rowsAffected = command.ExecuteNonQuery();
 
@@ -265,6 +271,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     throw new InvalidOperationException($"Locker with GUID '{locker.Guid}' not found.");
                 }
 
+                ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, $"Updated locker '{locker.LockerName}' in database");
             }
             catch (Exception ex)
@@ -302,6 +309,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 }
 
                 Logger.Log(LogLevel.Info, $"Deleted locker with GUID '{guid}' from database");
+                ApplyDatabasePermissions(connectionString);
             }
             catch (Exception ex)
             {
@@ -372,6 +380,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 }
 
                 var reclaimed = sizeBefore - sizeAfter;
+                ApplyDatabasePermissions(connectionString, databasePath);
                 Logger.Log(LogLevel.Info, $"Database vacuumed. Size before: {sizeBefore} bytes, after: {sizeAfter} bytes. Reclaimed: {reclaimed} bytes");
 
                 return reclaimed;
@@ -434,6 +443,89 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 Logger.Log(LogLevel.Error, $"Failed to get database info: {ex.Message}", ex);
                 throw;
             }
+        }
+
+        private static void EnsureColumn(SqliteConnection connection, string columnName, string definition)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA table_info(Lockers)";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (reader.GetString(1).Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+
+            using var alterCommand = connection.CreateCommand();
+            alterCommand.CommandText = $"ALTER TABLE Lockers ADD COLUMN {columnName} {definition}";
+            alterCommand.ExecuteNonQuery();
+        }
+
+        private static void ApplyDatabasePermissions(string connectionString, string? explicitDatabasePath = null)
+        {
+            var databasePath = explicitDatabasePath ?? TryGetDatabasePath(connectionString);
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                return;
+            }
+
+            var directory = Path.GetDirectoryName(databasePath);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                AppFilePermissions.EnsurePrivateDirectory(directory);
+            }
+
+            AppFilePermissions.ApplyPrivateFile(databasePath);
+            AppFilePermissions.ApplyPrivateFile($"{databasePath}-shm");
+            AppFilePermissions.ApplyPrivateFile($"{databasePath}-wal");
+        }
+
+        private static string? TryGetDatabasePath(string connectionString)
+        {
+            try
+            {
+                return new SqliteConnectionStringBuilder(connectionString).DataSource;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        private static LockerModel ReadLocker(SqliteDataReader reader)
+        {
+            return new LockerModel(
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3))
+            {
+                Guid = reader.GetString(0),
+                IsLocked = reader.GetInt32(4) == 1,
+                StorageFormatVersion = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                LockedArchiveSha256 = reader.IsDBNull(6) ? null : reader.GetString(6),
+                LockedAtUtc = reader.IsDBNull(7) ? null : ParseDateTime(reader.GetString(7))
+            };
+        }
+
+        private static object FormatDateTime(DateTime? value)
+        {
+            return value.HasValue
+                ? value.Value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)
+                : DBNull.Value;
+        }
+
+        private static DateTime? ParseDateTime(string value)
+        {
+            return DateTime.TryParse(
+                value,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var parsed)
+                ? parsed
+                : null;
         }
     }
 

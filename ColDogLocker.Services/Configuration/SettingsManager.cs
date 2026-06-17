@@ -17,6 +17,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Logging;
 using Newtonsoft.Json;
 
@@ -190,9 +191,9 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
 
                 // Ensure the directory exists
                 var directory = Path.GetDirectoryName(_settingsFile);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                if (!string.IsNullOrEmpty(directory))
                 {
-                    Directory.CreateDirectory(directory);
+                    AppFilePermissions.EnsurePrivateDirectory(directory);
                 }
 
                 // Create a temporary file first to ensure atomic writes
@@ -204,6 +205,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
 
                 // Write to temporary file first
                 File.WriteAllText(tempFile, jsonContent);
+                AppFilePermissions.ApplyPrivateFile(tempFile);
 
                 const int MaxWriteAttempts = 5;
                 const int WriteDelayMs = 100;
@@ -213,6 +215,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     try
                     {
                         File.Move(tempFile, _settingsFile, true);
+                        AppFilePermissions.ApplyPrivateFile(_settingsFile);
                         break;
                     }
                     catch (Exception) when (attempt < MaxWriteAttempts)
@@ -276,6 +279,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     var backupFileName = $"settings_corrupted_{timestamp}.json.bak";
                     var backupFile = Path.Combine(backupDirectory, backupFileName);
                     File.Copy(_settingsFile, backupFile, true);
+                    AppFilePermissions.ApplyPrivateFile(backupFile);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
             }

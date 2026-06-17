@@ -431,12 +431,161 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             }
         }
 
+        [Fact]
+        public async Task DownloadUpdateAsync_HttpDownloadUrl_ShouldRejectWithoutRequest()
+        {
+            // Arrange
+            var tempDirectory = CreateTempDirectory();
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>(),
+                currentVersion: "1.2.0",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                downloadDirectory: tempDirectory);
+
+            var updateInfo = new UpdateCheckResult
+            {
+                UpdateAvailable = true,
+                CanDownload = true,
+                DownloadUrl = "http://api.test/download/cdl.msi",
+                InstallerFileName = "cdl.msi",
+                AssetDigest = Sha256Digest("installer")
+            };
+
+            try
+            {
+                // Act
+                var exception = await Assert.ThrowsAsync<UpdateException>(() => service.DownloadUpdateAsync(updateInfo));
+
+                // Assert
+                Assert.Equal(UpdateFailureKind.InvalidDownloadUrl, exception.FailureKind);
+                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+            }
+            finally
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsync_UnexpectedHost_ShouldRejectWithoutRequest()
+        {
+            // Arrange
+            var tempDirectory = CreateTempDirectory();
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>(),
+                currentVersion: "1.2.0",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                downloadDirectory: tempDirectory);
+
+            var updateInfo = new UpdateCheckResult
+            {
+                UpdateAvailable = true,
+                CanDownload = true,
+                DownloadUrl = "https://evil.example/download/cdl.msi",
+                InstallerFileName = "cdl.msi",
+                AssetDigest = Sha256Digest("installer")
+            };
+
+            try
+            {
+                // Act
+                var exception = await Assert.ThrowsAsync<UpdateException>(() => service.DownloadUpdateAsync(updateInfo));
+
+                // Assert
+                Assert.Equal(UpdateFailureKind.InvalidDownloadUrl, exception.FailureKind);
+                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+            }
+            finally
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsync_DownloadExceedsLimit_ShouldNotWriteFile()
+        {
+            // Arrange
+            var bytes = Encoding.UTF8.GetBytes("installer payload");
+            var tempDirectory = CreateTempDirectory();
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>
+                {
+                    ["/download/cdl.msi"] = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new ByteArrayContent(bytes)
+                    }
+                },
+                currentVersion: "1.2.0",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                downloadDirectory: tempDirectory,
+                maxDownloadBytes: bytes.Length - 1);
+
+            var updateInfo = new UpdateCheckResult
+            {
+                UpdateAvailable = true,
+                CanDownload = true,
+                DownloadUrl = "https://api.test/download/cdl.msi",
+                InstallerFileName = "cdl.msi",
+                AssetDigest = Sha256Digest(bytes)
+            };
+
+            try
+            {
+                // Act
+                var exception = await Assert.ThrowsAsync<UpdateException>(() => service.DownloadUpdateAsync(updateInfo));
+
+                // Assert
+                Assert.Equal(UpdateFailureKind.DownloadTooLarge, exception.FailureKind);
+                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+            }
+            finally
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+
+        [Fact]
+        public async Task DownloadUpdateAsync_NonHexSha256Digest_ShouldRejectWithoutWritingFile()
+        {
+            // Arrange
+            var tempDirectory = CreateTempDirectory();
+            using var service = CreateService(
+                new Dictionary<string, HttpResponseMessage>(),
+                currentVersion: "1.2.0",
+                platform: new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows },
+                downloadDirectory: tempDirectory);
+
+            var updateInfo = new UpdateCheckResult
+            {
+                UpdateAvailable = true,
+                CanDownload = true,
+                DownloadUrl = "https://api.test/download/cdl.msi",
+                InstallerFileName = "cdl.msi",
+                AssetDigest = $"sha256:{new string('z', 64)}"
+            };
+
+            try
+            {
+                // Act
+                var exception = await Assert.ThrowsAsync<UpdateException>(() => service.DownloadUpdateAsync(updateInfo));
+
+                // Assert
+                Assert.Equal(UpdateFailureKind.MissingDigest, exception.FailureKind);
+                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+            }
+            finally
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+
         private static GitHubUpdateService CreateService(
             Dictionary<string, HttpResponseMessage> responses,
             string currentVersion,
             UpdatePlatform platform,
             UpdateChannel channel = UpdateChannel.Stable,
-            string? downloadDirectory = null)
+            string? downloadDirectory = null,
+            long? maxDownloadBytes = null)
         {
             var client = new HttpClient(new StubHttpMessageHandler(responses))
             {
@@ -449,6 +598,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 {
                     ApiBaseUrl = "https://api.test",
                     CurrentVersion = currentVersion,
+                    AllowedDownloadHosts = ["api.test", "downloads.example"],
+                    MaxDownloadBytes = maxDownloadBytes ?? 1024L * 1024L * 1024L,
                     PlatformDetector = () => platform,
                     DownloadDirectoryProvider = () => downloadDirectory ?? CreateTempDirectory()
                 },
