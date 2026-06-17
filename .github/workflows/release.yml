@@ -68,10 +68,10 @@ jobs:
             ]
             next_sequence = max(existing_sequences, default=0) + 1
             release_version = f"{base_version}-{prerelease_label}.{next_sequence}"
-            release_flags = "--prerelease"
+            release_flags = "--prerelease --latest=false" if prerelease_label in {"alpha", "beta"} else "--latest"
         else:
             release_version = version
-            release_flags = ""
+            release_flags = "--latest"
             tag_name = f"v{release_version}"
             if tag_name in existing_refs:
                 raise SystemExit(f"Release tag '{tag_name}' already exists. Bump Version before publishing a stable release.")
@@ -340,6 +340,7 @@ jobs:
           --title "$RELEASE_NAME" \
           --notes-file release-notes.md)
         if [ -n "$RELEASE_FLAGS" ]; then
-          args+=("$RELEASE_FLAGS")
+          read -r -a release_flags <<< "$RELEASE_FLAGS"
+          args+=("${release_flags[@]}")
         fi
         "${args[@]}"

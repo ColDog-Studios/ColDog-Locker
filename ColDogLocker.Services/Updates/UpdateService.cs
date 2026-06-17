@@ -222,6 +222,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public Func<string> DownloadDirectoryProvider { get; set; } =
             () => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
+        public bool AllowLoopbackHttpDownloadsForTesting { get; set; }
     }
 
     public static class UpdateService
@@ -243,6 +245,98 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         {
             var result = await _defaultService.Value.DownloadUpdateAsync(updateInfo, cancellationToken);
             return result.FilePath;
+        }
+
+        internal static UpdateServiceOptions CreateDefaultOptions()
+        {
+            var options = new UpdateServiceOptions();
+            if (!IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_ENABLE_UPDATE_OVERRIDES")))
+            {
+                return options;
+            }
+
+            var apiBaseUrl = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_API_BASE_URL");
+            if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+            {
+                options.ApiBaseUrl = apiBaseUrl;
+            }
+
+            var currentVersion = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_CURRENT_VERSION");
+            if (!string.IsNullOrWhiteSpace(currentVersion))
+            {
+                options.CurrentVersion = currentVersion;
+            }
+
+            var downloadDirectory = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_DOWNLOAD_DIR");
+            if (!string.IsNullOrWhiteSpace(downloadDirectory))
+            {
+                options.DownloadDirectoryProvider = () => downloadDirectory;
+            }
+
+            var platform = CreateE2EPlatform(Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_PLATFORM"));
+            if (platform != null)
+            {
+                options.PlatformDetector = () => platform;
+            }
+
+            if (IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_ALLOW_LOOPBACK_HTTP")))
+            {
+                options.AllowLoopbackHttpDownloadsForTesting = true;
+            }
+
+            return options;
+        }
+
+        private static UpdatePlatform? CreateE2EPlatform(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = value.Trim().ToLowerInvariant();
+            var parts = normalized.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length == 0)
+            {
+                return null;
+            }
+
+            var architecture = parts.Length > 1 ? ParseArchitecture(parts[^1]) : RuntimeInformation.ProcessArchitecture;
+            return parts[0] switch
+            {
+                "windows" or "win" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = architecture },
+                "macos" or "osx" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = architecture },
+                "linux" when parts.Contains("deb") => new UpdatePlatform
+                {
+                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Deb, Architecture = architecture
+                },
+                "linux" when parts.Contains("rpm") => new UpdatePlatform
+                {
+                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Rpm, Architecture = architecture
+                },
+                "linux" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Linux, Architecture = architecture },
+                _ => null
+            };
+        }
+
+        private static Architecture ParseArchitecture(string value)
+        {
+            return value switch
+            {
+                "x64" or "amd64" => Architecture.X64,
+                "arm64" or "aarch64" => Architecture.Arm64,
+                "x86" or "i386" => Architecture.X86,
+                "arm" or "armv7" or "arm32" => Architecture.Arm,
+                _ => RuntimeInformation.ProcessArchitecture
+            };
+        }
+
+        private static bool IsEnabled(string? value)
+        {
+            return value is not null &&
+                   (value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("yes", StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -412,7 +506,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public static GitHubUpdateService CreateDefault()
         {
-            var options = new UpdateServiceOptions();
+            var options = UpdateService.CreateDefaultOptions();
             var client = new HttpClient { Timeout = options.Timeout };
             return new GitHubUpdateService(client, options, disposeHttpClient: true);
         }
@@ -659,7 +753,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         private Uri ValidateDownloadUri(string downloadUrl)
         {
             if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri) ||
-                !uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                !IsAllowedDownloadScheme(uri) ||
                 !IsAllowedDownloadHost(uri.Host))
             {
                 Logger.Log(LogLevel.Warning, $"Rejected unsafe update download URL: {downloadUrl}");
@@ -672,7 +766,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         private void ValidateFinalDownloadUri(Uri uri)
         {
-            if (!uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) || !IsAllowedDownloadHost(uri.Host))
+            if (!IsAllowedDownloadScheme(uri) || !IsAllowedDownloadHost(uri.Host))
             {
                 Logger.Log(LogLevel.Warning, $"Rejected unsafe update redirect URL: {uri}");
                 throw new UpdateException(UpdateFailureKind.InvalidDownloadUrl,
@@ -682,8 +776,27 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         private bool IsAllowedDownloadHost(string host)
         {
+            if (_options.AllowLoopbackHttpDownloadsForTesting && IsLoopbackHost(host))
+            {
+                return true;
+            }
+
             return _options.AllowedDownloadHosts.Any(allowedHost =>
                 host.Equals(allowedHost, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool IsAllowedDownloadScheme(Uri uri)
+        {
+            return uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                   (_options.AllowLoopbackHttpDownloadsForTesting &&
+                    uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                    IsLoopbackHost(uri.Host));
+        }
+
+        private static bool IsLoopbackHost(string host)
+        {
+            return host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                   IPAddress.TryParse(host, out var address) && IPAddress.IsLoopback(address);
         }
 
         private async Task<UpdateDownloadResult> DownloadAndVerifyUpdateAsync(

@@ -35,6 +35,12 @@ Only `alpha`, `beta`, and `rc` prerelease labels are accepted by the automated m
 v0.8.0
 ```
 
+GitHub release classification is label-specific:
+
+- Stable versions with no suffix are full releases and are explicitly marked latest.
+- `rc` versions keep the sequenced `-rc.<sequence>` tag, but are published as full releases and explicitly marked latest.
+- `alpha` and `beta` versions are published as prereleases and explicitly marked not latest.
+
 Automated package builds override the MSBuild `Version` value with the computed release version. Package filenames, package metadata, and the generated `AppInfo.SemanticVersion` value inside the app therefore match the GitHub release tag used by update checks.
 
 ## Automated Flow
