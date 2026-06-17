@@ -5,8 +5,7 @@ This directory contains maintainer and agent *(clanker)*-facing context for ColD
 ## Contents
 
 - [Architecture](architecture.md) - solution layout, dependency flow, lifecycle notes, and maintainer guidance.
-- [GUI Status and Plans](gui-plans.md) - Avalonia, WPF migration, TUI, and GUI launcher status.
+- [GUI Status and Plans](gui-plans.md) - Avalonia, TUI, and GUI launcher status.
 - [Distribution Plan](distribution-plan.md) - packaging direction, release scope, update behavior, and open distribution decisions.
 - [Local Packaging](packaging.md) - local installer/package build commands and validation notes.
 - [Release Automation](release-automation.md) - release workflow, version/tag policy, package build entrypoints, and validation checklist.
-

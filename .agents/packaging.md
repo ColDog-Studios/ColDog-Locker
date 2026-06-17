@@ -27,8 +27,6 @@ On macOS, the CLI is installed as `/usr/local/bin/cdlocker`, the man page is ins
 
 Each installer/package is intentionally a combined app package. The CLI and GUI are not built or distributed as separate installers.
 
-The legacy WPF project is not packaged.
-
 ## Prerequisites
 
 - .NET SDK 10.

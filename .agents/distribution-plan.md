@@ -31,7 +31,6 @@ This differs from older framework-dependent, separate-DLL planning.
 | --- | --- | --- |
 | `cdlocker` / `cdlocker.exe` | `ColDogLocker.Cli` | CLI, TUI launcher, GUI launcher, automation surface. |
 | `ColDogLocker.exe` / `ColDogLocker` | `ColDogLocker.Avalonia` | Active graphical interface. |
-| `ColDogLocker.exe` | `ColDogLocker.Gui.WPF` | Legacy Windows WPF GUI kept temporarily as a migration reference. |
 
 The `Application` and `Infrastructure` DLLs from older planning docs are not part of the current solution.
 
@@ -101,12 +100,6 @@ dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Bui
 
 See [Local Packaging](packaging.md) for prerequisites, exact commands, and output paths.
 
-WPF GUI:
-
-```bash
-dotnet publish ColDogLocker.Gui.WPF/ColDogLocker.Gui.WPF.csproj -c Release -r win-x64
-```
-
 Avalonia GUI:
 
 ```bash
@@ -131,7 +124,7 @@ ColDog Locker\
 └── README.md
 ```
 
-In the recommended package, `ColDogLocker.exe` is the Avalonia GUI. If the legacy WPF app is packaged temporarily, keep it in a separate folder because it uses the same executable name. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
+In the recommended package, `ColDogLocker.exe` is the Avalonia GUI. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
 
 ## User Data
 
