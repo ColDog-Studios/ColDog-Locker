@@ -87,7 +87,14 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             // Arrange
             var update = CreateDownloadableUpdate();
             var download = new UpdateDownloadResult { FilePath = @"C:\Downloads\ColDogLocker.msi", BytesDownloaded = 1234, Sha256 = "abc123" };
-            var service = new StubUpdateService { CheckResult = update, DownloadResult = download };
+            var install = new UpdateInstallResult
+            {
+                FilePath = download.FilePath,
+                Command = "msiexec.exe /i C:\\Downloads\\ColDogLocker.msi",
+                InstallerStarted = true,
+                UserMessage = "Installer started."
+            };
+            var service = new StubUpdateService { CheckResult = update, DownloadResult = download, InstallResult = install };
             var host = new RecordingUpdateDialogHost { ConfirmDownload = true };
             var workflow = new UpdateWorkflow(service, host);
 
@@ -95,16 +102,19 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var result = await workflow.RunAsync();
 
             // Assert
-            Assert.Equal(UpdateWorkflowStatus.Downloaded, result.Status);
+            Assert.Equal(UpdateWorkflowStatus.Installed, result.Status);
             Assert.Same(update, result.Update);
             Assert.Same(download, result.Download);
+            Assert.Same(install, result.Install);
             Assert.Equal(1, service.DownloadCount);
+            Assert.Equal(1, service.InstallCount);
             var confirmation = Assert.Single(host.Confirmations);
             Assert.Equal("Update Available", confirmation.Title);
             Assert.Contains("Would you like to download and install it now?", confirmation.Message);
             var message = Assert.Single(host.Messages);
-            Assert.Equal("Download Complete", message.Title);
+            Assert.Equal("Installer Started", message.Title);
             Assert.Contains(download.FilePath, message.Message);
+            Assert.Contains("Installer started.", message.Message);
             Assert.Empty(host.Errors);
         }
 
@@ -172,10 +182,41 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             Assert.Same(update, result.Update);
             Assert.Same(exception, result.Exception);
             Assert.Equal(1, service.DownloadCount);
+            Assert.Equal(0, service.InstallCount);
             Assert.Single(host.Confirmations);
             var error = Assert.Single(host.Errors);
             Assert.Equal("Download Failed", error.Title);
             Assert.Contains("Could not save installer", error.Message);
+            Assert.Same(exception, error.Exception);
+            Assert.Empty(host.Messages);
+        }
+
+        [Fact]
+        public async Task RunAsync_InstallException_ReportsErrorAndLeavesDownload()
+        {
+            // Arrange
+            var update = CreateDownloadableUpdate();
+            var download = new UpdateDownloadResult { FilePath = "/home/user/Downloads/ColDogLocker.deb", BytesDownloaded = 1234, Sha256 = "abc123" };
+            var exception = new UpdateException(UpdateFailureKind.InstallFailed, "Package manager failed");
+            var service = new StubUpdateService { CheckResult = update, DownloadResult = download, InstallException = exception };
+            var host = new RecordingUpdateDialogHost { ConfirmDownload = true };
+            var workflow = new UpdateWorkflow(service, host);
+
+            // Act
+            var result = await workflow.RunAsync();
+
+            // Assert
+            Assert.Equal(UpdateWorkflowStatus.InstallFailed, result.Status);
+            Assert.Same(update, result.Update);
+            Assert.Same(download, result.Download);
+            Assert.Same(exception, result.Exception);
+            Assert.Equal(1, service.DownloadCount);
+            Assert.Equal(1, service.InstallCount);
+            Assert.Single(host.Confirmations);
+            var error = Assert.Single(host.Errors);
+            Assert.Equal("Install Failed", error.Title);
+            Assert.Contains(download.FilePath, error.Message);
+            Assert.Contains("Package manager failed", error.Message);
             Assert.Same(exception, error.Exception);
             Assert.Empty(host.Messages);
         }
@@ -199,11 +240,15 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         {
             public UpdateCheckResult? CheckResult { get; set; }
             public UpdateDownloadResult? DownloadResult { get; set; }
+            public UpdateInstallResult? InstallResult { get; set; }
             public Exception? CheckException { get; set; }
             public Exception? DownloadException { get; set; }
+            public Exception? InstallException { get; set; }
             public int CheckCount { get; private set; }
             public int DownloadCount { get; private set; }
+            public int InstallCount { get; private set; }
             public UpdateCheckResult? DownloadUpdate { get; private set; }
+            public UpdateDownloadResult? InstallDownload { get; private set; }
 
             public Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
             {
@@ -230,6 +275,21 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 }
 
                 return Task.FromResult(DownloadResult ?? new UpdateDownloadResult());
+            }
+
+            public Task<UpdateInstallResult> InstallUpdateAsync(
+                UpdateDownloadResult download,
+                CancellationToken cancellationToken = default)
+            {
+                InstallCount++;
+                InstallDownload = download;
+
+                if (InstallException != null)
+                {
+                    throw InstallException;
+                }
+
+                return Task.FromResult(InstallResult ?? new UpdateInstallResult { FilePath = download.FilePath, InstallerStarted = true });
             }
         }
 

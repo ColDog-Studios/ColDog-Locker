@@ -136,7 +136,7 @@ Settings writes use a temporary file and replacement flow so a failed write is l
 
 ## Updates
 
-Update checks use `UpdateService` and GitHub Releases. The active update channel controls whether stable or unstable releases are considered. The CLI can check, show release notes, and download a matching installer package, but it does not install updates automatically.
+Update checks use `UpdateService` and GitHub Releases. The active update channel controls whether stable or unstable releases are considered. The CLI can check, show release notes, download a matching installer package, and hand it to the platform installer after digest verification. Windows launches the installer elevated. Linux installs `.deb`/`.rpm` packages through the available system package manager using root, `pkexec`, or `sudo`. macOS update installation remains manual/experimental.
 
 ## Versioning
 

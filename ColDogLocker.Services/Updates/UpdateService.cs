@@ -32,6 +32,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
     {
         Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default);
         Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken = default);
+        Task<UpdateInstallResult> InstallUpdateAsync(UpdateDownloadResult download, CancellationToken cancellationToken = default);
     }
 
     public class UpdateCheckResult
@@ -72,6 +73,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         Network,
         Timeout,
         FileSystem,
+        InstallFailed,
         Unknown
     }
 
@@ -235,16 +237,19 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return _defaultService.Value.CheckForUpdatesAsync(cancellationToken);
         }
 
-        public static async Task<string> DownloadUpdateAsync(UpdateCheckResult updateInfo)
+        public static Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo)
         {
-            var result = await _defaultService.Value.DownloadUpdateAsync(updateInfo);
-            return result.FilePath;
+            return _defaultService.Value.DownloadUpdateAsync(updateInfo);
         }
 
-        public static async Task<string> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken)
+        public static Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken)
         {
-            var result = await _defaultService.Value.DownloadUpdateAsync(updateInfo, cancellationToken);
-            return result.FilePath;
+            return _defaultService.Value.DownloadUpdateAsync(updateInfo, cancellationToken);
+        }
+
+        public static Task<UpdateInstallResult> InstallUpdateAsync(UpdateDownloadResult download, CancellationToken cancellationToken = default)
+        {
+            return _defaultService.Value.InstallUpdateAsync(download, cancellationToken);
         }
 
         internal static UpdateServiceOptions CreateDefaultOptions()
@@ -502,6 +507,19 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             Logger.Log(LogLevel.Info, $"Successfully downloaded and verified update: {targetPath}");
             return result;
+        }
+
+        public Task<UpdateInstallResult> InstallUpdateAsync(
+            UpdateDownloadResult download,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(download.FilePath))
+            {
+                throw new UpdateException(UpdateFailureKind.InstallFailed, "The downloaded update does not include an installer path.");
+            }
+
+            var installer = new UpdateInstaller();
+            return installer.InstallAsync(download.FilePath, _options.PlatformDetector(), cancellationToken);
         }
 
         public static GitHubUpdateService CreateDefault()

@@ -44,14 +44,15 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 if (!download)
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Run `cdlocker update --download` to download and verify the installer.");
+                    Console.WriteLine("Run `cdlocker update --download` to download, verify, and start the installer.");
                     return 0;
                 }
 
                 var downloadResult = UpdateService.DownloadUpdateAsync(result).GetAwaiter().GetResult();
+                var installResult = UpdateService.InstallUpdateAsync(downloadResult).GetAwaiter().GetResult();
                 Console.WriteLine();
-                Console.WriteLine($"Downloaded: {downloadResult}");
-                Console.WriteLine("Run the installer to complete the update.");
+                Console.WriteLine($"Downloaded: {downloadResult.FilePath}");
+                Console.WriteLine(installResult.UserMessage);
                 return 0;
             }
             catch (UpdateException ex)

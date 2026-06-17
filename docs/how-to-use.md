@@ -209,13 +209,13 @@ cdlocker update
 
 Release notes are shown automatically when available.
 
-Download and verify a matching installer when one is available:
+Download, verify, and start a matching installer when one is available:
 
 ```bash
 cdlocker update --download
 ```
 
-Downloaded installers still need to be run manually.
+Windows starts the installer after verification. Linux installs the verified `.deb` or `.rpm` package through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package.
 
 macOS update checks can report available releases, but automatic macOS downloads are disabled. Experimental macOS `.pkg` builds are unsigned, unnotarized, untested, and not treated as official support.
 

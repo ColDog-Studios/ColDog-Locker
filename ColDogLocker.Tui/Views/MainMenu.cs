@@ -157,20 +157,21 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         return;
                     }
 
-                    Console.Write("Do you want to download the latest version? (y/N): ");
+                    Console.Write("Do you want to download and install the latest version? (y/N): ");
 
                     var response = Console.ReadLine()?.ToLower();
                     if (response == "y")
                     {
                         try
                         {
-                            var filePath = await UpdateService.DownloadUpdateAsync(result);
-                            Console.WriteLine($"\nDownloaded the latest version to: {filePath}");
-                            Console.WriteLine("Please run the installer to update ColDog Locker.");
+                            var download = await UpdateService.DownloadUpdateAsync(result);
+                            var install = await UpdateService.InstallUpdateAsync(download);
+                            Console.WriteLine($"\nDownloaded the latest version to: {download.FilePath}");
+                            Console.WriteLine(install.UserMessage);
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"\nError downloading update: {ex.Message}");
+                            Console.WriteLine($"\nError downloading or installing update: {ex.Message}");
                         }
                     }
                     else

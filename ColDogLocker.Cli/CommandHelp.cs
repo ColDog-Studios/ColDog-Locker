@@ -266,7 +266,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  update channel and current platform.");
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
-                    Console.WriteLine("  --download    Download and verify the matching installer package");
+                    Console.WriteLine("  --download    Download, verify, and start the matching installer package");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker update");

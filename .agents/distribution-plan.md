@@ -152,7 +152,7 @@ Current behavior:
 - Platform detection chooses Windows, Linux DEB, Linux RPM, macOS, or unsupported.
 - Automatic download requires a matching asset and a GitHub `sha256:` digest.
 - Downloads go to the user's Downloads folder.
-- The installer must still be run manually.
+- `cdlocker update --download` starts installation after the digest check. Windows launches the verified installer elevated. Linux runs the verified `.deb`/`.rpm` through the local package manager with root, `pkexec`, or `sudo`. macOS remains manual/experimental.
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
 On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
@@ -208,7 +208,7 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 9. Confirm TUI workflows on non-GUI environments.
 10. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
 11. Confirm update asset naming and SHA-256 digest availability.
-12. Verify `cdlocker update` release notes and `cdlocker update --download` behavior after publishing.
+12. Verify `cdlocker update` release notes and `cdlocker update --download` download, verification, and installer handoff behavior after publishing.
 
 ## Open Distribution Decisions
 

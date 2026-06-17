@@ -190,6 +190,8 @@ Debian package purge removes reserved system config/data directories if they are
 
 On Fedora, use `rpm -qpi` and `rpm -qpl` to validate RPM metadata and installed paths without installing it. Use a clean machine or VM for real `sudo dnf install` / `sudo dnf remove` smoke tests.
 
+The updater installs verified Linux packages by selecting the package family from platform detection or the downloaded file extension. Debian-family packages use `apt-get`, `apt`, or `dpkg`. RPM-family packages use `dnf`, `yum`, `zypper`, or `rpm`. Linux updates intentionally remove the existing `coldog-locker` package before installing the verified package because Fedora/RPM testing showed local package replacement can require an uninstall-first flow, and the DEB path mirrors that conservative behavior until clean Debian/Ubuntu VM testing proves direct replacement is safe. Non-root installs prefer `pkexec` when a graphical authentication session is available, then fall back to `sudo`, then `pkexec`.
+
 ## macOS Package Layout
 
 The macOS `.pkg` is experimental, unsigned, unnotarized, and untested. It installs system-wide and may trigger Gatekeeper warnings or require manual override on first launch.
