@@ -32,6 +32,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             Assert.True(File.Exists(database.Path));
             Assert.Empty(LockerRepository.GetAllLockers(database.ConnectionString));
+            Assert.Equal(LockerRepository.CurrentSchemaVersion, GetSchemaVersion(database.ConnectionString));
         }
 
         [Fact]
@@ -151,6 +152,25 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             Assert.Contains("StorageFormatVersion", columns);
             Assert.Contains("LockedArchiveSha256", columns);
             Assert.Contains("LockedAtUtc", columns);
+            Assert.Equal(LockerRepository.CurrentSchemaVersion, GetSchemaVersion(database.ConnectionString));
+        }
+
+        [Fact]
+        public void InitializeDatabase_WithNewerSchemaVersion_ShouldThrowInvalidOperationException()
+        {
+            using var database = TestDatabase.Create();
+            using (var connection = new SqliteConnection(database.ConnectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"PRAGMA user_version = {LockerRepository.CurrentSchemaVersion + 1}";
+                command.ExecuteNonQuery();
+            }
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                LockerRepository.InitializeDatabase(database.ConnectionString));
+
+            Assert.Contains("newer than this application supports", exception.Message);
         }
 
         [Fact]
@@ -240,6 +260,15 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 LockedArchiveSha256 = isLocked ? "abc123" : null,
                 LockedAtUtc = isLocked ? DateTime.UtcNow : null
             };
+        }
+
+        private static int GetSchemaVersion(string connectionString)
+        {
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+            var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA user_version";
+            return Convert.ToInt32(command.ExecuteScalar());
         }
 
         private sealed class TestDatabase : IDisposable

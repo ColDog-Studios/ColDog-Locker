@@ -112,7 +112,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 return;
             }
 
-            if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
+            if (LockerService.LockerExistsInMemory(lockerName))
             {
                 Logger.Log(LogLevel.Warning, $"Locker creation failed: duplicate locker name {lockerName}");
                 Console.Write($"\nLocker '{lockerName}' already exists. Press Enter to continue...");

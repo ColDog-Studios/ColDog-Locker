@@ -58,7 +58,6 @@ jobs:
 
     - name: Run Unit Tests
       run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
-      continue-on-error: true
 
     - name: Upload Test Results
       uses: actions/upload-artifact@v7
@@ -348,11 +347,12 @@ jobs:
         echo "CLI E2E Tests (macOS): ${{ needs.cli-e2e-tests-macos.result }}"
         echo ""
 
-        if [ "${{ needs.unit-tests.result }}" = "failure" ] || \
-           [ "${{ needs.unit-tests-macos.result }}" = "failure" ] || \
-           [ "${{ needs.cli-e2e-tests-windows.result }}" = "failure" ] || \
-           [ "${{ needs.cli-e2e-tests-linux.result }}" = "failure" ] || \
-           [ "${{ needs.cli-e2e-tests-macos.result }}" = "failure" ]; then
+        if [ "${{ needs.unit-tests.result }}" != "success" ] || \
+           [ "${{ needs.unit-tests-linux.result }}" != "success" ] || \
+           [ "${{ needs.unit-tests-macos.result }}" != "success" ] || \
+           [ "${{ needs.cli-e2e-tests-windows.result }}" != "success" ] || \
+           [ "${{ needs.cli-e2e-tests-linux.result }}" != "success" ] || \
+           [ "${{ needs.cli-e2e-tests-macos.result }}" != "success" ]; then
           echo "Some critical tests failed."
           exit 1
         fi

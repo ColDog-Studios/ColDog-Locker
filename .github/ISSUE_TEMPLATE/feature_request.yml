@@ -2,8 +2,6 @@ name: Feature Request
 description: Request a Feature or Enhancement
 title: "Feature-Request"
 labels: ["type: feature"]
-projects:
-    - "ColDogStudios/ColDog Locker/2"
 body:
     - type: markdown
       attributes:
@@ -39,10 +37,9 @@ body:
           label: Version
           description: What version of ColDog Locker are you running?
           options:
-              - 0.6.1-alpha
-              - 0.6.0-alpha
-              - 0.4.0-alpha
-              - 0.2.0-pre
+              - 0.10.x-beta
+              - Built from source
+              - Other
       validations:
           required: true
     - type: dropdown

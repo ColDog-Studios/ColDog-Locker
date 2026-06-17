@@ -24,7 +24,54 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerService
     {
-        public static readonly List<LockerModel> Lockers = [];
+        private static readonly object _lockerStateLock = new();
+        private static readonly List<LockerModel> _lockers = [];
+
+        public static IReadOnlyList<LockerModel> Lockers => GetLockersSnapshot();
+
+        public static List<LockerModel> GetLockersSnapshot()
+        {
+            lock (_lockerStateLock)
+            {
+                return [.. _lockers];
+            }
+        }
+
+        public static LockerModel? FindLockerByName(string lockerName)
+        {
+            lock (_lockerStateLock)
+            {
+                return _lockers.FirstOrDefault(locker =>
+                    locker.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        public static LockerModel? FindLockerByGuid(string guid)
+        {
+            lock (_lockerStateLock)
+            {
+                return _lockers.FirstOrDefault(locker => locker.Guid == guid);
+            }
+        }
+
+        public static bool LockerExistsInMemory(string lockerName)
+        {
+            return FindLockerByName(lockerName) is not null;
+        }
+
+        internal static void ReplaceLockersForTesting(IEnumerable<LockerModel> lockers)
+        {
+            lock (_lockerStateLock)
+            {
+                _lockers.Clear();
+                _lockers.AddRange(lockers);
+            }
+        }
+
+        internal static void ClearLockersForTesting()
+        {
+            ReplaceLockersForTesting([]);
+        }
 
         /// <summary>
         ///     Load locker metadata from the database
@@ -34,13 +81,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             try
             {
                 Logger.Log(LogLevel.Debug, "Loading lockers.");
-                Lockers.Clear();
-                Lockers.AddRange(LockerRepository.GetAllLockers());
+                var loadedLockers = LockerRepository.GetAllLockers();
+                lock (_lockerStateLock)
+                {
+                    _lockers.Clear();
+                    _lockers.AddRange(loadedLockers);
+                }
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "An error occurred while loading lockers from database. Starting with empty locker list", ex);
-                Lockers.Clear(); // Ensure we have a clean state
+                Logger.Log(LogLevel.Error, "An error occurred while loading lockers from database. Keeping existing locker list.", ex);
             }
         }
 
@@ -54,7 +104,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             // But we can use this to sync the in-memory list back to the database if needed
             try
             {
-                foreach (var locker in Lockers)
+                foreach (var locker in GetLockersSnapshot())
                 {
                     UpdateLocker(locker);
                 }
@@ -88,7 +138,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             // Add the locker to the database and in-memory list
             LockerRepository.InsertLocker(locker);
-            Lockers.Add(locker);
+            lock (_lockerStateLock)
+            {
+                _lockers.Add(locker);
+            }
 
             Logger.Log(LogLevel.Info, $"{locker.LockerName} created successfully");
         }
@@ -142,7 +195,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             // Remove the locker from the database and in-memory list
             LockerRepository.DeleteLocker(locker.Guid);
-            Lockers.Remove(locker);
+            lock (_lockerStateLock)
+            {
+                _lockers.RemoveAll(existing => existing.Guid == locker.Guid);
+            }
 
             Logger.Log(LogLevel.Info, $"{locker.LockerName} removed successfully");
         }

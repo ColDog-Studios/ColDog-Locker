@@ -137,7 +137,7 @@ User data is per-user and remains outside Program Files and `/opt`:
 └── logs\
 ```
 
-The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `1`. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal leaves per-user app data in place, and Debian purge removes reserved system config/data directories if future versions add them.
+The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `0` so user data is preserved unless cleanup is explicitly requested. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal leaves per-user app data in place, and Debian purge removes reserved system config/data directories if future versions add them.
 
 The experimental macOS `.pkg` does not provide a native uninstall checkbox. Remove `/Applications/ColDog Locker.app` and `/usr/local/bin/cdlocker` manually during testing.
 

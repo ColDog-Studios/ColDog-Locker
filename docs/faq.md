@@ -66,7 +66,7 @@ Settings are stored in `settings.json`; logs are stored in `logs/`.
 
 ## Does locking delete my files?
 
-No. Locking encrypts file contents in place and replaces each plaintext file with encrypted bytes. Unlocking decrypts the files back in place.
+No. Locking writes the locker contents into an encrypted `locker.cdl` archive and removes the plaintext directory only after the archive succeeds. Unlocking authenticates and decrypts that archive back into the normal locker folder.
 
 ## Should I keep backups?
 

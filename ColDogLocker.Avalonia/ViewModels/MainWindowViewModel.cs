@@ -363,7 +363,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             return await Task.Run(() =>
             {
                 LockerService.LoadLockers();
-                var snapshot = LockerService.Lockers.ToArray();
+                var snapshot = LockerService.GetLockersSnapshot();
                 return snapshot.Select(CreateLockerItem).ToList();
             });
         }
@@ -451,7 +451,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 
         private LockerModel? FindLocker(LockerItemViewModel item)
         {
-            return LockerService.Lockers.FirstOrDefault(locker => locker.Guid == item.Guid);
+            return LockerService.FindLockerByGuid(item.Guid);
         }
 
         private async Task RunLockerOperationAsync(

@@ -120,6 +120,16 @@ jobs:
           dotnet test "$project" --no-build --configuration "${{ env.CONFIGURATION }}" --verbosity normal
         done <<< "${TEST_PROJECTS}"
 
+    - name: Publish CLI for E2E
+      shell: bash
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c "${{ env.CONFIGURATION }}" -o ./cli-publish
+
+    - name: Run CLI E2E tests
+      shell: bash
+      run: |
+        chmod +x ./cli-publish/cdlocker
+        python3 .github/scripts/cli_e2e.py --cli ./cli-publish/cdlocker --work-dir ./cli-e2e-work
+
   windows-packages:
     name: Windows Packages (${{ matrix.arch }})
     runs-on: windows-latest

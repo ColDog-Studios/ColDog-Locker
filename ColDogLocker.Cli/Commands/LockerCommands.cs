@@ -82,7 +82,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Check if locker already exists
-            if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
+            if (LockerService.LockerExistsInMemory(lockerName))
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' already exists.");
                 return 1;
@@ -183,8 +183,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var deleteDirectory = args.Contains("--delete");
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -222,11 +221,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Remove the locker
             try
             {
-                // Use LockerService.RemoveLocker to properly delete from database
-                // Note: RemoveLocker has a Console.ReadLine() which we need to avoid in CLI
-                LockerRepository.DeleteLocker(locker.Guid);
-                LockerService.Lockers.Remove(locker);
-                Logger.Log(LogLevel.Info, $"{lockerName} removed successfully.");
+                LockerService.RemoveLocker(locker);
 
                 // Delete directory if requested
                 if (deleteDirectory && Directory.Exists(locker.LockerLocation))
@@ -282,8 +277,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -362,8 +356,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -436,7 +429,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Apply filter
-            var lockers = LockerService.Lockers.AsEnumerable();
+            var lockers = LockerService.GetLockersSnapshot().AsEnumerable();
             if (filterLocked.HasValue)
             {
                 lockers = lockers.Where(l => l.IsLocked == filterLocked.Value);
@@ -495,8 +488,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var lockerName = args[1];
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -579,8 +571,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -701,8 +692,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var lockerName = args[1];
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {

@@ -230,21 +230,25 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
             {
                 Logger.Log(LogLevel.Error, "Access denied when saving settings", ex);
                 CleanupTempFile();
+                throw;
             }
             catch (DirectoryNotFoundException ex)
             {
                 Logger.Log(LogLevel.Error, "Settings directory not found", ex);
                 CleanupTempFile();
+                throw;
             }
             catch (JsonException ex)
             {
                 Logger.Log(LogLevel.Error, "Failed to serialize settings to JSON", ex);
                 CleanupTempFile();
+                throw;
             }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
                 CleanupTempFile();
+                throw;
             }
         }
 

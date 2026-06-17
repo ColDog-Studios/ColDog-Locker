@@ -24,9 +24,9 @@
     <a href="https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug_report.yml">Report Bug</a>
     ·
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=enhancement&template=feature_request.yml">Request Feature</a>
   </p>
 </div>
 
@@ -228,7 +228,7 @@ See the [open issues](https://github.com/ColDog-Studios/ColDog-Locker/issues) fo
 
 ## Contributing
 
-ColDog Locker is proprietary software and is not currently accepting public contributions. However, feedback and bug reports are always welcome!
+ColDog Locker is free software under the GNU GPLv3. Public contributions are not broadly accepted yet, but feedback and bug reports are always welcome!
 
 If you encounter a bug or have a suggestion for improvement:
 

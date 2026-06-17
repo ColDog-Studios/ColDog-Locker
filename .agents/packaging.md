@@ -137,7 +137,7 @@ The desktop shortcut is an MSI feature selected by default and targets the insta
 
 The Start Menu shortcut is installed by default.
 
-The MSI has a feature-tree option named `Remove stored config and data on uninstall`, selected by default. Silent uninstall can also set `REMOVE_USER_DATA_ON_UNINSTALL=0` to preserve ColDog Locker settings, logs, locker metadata, and the default locker folder.
+The MSI has a feature-tree option named `Remove stored config and data on uninstall`, but user data preservation is the default. Silent uninstall can set `REMOVE_USER_DATA_ON_UNINSTALL=1` to opt in to removing ColDog Locker settings, logs, locker metadata, and the default locker folder.
 
 Code signing is not configured.
 

@@ -26,7 +26,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithNoLockers_ShouldReturnEmptyList()
         {
             // Arrange
-            LockerService.Lockers.Clear();
+            LockerService.ClearLockersForTesting();
 
             // Act
             var result = LockerFilter.ListLockers(false);
@@ -39,9 +39,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithOnlyLockedLockers_FilteringForUnlocked_ShouldReturnEmptyList()
         {
             // Arrange
-            LockerService.Lockers.Clear();
-            LockerService.Lockers.Add(new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true });
-            LockerService.Lockers.Add(new LockerModel("Locker2", "pass2", "loc2") { IsLocked = true });
+            LockerService.ReplaceLockersForTesting([
+                new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true },
+                new LockerModel("Locker2", "pass2", "loc2") { IsLocked = true }
+            ]);
 
             // Act
             var result = LockerFilter.ListLockers(false);
@@ -54,9 +55,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithOnlyUnlockedLockers_FilteringForLocked_ShouldReturnEmptyList()
         {
             // Arrange
-            LockerService.Lockers.Clear();
-            LockerService.Lockers.Add(new LockerModel("Locker1", "pass1", "loc1") { IsLocked = false });
-            LockerService.Lockers.Add(new LockerModel("Locker2", "pass2", "loc2") { IsLocked = false });
+            LockerService.ReplaceLockersForTesting([
+                new LockerModel("Locker1", "pass1", "loc1") { IsLocked = false },
+                new LockerModel("Locker2", "pass2", "loc2") { IsLocked = false }
+            ]);
 
             // Act
             var result = LockerFilter.ListLockers(true);
@@ -69,14 +71,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_FilteringForLocked_ShouldReturnOnlyLockedLockers()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var lockedLocker1 = new LockerModel("LockedLocker1", "pass1", "loc1") { IsLocked = true };
             var lockedLocker2 = new LockerModel("LockedLocker2", "pass2", "loc2") { IsLocked = true };
             var unlockedLocker = new LockerModel("UnlockedLocker", "pass3", "loc3") { IsLocked = false };
 
-            LockerService.Lockers.Add(lockedLocker1);
-            LockerService.Lockers.Add(unlockedLocker);
-            LockerService.Lockers.Add(lockedLocker2);
+            LockerService.ReplaceLockersForTesting([lockedLocker1, unlockedLocker, lockedLocker2]);
 
             // Act
             var result = LockerFilter.ListLockers(true);
@@ -92,14 +91,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_FilteringForUnlocked_ShouldReturnOnlyUnlockedLockers()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var unlockedLocker1 = new LockerModel("UnlockedLocker1", "pass1", "loc1") { IsLocked = false };
             var unlockedLocker2 = new LockerModel("UnlockedLocker2", "pass2", "loc2") { IsLocked = false };
             var lockedLocker = new LockerModel("LockedLocker", "pass3", "loc3") { IsLocked = true };
 
-            LockerService.Lockers.Add(unlockedLocker1);
-            LockerService.Lockers.Add(lockedLocker);
-            LockerService.Lockers.Add(unlockedLocker2);
+            LockerService.ReplaceLockersForTesting([unlockedLocker1, lockedLocker, unlockedLocker2]);
 
             // Act
             var result = LockerFilter.ListLockers(false);
@@ -115,14 +111,13 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithMixedLockers_ShouldFilterCorrectly()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var locker1 = new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true };
             var locker2 = new LockerModel("Locker2", "pass2", "loc2") { IsLocked = false };
             var locker3 = new LockerModel("Locker3", "pass3", "loc3") { IsLocked = true };
             var locker4 = new LockerModel("Locker4", "pass4", "loc4") { IsLocked = false };
             var locker5 = new LockerModel("Locker5", "pass5", "loc5") { IsLocked = true };
 
-            LockerService.Lockers.AddRange([locker1, locker2, locker3, locker4, locker5]);
+            LockerService.ReplaceLockersForTesting([locker1, locker2, locker3, locker4, locker5]);
 
             // Act
             var lockedResult = LockerFilter.ListLockers(true);
@@ -144,8 +139,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_ReturnsNewListInstance()
         {
             // Arrange
-            LockerService.Lockers.Clear();
-            LockerService.Lockers.Add(new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true });
+            LockerService.ReplaceLockersForTesting([
+                new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true }
+            ]);
 
             // Act
             var result1 = LockerFilter.ListLockers(true);
@@ -159,9 +155,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithSingleLockedLocker_ShouldReturnIt()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var locker = new LockerModel("SingleLocker", "pass", "loc") { IsLocked = true };
-            LockerService.Lockers.Add(locker);
+            LockerService.ReplaceLockersForTesting([locker]);
 
             // Act
             var result = LockerFilter.ListLockers(true);
@@ -175,9 +170,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_WithSingleUnlockedLocker_ShouldReturnIt()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var locker = new LockerModel("SingleLocker", "pass", "loc") { IsLocked = false };
-            LockerService.Lockers.Add(locker);
+            LockerService.ReplaceLockersForTesting([locker]);
 
             // Act
             var result = LockerFilter.ListLockers(false);
@@ -191,26 +185,26 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ListLockers_DoesNotModifyOriginalList()
         {
             // Arrange
-            LockerService.Lockers.Clear();
             var locker = new LockerModel("Locker1", "pass1", "loc1") { IsLocked = true };
-            LockerService.Lockers.Add(locker);
-            var originalCount = LockerService.Lockers.Count;
+            LockerService.ReplaceLockersForTesting([locker]);
+            var originalCount = LockerService.GetLockersSnapshot().Count;
 
             // Act
             var result = LockerFilter.ListLockers(true);
             result.Add(new LockerModel("NewLocker", "pass", "loc") { IsLocked = true });
 
             // Assert
-            Assert.Equal(originalCount, LockerService.Lockers.Count);
+            Assert.Equal(originalCount, LockerService.GetLockersSnapshot().Count);
         }
 
         [Fact]
         public void ListLockers_WithMultipleCallsWithDifferentStates_ReturnsCorrectResults()
         {
             // Arrange
-            LockerService.Lockers.Clear();
-            LockerService.Lockers.Add(new LockerModel("Locked1", "pass1", "loc1") { IsLocked = true });
-            LockerService.Lockers.Add(new LockerModel("Unlocked1", "pass2", "loc2") { IsLocked = false });
+            LockerService.ReplaceLockersForTesting([
+                new LockerModel("Locked1", "pass1", "loc1") { IsLocked = true },
+                new LockerModel("Unlocked1", "pass2", "loc2") { IsLocked = false }
+            ]);
 
             // Act
             var lockedResult = LockerFilter.ListLockers(true);

@@ -104,6 +104,8 @@ Archive hardening rules:
 ## Persistence
 
 Locker metadata is stored in SQLite via `LockerRepository`.
+In-memory locker state is owned by `LockerService`; UI and CLI callers should use service methods such as `GetLockersSnapshot`, `FindLockerByName`, `FindLockerByGuid`, `AddLocker`, `RemoveLocker`, `Lock`, and `Unlock` instead of mutating locker collections or calling repository write methods directly.
+SQLite schema migrations are tracked with `PRAGMA user_version`; update `LockerRepository.CurrentSchemaVersion` whenever a migration changes persisted schema.
 
 The `Lockers` table contains:
 

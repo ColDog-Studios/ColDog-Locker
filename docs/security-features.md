@@ -8,44 +8,44 @@ This document describes the current implementation, not an aspirational design.
 
 | Area | Current Implementation |
 | --- | --- |
-| File encryption | Versioned AES-GCM file format with per-chunk authentication tags |
+| File encryption | Versioned encrypted locker archive (`locker.cdl`) with AES-GCM per-chunk authentication tags |
 | Key derivation | PBKDF2-HMAC-SHA256, 210,000 iterations |
-| Per-file salt | 16 random bytes stored in the encrypted file header |
+| Archive salt | 16 random bytes stored in the encrypted archive header |
 | Password storage | BCrypt hash, cost factor 14 |
 | Locker metadata | Per-user SQLite database |
 | Settings | Per-user JSON file |
 | Path protection | Blocks drive roots, system paths, app data paths, and top-level user folders |
-| Operation safety | Temporary-file replacement and best-effort rollback for interrupted lock/unlock operations |
+| Operation safety | Staged archive creation/extraction and best-effort rollback for interrupted lock/unlock operations |
 
 ## File Encryption
 
-When a locker is locked, ColDog Locker recursively encrypts each file in the locker directory using a versioned `CDLENC` file format.
+When a locker is locked, ColDog Locker creates a compressed `tar+gzip` stream of the validated locker contents and encrypts that stream into a versioned `locker.cdl` archive inside the locked locker directory.
 
-For each file:
+For each archive:
 
 1. Generate a random 16-byte salt.
 2. Generate a random nonce prefix.
 3. Use PBKDF2-HMAC-SHA256 with 210,000 iterations to derive a 256-bit AES key from the locker password and salt.
-4. Write a header containing the format marker, salt, nonce prefix, original file length, and key derivation settings.
-5. Encrypt file content in chunks with AES-GCM.
+4. Write a header containing the archive format marker, salt, nonce prefix, original archive length, and key derivation settings.
+5. Encrypt archive content in chunks with AES-GCM.
 6. Store an authentication tag for each encrypted chunk.
-7. Write encrypted output to a temporary file.
-8. Replace the original file only after encryption completes.
+7. Write encrypted output to a temporary locked directory.
+8. Move the staged locked directory into place only after archive creation succeeds.
 
-When unlocking, ColDog Locker reads the encrypted file header, derives the same key, verifies each AES-GCM authentication tag, decrypts to a temporary file, and replaces the encrypted file only after the full file has been authenticated and decrypted.
+When unlocking, ColDog Locker reads the encrypted archive header, derives the same key, verifies each AES-GCM authentication tag, decrypts to a staging directory, validates archive entries, and moves the restored locker directory into place only after extraction succeeds.
 
 ## Important Crypto Caveats
 
-The current file format provides authenticated encryption for file contents.
+The current archive format provides authenticated encryption for locked locker contents.
 
 Practical effects:
 
 - A wrong password fails during authenticated decryption.
-- Modified encrypted chunks fail authentication before plaintext replacement.
-- Tamper detection is per encrypted file, not a complete locker-level manifest.
+- Modified encrypted chunks fail authentication before plaintext restoration.
+- Locked archive tampering is detected before the restored locker is moved into place.
 - Backups matter. Keep copies of important data outside the locker workflow.
 
-Future improvements should consider a locker-level state marker or manifest that cross-checks the database, directory state, and expected encrypted files.
+ColDog Locker also stores archive metadata and a SHA-256 hash in SQLite so filesystem state, metadata, and encrypted archive content can be checked together.
 
 ## Operation Safety
 
@@ -54,18 +54,22 @@ Lock and unlock operations are designed to avoid updating locker metadata until 
 During lock:
 
 1. The existing locker path and locker name are validated.
-2. Files are encrypted in place using temporary-file replacement.
-3. The locker directory is renamed to its locked form.
-4. Hidden/system attributes are applied where supported.
-5. SQLite metadata is updated last.
+2. Symlinks, reparse points, and unsafe paths are rejected.
+3. A compressed encrypted archive is written to a temporary locked directory.
+4. The original plaintext directory is removed only after archive creation succeeds.
+5. The temporary locked directory is moved to the locked path.
+6. Hidden/system attributes are applied where supported.
+7. SQLite metadata is updated last.
 
 During unlock:
 
 1. The existing locker path and locker name are validated.
-2. Files are authenticated and decrypted in place using temporary-file replacement.
-3. Hidden/system attributes are removed where supported.
-4. The locker directory is renamed to its unlocked form.
-5. SQLite metadata is updated last.
+2. The encrypted archive is authenticated and decrypted to a staging directory.
+3. Archive entries are validated before files are written.
+4. Hidden/system attributes are removed where supported.
+5. The staging directory is moved to the unlocked path.
+6. SQLite metadata is updated last.
+7. The locked archive directory is deleted best effort.
 
 If a lock or unlock operation fails partway through, ColDog Locker attempts a best-effort rollback and logs rollback failures. This reduces inconsistent states but does not replace the need for backups.
 
@@ -166,7 +170,7 @@ ColDog Locker is intended to help with:
 - Exposure from someone browsing the filesystem while lockers are locked.
 - Password hash disclosure, because plaintext passwords are not stored.
 - Accidental locking of high-risk system or profile locations.
-- Tampering with encrypted file contents while lockers are locked.
+- Tampering with encrypted archive contents while lockers are locked.
 - Some interrupted lock/unlock failure modes through temporary files and best-effort rollback.
 
 ## What ColDog Locker Does Not Protect Against
@@ -178,7 +182,7 @@ ColDog Locker does not protect against:
 - A compromised operating system.
 - Physical access while a locker is unlocked.
 - Memory inspection while passwords or derived keys are in use.
-- Complete locker-level state tampering when the database and filesystem are both manipulated.
+- Complete locker-level state tampering when the database, filesystem, and archive metadata are all manipulated consistently.
 - Data loss from interrupted operations, hardware failure, or missing backups.
 
 ## Recommended User Practices

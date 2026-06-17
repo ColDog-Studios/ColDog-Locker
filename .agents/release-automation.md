@@ -44,14 +44,15 @@ For `main` and manual dispatch:
 1. Check out the triggering commit.
 2. Read `Version` from `Directory.Build.props`.
 3. Restore, build, and test the Core, Services, and Avalonia test projects in `Release`.
-4. Build Windows x64 and arm64 `.msi` plus setup `.exe` installers.
-5. Build Linux x64 and arm64 `.deb` packages.
-6. Build Linux x64 and arm64 `.rpm` packages.
-7. Build experimental unsigned macOS x64 and arm64 `.pkg` packages.
-8. Download all package artifacts into one release asset directory.
-9. Create the GitHub release for the computed tag.
-10. Upload `.msi`, `.exe`, `.deb`, `.rpm`, and `.pkg` assets.
-11. Generate release notes from Conventional Commit messages with the `conventionalcommits` preset.
+4. Publish the CLI and run the CLI E2E workflow against the published binary.
+5. Build Windows x64 and arm64 `.msi` plus setup `.exe` installers.
+6. Build Linux x64 and arm64 `.deb` packages.
+7. Build Linux x64 and arm64 `.rpm` packages.
+8. Build experimental unsigned macOS x64 and arm64 `.pkg` packages.
+9. Download all package artifacts into one release asset directory.
+10. Create the GitHub release for the computed tag.
+11. Upload `.msi`, `.exe`, `.deb`, `.rpm`, and `.pkg` assets.
+12. Generate release notes from Conventional Commit messages with the `conventionalcommits` preset.
 
 The release job uses `contents: write` so it can create tags and GitHub Releases.
 
