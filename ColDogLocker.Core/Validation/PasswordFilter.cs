@@ -15,6 +15,8 @@
  **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using System.Text.RegularExpressions;
+
 namespace ColDogStudios.ColDogLocker.Core.Validation
 {
     public class PasswordRequirement
@@ -23,9 +25,8 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         public bool IsMet { get; set; }
     }
 
-    public class PasswordFilter
+    public partial class PasswordFilter
     {
-        // TODO: Probably change this to use a short list and use pattern matching to catch more variations
         private static readonly string[] _commonWords =
         [
             "password",
@@ -33,31 +34,22 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             "locker",
             "root",
             "secret",
-            "123456",
-            "qwerty",
+            "welcome",
             "letmein",
             "monkey",
-            "abc123",
             "football",
             "baseball",
             "basketball",
             "master",
-            "123456789",
-            "12345678",
-            "12345",
-            "1234",
-            "1234567",
-            "1234567890",
             "user",
             "test",
-            "guest",
-            "adfghjk",
-            "zxcvbnm",
-            "asdfghjkl",
-            "qazwsx",
-            "1q2w3e4r",
-            "1qaz2wsx"
+            "guest"
         ];
+
+        [GeneratedRegex(
+            "(?:0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210|qwer|wert|erty|rtyu|tyui|yuio|uiop|poiu|oiuy|iuyt|uytr|ytre|trew|rewq|asdf|sdfg|dfgh|fghj|ghjk|hjkl|lkjh|kjhg|jhgf|hgfd|gfds|fdsa|zxcv|xcvb|cvbn|vbnm|mnbv|nbvc|bvcx|vcxz|qazwsx|xswzaq|1q2w3e|1qaz2wsx)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking)]
+        private static partial Regex CommonPatternRegex();
 
         private static readonly List<Func<string, bool>> _securityRules =
         [
@@ -108,6 +100,8 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 }
             }
 
+            hasCommonWord |= CommonPatternRegex().IsMatch(password);
+
             requirements.Add(new PasswordRequirement { Description = "No common words", IsMet = !hasCommonWord });
 
             return requirements;
@@ -140,6 +134,13 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 {
                     return $"'{commonWord}' is considered a common word. Please enter a new password.";
                 }
+            }
+
+
+            var commonPattern = CommonPatternRegex().Match(password);
+            if (commonPattern.Success)
+            {
+                return $"'{commonPattern.Value}' is considered a common word pattern. Please enter a new password.";
             }
 
             return null; // Valid password
