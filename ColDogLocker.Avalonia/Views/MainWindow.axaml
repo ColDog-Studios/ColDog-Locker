@@ -168,7 +168,7 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Classes="top-menu" IsVisible="{Binding IsDeveloperMode}">
+            <MenuItem x:Name="DeveloperMenu" Classes="top-menu" IsVisible="{Binding IsDeveloperMode}">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Developer" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
@@ -274,15 +274,15 @@
                     <Button Grid.Column="0" Classes="tool-button" Width="42" Height="38" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderPlus" />
                     </Button>
-                    <Button Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}"
+                    <Button x:Name="LockButton" Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}"
                             ToolTip.Tip="Lock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Lock" />
                     </Button>
-                    <Button Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}"
+                    <Button x:Name="UnlockButton" Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}"
                             ToolTip.Tip="Unlock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="LockOpen" />
                     </Button>
-                    <Button Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}"
+                    <Button x:Name="RemoveButton" Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}"
                             ToolTip.Tip="Remove selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Delete" />
                     </Button>
@@ -295,7 +295,7 @@
                             ToolTip.Tip="Show selected locker properties">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="InformationOutline" />
                     </Button>
-                    <Button Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}"
+                    <Button x:Name="ToggleViewButton" Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}"
                             ToolTip.Tip="Toggle grid/list view">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="{Binding ToggleViewIconKind}" />
                     </Button>
@@ -303,13 +303,13 @@
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Refresh" />
                     </Button>
                     <Border Grid.Column="9" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
-                    <TextBox Grid.Column="11"
+                    <TextBox x:Name="SearchBox" Grid.Column="11"
                              PlaceholderText="Filter lockers"
                              Height="38"
                              VerticalAlignment="Center"
                              VerticalContentAlignment="Center"
                              Text="{Binding SearchText, Mode=TwoWay}" />
-                    <ComboBox Grid.Column="12"
+                    <ComboBox x:Name="SortBox" Grid.Column="12"
                               Height="38"
                               VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
@@ -325,7 +325,7 @@
             </Border>
 
             <Grid Grid.Row="1" Margin="12">
-                <Grid RowDefinitions="Auto,*" IsVisible="{Binding IsListView}">
+                <Grid x:Name="ListViewPanel" RowDefinitions="Auto,*" IsVisible="{Binding IsListView}">
                     <Border Grid.Row="0"
                             Padding="10,8"
                             Background="{DynamicResource AppTableHeaderBackgroundBrush}"
@@ -339,7 +339,7 @@
                             <TextBlock Grid.Column="4" Text="Location" FontWeight="SemiBold" Foreground="{DynamicResource AppForegroundBrush}" />
                         </Grid>
                     </Border>
-                    <ListBox Grid.Row="1"
+                    <ListBox x:Name="ListLockerList" Grid.Row="1"
                              ItemsSource="{Binding FilteredLockers}"
                              SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                              Background="Transparent"
@@ -380,7 +380,7 @@
                     </ListBox>
                 </Grid>
 
-                <ListBox ItemsSource="{Binding FilteredLockers}"
+                <ListBox x:Name="GridLockerList" ItemsSource="{Binding FilteredLockers}"
                          SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                          IsVisible="{Binding IsGridView}"
                          Background="Transparent"
