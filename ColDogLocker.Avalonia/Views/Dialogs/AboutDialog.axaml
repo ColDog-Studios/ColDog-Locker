@@ -137,7 +137,7 @@
                         <TextBlock FontSize="12"
                                    Opacity="0.78"
                                    TextWrapping="Wrap"
-                                   Text="Avalonia - MIT License&#x0a;Cross-platform UI framework&#x0a;&#x0a;BCrypt.Net-Next - MIT License&#x0a;Password hashing and verification&#x0a;&#x0a;CommunityToolkit.Mvvm - MIT License&#x0a;MVVM helpers and source generators&#x0a;&#x0a;Material.Icons.Avalonia - MIT License&#x0a;Material Design icon controls for Avalonia&#x0a;&#x0a;Microsoft.Data.Sqlite - MIT License&#x0a;Lightweight database engine&#x0a;&#x0a;Microsoft.Extensions.DependencyInjection - MIT License&#x0a;Dependency injection container&#x0a;&#x0a;Newtonsoft.Json - MIT License&#x0a;JSON serialization and deserialization" />
+                                   Text="Avalonia - MIT License&#x0a;Cross-platform UI framework&#x0a;&#x0a;BCrypt.Net-Next - MIT License&#x0a;Password hashing and verification&#x0a;&#x0a;CommunityToolkit.Mvvm - MIT License&#x0a;MVVM helpers and source generators&#x0a;&#x0a;Material.Icons.Avalonia - MIT License&#x0a;Material Design icon controls for Avalonia&#x0a;&#x0a;Microsoft.Data.Sqlite - MIT License&#x0a;Lightweight database API&#x0a;&#x0a;SQLitePCLRaw - Apache-2.0 License&#x0a;Native SQLite interop&#x0a;&#x0a;SourceGear.sqlite3 - Public Domain SQLite&#x0a;Cross-platform native SQLite builds&#x0a;&#x0a;Microsoft.Extensions.DependencyInjection - MIT License&#x0a;Dependency injection container&#x0a;&#x0a;Newtonsoft.Json - MIT License&#x0a;JSON serialization and deserialization" />
                     </StackPanel>
 
                     <StackPanel Spacing="10">

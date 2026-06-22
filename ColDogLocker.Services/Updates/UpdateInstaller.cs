@@ -119,11 +119,27 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             {
                 UpdateOperatingSystem.Windows => CreateWindowsInstallCommand(installerPath),
                 UpdateOperatingSystem.Linux => CreateLinuxInstallCommand(installerPath, platform),
-                UpdateOperatingSystem.MacOS => throw new UpdateException(UpdateFailureKind.UnsupportedPlatform,
-                    "Automatic macOS installation is not supported. Run the downloaded package manually."),
+                UpdateOperatingSystem.MacOS => CreateMacOsInstallCommand(installerPath),
                 _ => throw new UpdateException(UpdateFailureKind.UnsupportedPlatform,
                     "Automatic installation is not supported on this platform.")
             };
+        }
+
+        private static UpdateInstallerCommand CreateMacOsInstallCommand(string installerPath)
+        {
+            if (!Path.GetExtension(installerPath).Equals(".pkg", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UpdateException(UpdateFailureKind.InstallFailed,
+                    "The downloaded macOS update is not a PKG installer.");
+            }
+
+            return new UpdateInstallerCommand(
+                "/usr/bin/open",
+                [installerPath],
+                useShellExecute: false,
+                verb: null,
+                waitForExit: false,
+                "Installer opened. Follow the Installer prompts, then restart ColDog Locker when it finishes.");
         }
 
         private static UpdateInstallerCommand CreateWindowsInstallCommand(string installerPath)
@@ -316,6 +332,11 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             bool waitForExit,
             CancellationToken cancellationToken)
         {
+            if (IsE2EInstallerLaunchSuppressed())
+            {
+                return new UpdateProcessResult(waitForExit ? 0 : null);
+            }
+
             using var process = Process.Start(startInfo)
                                 ?? throw new InvalidOperationException($"Failed to launch '{startInfo.FileName}'.");
 
@@ -326,6 +347,20 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             await process.WaitForExitAsync(cancellationToken);
             return new UpdateProcessResult(process.ExitCode);
+        }
+
+        private static bool IsE2EInstallerLaunchSuppressed()
+        {
+            return IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_ENABLE_UPDATE_OVERRIDES")) &&
+                   IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_SKIP_INSTALLER_LAUNCH"));
+        }
+
+        private static bool IsEnabled(string? value)
+        {
+            return value is not null &&
+                   (value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("yes", StringComparison.OrdinalIgnoreCase));
         }
     }
 

@@ -105,6 +105,11 @@ namespace ColDogStudios.ColDogLocker.Cli
                 yield return Path.Combine(cliDirectory, executableName);
             }
 
+            if (OperatingSystem.IsMacOS())
+            {
+                yield return "/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker";
+            }
+
             var sourceRoot = FindSourceRoot(cliDirectory);
             if (sourceRoot == null)
             {

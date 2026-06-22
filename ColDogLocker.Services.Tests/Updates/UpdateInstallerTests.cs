@@ -42,6 +42,39 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         }
 
         [Fact]
+        public void CreateInstallCommand_MacOsPkg_OpensInstallerPackage()
+        {
+            // Arrange
+            var installer = CreateInstaller([]);
+            var platform = new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = Architecture.Arm64 };
+
+            // Act
+            var command = installer.CreateInstallCommand("/Users/test/Downloads/ColDogLocker.pkg", platform);
+
+            // Assert
+            Assert.Equal("/usr/bin/open", command.FileName);
+            Assert.Equal(["/Users/test/Downloads/ColDogLocker.pkg"], command.Arguments);
+            Assert.False(command.UseShellExecute);
+            Assert.False(command.WaitForExit);
+        }
+
+        [Fact]
+        public void CreateInstallCommand_MacOsNonPkg_ThrowsInstallFailed()
+        {
+            // Arrange
+            var installer = CreateInstaller([]);
+            var platform = new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = Architecture.X64 };
+
+            // Act
+            var exception = Assert.Throws<UpdateException>(() =>
+                installer.CreateInstallCommand("/Users/test/Downloads/ColDogLocker.zip", platform));
+
+            // Assert
+            Assert.Equal(UpdateFailureKind.InstallFailed, exception.FailureKind);
+            Assert.Contains("PKG", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void CreateInstallCommand_LinuxDebWithGraphicalSession_UsesPkexecRemoveThenAptGetInstall()
         {
             // Arrange

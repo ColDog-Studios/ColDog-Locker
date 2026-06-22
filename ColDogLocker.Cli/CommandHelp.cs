@@ -25,8 +25,8 @@ namespace ColDogStudios.ColDogLocker.Cli
         public static void ShowGeneralHelp()
         {
             Console.WriteLine("USAGE:");
-            Console.WriteLine("  cdlocker                           Launch GUI (default)");
-            Console.WriteLine("  cdlocker gui                       Launch GUI explicitly");
+            Console.WriteLine("  cdlocker                           Show help");
+            Console.WriteLine("  cdlocker gui                       Launch GUI");
             Console.WriteLine("  cdlocker terminal                  Launch Terminal UI");
             Console.WriteLine();
 

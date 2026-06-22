@@ -158,7 +158,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         }
 
         [Fact]
-        public async Task CheckForUpdatesAsync_MacOsUpdate_ShouldReturnManualUpdateInstructions()
+        public async Task CheckForUpdatesAsync_MacOsUpdate_ShouldSelectPkgAsset()
         {
             // Arrange
             using var service = CreateService(
@@ -166,7 +166,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 {
                     ["/repos/ColDog-Studios/ColDog-Locker/releases/latest"] =
                         JsonResponse(CreateReleaseJson("v1.3.0", "Mac release notes",
-                            ("ColDogLocker-win-x64.msi", "https://downloads.example/cdl.msi", Sha256Digest("installer"))))
+                            ("ColDogLocker-1.3.0-macos-x64.pkg", "https://downloads.example/cdl-x64.pkg", Sha256Digest("x64")),
+                            ("ColDogLocker-1.3.0-macos-arm64.pkg", "https://downloads.example/cdl-arm64.pkg", Sha256Digest("arm64"))))
                 },
                 "1.2.0",
                 new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = Architecture.Arm64 });
@@ -176,10 +177,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
             // Assert
             Assert.True(result.UpdateAvailable);
-            Assert.False(result.CanDownload);
-            Assert.False(result.IsSupportedPlatform);
+            Assert.True(result.CanDownload);
+            Assert.True(result.IsSupportedPlatform);
             Assert.Contains("macOS", result.PlatformName);
-            Assert.Contains("Automatic macOS updates are disabled", result.ManualUpdateInstructions);
+            Assert.Equal("ColDogLocker-1.3.0-macos-arm64.pkg", result.InstallerFileName);
+            Assert.Equal("https://downloads.example/cdl-arm64.pkg", result.DownloadUrl);
         }
 
         [Fact]

@@ -111,6 +111,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public bool SupportsAutomaticUpdates
             => OperatingSystem is UpdateOperatingSystem.Windows ||
+               OperatingSystem is UpdateOperatingSystem.MacOS ||
                (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
 
         public string DisplayName
@@ -133,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string ManualUpdateInstructions => OperatingSystem switch
         {
             UpdateOperatingSystem.MacOS =>
-                "Automatic macOS updates are disabled because this installer path cannot be reliably tested. Download the desired release from GitHub, verify the release asset digest shown on GitHub, back up your configuration, then replace the application bundle manually.",
+                "Download the matching macOS .pkg from GitHub, verify its release digest, then open it with Installer.",
             UpdateOperatingSystem.Linux when LinuxPackageFormat is LinuxPackageFormat.Unknown =>
                 "Automatic Linux updates need a known package family. Download the .deb or .rpm package that matches your distribution from GitHub, verify the release asset digest shown on GitHub, then install it with your package manager.",
             _ =>
@@ -674,6 +675,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                                                  name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Rpm &&
                                                  name.EndsWith(".rpm", StringComparison.OrdinalIgnoreCase) => 60,
+                UpdateOperatingSystem.MacOS when name.EndsWith(".pkg", StringComparison.OrdinalIgnoreCase) => 60,
                 _ => -1
             };
 
@@ -698,6 +700,11 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
 
             if (platform.OperatingSystem is UpdateOperatingSystem.Linux && ContainsAny(name, "linux"))
+            {
+                score += 5;
+            }
+
+            if (platform.OperatingSystem is UpdateOperatingSystem.MacOS && ContainsAny(name, "macos", "osx", "mac"))
             {
                 score += 5;
             }
