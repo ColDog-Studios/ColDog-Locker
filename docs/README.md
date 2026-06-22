@@ -11,4 +11,4 @@ This directory contains user-facing documentation for ColDog Locker.
 
 ## Current Status
 
-ColDog Locker is pre-release software. The CLI, terminal UI, and Avalonia GUI are available. Windows and Linux packages are available for validation, and macOS packages are experimental, unsigned, unnotarized, and untested.
+ColDog Locker is pre-release software. The CLI, terminal UI, and Avalonia GUI are available in Windows, Linux, and macOS packages. Windows and macOS packages are unsigned and may trigger platform security warnings.

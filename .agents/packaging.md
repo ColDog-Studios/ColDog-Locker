@@ -12,9 +12,9 @@ Release automation passes the computed release version with `-p:Version=<release
 | Windows | `.exe` setup bundle through WiX Burn | `x64`, `arm64` | Per-machine only |
 | Linux | `.deb` | `x64`, `arm64` | System package |
 | Linux | `.rpm` | `x64`, `arm64` | System package |
-| macOS | `.pkg` through `pkgbuild` | `x64`, `arm64` | System package, experimental |
+| macOS | `.pkg` through `pkgbuild` | `x64`, `arm64` | System package |
 
-macOS packages are unsigned, unnotarized, untested, and experimental. They are intended for local validation only until macOS support is deliberately promoted.
+macOS packages are unsigned and unnotarized because the project does not currently have Apple code-signing credentials. Gatekeeper warnings are expected, but macOS remains part of the supported package matrix.
 
 The active package contents are:
 
@@ -56,7 +56,7 @@ For a real install/remove smoke test on Fedora, use a clean machine or VM and ru
 
 Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated releases are published by the `Release` workflow on pushes to `main` and by manual dispatch.
 
-The manual `Packages` workflow still keeps the macOS package job opt-in because those packages are experimental and unsigned. The automated `Release` workflow includes macOS `.pkg` assets so update checks can see the same platform matrix as Windows and Linux.
+The manual `Packages` and automated `Release` workflows include macOS `.pkg` assets alongside Windows and Linux packages.
 
 Windows MSI and setup EXE:
 
@@ -93,7 +93,7 @@ rpm -qpi artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 rpm -qpl artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 ```
 
-macOS PKG, experimental unsigned:
+macOS PKG, unsigned:
 
 ```bash
 dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=x64 -p:Configuration=Release
@@ -194,7 +194,7 @@ The updater installs verified Linux packages by selecting the package family fro
 
 ## macOS Package Layout
 
-The macOS `.pkg` is experimental, unsigned, unnotarized, and untested. It installs system-wide and may trigger Gatekeeper warnings or require manual override on first launch.
+The macOS `.pkg` is unsigned and unnotarized. It installs system-wide and may trigger Gatekeeper warnings or require manual approval on first launch.
 
 The GUI app bundle is installed under:
 
@@ -214,9 +214,9 @@ The CLI man page is installed under:
 /usr/local/share/man/man1/cdlocker.1.gz
 ```
 
-The package installs both the CLI and Avalonia GUI together. The current CLI still reports macOS GUI launching as unsupported, so launch the experimental GUI directly from `/Applications/ColDog Locker.app` when validating it.
+The package installs both the CLI and Avalonia GUI together. `cdlocker gui` launches `/Applications/ColDog Locker.app`.
 
-The `.pkg` format does not provide a native uninstall checkbox. Remove the experimental macOS package files manually:
+The `.pkg` format does not provide a native uninstall checkbox. Remove the macOS package files manually:
 
 ```bash
 sudo rm -rf "/Applications/ColDog Locker.app"

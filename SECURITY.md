@@ -37,7 +37,7 @@ For detailed information about ColDog Locker's security architecture, encryption
 
 | Version | Supported |
 | ------- | --------- |
-| 0.10.x-beta | Yes |
+| 0.11.x-beta | Yes |
 | Older prereleases | Best effort |
 
 We recommend always using the latest version for the best security protections.

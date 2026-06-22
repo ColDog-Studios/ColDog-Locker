@@ -67,18 +67,18 @@ Implemented packages:
 
 ### macOS
 
-macOS local packaging is implemented as an experimental unsigned `.pkg` for `osx-x64` and `osx-arm64`.
+macOS local packaging is implemented as an unsigned `.pkg` for `osx-x64` and `osx-arm64`.
 
-Experimental package behavior:
+Package behavior:
 
 - Install the CLI and Avalonia GUI together.
 - Install the GUI app bundle under `/Applications/ColDog Locker.app`.
 - Install the CLI command as `/usr/local/bin/cdlocker`.
 - Install the CLI man page as `/usr/local/share/man/man1/cdlocker.1.gz`.
 - Do not split CLI and GUI into separate packages.
-- Treat macOS release assets as experimental until macOS validation, signing, and notarization decisions are revisited.
+- `cdlocker gui` launches the installed app bundle.
 
-The current CLI still reports macOS GUI launching as unsupported. Launch the experimental GUI directly from `/Applications/ColDog Locker.app` when testing the `.pkg`.
+The package is not signed or notarized because the project does not currently have Apple code-signing credentials. Gatekeeper warnings remain expected.
 
 ## Publish Commands
 
@@ -139,7 +139,7 @@ User data is per-user and remains outside Program Files and `/opt`:
 
 The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `0` so user data is preserved unless cleanup is explicitly requested. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal leaves per-user app data in place, and Debian purge removes reserved system config/data directories if future versions add them.
 
-The experimental macOS `.pkg` does not provide a native uninstall checkbox. Remove `/Applications/ColDog Locker.app` and `/usr/local/bin/cdlocker` manually during testing.
+The macOS `.pkg` does not provide a native uninstall checkbox. Remove `/Applications/ColDog Locker.app` and `/usr/local/bin/cdlocker` manually.
 
 ## Updates
 
@@ -152,7 +152,7 @@ Current behavior:
 - Platform detection chooses Windows, Linux DEB, Linux RPM, macOS, or unsupported.
 - Automatic download requires a matching asset and a GitHub `sha256:` digest.
 - Downloads go to the user's Downloads folder.
-- `cdlocker update --download` starts installation after the digest check. Windows launches the verified installer elevated. Linux runs the verified `.deb`/`.rpm` through the local package manager with root, `pkexec`, or `sudo`. macOS remains manual/experimental.
+- `cdlocker update --download` starts installation after the digest check. Windows launches the verified installer elevated. Linux runs the verified `.deb`/`.rpm` through the local package manager with root, `pkexec`, or `sudo`. macOS opens the verified `.pkg` with Installer.
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
 On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
@@ -179,7 +179,7 @@ Current expected state:
 
 - No code signing.
 - SmartScreen warnings may appear on Windows.
-- Gatekeeper warnings should be expected for unsigned, unnotarized experimental macOS packages.
+- Gatekeeper warnings should be expected for unsigned, unnotarized macOS packages.
 - Antivirus false positives are possible because the app encrypts files.
 
 Future stable releases should consider:
@@ -204,7 +204,7 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 5. Confirm `cdlocker new`, `lock`, `unlock`, `verify`, and `remove`.
 6. Confirm Avalonia GUI workflows on Windows.
 7. Confirm Linux desktop menu entries for `ColDogLocker` and `cdlocker`.
-8. Confirm experimental macOS `.pkg` install, `/usr/local/bin/cdlocker`, and `/Applications/ColDog Locker.app`.
+8. Confirm macOS `.pkg` install, `/usr/local/bin/cdlocker`, `cdlocker gui`, and `/Applications/ColDog Locker.app`.
 9. Confirm TUI workflows on non-GUI environments.
 10. Validate RPM metadata and paths locally on Fedora with `rpm -qpi` and `rpm -qpl`.
 11. Confirm update asset naming and SHA-256 digest availability.
@@ -212,5 +212,5 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E 
 
 ## Open Distribution Decisions
 
-- Whether macOS should remain experimental/unsigned or be promoted later with Developer ID signing and notarization.
+- Add Developer ID signing and notarization if project signing credentials become available.
 - Whether Linux GUI package dependencies should be declared explicitly once clean distro VM testing identifies the minimum native library set.

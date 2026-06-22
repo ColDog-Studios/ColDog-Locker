@@ -215,9 +215,9 @@ Download, verify, and start a matching installer when one is available:
 cdlocker update --download
 ```
 
-Windows starts the installer after verification. Linux installs the verified `.deb` or `.rpm` package through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package.
+Windows starts the installer after verification. Linux installs the verified `.deb` or `.rpm` package through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package. macOS downloads and verifies the matching `.pkg`, then opens it with Installer.
 
-macOS update checks can report available releases, but automatic macOS downloads are disabled. Experimental macOS `.pkg` builds are unsigned, unnotarized, untested, and not treated as official support.
+Windows and macOS packages are unsigned, so Windows SmartScreen or macOS Gatekeeper may display a warning.
 
 ## Data Locations
 

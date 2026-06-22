@@ -65,8 +65,7 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 > Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet.
 
 > [!WARNING]
-> macOS `.pkg` builds are experimental, unsigned, unnotarized, and untested.
-> They are provided for local validation only and should not be treated as official macOS support.
+> Windows and macOS packages are unsigned. Windows SmartScreen or macOS Gatekeeper may display a warning because the project does not currently have code-signing certificates.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -79,7 +78,7 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 ## Getting Started
 
-Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and experimental macOS validation.
+Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and macOS.
 You can also build from source following the instructions below.
 
 ### Prerequisites
@@ -276,6 +275,8 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 - [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)
+- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw)
+- [SourceGear.sqlite3](https://www.nuget.org/packages/SourceGear.sqlite3)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
