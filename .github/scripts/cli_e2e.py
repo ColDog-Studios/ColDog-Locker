@@ -184,6 +184,7 @@ class CliE2E:
             "CDLOCKER_E2E_UPDATE_DOWNLOAD_DIR": str(self.app_data_dir / "downloads"),
             "CDLOCKER_E2E_UPDATE_PLATFORM": "windows-x64",
             "CDLOCKER_E2E_UPDATE_ALLOW_LOOPBACK_HTTP": "1",
+            "CDLOCKER_E2E_UPDATE_SKIP_INSTALLER_LAUNCH": "1",
         }
 
     def update_release_json(

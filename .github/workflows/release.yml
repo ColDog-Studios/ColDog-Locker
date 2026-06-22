@@ -96,6 +96,14 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Fail on vulnerable NuGet packages
+      shell: bash
+      run: dotnet restore ColDogLocker.slnx -p:NuGetAudit=true -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
+
+    - name: Report vulnerable packages
+      shell: bash
+      run: dotnet list ColDogLocker.slnx package --vulnerable --include-transitive
+
     - name: Restore dependencies
       shell: bash
       run: |

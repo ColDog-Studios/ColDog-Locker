@@ -8,6 +8,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Fail on vulnerable NuGet packages
+      shell: bash
+      run: dotnet restore ColDogLocker.slnx -p:NuGetAudit=true -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
+
+    - name: Report vulnerable packages
+      run: dotnet list ColDogLocker.slnx package --vulnerable --include-transitive
+
   unit-tests:
     name: Unit Tests (Windows)
     runs-on: windows-latest
@@ -328,7 +348,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [unit-tests, unit-tests-linux, unit-tests-macos, cli-e2e-tests-windows, cli-e2e-tests-linux, cli-e2e-tests-macos]
+    needs: [dependency-audit, unit-tests, unit-tests-linux, unit-tests-macos, cli-e2e-tests-windows, cli-e2e-tests-linux, cli-e2e-tests-macos]
     if: always()
 
     steps:
@@ -340,6 +360,7 @@ jobs:
         echo "╚══════════════════════════════════════╝"
         echo ""
         echo "Unit Tests (Windows): ${{ needs.unit-tests.result }}"
+        echo "Dependency Audit: ${{ needs.dependency-audit.result }}"
         echo "Unit Tests (Linux): ${{ needs.unit-tests-linux.result }}"
         echo "Unit Tests (macOS): ${{ needs.unit-tests-macos.result }}"
         echo "CLI E2E Tests (Windows): ${{ needs.cli-e2e-tests-windows.result }}"
@@ -347,7 +368,8 @@ jobs:
         echo "CLI E2E Tests (macOS): ${{ needs.cli-e2e-tests-macos.result }}"
         echo ""
 
-        if [ "${{ needs.unit-tests.result }}" != "success" ] || \
+        if [ "${{ needs.dependency-audit.result }}" != "success" ] || \
+           [ "${{ needs.unit-tests.result }}" != "success" ] || \
            [ "${{ needs.unit-tests-linux.result }}" != "success" ] || \
            [ "${{ needs.unit-tests-macos.result }}" != "success" ] || \
            [ "${{ needs.cli-e2e-tests-windows.result }}" != "success" ] || \

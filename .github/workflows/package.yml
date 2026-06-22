@@ -16,10 +16,10 @@ on:
         type: boolean
         default: true
       build_macos:
-        description: Build experimental unsigned macOS PKG packages
+        description: Build unsigned macOS PKG packages
         required: true
         type: boolean
-        default: false
+        default: true
       configuration:
         description: Build configuration
         required: true
@@ -134,7 +134,7 @@ jobs:
         if-no-files-found: error
 
   macos-pkg:
-    name: macOS PKG experimental unsigned (${{ matrix.arch }})
+    name: macOS PKG unsigned (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_macos }}
     strategy:
