@@ -164,7 +164,7 @@ Linux desktop application entries are installed under:
 /usr/share/applications/cdlocker.desktop
 ```
 
-`coldog-locker.desktop` appears as `ColDogLocker` and launches the Avalonia GUI from `/opt/coldog-locker/ColDogLocker`. `cdlocker.desktop` appears as `cdlocker` and opens the terminal interface with `cdlocker tui` so desktop users can see that the CLI/TUI entrypoint is installed.
+`coldog-locker.desktop` appears as `ColDogLocker` and launches the Avalonia GUI from `/opt/coldog-locker/ColDogLocker`. `cdlocker gui` also falls back to that installed GUI path so the `/usr/bin/cdlocker` command can launch the GUI even when invoked through the package-manager command link. `cdlocker.desktop` appears as `cdlocker` and opens the terminal interface with `cdlocker tui` so desktop users can see that the CLI/TUI entrypoint is installed.
 
 The desktop icon is installed under:
 
@@ -214,7 +214,7 @@ The CLI man page is installed under:
 /usr/local/share/man/man1/cdlocker.1.gz
 ```
 
-The package installs both the CLI and Avalonia GUI together. `cdlocker gui` launches `/Applications/ColDog Locker.app`.
+The package installs both the CLI and Avalonia GUI together. `cdlocker gui` launches `/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker`.
 
 The `.pkg` format does not provide a native uninstall checkbox. Remove the macOS package files manually:
 

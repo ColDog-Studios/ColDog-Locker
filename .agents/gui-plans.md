@@ -27,8 +27,10 @@ The Avalonia project builds the GUI executable as `ColDogLocker.exe` on Windows 
 The CLI owns the GUI launcher:
 
 - Windows: launches the Avalonia GUI executable.
-- Linux: attempts to launch the Avalonia GUI executable.
-- macOS: launches `/Applications/ColDog Locker.app` from the installed CLI.
+- Linux: launches the Avalonia GUI executable beside the CLI, from source-build paths, or from `/opt/coldog-locker/ColDogLocker` when installed.
+- macOS: launches the Avalonia GUI executable beside the CLI, from source-build paths, or from `/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker` when installed.
+
+The launcher is intentionally a lightweight starter: after the GUI process starts successfully, `cdlocker gui` releases the process handle and returns success instead of staying alive until the GUI exits. Source-build candidates are checked before installed package fallbacks so local development builds do not accidentally launch an already-installed GUI.
 
 ## Next GUI Work
 

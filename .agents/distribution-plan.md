@@ -196,7 +196,7 @@ Future stable releases should consider:
 dotnet test
 ```
 
-CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. macOS GUI E2E testing is not implemented yet.
+CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. CLI unit tests cover installed Linux and macOS `cdlocker gui` launcher path selection. Full installed GUI E2E testing remains a manual clean-machine validation item.
 
 2. Publish target artifacts.
 3. Test on a clean machine or VM for each target.

@@ -16,6 +16,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
   TEST_PROJECTS: |
+    ColDogLocker.Cli.Tests/ColDogLocker.Cli.Tests.csproj
     ColDogLocker.Core.Tests/ColDogLocker.Core.Tests.csproj
     ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj
     ColDogLocker.Avalonia.Tests/ColDogLocker.Avalonia.Tests.csproj
