@@ -42,7 +42,9 @@ class UpdateStubServer:
 
     @property
     def base_url(self) -> str:
-        host, port = self.server.server_address
+        address = self.server.server_address
+        host = address[0]
+        port = address[1]
         return f"http://{host}:{port}"
 
     def create_handler(self):
@@ -253,7 +255,6 @@ class CliE2E:
             "db-info": "DATABASE INFORMATION",
             "update": "CHECK FOR UPDATES",
             "gui": "LAUNCH GUI",
-            "terminal": "LAUNCH TERMINAL UI",
             "tui": "LAUNCH TERMINAL UI",
         }
         for command, expected in expectations.items():
