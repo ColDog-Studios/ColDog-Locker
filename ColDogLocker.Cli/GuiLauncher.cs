@@ -24,21 +24,16 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         public static int Launch(string[] args)
         {
+            return Launch(args, GuiLauncherEnvironment.Current);
+        }
+
+        internal static int Launch(string[] args, GuiLauncherEnvironment environment)
+        {
             try
             {
-                if (OperatingSystem.IsMacOS())
-                {
-                    const string message = "GUI launcher not yet available on macOS. Use 'cdlocker tui' for TUI.";
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Error.WriteLine(message);
-                    Console.ResetColor();
-                    Logger.Log(LogLevel.Warning, message);
-                    return 1;
-                }
-
                 Logger.Log(LogLevel.Debug, "Launching Avalonia GUI");
 
-                var guiPath = FindAvaloniaGuiExecutable();
+                var guiPath = FindAvaloniaGuiExecutable(environment);
                 if (guiPath == null)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -58,7 +53,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     }
                 }
 
-                var process = Process.Start(startInfo);
+                var process = environment.StartProcess(startInfo);
                 if (process == null)
                 {
                     Logger.Log(LogLevel.Error, $"Failed to start GUI process for {guiPath}");
@@ -67,8 +62,8 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                 Logger.Log(LogLevel.Debug, $"Launched Avalonia GUI process with ID: {process.Id}");
                 Console.WriteLine($"Launching GUI: {Path.GetFileName(guiPath)}");
-                process.WaitForExit();
-                return process.ExitCode;
+                process.Dispose();
+                return 0;
             }
             catch (Exception ex)
             {
@@ -80,12 +75,12 @@ namespace ColDogStudios.ColDogLocker.Cli
             }
         }
 
-        private static string? FindAvaloniaGuiExecutable()
+        internal static string? FindAvaloniaGuiExecutable(GuiLauncherEnvironment environment)
         {
-            foreach (var path in GetCandidatePaths())
+            foreach (var path in GetCandidatePaths(environment))
             {
                 var normalizedPath = Path.GetFullPath(path);
-                if (File.Exists(normalizedPath))
+                if (environment.FileExists(normalizedPath))
                 {
                     Logger.Log(LogLevel.Debug, $"Found Avalonia GUI executable at: {normalizedPath}");
                     return normalizedPath;
@@ -95,55 +90,58 @@ namespace ColDogStudios.ColDogLocker.Cli
             return null;
         }
 
-        private static IEnumerable<string> GetCandidatePaths()
+        internal static IEnumerable<string> GetCandidatePaths(GuiLauncherEnvironment environment)
         {
-            var cliDirectory = Path.GetFullPath(AppContext.BaseDirectory);
-            var executableNames = GetExecutableNames();
+            var cliDirectory = Path.GetFullPath(environment.BaseDirectory);
+            var executableNames = GetExecutableNames(environment);
 
             foreach (var executableName in executableNames)
             {
                 yield return Path.Combine(cliDirectory, executableName);
             }
 
-            if (OperatingSystem.IsMacOS())
+            var sourceRoot = FindSourceRoot(cliDirectory, environment);
+            if (sourceRoot != null)
+            {
+                foreach (var ancestor in GetAncestorDirectories(cliDirectory))
+                {
+                    if (!IsWithinSourceRoot(ancestor, sourceRoot))
+                    {
+                        continue;
+                    }
+
+                    foreach (var executableName in executableNames)
+                    {
+                        yield return Path.Combine(ancestor, "bin", "Debug", executableName);
+                        yield return Path.Combine(ancestor, "bin", "Release", executableName);
+                        yield return Path.Combine(ancestor, "bin", "net10.0", executableName);
+                        yield return Path.Combine(ancestor, "bin", "Debug", "net10.0", executableName);
+                        yield return Path.Combine(ancestor, "bin", "Release", "net10.0", executableName);
+                        yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", executableName);
+                        yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Release", "net10.0", executableName);
+                    }
+                }
+            }
+
+            if (environment.IsMacOS)
             {
                 yield return "/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker";
             }
 
-            var sourceRoot = FindSourceRoot(cliDirectory);
-            if (sourceRoot == null)
+            if (environment.IsLinux)
             {
-                yield break;
-            }
-
-            foreach (var ancestor in GetAncestorDirectories(cliDirectory))
-            {
-                if (!IsWithinSourceRoot(ancestor, sourceRoot))
-                {
-                    continue;
-                }
-
-                foreach (var executableName in executableNames)
-                {
-                    yield return Path.Combine(ancestor, "bin", "Debug", executableName);
-                    yield return Path.Combine(ancestor, "bin", "Release", executableName);
-                    yield return Path.Combine(ancestor, "bin", "net10.0", executableName);
-                    yield return Path.Combine(ancestor, "bin", "Debug", "net10.0", executableName);
-                    yield return Path.Combine(ancestor, "bin", "Release", "net10.0", executableName);
-                    yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", executableName);
-                    yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Release", "net10.0", executableName);
-                }
+                yield return "/opt/coldog-locker/ColDogLocker";
             }
         }
 
-        private static string? FindSourceRoot(string startDirectory)
+        private static string? FindSourceRoot(string startDirectory, GuiLauncherEnvironment environment)
         {
             foreach (var ancestor in GetAncestorDirectories(startDirectory))
             {
-                if ((File.Exists(Path.Combine(ancestor, "ColDogLocker.sln")) ||
-                     File.Exists(Path.Combine(ancestor, "ColDogLocker.slnx"))) &&
-                    Directory.Exists(Path.Combine(ancestor, "ColDogLocker.Avalonia")) &&
-                    Directory.Exists(Path.Combine(ancestor, "ColDogLocker.Cli")))
+                if ((environment.FileExists(Path.Combine(ancestor, "ColDogLocker.sln")) ||
+                     environment.FileExists(Path.Combine(ancestor, "ColDogLocker.slnx"))) &&
+                    environment.DirectoryExists(Path.Combine(ancestor, "ColDogLocker.Avalonia")) &&
+                    environment.DirectoryExists(Path.Combine(ancestor, "ColDogLocker.Cli")))
                 {
                     return Path.GetFullPath(ancestor);
                 }
@@ -160,9 +158,9 @@ namespace ColDogStudios.ColDogLocker.Cli
                     !Path.IsPathRooted(relativePath));
         }
 
-        private static IEnumerable<string> GetExecutableNames()
+        private static IEnumerable<string> GetExecutableNames(GuiLauncherEnvironment environment)
         {
-            if (OperatingSystem.IsWindows())
+            if (environment.IsWindows)
             {
                 yield return "ColDogLocker.exe";
                 yield break;
@@ -179,6 +177,53 @@ namespace ColDogStudios.ColDogLocker.Cli
                 yield return directory.FullName;
                 directory = directory.Parent;
             }
+        }
+    }
+
+    internal sealed class GuiLauncherEnvironment
+    {
+        public static GuiLauncherEnvironment Current { get; } = new()
+        {
+            BaseDirectory = AppContext.BaseDirectory,
+            IsWindows = OperatingSystem.IsWindows(),
+            IsMacOS = OperatingSystem.IsMacOS(),
+            IsLinux = OperatingSystem.IsLinux(),
+            FileExists = File.Exists,
+            DirectoryExists = Directory.Exists,
+            StartProcess = startInfo =>
+            {
+                var process = Process.Start(startInfo);
+                return process == null ? null : new GuiProcess(process);
+            }
+        };
+
+        public required string BaseDirectory { get; init; }
+
+        public required bool IsWindows { get; init; }
+
+        public required bool IsMacOS { get; init; }
+
+        public required bool IsLinux { get; init; }
+
+        public required Func<string, bool> FileExists { get; init; }
+
+        public required Func<string, bool> DirectoryExists { get; init; }
+
+        public required Func<ProcessStartInfo, IGuiProcess?> StartProcess { get; init; }
+    }
+
+    internal interface IGuiProcess : IDisposable
+    {
+        int Id { get; }
+    }
+
+    internal sealed class GuiProcess(Process process) : IGuiProcess
+    {
+        public int Id => process.Id;
+
+        public void Dispose()
+        {
+            process.Dispose();
         }
     }
 }
