@@ -9,7 +9,7 @@ ColDog Locker manages directories called lockers. A locker is an ordinary folder
 ColDog Locker currently has three user-facing interfaces:
 
 - **Avalonia GUI**: `cdlocker gui`
-- **Terminal UI**: `cdlocker tui` or `cdlocker terminal`
+- **Terminal UI**: `cdlocker tui`
 - **CLI commands**: `cdlocker <command> ...`
 
 Running `cdlocker` with no arguments currently shows command help. Use `cdlocker gui` when you want the graphical interface.

@@ -32,12 +32,6 @@ Current behavior:
 
 Launches the terminal user interface.
 
-Alias:
-
-```bash
-cdlocker terminal
-```
-
 ## Locker Commands
 
 ### `cdlocker new <name> [--path <parent>] [--password <password>]`

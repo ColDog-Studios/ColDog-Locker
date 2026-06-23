@@ -27,7 +27,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine("USAGE:");
             Console.WriteLine("  cdlocker                           Show help");
             Console.WriteLine("  cdlocker gui                       Launch GUI");
-            Console.WriteLine("  cdlocker terminal                  Launch Terminal UI");
+            Console.WriteLine("  cdlocker tui                       Launch Terminal UI");
             Console.WriteLine();
 
             Console.WriteLine("LOCKER COMMANDS:");
@@ -292,10 +292,9 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  Launches the graphical user interface.");
                     break;
 
-                case "terminal":
                 case "tui":
                     Console.WriteLine("LAUNCH TERMINAL UI:");
-                    Console.WriteLine("  cdlocker terminal");
+                    Console.WriteLine("  cdlocker tui");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Launches the terminal-based user interface.");
@@ -305,7 +304,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine($"No help available for command: {command}");
                     Console.WriteLine();
                     Console.WriteLine(
-                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, gui, terminal");
+                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, update, gui, tui");
                     break;
             }
         }
