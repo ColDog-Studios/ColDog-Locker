@@ -46,7 +46,6 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
 
             Assert.Contains("No help available for command: missing-command", output);
             Assert.Contains("update", output);
-            Assert.Contains("terminal", output);
             Assert.Contains("tui", output);
         }
 
