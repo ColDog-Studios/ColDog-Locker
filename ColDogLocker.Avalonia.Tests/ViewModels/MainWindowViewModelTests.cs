@@ -195,7 +195,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
                 {
                     Guid = System.Guid.NewGuid().ToString(),
                     Name = "Alpha",
-                    Location = Path.Combine(Path.DirectorySeparatorChar.ToString(), "vault", "alpha"),
+                    Location = $"{Path.DirectorySeparatorChar}{Path.Join("vault", "alpha")}",
                     IsLocked = false,
                     LastModified = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc),
                     Size = 200
@@ -204,7 +204,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
                 {
                     Guid = System.Guid.NewGuid().ToString(),
                     Name = "Beta",
-                    Location = Path.Combine(Path.DirectorySeparatorChar.ToString(), "archive", "beta"),
+                    Location = $"{Path.DirectorySeparatorChar}{Path.Join("archive", "beta")}",
                     IsLocked = true,
                     LastModified = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     Size = 100

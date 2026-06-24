@@ -309,10 +309,21 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         private static bool CommandExists(string command)
         {
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                return false;
+            }
+
+            var candidate = Path.GetFileName(command);
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return false;
+            }
+
             var paths = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
                 .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            return paths.Any(path => File.Exists(Path.Combine(path, command)));
+            return paths.Any(path => File.Exists(Path.Combine(path, candidate)));
         }
 
         private static bool IsRunningAsAdministrator()

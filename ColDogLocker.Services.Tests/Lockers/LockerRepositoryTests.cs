@@ -313,7 +313,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public static TestDatabase Create()
             {
-                return new TestDatabase(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}"));
+                return new TestDatabase(System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}"));
             }
 
             public static TestDatabase CreateInitialized()

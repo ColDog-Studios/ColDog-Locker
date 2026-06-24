@@ -49,6 +49,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
+            var lockerNameValidationError = ValidateLockerName(lockerName);
+            if (lockerNameValidationError != null)
+            {
+                Console.Error.WriteLine($"Error: {lockerNameValidationError}");
+                return 1;
+            }
+
             string? customPath = null;
             string? providedPassword = null;
 
@@ -69,8 +76,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             // Determine locker location
             var lockerLocation = customPath is not null
-                ? Path.Combine(customPath, lockerName)
-                : Path.Combine(AppPaths.CdlDir, lockerName);
+                ? Path.Join(customPath, lockerName)
+                : Path.Join(AppPaths.CdlDir, lockerName);
 
             // Validate path is not protected
             var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
@@ -161,6 +168,25 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.Error.WriteLine($"Error creating locker: {ex.Message}");
                 return 1;
             }
+        }
+
+        private static string? ValidateLockerName(string lockerName)
+        {
+            if (string.IsNullOrWhiteSpace(lockerName))
+            {
+                return "Locker name cannot be empty.";
+            }
+
+            var trimmedName = lockerName.Trim();
+            if (trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                trimmedName.Contains(Path.DirectorySeparatorChar) ||
+                trimmedName.Contains(Path.AltDirectorySeparatorChar) ||
+                trimmedName is "." or "..")
+            {
+                return "Locker name must be a valid file name, not a path.";
+            }
+
+            return null;
         }
 
         #endregion

@@ -84,7 +84,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             try
             {
                 var logsPath = Path.GetDirectoryName(Logger.GetCurrentLogFilePath())
-                               ?? Path.Combine(AppPaths.LocalConfig, "logs");
+                               ?? Path.Join(AppPaths.LocalConfig, "logs");
                 AppFilePermissions.EnsurePrivateDirectory(logsPath);
 
                 if (_platformService != null)

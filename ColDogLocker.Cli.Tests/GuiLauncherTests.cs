@@ -57,7 +57,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         [Fact]
         public void Launch_WhenLinuxInstalledGuiIsMissing_ReturnsExecutableNotFoundError()
         {
-            var errorWriter = new StringWriter();
+            using var errorWriter = new StringWriter();
             var originalError = Console.Error;
 
             try
@@ -102,7 +102,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         [Fact]
         public void Launch_WhenProcessCannotStart_ReturnsFailure()
         {
-            var baseDirectory = Path.Combine(Path.GetTempPath(), $"cdlocker-gui-launcher-tests-{Guid.NewGuid():N}");
+            var baseDirectory = Path.Join(Path.GetTempPath(), $"cdlocker-gui-launcher-tests-{Guid.NewGuid():N}");
             var expectedExecutable = Path.GetFullPath(Path.Combine(baseDirectory, "ColDogLocker"));
             var environment = CreateEnvironment(
                 isMacOS: false,
@@ -147,7 +147,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         [Fact]
         public void Launch_WhenMacOsInstalledAppIsMissing_ReturnsExecutableNotFoundError()
         {
-            var errorWriter = new StringWriter();
+            using var errorWriter = new StringWriter();
             var originalError = Console.Error;
 
             try
@@ -171,7 +171,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         [Fact]
         public void GetCandidatePaths_WhenSourceTreeAndInstalledFallbackExist_PrefersSourceTreeBeforeInstalledFallback()
         {
-            var sourceRoot = Path.Combine(Path.GetTempPath(), $"cdlocker-source-{Guid.NewGuid():N}");
+            var sourceRoot = Path.Join(Path.GetTempPath(), $"cdlocker-source-{Guid.NewGuid():N}");
             var baseDirectory = Path.Combine(sourceRoot, "ColDogLocker.Cli", "bin", "Debug", "net10.0");
             var sourceCandidate = Path.Combine(sourceRoot, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", "ColDogLocker");
             var environment = CreateEnvironment(
@@ -202,7 +202,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         {
             return new GuiLauncherEnvironment
             {
-                BaseDirectory = baseDirectory ?? Path.Combine(Path.GetTempPath(), $"cdlocker-gui-launcher-tests-{Guid.NewGuid():N}"),
+                BaseDirectory = baseDirectory ?? Path.Join(Path.GetTempPath(), $"cdlocker-gui-launcher-tests-{Guid.NewGuid():N}"),
                 IsMacOS = isMacOS,
                 IsLinux = isLinux,
                 IsWindows = isWindows,

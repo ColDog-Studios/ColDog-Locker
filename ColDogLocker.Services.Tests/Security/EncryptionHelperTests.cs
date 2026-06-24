@@ -41,7 +41,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 
             public static TestDirectory Create()
             {
-                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-encryption-tests-{Guid.NewGuid():N}");
+                var directoryName = $"cdlocker-encryption-tests-{Guid.NewGuid():N}";
+                var safeDirectoryName = System.IO.Path.GetFileName(directoryName) ?? directoryName;
+                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), safeDirectoryName);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
             }

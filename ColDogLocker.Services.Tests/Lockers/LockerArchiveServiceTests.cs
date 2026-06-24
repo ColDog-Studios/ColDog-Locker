@@ -283,7 +283,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public static TestWorkspace Create()
             {
-                return new TestWorkspace(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-archive-tests-{Guid.NewGuid():N}"));
+                return new TestWorkspace(System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-archive-tests-{Guid.NewGuid():N}"));
             }
 
             public string CreateDirectory(string name)

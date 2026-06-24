@@ -113,7 +113,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
         private static string CreateSafeLockerPath()
         {
             var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            return Path.Combine(profile, "Documents", "ColDogLockerHeadless", "HeadlessLocker");
+            return Path.Join(profile, "Documents", "ColDogLockerHeadless", "HeadlessLocker");
         }
 
         private static T RequiredControl<T>(Control root, string name) where T : Control

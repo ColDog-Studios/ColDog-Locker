@@ -197,21 +197,12 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
                     return false;
                 }
 
-                // Validate pre-release format (no leading zeros in numeric identifiers per semver spec)
-                if (preRelease != null)
+                var preReleaseParts = preRelease?.Split('.');
+                if (preReleaseParts?.Any(part => part.Length > 1 && part[0] == '0' && char.IsDigit(part[1])) == true)
                 {
-                    var parts = preRelease.Split('.');
-                    foreach (var part in parts)
-                    {
-                        // Reject numeric identifiers with leading zeros (except "0" itself)
-                        if (part.Length > 1 && part[0] == '0' && char.IsDigit(part[1]))
-                        {
-                            return false;
-                        }
-                    }
+                    return false;
                 }
 
-                var preReleaseParts = preRelease?.Split('.');
                 result = new SemanticVersion(major, minor, patch, preRelease, preReleaseParts);
                 return true;
             }

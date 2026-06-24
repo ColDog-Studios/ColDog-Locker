@@ -48,7 +48,7 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
                 throw new InvalidOperationException("Logs directory name must be a relative path segment.");
             }
 
-            var logsDirectoryPath = Path.Combine(AppPaths.LocalConfig, logsDirectoryName);
+            var logsDirectoryPath = Path.Join(AppPaths.LocalConfig, logsDirectoryName);
             var createdLogsDirectory = !Directory.Exists(logsDirectoryPath);
             AppFilePermissions.EnsurePrivateDirectory(logsDirectoryPath);
             if (createdLogsDirectory)

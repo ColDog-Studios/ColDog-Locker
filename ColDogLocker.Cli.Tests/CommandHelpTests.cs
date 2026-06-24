@@ -51,7 +51,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
 
         private static string CaptureOutput(Action action)
         {
-            var outputWriter = new StringWriter();
+            using var outputWriter = new StringWriter();
             var originalOutput = Console.Out;
 
             try

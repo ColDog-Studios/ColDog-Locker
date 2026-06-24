@@ -192,7 +192,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private async void OpenLogsFolder_Click(object? sender, RoutedEventArgs e)
         {
             var logsPath = Path.GetDirectoryName(Logger.GetCurrentLogFilePath())
-                           ?? Path.Combine(AppPaths.LocalConfig, "logs");
+                           ?? Path.Join(AppPaths.LocalConfig, "logs");
             await OpenFolderAsync(logsPath, "Failed to open logs folder");
         }
 

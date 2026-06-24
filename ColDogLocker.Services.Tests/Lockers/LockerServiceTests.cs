@@ -32,7 +32,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         [Fact]
         public void AddLocker_WithInvalidName_ShouldThrowArgumentException()
         {
-            var locker = new LockerModel("bad/name", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            var locker = new LockerModel("bad/name", "hash", Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString()));
 
             var exception = Assert.Throws<ArgumentException>(() => LockerService.AddLocker(locker));
 
@@ -63,7 +63,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         [Fact]
         public void RemoveLocker_WithLockedLocker_ShouldThrowInvalidOperationException()
         {
-            var locker = new LockerModel("Locked", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())) { IsLocked = true };
+            var locker = new LockerModel("Locked", "hash", Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString())) { IsLocked = true };
 
             var exception = Assert.Throws<InvalidOperationException>(() => LockerService.RemoveLocker(locker));
 
@@ -73,7 +73,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         [Fact]
         public void Verify_MissingDirectory_ShouldReturnInvalidResult()
         {
-            var locker = new LockerModel("Missing", "hash", Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            var locker = new LockerModel("Missing", "hash", Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString()));
 
             var result = LockerService.Verify(locker);
 

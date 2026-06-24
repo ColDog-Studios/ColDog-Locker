@@ -49,7 +49,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             Console.WriteLine($"\nLocal Config Location: {AppPaths.LocalConfig}");
             Console.WriteLine($"Current Directory: {AppPaths.CdlDir}");
-            var logPath = Path.Combine(AppPaths.LocalConfig, "logs");
+            var logPath = Path.Join(AppPaths.LocalConfig, "logs");
             Console.WriteLine($"Log Directory: {logPath}");
             Console.WriteLine($"Log Directory Exists: {Directory.Exists(logPath)}");
 
