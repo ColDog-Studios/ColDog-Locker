@@ -224,7 +224,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public Func<UpdatePlatform> PlatformDetector { get; set; } = UpdatePlatform.Detect;
 
         public Func<string> DownloadDirectoryProvider { get; set; } =
-            () => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            () => Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
 
         public bool AllowLoopbackHttpDownloadsForTesting { get; set; }
     }
@@ -772,7 +772,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         private string GetDownloadPath(string installerFileName)
         {
             var safeFileName = Path.GetFileName(installerFileName);
-            return Path.Combine(_options.DownloadDirectoryProvider(), safeFileName);
+            return Path.Join(_options.DownloadDirectoryProvider(), safeFileName);
         }
 
         private Uri ValidateDownloadUri(string downloadUrl)
@@ -832,7 +832,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             CancellationToken cancellationToken)
         {
             var targetDirectory = Path.GetDirectoryName(targetPath) ?? Directory.GetCurrentDirectory();
-            var tempPath = Path.Combine(targetDirectory, $".{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+            var tempPath = Path.Join(targetDirectory, $".{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
 
             try
             {

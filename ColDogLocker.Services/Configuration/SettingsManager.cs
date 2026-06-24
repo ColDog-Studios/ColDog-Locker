@@ -26,7 +26,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
     public static class SettingsManager
     {
         // Path to the settings file
-        private static readonly string _settingsFile = Path.Combine(AppPaths.LocalConfig, "settings.json");
+        private static readonly string _settingsFile = Path.Join(AppPaths.LocalConfig, "settings.json");
 
         // Timestamp of the last time the application wrote the settings file (UTC).
         // FileWatcherManager uses this to ignore change events caused by our own saves.
@@ -281,7 +281,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                     var backupDirectory = Path.GetDirectoryName(_settingsFile) ?? AppPaths.LocalConfig;
                     var backupFileName = $"settings_corrupted_{timestamp}.json.bak";
-                    var backupFile = Path.Combine(backupDirectory, backupFileName);
+                    var backupFile = Path.Join(backupDirectory, backupFileName);
                     File.Copy(_settingsFile, backupFile, true);
                     AppFilePermissions.ApplyPrivateFile(backupFile);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");

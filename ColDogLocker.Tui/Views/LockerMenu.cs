@@ -98,7 +98,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             // Get locker location
-            var lockerLocation = Path.Combine(AppPaths.CdlDir, lockerName);
+            var lockerLocation = Path.Join(AppPaths.CdlDir, lockerName);
 
             // Validate locker path is not protected
             Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");

@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Environment
             var localConfig = AppPaths.LocalConfig;
 
             // Assert
-            Assert.EndsWith(Path.Combine("ColDog Studios", "ColDog Locker"), localConfig);
+            Assert.EndsWith(Path.Join("ColDog Studios", "ColDog Locker"), localConfig);
         }
 
         [Fact]

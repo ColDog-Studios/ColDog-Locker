@@ -171,14 +171,10 @@ namespace ColDogStudios.ColDogLocker.Cli
 
         private static IEnumerable<string> GetSafeExecutableNames(GuiLauncherEnvironment environment)
         {
-            foreach (var executableName in GetExecutableNames(environment))
-            {
-                var safeExecutableName = Path.GetFileName(executableName);
-                if (!string.IsNullOrWhiteSpace(safeExecutableName))
-                {
-                    yield return safeExecutableName;
-                }
-            }
+            return GetExecutableNames(environment)
+                .Select(Path.GetFileName)
+                .Where(safeExecutableName => !string.IsNullOrWhiteSpace(safeExecutableName))
+                .Select(safeExecutableName => safeExecutableName!);
         }
 
         private static IEnumerable<string> GetAncestorDirectories(string startDirectory)

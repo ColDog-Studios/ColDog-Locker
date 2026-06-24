@@ -43,7 +43,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
             {
                 var directoryName = $"cdlocker-encryption-tests-{Guid.NewGuid():N}";
                 var safeDirectoryName = System.IO.Path.GetFileName(directoryName) ?? directoryName;
-                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), safeDirectoryName);
+                var path = System.IO.Path.Join(System.IO.Path.GetTempPath(), safeDirectoryName);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
             }
@@ -280,7 +280,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         {
             // Arrange
             using var directory = TestDirectory.Create();
-            var filePath = Path.Combine(directory.Path, "secret.bin");
+            var filePath = Path.Join(directory.Path, "secret.bin");
             var originalBytes = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
             File.WriteAllBytes(filePath, originalBytes);
 
@@ -299,7 +299,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         {
             // Arrange
             using var directory = TestDirectory.Create();
-            var filePath = Path.Combine(directory.Path, "secret.txt");
+            var filePath = Path.Join(directory.Path, "secret.txt");
             File.WriteAllText(filePath, "sensitive content");
             EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
 

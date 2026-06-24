@@ -182,7 +182,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
         public static string GetArchivePath(string lockedLockerDirectory)
         {
-            return Path.Combine(lockedLockerDirectory, ArchiveFileName);
+            return Path.Join(lockedLockerDirectory, ArchiveFileName);
         }
 
         public static string ComputeSha256(string filePath)
@@ -367,7 +367,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             var normalizedName = ValidateArchiveEntryName(entryName);
             var destinationRootWithSeparator = EnsureTrailingSeparator(destinationRoot);
-            var destinationPath = Path.GetFullPath(Path.Combine(destinationRootWithSeparator, normalizedName.Replace('/', Path.DirectorySeparatorChar)));
+            var destinationPath = Path.GetFullPath(Path.Join(destinationRootWithSeparator, normalizedName.Replace('/', Path.DirectorySeparatorChar)));
             var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
             if (!destinationPath.StartsWith(destinationRootWithSeparator, comparison))

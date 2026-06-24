@@ -242,14 +242,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            var newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
+            var newLockerLocation = Path.Join(lockerDirectory, $".{locker.LockerName}");
             if (Directory.Exists(newLockerLocation))
             {
                 throw new IOException($"Target locked locker directory already exists: {newLockerLocation}");
             }
 
             var previousLocation = locker.LockerLocation;
-            var tempLockedLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
+            var tempLockedLocation = Path.Join(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
             try
             {
                 Directory.CreateDirectory(tempLockedLocation);
@@ -320,7 +320,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            var newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
+            var newLockerLocation = Path.Join(lockerDirectory, locker.LockerName);
             if (Directory.Exists(newLockerLocation))
             {
                 throw new IOException($"Target unlocked locker directory already exists: {newLockerLocation}");
@@ -330,7 +330,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var previousStorageFormatVersion = locker.StorageFormatVersion;
             var previousLockedArchiveSha256 = locker.LockedArchiveSha256;
             var previousLockedAtUtc = locker.LockedAtUtc;
-            var stagingLocation = Path.Combine(lockerDirectory, $"{locker.LockerName}.{Guid.NewGuid():N}.unlocking");
+            var stagingLocation = Path.Join(lockerDirectory, $"{locker.LockerName}.{Guid.NewGuid():N}.unlocking");
             var archivePath = LockerArchiveService.GetArchivePath(previousLocation);
             var archiveVerification = LockerArchiveService.VerifyArchive(archivePath, locker, locker.LockedArchiveSha256);
             if (!archiveVerification.IsValid)
@@ -516,7 +516,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         result.AddWarning("Unlocked locker directory name should not start with period");
                     }
 
-                    var lockedSibling = Path.Combine(
+                    var lockedSibling = Path.Join(
                         Path.GetDirectoryName(locker.LockerLocation) ?? string.Empty,
                         $".{locker.LockerName}");
                     var leftoverArchivePath = LockerArchiveService.GetArchivePath(lockedSibling);

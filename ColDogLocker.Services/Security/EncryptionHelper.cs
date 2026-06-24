@@ -354,7 +354,7 @@ namespace ColDogStudios.ColDogLocker.Services.Security
         {
             var directory = Path.GetDirectoryName(inputFile) ?? Directory.GetCurrentDirectory();
             var fileName = Path.GetFileName(inputFile);
-            return Path.Combine(directory, $".{fileName}.{Guid.NewGuid():N}{suffix}.tmp");
+            return Path.Join(directory, $".{fileName}.{Guid.NewGuid():N}{suffix}.tmp");
         }
 
         private static void ReplaceFile(string sourceFile, string destinationFile)

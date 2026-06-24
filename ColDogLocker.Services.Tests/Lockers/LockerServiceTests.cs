@@ -90,7 +90,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var directory = TestDirectory.Create("Unlocked");
             File.WriteAllText(Path.Join(directory.Path, "file.txt"), "content");
-            var childDirectory = Directory.CreateDirectory(Path.Combine(directory.Path, "child"));
+            var childDirectory = Directory.CreateDirectory(Path.Join(directory.Path, "child"));
             File.WriteAllText(Path.Join(childDirectory.FullName, "nested.txt"), "content");
             var locker = new LockerModel("Unlocked", "hash", directory.Path);
 
@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             using var source = TestDirectory.Create("Source");
             File.WriteAllText(Path.Join(source.Path, "secret.txt"), "classified");
             var parent = Directory.GetParent(source.Path)!.FullName;
-            var lockedPath = Path.Combine(parent, "Locked");
+            var lockedPath = Path.Join(parent, "Locked");
             Directory.CreateDirectory(lockedPath);
 
             var locker = new LockerModel("Locked", "hash", lockedPath) { IsLocked = true };
@@ -164,7 +164,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             using var source = TestDirectory.Create("Source");
             File.WriteAllText(Path.Join(source.Path, "secret.txt"), "classified");
             var parent = Directory.GetParent(source.Path)!.FullName;
-            var lockedPath = Path.Combine(parent, ".Locked");
+            var lockedPath = Path.Join(parent, ".Locked");
             Directory.CreateDirectory(lockedPath);
 
             var locker = new LockerModel("Locked", "hash", lockedPath) { IsLocked = true };
@@ -176,7 +176,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             locker.StorageFormatVersion = LockerArchiveService.CurrentStorageFormatVersion;
             locker.LockedArchiveSha256 = archive.Sha256;
             locker.LockedAtUtc = archive.LockedAtUtc;
-            File.WriteAllText(Path.Combine(lockedPath, "extra.txt"), "unexpected");
+            File.WriteAllText(Path.Join(lockedPath, "extra.txt"), "unexpected");
 
             var result = LockerService.Verify(locker);
 
@@ -189,13 +189,13 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             const string password = "CorrectHorseBatteryStaple123!";
             using var workspace = TestDirectory.CreateAllowed("Workspace");
-            var sourcePath = Path.Combine(workspace.Path, "source");
+            var sourcePath = Path.Join(workspace.Path, "source");
             Directory.CreateDirectory(sourcePath);
-            File.WriteAllText(Path.Combine(sourcePath, "secret.txt"), "classified");
+            File.WriteAllText(Path.Join(sourcePath, "secret.txt"), "classified");
 
-            var lockedPath = Path.Combine(workspace.Path, ".Vault");
+            var lockedPath = Path.Join(workspace.Path, ".Vault");
             Directory.CreateDirectory(lockedPath);
-            var unlockedPath = Path.Combine(workspace.Path, "Vault");
+            var unlockedPath = Path.Join(workspace.Path, "Vault");
             var locker = new LockerModel("Vault", EncryptionHelper.HashPassword(password), lockedPath) { IsLocked = true };
             var archive = LockerArchiveService.CreateFromDirectory(
                 sourcePath,
@@ -256,17 +256,17 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             public static TestDirectory Create(string name)
             {
                 var parent = System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}");
-                var path = System.IO.Path.Combine(parent, name);
+                var path = System.IO.Path.Join(parent, name);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
             }
 
             public static TestDirectory CreateAllowed(string name)
             {
-                var parent = System.IO.Path.Combine(
+                var parent = System.IO.Path.Join(
                     Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                     $"cdlocker-tests-{Guid.NewGuid():N}");
-                var path = System.IO.Path.Combine(parent, name);
+                var path = System.IO.Path.Join(parent, name);
                 Directory.CreateDirectory(path);
                 return new TestDirectory(path);
             }

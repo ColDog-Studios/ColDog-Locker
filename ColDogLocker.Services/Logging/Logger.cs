@@ -115,7 +115,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         private const int MaxRetainedLogFiles = 4;
         private static readonly string _logDirectory = Path.GetFullPath(Path.Join(Path.GetFullPath(AppPaths.LocalConfig), "logs"));
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        private static readonly string _logFilePath = Path.Combine(_logDirectory, "cdl.log");
+        private static readonly string _logFilePath = Path.Join(_logDirectory, "cdl.log");
         private static readonly Lock _lockObject = new();
 
         private static LogLevel _minLogLevel = LogLevel.Info;
@@ -348,7 +348,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             {
                 EnsureLogDirectory();
                 var fallbackFileName = Path.GetFileName($"fallback_{_sessionId}.txt");
-                var fallbackPath = Path.Combine(_logDirectory, fallbackFileName);
+                var fallbackPath = Path.Join(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
                     $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {loggerException.Message}){Environment.NewLine}");
                 AppFilePermissions.ApplyPrivateFile(fallbackPath);
@@ -408,7 +408,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             }
 
             var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-            var rotatedName = Path.Combine(_logDirectory, $"cdl_{timestamp}.log");
+            var rotatedName = Path.Join(_logDirectory, $"cdl_{timestamp}.log");
             File.Move(_logFilePath, rotatedName);
 
             // Delete oldest files beyond the retained limit

@@ -88,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             SetLocation(string.IsNullOrWhiteSpace(lockerName)
                 ? string.Empty
-                : Path.Combine(_defaultBasePath, lockerName));
+                : Path.Join(_defaultBasePath, lockerName));
         }
 
         private async void BrowseButton_Click(object? sender, RoutedEventArgs e)

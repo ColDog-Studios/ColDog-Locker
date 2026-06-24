@@ -318,7 +318,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.True(File.Exists(result.FilePath));
-                Assert.Equal(Path.Combine(tempDirectory, "cdl.msi"), result.FilePath);
+                Assert.Equal(Path.Join(tempDirectory, "cdl.msi"), result.FilePath);
                 Assert.Equal(bytes.Length, result.BytesDownloaded);
                 Assert.Equal(Sha256Hex(bytes), result.Sha256);
             }
@@ -358,7 +358,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.Equal(UpdateFailureKind.DigestMismatch, exception.FailureKind);
-                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+                Assert.False(File.Exists(Path.Join(tempDirectory, "cdl.msi")));
             }
             finally
             {
@@ -373,7 +373,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
             var oldBytes = Encoding.UTF8.GetBytes("old installer");
             var newBytes = Encoding.UTF8.GetBytes("new installer");
             var tempDirectory = CreateTempDirectory();
-            var targetPath = Path.Combine(tempDirectory, "cdl.msi");
+            var targetPath = Path.Join(tempDirectory, "cdl.msi");
             await File.WriteAllBytesAsync(targetPath, oldBytes);
 
             using var service = CreateService(
@@ -434,7 +434,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.Equal(UpdateFailureKind.InvalidDownloadUrl, exception.FailureKind);
-                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+                Assert.False(File.Exists(Path.Join(tempDirectory, "cdl.msi")));
             }
             finally
             {
@@ -469,7 +469,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.Equal(UpdateFailureKind.InvalidDownloadUrl, exception.FailureKind);
-                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+                Assert.False(File.Exists(Path.Join(tempDirectory, "cdl.msi")));
             }
             finally
             {
@@ -506,7 +506,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.Equal(UpdateFailureKind.DownloadTooLarge, exception.FailureKind);
-                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+                Assert.False(File.Exists(Path.Join(tempDirectory, "cdl.msi")));
             }
             finally
             {
@@ -541,7 +541,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
                 // Assert
                 Assert.Equal(UpdateFailureKind.MissingDigest, exception.FailureKind);
-                Assert.False(File.Exists(Path.Combine(tempDirectory, "cdl.msi")));
+                Assert.False(File.Exists(Path.Join(tempDirectory, "cdl.msi")));
             }
             finally
             {

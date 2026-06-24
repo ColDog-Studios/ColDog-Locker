@@ -103,7 +103,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         public void Launch_WhenProcessCannotStart_ReturnsFailure()
         {
             var baseDirectory = Path.Join(Path.GetTempPath(), $"cdlocker-gui-launcher-tests-{Guid.NewGuid():N}");
-            var expectedExecutable = Path.GetFullPath(Path.Combine(baseDirectory, "ColDogLocker"));
+            var expectedExecutable = Path.GetFullPath(Path.Join(baseDirectory, "ColDogLocker"));
             var environment = CreateEnvironment(
                 isMacOS: false,
                 isLinux: true,
@@ -172,17 +172,17 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         public void GetCandidatePaths_WhenSourceTreeAndInstalledFallbackExist_PrefersSourceTreeBeforeInstalledFallback()
         {
             var sourceRoot = Path.Join(Path.GetTempPath(), $"cdlocker-source-{Guid.NewGuid():N}");
-            var baseDirectory = Path.Combine(sourceRoot, "ColDogLocker.Cli", "bin", "Debug", "net10.0");
-            var sourceCandidate = Path.Combine(sourceRoot, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", "ColDogLocker");
+            var baseDirectory = Path.Join(sourceRoot, "ColDogLocker.Cli", "bin", "Debug", "net10.0");
+            var sourceCandidate = Path.Join(sourceRoot, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", "ColDogLocker");
             var environment = CreateEnvironment(
                 isMacOS: false,
                 isLinux: true,
                 isWindows: false,
                 baseDirectory: baseDirectory,
-                fileExists: path => string.Equals(path, Path.Combine(sourceRoot, "ColDogLocker.slnx"), StringComparison.Ordinal),
+                fileExists: path => string.Equals(path, Path.Join(sourceRoot, "ColDogLocker.slnx"), StringComparison.Ordinal),
                 directoryExists: path =>
-                    string.Equals(path, Path.Combine(sourceRoot, "ColDogLocker.Avalonia"), StringComparison.Ordinal) ||
-                    string.Equals(path, Path.Combine(sourceRoot, "ColDogLocker.Cli"), StringComparison.Ordinal));
+                    string.Equals(path, Path.Join(sourceRoot, "ColDogLocker.Avalonia"), StringComparison.Ordinal) ||
+                    string.Equals(path, Path.Join(sourceRoot, "ColDogLocker.Cli"), StringComparison.Ordinal));
 
             var candidates = GuiLauncher.GetCandidatePaths(environment).ToArray();
 

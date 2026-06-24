@@ -320,10 +320,15 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 return false;
             }
 
+            if (Path.IsPathRooted(candidate))
+            {
+                return false;
+            }
+
             var paths = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
                 .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            return paths.Any(path => File.Exists(Path.Combine(path, candidate)));
+            return paths.Any(path => File.Exists(Path.Join(path, candidate)));
         }
 
         private static bool IsRunningAsAdministrator()

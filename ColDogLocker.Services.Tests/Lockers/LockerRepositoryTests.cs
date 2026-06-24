@@ -276,7 +276,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             private TestDatabase(string directory)
             {
                 Directory = directory;
-                Path = System.IO.Path.Combine(directory, "lockers.db");
+                Path = System.IO.Path.Join(directory, "lockers.db");
                 ConnectionString = $"Data Source={Path};Pooling=False";
                 System.IO.Directory.CreateDirectory(directory);
             }

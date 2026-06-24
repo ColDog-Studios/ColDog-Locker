@@ -34,7 +34,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         /// <summary>
         ///     Local configuration directory
         /// </summary>
-        public static readonly string LocalConfig = Path.Combine(
+        public static readonly string LocalConfig = Path.Join(
             LocalApplicationData,
             "ColDog Studios",
             "ColDog Locker"
@@ -43,7 +43,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         /// <summary>
         ///     Default ColDog Locker Directory
         /// </summary>
-        public static readonly string CdlDir = Path.Combine(
+        public static readonly string CdlDir = Path.Join(
             Documents,
             "ColDog Locker"
         );
