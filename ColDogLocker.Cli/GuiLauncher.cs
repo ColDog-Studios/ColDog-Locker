@@ -93,11 +93,11 @@ namespace ColDogStudios.ColDogLocker.Cli
         internal static IEnumerable<string> GetCandidatePaths(GuiLauncherEnvironment environment)
         {
             var cliDirectory = Path.GetFullPath(environment.BaseDirectory);
-            var executableNames = GetExecutableNames(environment);
+            var executableNames = GetSafeExecutableNames(environment);
 
             foreach (var executableName in executableNames)
             {
-                yield return Path.Combine(cliDirectory, executableName);
+                yield return Path.Join(cliDirectory, executableName);
             }
 
             var sourceRoot = FindSourceRoot(cliDirectory, environment);
@@ -112,13 +112,13 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                     foreach (var executableName in executableNames)
                     {
-                        yield return Path.Combine(ancestor, "bin", "Debug", executableName);
-                        yield return Path.Combine(ancestor, "bin", "Release", executableName);
-                        yield return Path.Combine(ancestor, "bin", "net10.0", executableName);
-                        yield return Path.Combine(ancestor, "bin", "Debug", "net10.0", executableName);
-                        yield return Path.Combine(ancestor, "bin", "Release", "net10.0", executableName);
-                        yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", executableName);
-                        yield return Path.Combine(ancestor, "ColDogLocker.Avalonia", "bin", "Release", "net10.0", executableName);
+                        yield return Path.Join(ancestor, "bin", "Debug", executableName);
+                        yield return Path.Join(ancestor, "bin", "Release", executableName);
+                        yield return Path.Join(ancestor, "bin", "net10.0", executableName);
+                        yield return Path.Join(ancestor, "bin", "Debug", "net10.0", executableName);
+                        yield return Path.Join(ancestor, "bin", "Release", "net10.0", executableName);
+                        yield return Path.Join(ancestor, "ColDogLocker.Avalonia", "bin", "Debug", "net10.0", executableName);
+                        yield return Path.Join(ancestor, "ColDogLocker.Avalonia", "bin", "Release", "net10.0", executableName);
                     }
                 }
             }
@@ -138,10 +138,10 @@ namespace ColDogStudios.ColDogLocker.Cli
         {
             foreach (var ancestor in GetAncestorDirectories(startDirectory))
             {
-                if ((environment.FileExists(Path.Combine(ancestor, "ColDogLocker.sln")) ||
-                     environment.FileExists(Path.Combine(ancestor, "ColDogLocker.slnx"))) &&
-                    environment.DirectoryExists(Path.Combine(ancestor, "ColDogLocker.Avalonia")) &&
-                    environment.DirectoryExists(Path.Combine(ancestor, "ColDogLocker.Cli")))
+                if ((environment.FileExists(Path.Join(ancestor, "ColDogLocker.sln")) ||
+                     environment.FileExists(Path.Join(ancestor, "ColDogLocker.slnx"))) &&
+                    environment.DirectoryExists(Path.Join(ancestor, "ColDogLocker.Avalonia")) &&
+                    environment.DirectoryExists(Path.Join(ancestor, "ColDogLocker.Cli")))
                 {
                     return Path.GetFullPath(ancestor);
                 }
@@ -167,6 +167,18 @@ namespace ColDogStudios.ColDogLocker.Cli
             }
 
             yield return "ColDogLocker";
+        }
+
+        private static IEnumerable<string> GetSafeExecutableNames(GuiLauncherEnvironment environment)
+        {
+            foreach (var executableName in GetExecutableNames(environment))
+            {
+                var safeExecutableName = Path.GetFileName(executableName);
+                if (!string.IsNullOrWhiteSpace(safeExecutableName))
+                {
+                    yield return safeExecutableName;
+                }
+            }
         }
 
         private static IEnumerable<string> GetAncestorDirectories(string startDirectory)
