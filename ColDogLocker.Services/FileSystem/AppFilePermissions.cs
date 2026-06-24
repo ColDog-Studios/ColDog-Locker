@@ -74,15 +74,19 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
             catch (IOException)
             {
+                return;
             }
             catch (UnauthorizedAccessException)
             {
+                return;
             }
             catch (PlatformNotSupportedException)
             {
+                return;
             }
             catch (NotSupportedException)
             {
+                return;
             }
         }
     }

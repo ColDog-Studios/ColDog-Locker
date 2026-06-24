@@ -88,7 +88,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 SetArchiveFileProtection(archivePath);
                 return new LockerArchiveCreationResult(archivePath, ComputeSha256(archivePath), lockedAtUtc);
             }
-            catch
+            catch (Exception ex) when (IsArchiveOperationException(ex))
+            {
+                TryDeleteFile(archivePath);
+                throw;
+            }
+            catch (Exception)
             {
                 TryDeleteFile(archivePath);
                 throw;
@@ -139,6 +144,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     result.AddError("Locked archive metadata does not match locker metadata.");
                 }
             }
+            catch (Exception ex) when (IsArchiveReadException(ex))
+            {
+                result.AddError($"Locked archive metadata could not be read: {ex.Message}");
+            }
             catch (Exception ex)
             {
                 result.AddError($"Locked archive metadata could not be read: {ex.Message}");
@@ -173,7 +182,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 using var gzipStream = new GZipStream(encryptedStream, CompressionMode.Decompress, false);
                 ExtractValidatedTar(gzipStream, destinationDirectory);
             }
-            catch
+            catch (Exception ex) when (IsArchiveOperationException(ex))
+            {
+                TryDeleteDirectory(destinationDirectory);
+                throw;
+            }
+            catch (Exception)
             {
                 TryDeleteDirectory(destinationDirectory);
                 throw;
@@ -579,9 +593,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.SetUnixFileMode(archivePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
                 }
             }
-            catch
+            catch (Exception ex) when (IsArchiveProtectionException(ex))
             {
                 // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
+            }
+            catch (Exception)
+            {
+                // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
+                return;
             }
         }
 
@@ -595,9 +614,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.Delete(filePath);
                 }
             }
-            catch
+            catch (Exception ex) when (IsArchiveCleanupException(ex))
             {
                 // Cleanup failures should not hide the original archive error.
+            }
+            catch (Exception)
+            {
+                // Cleanup failures should not hide the original archive error.
+                return;
             }
         }
 
@@ -624,10 +648,43 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 Directory.Delete(directoryPath, true);
             }
-            catch
+            catch (Exception ex) when (IsArchiveCleanupException(ex))
             {
                 // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
             }
+            catch (Exception)
+            {
+                // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
+                return;
+            }
+        }
+
+        private static bool IsArchiveOperationException(Exception ex)
+        {
+            return ex is IOException
+                or UnauthorizedAccessException
+                or DirectoryNotFoundException
+                or PathTooLongException
+                or ArgumentException
+                or NotSupportedException
+                or InvalidDataException
+                or JsonException
+                or CryptographicException;
+        }
+
+        private static bool IsArchiveReadException(Exception ex)
+        {
+            return IsArchiveOperationException(ex);
+        }
+
+        private static bool IsArchiveProtectionException(Exception ex)
+        {
+            return ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException or NotSupportedException or ArgumentException;
+        }
+
+        private static bool IsArchiveCleanupException(Exception ex)
+        {
+            return ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or NotSupportedException;
         }
 
         private sealed class EncryptedArchiveWriteStream : Stream

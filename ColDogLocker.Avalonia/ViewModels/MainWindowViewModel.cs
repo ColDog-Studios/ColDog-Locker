@@ -443,7 +443,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                     .EnumerateFiles("*", SearchOption.AllDirectories)
                     .Sum(file => file.Length);
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or System.Security.SecurityException)
+            {
+                return 0;
+            }
+            catch (Exception)
             {
                 return 0;
             }

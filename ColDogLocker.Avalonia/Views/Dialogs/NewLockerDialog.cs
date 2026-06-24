@@ -224,7 +224,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 Directory.CreateDirectory(defaultBasePath);
                 return defaultBasePath;
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or System.Security.SecurityException)
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            }
+            catch (Exception)
             {
                 return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             }

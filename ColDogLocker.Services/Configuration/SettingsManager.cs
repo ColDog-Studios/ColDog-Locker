@@ -72,6 +72,11 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})"));
                     Thread.Sleep(ReadDelayMs);
                 }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
+                {
+                    Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
+                    return;
+                }
                 catch (Exception ex)
                 {
                     Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
@@ -218,6 +223,10 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                         AppFilePermissions.ApplyPrivateFile(_settingsFile);
                         break;
                     }
+                    catch (Exception ex) when (attempt < MaxWriteAttempts && ex is IOException or UnauthorizedAccessException)
+                    {
+                        Thread.Sleep(WriteDelayMs);
+                    }
                     catch (Exception) when (attempt < MaxWriteAttempts)
                     {
                         Thread.Sleep(WriteDelayMs);
@@ -244,6 +253,12 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                 CleanupTempFile();
                 throw;
             }
+            catch (Exception ex) when (ex is IOException or NotSupportedException or ArgumentException or System.Security.SecurityException)
+            {
+                Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
+                CleanupTempFile();
+                throw;
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
@@ -264,10 +279,15 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     Logger.Log(LogLevel.Debug, "Temporary settings file cleaned up.");
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or ArgumentException)
             {
                 // If we can't clean up the temp file, it's not critical
-                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.");
+                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
+            }
+            catch (Exception ex)
+            {
+                // If we can't clean up the temp file, it's not critical
+                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
             }
         }
 
@@ -286,6 +306,10 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     AppFilePermissions.ApplyPrivateFile(backupFile);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or NotSupportedException or ArgumentException)
+            {
+                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
             }
             catch (Exception ex)
             {

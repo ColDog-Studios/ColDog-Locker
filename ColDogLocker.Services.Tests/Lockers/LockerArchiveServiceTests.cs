@@ -201,6 +201,10 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             {
                 File.CreateSymbolicLink(link, target);
             }
+            catch (Exception ex) when (!File.Exists(link) && ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException or NotSupportedException or ArgumentException)
+            {
+                return;
+            }
             catch (Exception) when (!File.Exists(link))
             {
                 return;

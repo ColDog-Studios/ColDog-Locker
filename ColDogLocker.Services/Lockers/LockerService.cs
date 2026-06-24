@@ -172,7 +172,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 locker.LockerLocation = lockerLocation;
                 UpdateLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerPersistenceException(ex))
+            {
+                locker.LockerName = previousName;
+                locker.LockerLocation = previousLocation;
+                throw;
+            }
+            catch (Exception)
             {
                 locker.LockerName = previousName;
                 locker.LockerLocation = previousLocation;
@@ -272,7 +278,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Save the updated locker to database
                 UpdateLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
                 throw;
@@ -354,7 +365,19 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Save the updated locker to database
                 persistLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                RollBackUnlockFailure(
+                    locker,
+                    previousLocation,
+                    newLockerLocation,
+                    stagingLocation,
+                    previousStorageFormatVersion,
+                    previousLockedArchiveSha256,
+                    previousLockedAtUtc);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackUnlockFailure(
                     locker,
@@ -371,6 +394,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 ClearAttributesForDelete(previousLocation);
                 Directory.Delete(previousLocation, true);
+            }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Unlocked {locker.LockerName}, but failed to remove locked archive directory '{previousLocation}'.", ex);
             }
             catch (Exception ex)
             {
@@ -653,6 +680,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     LockerArchiveService.TryDeleteDirectory(tempLockedLocation);
                 }
             }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
@@ -692,6 +723,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 {
                     File.SetAttributes(previousLocation, File.GetAttributes(previousLocation) | FileAttributes.Hidden | FileAttributes.System);
                 }
+            }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Error, $"Failed to fully roll back unlock operation for {locker.LockerName}", ex);
             }
             catch (Exception ex)
             {
@@ -734,6 +769,24 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+        }
+
+        private static bool IsLockerPersistenceException(Exception ex)
+        {
+            return ex is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException;
+        }
+
+        private static bool IsLockerOperationException(Exception ex)
+        {
+            return ex is IOException
+                or UnauthorizedAccessException
+                or DirectoryNotFoundException
+                or PathTooLongException
+                or ArgumentException
+                or NotSupportedException
+                or InvalidOperationException
+                or InvalidDataException
+                or System.Security.Cryptography.CryptographicException;
         }
     }
 
