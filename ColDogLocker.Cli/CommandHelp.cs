@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 namespace ColDogStudios.ColDogLocker.Cli
 {
@@ -25,9 +25,9 @@ namespace ColDogStudios.ColDogLocker.Cli
         public static void ShowGeneralHelp()
         {
             Console.WriteLine("USAGE:");
-            Console.WriteLine("  cdlocker                           Launch GUI (default)");
-            Console.WriteLine("  cdlocker gui                       Launch GUI explicitly");
-            Console.WriteLine("  cdlocker terminal                  Launch Terminal UI");
+            Console.WriteLine("  cdlocker                           Show help");
+            Console.WriteLine("  cdlocker gui                       Launch GUI");
+            Console.WriteLine("  cdlocker tui                       Launch Terminal UI");
             Console.WriteLine();
 
             Console.WriteLine("LOCKER COMMANDS:");
@@ -266,7 +266,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  update channel and current platform.");
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
-                    Console.WriteLine("  --download    Download and verify the matching installer package");
+                    Console.WriteLine("  --download    Download, verify, and start the matching installer package");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker update");
@@ -292,10 +292,9 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  Launches the graphical user interface.");
                     break;
 
-                case "terminal":
                 case "tui":
                     Console.WriteLine("LAUNCH TERMINAL UI:");
-                    Console.WriteLine("  cdlocker terminal");
+                    Console.WriteLine("  cdlocker tui");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Launches the terminal-based user interface.");
@@ -305,7 +304,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine($"No help available for command: {command}");
                     Console.WriteLine();
                     Console.WriteLine(
-                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, gui, terminal");
+                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, update, gui, tui");
                     break;
             }
         }

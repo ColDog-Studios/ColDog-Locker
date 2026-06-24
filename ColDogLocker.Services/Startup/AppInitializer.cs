@@ -1,25 +1,25 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Logging;
-using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Services.Startup
@@ -48,7 +48,7 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
                 throw new InvalidOperationException("Logs directory name must be a relative path segment.");
             }
 
-            var logsDirectoryPath = Path.Combine(AppPaths.LocalConfig, logsDirectoryName);
+            var logsDirectoryPath = Path.Join(AppPaths.LocalConfig, logsDirectoryName);
             var createdLogsDirectory = !Directory.Exists(logsDirectoryPath);
             AppFilePermissions.EnsurePrivateDirectory(logsDirectoryPath);
             if (createdLogsDirectory)
@@ -75,10 +75,15 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
                 {
                     await UpdateService.CheckForUpdatesAsync();
                 }
-                catch
+                catch (Exception ex) when (ex is UpdateException or HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
                     // Silently ignore update check failures during initialization
-                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.");
+                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.", ex);
+                }
+                catch (Exception ex)
+                {
+                    // Silently ignore update check failures during initialization
+                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.", ex);
                 }
             }
 

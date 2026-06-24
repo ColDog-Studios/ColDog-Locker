@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Collections.ObjectModel;
 using ColDogStudios.ColDogLocker.Avalonia.Models;
@@ -40,8 +40,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         [ObservableProperty] private bool _isDeveloperMode;
         [ObservableProperty] private bool _isGridView = true;
         [ObservableProperty] private ObservableCollection<LockerItemViewModel> _lockers = [];
-        [ObservableProperty] private LockerItemViewModel? _selectedLocker;
         [ObservableProperty] private string _searchText = string.Empty;
+        [ObservableProperty] private LockerItemViewModel? _selectedLocker;
         [ObservableProperty] private bool _sortAscending = true;
         [ObservableProperty] private string _sortColumn = "Name";
         [ObservableProperty] private string _statusMessage = "Ready";
@@ -88,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 }
             });
 
-            await RefreshAsync(showMessage: false);
+            await RefreshAsync(false);
         }
 
         [RelayCommand]
@@ -132,7 +132,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             await RunLockerOperationAsync(SelectedLocker, "Lock Error", async locker =>
             {
                 await Task.Run(() => LockerService.Lock(locker, password));
-                await RefreshAsync(showMessage: false);
+                await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Locker Locked", $"Locked: {locker.LockerName}");
             });
         }
@@ -154,7 +154,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             await RunLockerOperationAsync(SelectedLocker, "Unlock Error", async locker =>
             {
                 await Task.Run(() => LockerService.Unlock(locker, password));
-                await RefreshAsync(showMessage: false);
+                await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Locker Unlocked", $"Unlocked: {locker.LockerName}");
             });
         }
@@ -184,7 +184,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             await RunLockerOperationAsync(SelectedLocker, "Remove Error", async locker =>
             {
                 await Task.Run(() => LockerService.RemoveLocker(locker));
-                await RefreshAsync(showMessage: false);
+                await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Locker Removed", $"Removed: {locker.LockerName}");
             });
         }
@@ -201,7 +201,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             if (locker != null)
             {
                 await _dialogs.ShowLockerPropertiesAsync(locker);
-                await RefreshAsync(showMessage: false);
+                await RefreshAsync(false);
             }
         }
 
@@ -228,7 +228,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         [RelayCommand]
         private Task RefreshAsync()
         {
-            return RefreshAsync(showMessage: true);
+            return RefreshAsync(true);
         }
 
         [RelayCommand]
@@ -363,7 +363,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             return await Task.Run(() =>
             {
                 LockerService.LoadLockers();
-                var snapshot = LockerService.Lockers.ToArray();
+                var snapshot = LockerService.GetLockersSnapshot();
                 return snapshot.Select(CreateLockerItem).ToList();
             });
         }
@@ -443,7 +443,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                     .EnumerateFiles("*", SearchOption.AllDirectories)
                     .Sum(file => file.Length);
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or System.Security.SecurityException)
+            {
+                return 0;
+            }
+            catch (Exception)
             {
                 return 0;
             }
@@ -451,7 +455,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 
         private LockerModel? FindLocker(LockerItemViewModel item)
         {
-            return LockerService.Lockers.FirstOrDefault(locker => locker.Guid == item.Guid);
+            return LockerService.FindLockerByGuid(item.Guid);
         }
 
         private async Task RunLockerOperationAsync(
@@ -504,6 +508,5 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             ShowPropertiesCommand.NotifyCanExecuteChanged();
             OpenLocationCommand.NotifyCanExecuteChanged();
         }
-
     }
 }

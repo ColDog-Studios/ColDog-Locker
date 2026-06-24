@@ -32,7 +32,7 @@
     <Error Condition="'$(RuntimeIdentifier)' == ''" Text="PackageArchitecture must be x64 or arm64." />
   </Target>
 
-  <!-- Experimental unsigned macOS package: CLI and Avalonia GUI ship together. -->
+  <!-- Unsigned macOS package: CLI and Avalonia GUI ship together. -->
   <Target Name="PublishInstallerApps" DependsOnTargets="ValidatePackageProperties">
     <RemoveDir Directories="$(CliPublishRoot);$(GuiPublishRoot)" />
     <MakeDir Directories="$(CliPublishRoot);$(GuiPublishRoot);$(DistRoot)" />

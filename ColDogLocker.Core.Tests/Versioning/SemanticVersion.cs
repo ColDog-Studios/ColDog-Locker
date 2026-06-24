@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using ColDogStudios.ColDogLocker.Core.Versioning;
 
@@ -41,6 +41,45 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
             Assert.Equal(expectedMinor, version.Minor);
             Assert.Equal(expectedPatch, version.Patch);
             Assert.Equal(expectedPreRelease, version.PreRelease);
+        }
+
+        #endregion
+
+        #region ToString Tests
+
+        [Theory]
+        [InlineData("1.0.0", "1.0.0")]
+        [InlineData("1.2.3-alpha", "1.2.3-alpha")]
+        [InlineData("2.56.789", "2.56.789")]
+        [InlineData("1.0.0-rc.2", "1.0.0-rc.2")]
+        public void ToString_ShouldFormatCorrectly(string versionString, string expected)
+        {
+            // Arrange
+            var version = new SemanticVersion(versionString);
+
+            // Act
+            var result = version.ToString();
+
+            // Assert
+            Assert.Equal(expected, result);
+        }
+
+        #endregion
+
+        #region Immutability Tests
+
+        [Fact]
+        public void Properties_ShouldBeReadOnly()
+        {
+            // Arrange
+            var version = new SemanticVersion("1.2.3-alpha");
+
+            // Act & Assert - attempting to set properties should not compile
+            // This is verified at compile-time, but we document the expected behavior here
+            Assert.Equal(1, version.Major);
+            Assert.Equal(2, version.Minor);
+            Assert.Equal(3, version.Patch);
+            Assert.Equal("alpha", version.PreRelease);
         }
 
         #endregion
@@ -281,7 +320,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
         public void EqualsOperator_WithOneNull_ShouldReturnFalse()
         {
             // Arrange
-            SemanticVersion v1 = new SemanticVersion("1.0.0");
+            var v1 = new SemanticVersion("1.0.0");
             SemanticVersion v2 = null!;
 
             // Act & Assert
@@ -358,45 +397,6 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Versioning
 
             // Act & Assert
             Assert.Equal(expected, version1 <= version2);
-        }
-
-        #endregion
-
-        #region ToString Tests
-
-        [Theory]
-        [InlineData("1.0.0", "1.0.0")]
-        [InlineData("1.2.3-alpha", "1.2.3-alpha")]
-        [InlineData("2.56.789", "2.56.789")]
-        [InlineData("1.0.0-rc.2", "1.0.0-rc.2")]
-        public void ToString_ShouldFormatCorrectly(string versionString, string expected)
-        {
-            // Arrange
-            var version = new SemanticVersion(versionString);
-
-            // Act
-            var result = version.ToString();
-
-            // Assert
-            Assert.Equal(expected, result);
-        }
-
-        #endregion
-
-        #region Immutability Tests
-
-        [Fact]
-        public void Properties_ShouldBeReadOnly()
-        {
-            // Arrange
-            var version = new SemanticVersion("1.2.3-alpha");
-
-            // Act & Assert - attempting to set properties should not compile
-            // This is verified at compile-time, but we document the expected behavior here
-            Assert.Equal(1, version.Major);
-            Assert.Equal(2, version.Minor);
-            Assert.Equal(3, version.Patch);
-            Assert.Equal("alpha", version.PreRelease);
         }
 
         #endregion

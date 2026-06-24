@@ -26,17 +26,11 @@ Current behavior:
 
 - Windows launches the Avalonia GUI executable, `ColDogLocker.exe`.
 - Linux attempts to launch the Avalonia GUI executable, `ColDogLocker`.
-- macOS reports that GUI launching is not available yet and suggests the TUI.
+- macOS launches `/Applications/ColDog Locker.app` when installed from the PKG.
 
 ### `cdlocker tui`
 
 Launches the terminal user interface.
-
-Alias:
-
-```bash
-cdlocker terminal
-```
 
 ## Locker Commands
 
@@ -239,11 +233,11 @@ Checks GitHub Releases for an update matching the configured channel and current
 
 Options:
 
-- `--download`: download and verify a matching installer package when available.
+- `--download`: download, verify, and start a matching installer package when available.
 
 Release notes are printed automatically when available.
 
-The command downloads the installer only. It does not install the update automatically.
+On Windows, the installer is launched after verification. On Linux, the verified `.deb` or `.rpm` package is installed through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package.
 
 ## Other Commands
 

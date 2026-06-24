@@ -1,21 +1,22 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Material.Icons;
 
@@ -59,12 +60,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             CancelButton.IsVisible = kind == MessageDialogKind.Confirmation;
         }
 
-        private void OkButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        private void OkButton_Click(object? sender, RoutedEventArgs e)
         {
             Close(_kind != MessageDialogKind.Error);
         }
 
-        private void CancelButton_Click(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
+        private void CancelButton_Click(object? sender, RoutedEventArgs e)
         {
             Close(false);
         }

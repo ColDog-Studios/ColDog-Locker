@@ -1,27 +1,54 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Services.Security;
 using System.Security.Cryptography;
+using ColDogStudios.ColDogLocker.Services.Security;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 {
     public class EncryptionHelperTests
     {
+        private sealed class TestDirectory : IDisposable
+        {
+            private TestDirectory(string path)
+            {
+                Path = path;
+            }
+
+            public string Path { get; }
+
+            public void Dispose()
+            {
+                if (Directory.Exists(Path))
+                {
+                    Directory.Delete(Path, true);
+                }
+            }
+
+            public static TestDirectory Create()
+            {
+                var directoryName = $"cdlocker-encryption-tests-{Guid.NewGuid():N}";
+                var safeDirectoryName = System.IO.Path.GetFileName(directoryName) ?? directoryName;
+                var path = System.IO.Path.Join(System.IO.Path.GetTempPath(), safeDirectoryName);
+                Directory.CreateDirectory(path);
+                return new TestDirectory(path);
+            }
+        }
+
         #region HashPassword Tests
 
         [Fact]
@@ -253,7 +280,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         {
             // Arrange
             using var directory = TestDirectory.Create();
-            var filePath = Path.Combine(directory.Path, "secret.bin");
+            var filePath = Path.Join(directory.Path, "secret.bin");
             var originalBytes = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
             File.WriteAllBytes(filePath, originalBytes);
 
@@ -272,7 +299,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         {
             // Arrange
             using var directory = TestDirectory.Create();
-            var filePath = Path.Combine(directory.Path, "secret.txt");
+            var filePath = Path.Join(directory.Path, "secret.txt");
             File.WriteAllText(filePath, "sensitive content");
             EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
 
@@ -383,30 +410,5 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         }
 
         #endregion
-
-        private sealed class TestDirectory : IDisposable
-        {
-            private TestDirectory(string path)
-            {
-                Path = path;
-            }
-
-            public string Path { get; }
-
-            public static TestDirectory Create()
-            {
-                var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-encryption-tests-{Guid.NewGuid():N}");
-                Directory.CreateDirectory(path);
-                return new TestDirectory(path);
-            }
-
-            public void Dispose()
-            {
-                if (Directory.Exists(Path))
-                {
-                    Directory.Delete(Path, recursive: true);
-                }
-            }
-        }
     }
 }

@@ -16,6 +16,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
   TEST_PROJECTS: |
+    ColDogLocker.Cli.Tests/ColDogLocker.Cli.Tests.csproj
     ColDogLocker.Core.Tests/ColDogLocker.Core.Tests.csproj
     ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj
     ColDogLocker.Avalonia.Tests/ColDogLocker.Avalonia.Tests.csproj
@@ -33,7 +34,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Compute release metadata
       id: metadata
@@ -68,10 +69,10 @@ jobs:
             ]
             next_sequence = max(existing_sequences, default=0) + 1
             release_version = f"{base_version}-{prerelease_label}.{next_sequence}"
-            release_flags = "--prerelease"
+            release_flags = "--prerelease --latest=false" if prerelease_label in {"alpha", "beta"} else "--latest"
         else:
             release_version = version
-            release_flags = ""
+            release_flags = "--latest"
             tag_name = f"v{release_version}"
             if tag_name in existing_refs:
                 raise SystemExit(f"Release tag '{tag_name}' already exists. Bump Version before publishing a stable release.")
@@ -89,12 +90,20 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Fail on vulnerable NuGet packages
+      shell: bash
+      run: dotnet restore ColDogLocker.slnx -p:NuGetAudit=true -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
+
+    - name: Report vulnerable packages
+      shell: bash
+      run: dotnet list ColDogLocker.slnx package --vulnerable --include-transitive
 
     - name: Restore dependencies
       shell: bash
@@ -120,6 +129,16 @@ jobs:
           dotnet test "$project" --no-build --configuration "${{ env.CONFIGURATION }}" --verbosity normal
         done <<< "${TEST_PROJECTS}"
 
+    - name: Publish CLI for E2E
+      shell: bash
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c "${{ env.CONFIGURATION }}" -o ./cli-publish
+
+    - name: Run CLI E2E tests
+      shell: bash
+      run: |
+        chmod +x ./cli-publish/cdlocker
+        python3 .github/scripts/cli_e2e.py --cli ./cli-publish/cdlocker --work-dir ./cli-e2e-work
+
   windows-packages:
     name: Windows Packages (${{ matrix.arch }})
     runs-on: windows-latest
@@ -131,7 +150,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -164,7 +183,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -201,7 +220,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -238,7 +257,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
@@ -262,7 +281,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
@@ -330,6 +349,7 @@ jobs:
           --title "$RELEASE_NAME" \
           --notes-file release-notes.md)
         if [ -n "$RELEASE_FLAGS" ]; then
-          args+=("$RELEASE_FLAGS")
+          read -r -a release_flags <<< "$RELEASE_FLAGS"
+          args+=("${release_flags[@]}")
         fi
         "${args[@]}"

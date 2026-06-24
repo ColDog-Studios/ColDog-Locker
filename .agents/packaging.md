@@ -12,9 +12,9 @@ Release automation passes the computed release version with `-p:Version=<release
 | Windows | `.exe` setup bundle through WiX Burn | `x64`, `arm64` | Per-machine only |
 | Linux | `.deb` | `x64`, `arm64` | System package |
 | Linux | `.rpm` | `x64`, `arm64` | System package |
-| macOS | `.pkg` through `pkgbuild` | `x64`, `arm64` | System package, experimental |
+| macOS | `.pkg` through `pkgbuild` | `x64`, `arm64` | System package |
 
-macOS packages are unsigned, unnotarized, untested, and experimental. They are intended for local validation only until macOS support is deliberately promoted.
+macOS packages are unsigned and unnotarized because the project does not currently have Apple code-signing credentials. Gatekeeper warnings are expected, but macOS remains part of the supported package matrix.
 
 The active package contents are:
 
@@ -26,8 +26,6 @@ The active package contents are:
 On macOS, the CLI is installed as `/usr/local/bin/cdlocker`, the man page is installed as `/usr/local/share/man/man1/cdlocker.1.gz`, and the GUI is installed as `/Applications/ColDog Locker.app`.
 
 Each installer/package is intentionally a combined app package. The CLI and GUI are not built or distributed as separate installers.
-
-The legacy WPF project is not packaged.
 
 ## Prerequisites
 
@@ -58,7 +56,7 @@ For a real install/remove smoke test on Fedora, use a clean machine or VM and ru
 
 Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated releases are published by the `Release` workflow on pushes to `main` and by manual dispatch.
 
-The manual `Packages` workflow still keeps the macOS package job opt-in because those packages are experimental and unsigned. The automated `Release` workflow includes macOS `.pkg` assets so update checks can see the same platform matrix as Windows and Linux.
+The manual `Packages` and automated `Release` workflows include macOS `.pkg` assets alongside Windows and Linux packages.
 
 Windows MSI and setup EXE:
 
@@ -95,7 +93,7 @@ rpm -qpi artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 rpm -qpl artifacts/packages/dist/ColDogLocker-<version>-linux-x64.rpm
 ```
 
-macOS PKG, experimental unsigned:
+macOS PKG, unsigned:
 
 ```bash
 dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=x64 -p:Configuration=Release
@@ -139,7 +137,7 @@ The desktop shortcut is an MSI feature selected by default and targets the insta
 
 The Start Menu shortcut is installed by default.
 
-The MSI has a feature-tree option named `Remove stored config and data on uninstall`, selected by default. Silent uninstall can also set `REMOVE_USER_DATA_ON_UNINSTALL=0` to preserve ColDog Locker settings, logs, locker metadata, and the default locker folder.
+The MSI has a feature-tree option named `Remove stored config and data on uninstall`, but user data preservation is the default. Silent uninstall can set `REMOVE_USER_DATA_ON_UNINSTALL=1` to opt in to removing ColDog Locker settings, logs, locker metadata, and the default locker folder.
 
 Code signing is not configured.
 
@@ -166,7 +164,7 @@ Linux desktop application entries are installed under:
 /usr/share/applications/cdlocker.desktop
 ```
 
-`coldog-locker.desktop` appears as `ColDogLocker` and launches the Avalonia GUI from `/opt/coldog-locker/ColDogLocker`. `cdlocker.desktop` appears as `cdlocker` and opens the terminal interface with `cdlocker tui` so desktop users can see that the CLI/TUI entrypoint is installed.
+`coldog-locker.desktop` appears as `ColDogLocker` and launches the Avalonia GUI from `/opt/coldog-locker/ColDogLocker`. `cdlocker gui` also falls back to that installed GUI path so the `/usr/bin/cdlocker` command can launch the GUI even when invoked through the package-manager command link. `cdlocker.desktop` appears as `cdlocker` and opens the terminal interface with `cdlocker tui` so desktop users can see that the CLI/TUI entrypoint is installed.
 
 The desktop icon is installed under:
 
@@ -192,9 +190,11 @@ Debian package purge removes reserved system config/data directories if they are
 
 On Fedora, use `rpm -qpi` and `rpm -qpl` to validate RPM metadata and installed paths without installing it. Use a clean machine or VM for real `sudo dnf install` / `sudo dnf remove` smoke tests.
 
+The updater installs verified Linux packages by selecting the package family from platform detection or the downloaded file extension. Debian-family packages use `apt-get`, `apt`, or `dpkg`. RPM-family packages use `dnf`, `yum`, `zypper`, or `rpm`. Linux updates intentionally remove the existing `coldog-locker` package before installing the verified package because Fedora/RPM testing showed local package replacement can require an uninstall-first flow, and the DEB path mirrors that conservative behavior until clean Debian/Ubuntu VM testing proves direct replacement is safe. Non-root installs prefer `pkexec` when a graphical authentication session is available, then fall back to `sudo`, then `pkexec`.
+
 ## macOS Package Layout
 
-The macOS `.pkg` is experimental, unsigned, unnotarized, and untested. It installs system-wide and may trigger Gatekeeper warnings or require manual override on first launch.
+The macOS `.pkg` is unsigned and unnotarized. It installs system-wide and may trigger Gatekeeper warnings or require manual approval on first launch.
 
 The GUI app bundle is installed under:
 
@@ -214,9 +214,9 @@ The CLI man page is installed under:
 /usr/local/share/man/man1/cdlocker.1.gz
 ```
 
-The package installs both the CLI and Avalonia GUI together. The current CLI still reports macOS GUI launching as unsupported, so launch the experimental GUI directly from `/Applications/ColDog Locker.app` when validating it.
+The package installs both the CLI and Avalonia GUI together. `cdlocker gui` launches `/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker`.
 
-The `.pkg` format does not provide a native uninstall checkbox. Remove the experimental macOS package files manually:
+The `.pkg` format does not provide a native uninstall checkbox. Remove the macOS package files manually:
 
 ```bash
 sudo rm -rf "/Applications/ColDog Locker.app"

@@ -1,25 +1,25 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Services.Lockers;
 using System.Buffers.Binary;
 using System.Formats.Tar;
 using System.Text;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 {
@@ -32,21 +32,21 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("PlainLocker");
-            Directory.CreateDirectory(Path.Combine(source, "empty"));
-            var nested = Directory.CreateDirectory(Path.Combine(source, "nested"));
-            File.WriteAllText(Path.Combine(source, "root.txt"), "root secret");
-            File.WriteAllText(Path.Combine(nested.FullName, "nested.txt"), "nested secret");
+            Directory.CreateDirectory(Path.Join(source, "empty"));
+            var nested = Directory.CreateDirectory(Path.Join(source, "nested"));
+            File.WriteAllText(Path.Join(source, "root.txt"), "root secret");
+            File.WriteAllText(Path.Join(nested.FullName, "nested.txt"), "nested secret");
 
             var locker = CreateLocker("PlainLocker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
 
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
-            var restored = Path.Combine(workspace.Path, "restored");
+            var restored = Path.Join(workspace.Path, "restored");
             LockerArchiveService.ExtractToDirectory(archive.ArchivePath, restored, locker, Password);
 
-            Assert.Equal("root secret", File.ReadAllText(Path.Combine(restored, "root.txt")));
-            Assert.Equal("nested secret", File.ReadAllText(Path.Combine(restored, "nested", "nested.txt")));
-            Assert.True(Directory.Exists(Path.Combine(restored, "empty")));
+            Assert.Equal("root secret", File.ReadAllText(Path.Join(restored, "root.txt")));
+            Assert.Equal("nested secret", File.ReadAllText(Path.Join(restored, "nested", "nested.txt")));
+            Assert.True(Directory.Exists(Path.Join(restored, "empty")));
         }
 
         [Fact]
@@ -54,9 +54,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
 
             var bytes = File.ReadAllBytes(archive.ArchivePath);
@@ -64,7 +64,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             WriteArchiveBytesForTamperTest(archive.ArchivePath, bytes);
 
             Assert.ThrowsAny<Exception>(() =>
-                LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Combine(workspace.Path, "restored"), locker, Password));
+                LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Join(workspace.Path, "restored"), locker, Password));
         }
 
         [Fact]
@@ -72,9 +72,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
 
             var originalHash = archive.Sha256;
@@ -94,9 +94,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
             var otherLocker = CreateLocker("Locker", source);
 
@@ -113,9 +113,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
 
             LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
 
@@ -159,10 +159,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         public void ExtractValidatedTar_WithLinkEntry_ShouldThrow()
         {
             using var workspace = TestWorkspace.Create();
-            using var tarStream = CreateTarStream(new PaxTarEntry(TarEntryType.SymbolicLink, "link")
-            {
-                LinkName = "target.txt"
-            });
+            using var tarStream = CreateTarStream(new PaxTarEntry(TarEntryType.SymbolicLink, "link") { LinkName = "target.txt" });
 
             Assert.Throws<InvalidDataException>(() =>
                 LockerArchiveService.ExtractValidatedTar(tarStream, workspace.CreateDirectory("restore")));
@@ -173,9 +170,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
             locker.LockedAtUtc = archive.LockedAtUtc.AddMinutes(1);
 
@@ -196,13 +193,17 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            var target = Path.Combine(source, "target.txt");
-            var link = Path.Combine(source, "link.txt");
+            var target = Path.Join(source, "target.txt");
+            var link = Path.Join(source, "link.txt");
             File.WriteAllText(target, "secret");
 
             try
             {
                 File.CreateSymbolicLink(link, target);
+            }
+            catch (Exception ex) when (!File.Exists(link) && ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException or NotSupportedException or ArgumentException)
+            {
+                return;
             }
             catch (Exception) when (!File.Exists(link))
             {
@@ -210,7 +211,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             }
 
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
 
             Assert.Throws<InvalidDataException>(() =>
                 LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password));
@@ -221,9 +222,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         {
             using var workspace = TestWorkspace.Create();
             var source = workspace.CreateDirectory("Locker");
-            File.WriteAllText(Path.Combine(source, "secret.txt"), "secret");
+            File.WriteAllText(Path.Join(source, "secret.txt"), "secret");
             var locker = CreateLocker("Locker", source);
-            var archivePath = Path.Combine(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
+            var archivePath = Path.Join(workspace.Path, "locked", LockerArchiveService.ArchiveFileName);
             var archive = LockerArchiveService.CreateFromDirectory(source, archivePath, locker, Password);
 
             var bytes = File.ReadAllBytes(archive.ArchivePath);
@@ -232,7 +233,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             WriteArchiveBytesForTamperTest(archive.ArchivePath, bytes);
 
             var exception = Assert.Throws<InvalidDataException>(() =>
-                LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Combine(workspace.Path, "restored"), locker, Password));
+                LockerArchiveService.ExtractToDirectory(archive.ArchivePath, Path.Join(workspace.Path, "restored"), locker, Password));
             Assert.Contains("key derivation", exception.Message);
         }
 
@@ -244,7 +245,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
         private static MemoryStream CreateTarStream(params TarEntry[] entries)
         {
             var stream = new MemoryStream();
-            using (var writer = new TarWriter(stream, TarEntryFormat.Pax, leaveOpen: true))
+            using (var writer = new TarWriter(stream, TarEntryFormat.Pax, true))
             {
                 foreach (var entry in entries)
                 {
@@ -276,24 +277,24 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             public string Path { get; }
 
-            public static TestWorkspace Create()
-            {
-                return new TestWorkspace(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-archive-tests-{Guid.NewGuid():N}"));
-            }
-
-            public string CreateDirectory(string name)
-            {
-                var path = System.IO.Path.Combine(Path, name);
-                Directory.CreateDirectory(path);
-                return path;
-            }
-
             public void Dispose()
             {
                 if (Directory.Exists(Path))
                 {
                     DeleteDirectory(Path);
                 }
+            }
+
+            public static TestWorkspace Create()
+            {
+                return new TestWorkspace(System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-archive-tests-{Guid.NewGuid():N}"));
+            }
+
+            public string CreateDirectory(string name)
+            {
+                var path = System.IO.Path.Join(Path, name);
+                Directory.CreateDirectory(path);
+                return path;
             }
 
             private static void DeleteDirectory(string path)
@@ -309,7 +310,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 }
 
                 File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
-                Directory.Delete(path, recursive: true);
+                Directory.Delete(path, true);
             }
         }
     }

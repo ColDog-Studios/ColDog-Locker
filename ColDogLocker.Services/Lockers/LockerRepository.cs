@@ -1,31 +1,33 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Core.Environment;
-using ColDogStudios.ColDogLocker.Services.Logging;
-using ColDogStudios.ColDogLocker.Core.Models;
 using System.Globalization;
-using Microsoft.Data.Sqlite;
+using ColDogStudios.ColDogLocker.Core.Environment;
+using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.FileSystem;
+using ColDogStudios.ColDogLocker.Services.Logging;
+using Microsoft.Data.Sqlite;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerRepository
     {
+        internal const int CurrentSchemaVersion = 1;
+
         private static readonly string _databasePath = Path.Join(AppPaths.LocalConfig, Path.GetFileName("lockers.db"));
         private static readonly string _connectionString = $"Data Source={_databasePath}";
 
@@ -61,9 +63,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         UpdatedAt TEXT NOT NULL DEFAULT (datetime('now'))
                     )";
                 command.ExecuteNonQuery();
-                EnsureColumn(connection, "StorageFormatVersion", "INTEGER NULL");
-                EnsureColumn(connection, "LockedArchiveSha256", "TEXT NULL");
-                EnsureColumn(connection, "LockedAtUtc", "TEXT NULL");
+                ApplySchemaMigrations(connection);
 
                 ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, "Database initialized successfully");
@@ -93,7 +93,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -128,7 +129,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
                 command.Parameters.AddWithValue("$guid", guid);
 
                 using var reader = command.ExecuteReader();
@@ -162,7 +164,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 connection.Open();
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
+                command.CommandText =
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
                 command.Parameters.AddWithValue("$name", name);
 
                 using var reader = command.ExecuteReader();
@@ -462,6 +465,40 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             using var alterCommand = connection.CreateCommand();
             alterCommand.CommandText = $"ALTER TABLE Lockers ADD COLUMN {columnName} {definition}";
             alterCommand.ExecuteNonQuery();
+        }
+
+        private static void ApplySchemaMigrations(SqliteConnection connection)
+        {
+            var schemaVersion = GetSchemaVersion(connection);
+
+            if (schemaVersion < 1)
+            {
+                EnsureColumn(connection, "StorageFormatVersion", "INTEGER NULL");
+                EnsureColumn(connection, "LockedArchiveSha256", "TEXT NULL");
+                EnsureColumn(connection, "LockedAtUtc", "TEXT NULL");
+                SetSchemaVersion(connection, 1);
+                schemaVersion = 1;
+            }
+
+            if (schemaVersion > CurrentSchemaVersion)
+            {
+                throw new InvalidOperationException(
+                    $"Database schema version {schemaVersion} is newer than this application supports ({CurrentSchemaVersion}).");
+            }
+        }
+
+        private static int GetSchemaVersion(SqliteConnection connection)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA user_version";
+            return Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+        }
+
+        private static void SetSchemaVersion(SqliteConnection connection, int version)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA user_version = {version}";
+            command.ExecuteNonQuery();
         }
 
         private static void ApplyDatabasePermissions(string connectionString, string? explicitDatabasePath = null)

@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Net;
 using System.Net.Http.Headers;
@@ -32,6 +32,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
     {
         Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default);
         Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken = default);
+        Task<UpdateInstallResult> InstallUpdateAsync(UpdateDownloadResult download, CancellationToken cancellationToken = default);
     }
 
     public class UpdateCheckResult
@@ -72,6 +73,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         Network,
         Timeout,
         FileSystem,
+        InstallFailed,
         Unknown
     }
 
@@ -109,7 +111,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public bool SupportsAutomaticUpdates
             => OperatingSystem is UpdateOperatingSystem.Windows ||
-            (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
+               OperatingSystem is UpdateOperatingSystem.MacOS ||
+               (OperatingSystem is UpdateOperatingSystem.Linux && LinuxPackageFormat is not LinuxPackageFormat.Unknown);
 
         public string DisplayName
         {
@@ -131,7 +134,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string ManualUpdateInstructions => OperatingSystem switch
         {
             UpdateOperatingSystem.MacOS =>
-                "Automatic macOS updates are disabled because this installer path cannot be reliably tested. Download the desired release from GitHub, verify the release asset digest shown on GitHub, back up your configuration, then replace the application bundle manually.",
+                "Download the matching macOS .pkg from GitHub, verify its release digest, then open it with Installer.",
             UpdateOperatingSystem.Linux when LinuxPackageFormat is LinuxPackageFormat.Unknown =>
                 "Automatic Linux updates need a known package family. Download the .deb or .rpm package that matches your distribution from GitHub, verify the release asset digest shown on GitHub, then install it with your package manager.",
             _ =>
@@ -152,11 +155,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return new UpdatePlatform
-                {
-                    OperatingSystem = UpdateOperatingSystem.Linux,
-                    LinuxPackageFormat = DetectLinuxPackageFormat()
-                };
+                return new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = DetectLinuxPackageFormat() };
             }
 
             return new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Unsupported };
@@ -213,6 +212,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string CurrentVersion { get; set; } = AppInfo.SemanticVersion;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
         public long MaxDownloadBytes { get; set; } = 1024L * 1024L * 1024L;
+
         public IReadOnlyCollection<string> AllowedDownloadHosts { get; set; } =
         [
             "github.com",
@@ -220,9 +220,13 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             "github-releases.githubusercontent.com",
             "release-assets.githubusercontent.com"
         ];
+
         public Func<UpdatePlatform> PlatformDetector { get; set; } = UpdatePlatform.Detect;
+
         public Func<string> DownloadDirectoryProvider { get; set; } =
-            () => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            () => Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
+        public bool AllowLoopbackHttpDownloadsForTesting { get; set; }
     }
 
     public static class UpdateService
@@ -234,27 +238,122 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return _defaultService.Value.CheckForUpdatesAsync(cancellationToken);
         }
 
-        public static async Task<string> DownloadUpdateAsync(UpdateCheckResult updateInfo)
+        public static Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo)
         {
-            var result = await _defaultService.Value.DownloadUpdateAsync(updateInfo);
-            return result.FilePath;
+            return _defaultService.Value.DownloadUpdateAsync(updateInfo);
         }
 
-        public static async Task<string> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken)
+        public static Task<UpdateDownloadResult> DownloadUpdateAsync(UpdateCheckResult updateInfo, CancellationToken cancellationToken)
         {
-            var result = await _defaultService.Value.DownloadUpdateAsync(updateInfo, cancellationToken);
-            return result.FilePath;
+            return _defaultService.Value.DownloadUpdateAsync(updateInfo, cancellationToken);
+        }
+
+        public static Task<UpdateInstallResult> InstallUpdateAsync(UpdateDownloadResult download, CancellationToken cancellationToken = default)
+        {
+            return _defaultService.Value.InstallUpdateAsync(download, cancellationToken);
+        }
+
+        internal static UpdateServiceOptions CreateDefaultOptions()
+        {
+            var options = new UpdateServiceOptions();
+            if (!IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_ENABLE_UPDATE_OVERRIDES")))
+            {
+                return options;
+            }
+
+            var apiBaseUrl = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_API_BASE_URL");
+            if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+            {
+                options.ApiBaseUrl = apiBaseUrl;
+            }
+
+            var currentVersion = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_CURRENT_VERSION");
+            if (!string.IsNullOrWhiteSpace(currentVersion))
+            {
+                options.CurrentVersion = currentVersion;
+            }
+
+            var downloadDirectory = Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_DOWNLOAD_DIR");
+            if (!string.IsNullOrWhiteSpace(downloadDirectory))
+            {
+                options.DownloadDirectoryProvider = () => downloadDirectory;
+            }
+
+            var platform = CreateE2EPlatform(Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_PLATFORM"));
+            if (platform != null)
+            {
+                options.PlatformDetector = () => platform;
+            }
+
+            if (IsEnabled(Environment.GetEnvironmentVariable("CDLOCKER_E2E_UPDATE_ALLOW_LOOPBACK_HTTP")))
+            {
+                options.AllowLoopbackHttpDownloadsForTesting = true;
+            }
+
+            return options;
+        }
+
+        private static UpdatePlatform? CreateE2EPlatform(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            var normalized = value.Trim().ToLowerInvariant();
+            var parts = normalized.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (parts.Length == 0)
+            {
+                return null;
+            }
+
+            var architecture = parts.Length > 1 ? ParseArchitecture(parts[^1]) : RuntimeInformation.ProcessArchitecture;
+            return parts[0] switch
+            {
+                "windows" or "win" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Windows, Architecture = architecture },
+                "macos" or "osx" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = architecture },
+                "linux" when parts.Contains("deb") => new UpdatePlatform
+                {
+                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Deb, Architecture = architecture
+                },
+                "linux" when parts.Contains("rpm") => new UpdatePlatform
+                {
+                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Rpm, Architecture = architecture
+                },
+                "linux" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Linux, Architecture = architecture },
+                _ => null
+            };
+        }
+
+        private static Architecture ParseArchitecture(string value)
+        {
+            return value switch
+            {
+                "x64" or "amd64" => Architecture.X64,
+                "arm64" or "aarch64" => Architecture.Arm64,
+                "x86" or "i386" => Architecture.X86,
+                "arm" or "armv7" or "arm32" => Architecture.Arm,
+                _ => RuntimeInformation.ProcessArchitecture
+            };
+        }
+
+        private static bool IsEnabled(string? value)
+        {
+            return value is not null &&
+                   (value.Equals("1", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+                    value.Equals("yes", StringComparison.OrdinalIgnoreCase));
         }
     }
 
     public sealed class GitHubUpdateService : IUpdateService, IDisposable
     {
         private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
+        private readonly Func<UpdateChannel> _channelProvider;
+        private readonly bool _disposeHttpClient;
 
         private readonly HttpClient _httpClient;
         private readonly UpdateServiceOptions _options;
-        private readonly Func<UpdateChannel> _channelProvider;
-        private readonly bool _disposeHttpClient;
 
         public GitHubUpdateService(
             HttpClient httpClient,
@@ -270,11 +369,12 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             ConfigureGitHubHeaders(_httpClient);
         }
 
-        public static GitHubUpdateService CreateDefault()
+        public void Dispose()
         {
-            var options = new UpdateServiceOptions();
-            var client = new HttpClient { Timeout = options.Timeout };
-            return new GitHubUpdateService(client, options, disposeHttpClient: true);
+            if (_disposeHttpClient)
+            {
+                _httpClient.Dispose();
+            }
         }
 
         public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
@@ -363,7 +463,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             catch (HttpRequestException ex)
             {
                 Logger.Log(LogLevel.Error, "Update check failed due to a network or GitHub API error.", ex);
-                throw new UpdateException(UpdateFailureKind.Network, "Unable to contact GitHub for update information. Please check your network connection and try again.", ex);
+                throw new UpdateException(UpdateFailureKind.Network,
+                    "Unable to contact GitHub for update information. Please check your network connection and try again.", ex);
             }
             catch (JsonException ex)
             {
@@ -409,12 +510,24 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return result;
         }
 
-        public void Dispose()
+        public Task<UpdateInstallResult> InstallUpdateAsync(
+            UpdateDownloadResult download,
+            CancellationToken cancellationToken = default)
         {
-            if (_disposeHttpClient)
+            if (string.IsNullOrWhiteSpace(download.FilePath))
             {
-                _httpClient.Dispose();
+                throw new UpdateException(UpdateFailureKind.InstallFailed, "The downloaded update does not include an installer path.");
             }
+
+            var installer = new UpdateInstaller();
+            return installer.InstallAsync(download.FilePath, _options.PlatformDetector(), cancellationToken);
+        }
+
+        public static GitHubUpdateService CreateDefault()
+        {
+            var options = UpdateService.CreateDefaultOptions();
+            var client = new HttpClient { Timeout = options.Timeout };
+            return new GitHubUpdateService(client, options, disposeHttpClient: true);
         }
 
         private async Task<GitHubReleaseDto?> FetchReleaseAsync(CancellationToken cancellationToken)
@@ -437,12 +550,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 .Select(release =>
                 {
                     var parsed = SemanticVersion.TryParse(NormalizeVersion(release.TagName), out var version);
-                    return new
-                    {
-                        Release = release,
-                        Parsed = parsed,
-                        Version = version
-                    };
+                    return new { Release = release, Parsed = parsed, Version = version };
                 })
                 .Where(candidate => candidate.Parsed)
                 .OrderByDescending(candidate => candidate.Version)
@@ -564,9 +672,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 UpdateOperatingSystem.Windows when name.EndsWith(".msi", StringComparison.OrdinalIgnoreCase) => 70,
                 UpdateOperatingSystem.Windows when name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Deb &&
-                                             name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
+                                                 name.EndsWith(".deb", StringComparison.OrdinalIgnoreCase) => 60,
                 UpdateOperatingSystem.Linux when platform.LinuxPackageFormat is LinuxPackageFormat.Rpm &&
-                                             name.EndsWith(".rpm", StringComparison.OrdinalIgnoreCase) => 60,
+                                                 name.EndsWith(".rpm", StringComparison.OrdinalIgnoreCase) => 60,
+                UpdateOperatingSystem.MacOS when name.EndsWith(".pkg", StringComparison.OrdinalIgnoreCase) => 60,
                 _ => -1
             };
 
@@ -591,6 +700,11 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
 
             if (platform.OperatingSystem is UpdateOperatingSystem.Linux && ContainsAny(name, "linux"))
+            {
+                score += 5;
+            }
+
+            if (platform.OperatingSystem is UpdateOperatingSystem.MacOS && ContainsAny(name, "macos", "osx", "mac"))
             {
                 score += 5;
             }
@@ -658,13 +772,13 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         private string GetDownloadPath(string installerFileName)
         {
             var safeFileName = Path.GetFileName(installerFileName);
-            return Path.Combine(_options.DownloadDirectoryProvider(), safeFileName);
+            return Path.Join(_options.DownloadDirectoryProvider(), safeFileName);
         }
 
         private Uri ValidateDownloadUri(string downloadUrl)
         {
             if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri) ||
-                !uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                !IsAllowedDownloadScheme(uri) ||
                 !IsAllowedDownloadHost(uri.Host))
             {
                 Logger.Log(LogLevel.Warning, $"Rejected unsafe update download URL: {downloadUrl}");
@@ -677,7 +791,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         private void ValidateFinalDownloadUri(Uri uri)
         {
-            if (!uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) || !IsAllowedDownloadHost(uri.Host))
+            if (!IsAllowedDownloadScheme(uri) || !IsAllowedDownloadHost(uri.Host))
             {
                 Logger.Log(LogLevel.Warning, $"Rejected unsafe update redirect URL: {uri}");
                 throw new UpdateException(UpdateFailureKind.InvalidDownloadUrl,
@@ -687,8 +801,27 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         private bool IsAllowedDownloadHost(string host)
         {
+            if (_options.AllowLoopbackHttpDownloadsForTesting && IsLoopbackHost(host))
+            {
+                return true;
+            }
+
             return _options.AllowedDownloadHosts.Any(allowedHost =>
                 host.Equals(allowedHost, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool IsAllowedDownloadScheme(Uri uri)
+        {
+            return uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                   (_options.AllowLoopbackHttpDownloadsForTesting &&
+                    uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) &&
+                    IsLoopbackHost(uri.Host));
+        }
+
+        private static bool IsLoopbackHost(string host)
+        {
+            return host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                   IPAddress.TryParse(host, out var address) && IPAddress.IsLoopback(address);
         }
 
         private async Task<UpdateDownloadResult> DownloadAndVerifyUpdateAsync(
@@ -699,7 +832,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             CancellationToken cancellationToken)
         {
             var targetDirectory = Path.GetDirectoryName(targetPath) ?? Directory.GetCurrentDirectory();
-            var tempPath = Path.Combine(targetDirectory, $".{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+            var tempPath = Path.Join(targetDirectory, $".{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
 
             try
             {
@@ -728,7 +861,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                                  FileMode.CreateNew,
                                  FileAccess.Write,
                                  FileShare.None,
-                                 bufferSize: 1024 * 128,
+                                 1024 * 128,
                                  FileOptions.Asynchronous | FileOptions.SequentialScan))
                 {
                     AppFilePermissions.ApplyPrivateFile(tempPath);
@@ -772,12 +905,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
                 AppFilePermissions.ApplyPrivateFile(targetPath);
 
-                return new UpdateDownloadResult
-                {
-                    FilePath = targetPath,
-                    Sha256 = actualHash,
-                    BytesDownloaded = bytesDownloaded
-                };
+                return new UpdateDownloadResult { FilePath = targetPath, Sha256 = actualHash, BytesDownloaded = bytesDownloaded };
             }
             catch (UpdateException)
             {

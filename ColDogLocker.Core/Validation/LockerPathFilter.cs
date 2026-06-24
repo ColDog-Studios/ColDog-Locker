@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Runtime.InteropServices;
 
@@ -123,13 +123,13 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var systemDrive = Path.GetPathRoot(System.Environment.SystemDirectory)?.TrimEnd(Path.DirectorySeparatorChar) ?? "C:";
-                systemPaths.Add(Path.Combine(systemDrive, "PerfLogs"));
-                systemPaths.Add(Path.Combine(systemDrive, "Recovery"));
-                systemPaths.Add(Path.Combine(systemDrive, "System Volume Information"));
-                systemPaths.Add(Path.Combine(systemDrive, "$Recycle.Bin"));
-                systemPaths.Add(Path.Combine(systemDrive, "Boot"));
-                systemPaths.Add(Path.Combine(systemDrive, "bootmgr"));
-                systemPaths.Add(Path.Combine(systemDrive, "EFI"));
+                systemPaths.Add(Path.Join(systemDrive, "PerfLogs"));
+                systemPaths.Add(Path.Join(systemDrive, "Recovery"));
+                systemPaths.Add(Path.Join(systemDrive, "System Volume Information"));
+                systemPaths.Add(Path.Join(systemDrive, "$Recycle.Bin"));
+                systemPaths.Add(Path.Join(systemDrive, "Boot"));
+                systemPaths.Add(Path.Join(systemDrive, "bootmgr"));
+                systemPaths.Add(Path.Join(systemDrive, "EFI"));
 
                 var sysRoot = System.Environment.GetEnvironmentVariable("SystemRoot") ?? @"C:\Windows";
                 if (!string.IsNullOrEmpty(sysRoot) && !systemPaths.Contains(sysRoot, StringComparer.OrdinalIgnoreCase))
@@ -153,7 +153,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             }
 
             // AppData root - can't lock C:\Users\ColDog\AppData but can lock C:\Users\ColDog\AppData\MyHiddenLocker
-            var appDataRoot = Path.Combine(userProfile, "AppData");
+            var appDataRoot = Path.Join(userProfile, "AppData");
             if (!string.IsNullOrEmpty(appDataRoot))
             {
                 userFolderPaths.Add(appDataRoot);
@@ -165,7 +165,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             var videos = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyVideos);
             var music = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyMusic);
             var desktop = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
-            var downloads = Path.Combine(userProfile, "Downloads");
+            var downloads = Path.Join(userProfile, "Downloads");
 
             if (!string.IsNullOrEmpty(documents))
             {

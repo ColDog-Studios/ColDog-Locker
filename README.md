@@ -24,9 +24,9 @@
     <a href="https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=bug&template=bug_report.yml">Report Bug</a>
     ·
-    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/ColDog-Studios/ColDog-Locker/issues/new?labels=enhancement&template=feature_request.yml">Request Feature</a>
   </p>
 </div>
 
@@ -61,10 +61,11 @@ ColDog Locker is a desktop app for securely locking, unlocking, and managing enc
 It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cybersecurity class.
 
 > [!NOTE]
-> ColDog Locker is still in development. Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet.
+> ColDog Locker is still in development.
+> Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet.
 
 > [!WARNING]
-> macOS `.pkg` builds are experimental, unsigned, unnotarized, and untested. They are provided for local validation only and should not be treated as official macOS support.
+> Windows and macOS packages are unsigned. Windows SmartScreen or macOS Gatekeeper may display a warning because the project does not currently have code-signing certificates.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -77,7 +78,8 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 ## Getting Started
 
-Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and experimental macOS validation. You can also build from source following the instructions below.
+Prerelease installer assets are published from `main` on GitHub Releases for Windows, Linux, and macOS.
+You can also build from source following the instructions below.
 
 ### Prerequisites
 
@@ -228,7 +230,7 @@ See the [open issues](https://github.com/ColDog-Studios/ColDog-Locker/issues) fo
 
 ## Contributing
 
-ColDog Locker is proprietary software and is not currently accepting public contributions. However, feedback and bug reports are always welcome!
+ColDog Locker is free software under the GNU GPLv3. Public contributions are not broadly accepted yet, but feedback and bug reports are always welcome!
 
 If you encounter a bug or have a suggestion for improvement:
 
@@ -273,6 +275,8 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 - [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
 - [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
 - [Newtonsoft.Json](https://www.newtonsoft.com/json)
+- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw)
+- [SourceGear.sqlite3](https://www.nuget.org/packages/SourceGear.sqlite3)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

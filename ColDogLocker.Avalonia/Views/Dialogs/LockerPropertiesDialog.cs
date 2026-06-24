@@ -1,21 +1,21 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using Avalonia;
+using System.Security;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -23,7 +23,6 @@ using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using Material.Icons;
-using System.IO;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -32,7 +31,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private static readonly IBrush LockedBrush = new SolidColorBrush(Color.Parse("#FF6923"));
         private static readonly IBrush UnlockedBrush = new SolidColorBrush(Color.Parse("#0077B6"));
 
-        private LockerModel? _locker;
+        private readonly LockerModel? _locker;
         private bool _hasChanges;
 
         public LockerPropertiesDialog()
@@ -62,8 +61,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             BrowseButton.IsEnabled = !locker.IsLocked;
             LocationWarningText.IsVisible = locker.IsLocked;
             SizeText.Text = GetSizeText(locker.LockerLocation);
-            CreatedText.Text = GetDirectoryDate(locker.LockerLocation, dateKind: DateKind.Created);
-            ModifiedText.Text = GetDirectoryDate(locker.LockerLocation, dateKind: DateKind.Modified);
+            CreatedText.Text = GetDirectoryDate(locker.LockerLocation, DateKind.Created);
+            ModifiedText.Text = GetDirectoryDate(locker.LockerLocation, DateKind.Modified);
 
             var statusBrush = locker.IsLocked ? LockedBrush : UnlockedBrush;
             StatusIcon.Kind = locker.IsLocked ? MaterialIconKind.Lock : MaterialIconKind.LockOpen;
@@ -78,8 +77,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Select new location for locker",
-                AllowMultiple = false
+                Title = "Select new location for locker", AllowMultiple = false
             });
 
             var folder = folders.FirstOrDefault();
@@ -211,7 +209,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 return "Unable to retrieve";
             }
-            catch (System.Security.SecurityException)
+            catch (SecurityException)
             {
                 return "Unable to retrieve";
             }
@@ -236,7 +234,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 return "Unable to calculate";
             }
-            catch (System.Security.SecurityException)
+            catch (SecurityException)
             {
                 return "Unable to calculate";
             }
@@ -265,7 +263,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 return size;
             }
-            catch (System.Security.SecurityException)
+            catch (SecurityException)
             {
                 return size;
             }

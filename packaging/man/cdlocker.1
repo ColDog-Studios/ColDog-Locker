@@ -8,8 +8,6 @@ cdlocker \- manage encrypted ColDog Locker directories
 .br
 .B cdlocker tui
 .br
-.B cdlocker terminal
-.br
 .B cdlocker new
 .I name
 .RB [ --path
@@ -78,7 +76,7 @@ stored under the per-user local app data directory.
 .B gui
 Launch the graphical interface.
 .TP
-.BR tui ", " terminal
+.BR tui
 Launch the terminal user interface.
 .TP
 .BI "new " name
@@ -133,7 +131,7 @@ Optimize the SQLite database.
 .B update
 Check for releases. Release notes are printed automatically when available. Use
 .B --download
-to download a matching installer.
+to download, verify, and start a matching installer.
 .TP
 .B help
 Show help.
@@ -177,7 +175,7 @@ Skip removal confirmation.
 Delete the locker directory when removing the locker.
 .TP
 .B --download
-Download and verify a matching update installer when available.
+Download, verify, and start a matching update installer when available.
 .SH FILES
 .TP
 .I ~/.local/share/ColDog Studios/ColDog Locker/settings.json

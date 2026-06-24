@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Diagnostics.CodeAnalysis;
 using ColDogStudios.ColDogLocker.Core.Environment;
@@ -26,7 +26,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
     public static class SettingsManager
     {
         // Path to the settings file
-        private static readonly string _settingsFile = Path.Combine(AppPaths.LocalConfig, "settings.json");
+        private static readonly string _settingsFile = Path.Join(AppPaths.LocalConfig, "settings.json");
 
         // Timestamp of the last time the application wrote the settings file (UTC).
         // FileWatcherManager uses this to ignore change events caused by our own saves.
@@ -71,6 +71,11 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                 {
                     pendingLogs.Add((LogLevel.Debug, $"Attempt {attempt}: Unable to read settings file ({ioEx.Message})"));
                     Thread.Sleep(ReadDelayMs);
+                }
+                catch (Exception ex) when (ex is UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
+                {
+                    Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
+                    return;
                 }
                 catch (Exception ex)
                 {
@@ -218,6 +223,10 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                         AppFilePermissions.ApplyPrivateFile(_settingsFile);
                         break;
                     }
+                    catch (Exception ex) when (attempt < MaxWriteAttempts && ex is IOException or UnauthorizedAccessException)
+                    {
+                        Thread.Sleep(WriteDelayMs);
+                    }
                     catch (Exception) when (attempt < MaxWriteAttempts)
                     {
                         Thread.Sleep(WriteDelayMs);
@@ -230,21 +239,31 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
             {
                 Logger.Log(LogLevel.Error, "Access denied when saving settings", ex);
                 CleanupTempFile();
+                throw;
             }
             catch (DirectoryNotFoundException ex)
             {
                 Logger.Log(LogLevel.Error, "Settings directory not found", ex);
                 CleanupTempFile();
+                throw;
             }
             catch (JsonException ex)
             {
                 Logger.Log(LogLevel.Error, "Failed to serialize settings to JSON", ex);
                 CleanupTempFile();
+                throw;
+            }
+            catch (Exception ex) when (ex is IOException or NotSupportedException or ArgumentException or System.Security.SecurityException)
+            {
+                Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
+                CleanupTempFile();
+                throw;
             }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
                 CleanupTempFile();
+                throw;
             }
         }
 
@@ -260,10 +279,15 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     Logger.Log(LogLevel.Debug, "Temporary settings file cleaned up.");
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or ArgumentException)
             {
                 // If we can't clean up the temp file, it's not critical
-                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.");
+                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
+            }
+            catch (Exception ex)
+            {
+                // If we can't clean up the temp file, it's not critical
+                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
             }
         }
 
@@ -277,11 +301,15 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                     var backupDirectory = Path.GetDirectoryName(_settingsFile) ?? AppPaths.LocalConfig;
                     var backupFileName = $"settings_corrupted_{timestamp}.json.bak";
-                    var backupFile = Path.Combine(backupDirectory, backupFileName);
+                    var backupFile = Path.Join(backupDirectory, backupFileName);
                     File.Copy(_settingsFile, backupFile, true);
                     AppFilePermissions.ApplyPrivateFile(backupFile);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or NotSupportedException or ArgumentException)
+            {
+                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
             }
             catch (Exception ex)
             {

@@ -1,20 +1,21 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
@@ -25,8 +26,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
     public sealed class AvaloniaUserDialogService : IUserDialogService
     {
-        private readonly IAppThemeService _themeService;
         private readonly IPlatformService _platformService;
+        private readonly IAppThemeService _themeService;
         private readonly AvaloniaUpdateDialogHost _updateDialogHost;
         private readonly UpdateWorkflow _updateWorkflow;
 
@@ -40,6 +41,20 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             _platformService = platformService;
             _updateDialogHost = updateDialogHost;
             _updateWorkflow = updateWorkflow;
+        }
+
+        private static Window Owner
+        {
+            get
+            {
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                    desktop.MainWindow is { } mainWindow)
+                {
+                    return mainWindow;
+                }
+
+                throw new InvalidOperationException("No Avalonia main window is available for dialog ownership.");
+            }
         }
 
         public Task ShowMessageAsync(string title, string message)
@@ -125,20 +140,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             dialog.Complete("Progress dialog test complete.");
             await Task.Delay(900);
             dialog.Close();
-        }
-
-        private static Window Owner
-        {
-            get
-            {
-                if (global::Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-                    desktop.MainWindow is { } mainWindow)
-                {
-                    return mainWindow;
-                }
-
-                throw new InvalidOperationException("No Avalonia main window is available for dialog ownership.");
-            }
         }
 
         private static async Task ShowDialogAsync(Window dialog)

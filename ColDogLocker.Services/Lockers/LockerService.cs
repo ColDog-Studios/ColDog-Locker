@@ -1,30 +1,77 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Services.Security;
-using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Logging;
+using ColDogStudios.ColDogLocker.Services.Security;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerService
     {
-        public static readonly List<LockerModel> Lockers = [];
+        private static readonly object _lockerStateLock = new();
+        private static readonly List<LockerModel> _lockers = [];
+
+        public static IReadOnlyList<LockerModel> Lockers => GetLockersSnapshot();
+
+        public static List<LockerModel> GetLockersSnapshot()
+        {
+            lock (_lockerStateLock)
+            {
+                return [.. _lockers];
+            }
+        }
+
+        public static LockerModel? FindLockerByName(string lockerName)
+        {
+            lock (_lockerStateLock)
+            {
+                return _lockers.FirstOrDefault(locker =>
+                    locker.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        public static LockerModel? FindLockerByGuid(string guid)
+        {
+            lock (_lockerStateLock)
+            {
+                return _lockers.FirstOrDefault(locker => locker.Guid == guid);
+            }
+        }
+
+        public static bool LockerExistsInMemory(string lockerName)
+        {
+            return FindLockerByName(lockerName) is not null;
+        }
+
+        internal static void ReplaceLockersForTesting(IEnumerable<LockerModel> lockers)
+        {
+            lock (_lockerStateLock)
+            {
+                _lockers.Clear();
+                _lockers.AddRange(lockers);
+            }
+        }
+
+        internal static void ClearLockersForTesting()
+        {
+            ReplaceLockersForTesting([]);
+        }
 
         /// <summary>
         ///     Load locker metadata from the database
@@ -34,13 +81,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             try
             {
                 Logger.Log(LogLevel.Debug, "Loading lockers.");
-                Lockers.Clear();
-                Lockers.AddRange(LockerRepository.GetAllLockers());
+                var loadedLockers = LockerRepository.GetAllLockers();
+                lock (_lockerStateLock)
+                {
+                    _lockers.Clear();
+                    _lockers.AddRange(loadedLockers);
+                }
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "An error occurred while loading lockers from database. Starting with empty locker list", ex);
-                Lockers.Clear(); // Ensure we have a clean state
+                Logger.Log(LogLevel.Error, "An error occurred while loading lockers from database. Keeping existing locker list.", ex);
             }
         }
 
@@ -54,7 +104,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             // But we can use this to sync the in-memory list back to the database if needed
             try
             {
-                foreach (var locker in Lockers)
+                foreach (var locker in GetLockersSnapshot())
                 {
                     UpdateLocker(locker);
                 }
@@ -88,7 +138,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             // Add the locker to the database and in-memory list
             LockerRepository.InsertLocker(locker);
-            Lockers.Add(locker);
+            lock (_lockerStateLock)
+            {
+                _lockers.Add(locker);
+            }
 
             Logger.Log(LogLevel.Info, $"{locker.LockerName} created successfully");
         }
@@ -119,7 +172,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 locker.LockerLocation = lockerLocation;
                 UpdateLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerPersistenceException(ex))
+            {
+                locker.LockerName = previousName;
+                locker.LockerLocation = previousLocation;
+                throw;
+            }
+            catch (Exception)
             {
                 locker.LockerName = previousName;
                 locker.LockerLocation = previousLocation;
@@ -142,7 +201,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             // Remove the locker from the database and in-memory list
             LockerRepository.DeleteLocker(locker.Guid);
-            Lockers.Remove(locker);
+            lock (_lockerStateLock)
+            {
+                _lockers.RemoveAll(existing => existing.Guid == locker.Guid);
+            }
 
             Logger.Log(LogLevel.Info, $"{locker.LockerName} removed successfully");
         }
@@ -186,21 +248,21 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            var newLockerLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}");
+            var newLockerLocation = Path.Join(lockerDirectory, $".{locker.LockerName}");
             if (Directory.Exists(newLockerLocation))
             {
                 throw new IOException($"Target locked locker directory already exists: {newLockerLocation}");
             }
 
             var previousLocation = locker.LockerLocation;
-            var tempLockedLocation = Path.Combine(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
+            var tempLockedLocation = Path.Join(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
             try
             {
                 Directory.CreateDirectory(tempLockedLocation);
                 var archivePath = LockerArchiveService.GetArchivePath(tempLockedLocation);
                 var archive = LockerArchiveService.CreateFromDirectory(previousLocation, archivePath, locker, password);
 
-                Directory.Delete(previousLocation, recursive: true);
+                Directory.Delete(previousLocation, true);
                 Directory.Move(tempLockedLocation, newLockerLocation);
 
                 // Set Hidden and System attributes to the locker directory
@@ -216,7 +278,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Save the updated locker to database
                 UpdateLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
                 throw;
@@ -264,7 +331,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
-            var newLockerLocation = Path.Combine(lockerDirectory, locker.LockerName);
+            var newLockerLocation = Path.Join(lockerDirectory, locker.LockerName);
             if (Directory.Exists(newLockerLocation))
             {
                 throw new IOException($"Target unlocked locker directory already exists: {newLockerLocation}");
@@ -274,7 +341,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var previousStorageFormatVersion = locker.StorageFormatVersion;
             var previousLockedArchiveSha256 = locker.LockedArchiveSha256;
             var previousLockedAtUtc = locker.LockedAtUtc;
-            var stagingLocation = Path.Combine(lockerDirectory, $"{locker.LockerName}.{Guid.NewGuid():N}.unlocking");
+            var stagingLocation = Path.Join(lockerDirectory, $"{locker.LockerName}.{Guid.NewGuid():N}.unlocking");
             var archivePath = LockerArchiveService.GetArchivePath(previousLocation);
             var archiveVerification = LockerArchiveService.VerifyArchive(archivePath, locker, locker.LockedArchiveSha256);
             if (!archiveVerification.IsValid)
@@ -298,7 +365,19 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Save the updated locker to database
                 persistLocker(locker);
             }
-            catch
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                RollBackUnlockFailure(
+                    locker,
+                    previousLocation,
+                    newLockerLocation,
+                    stagingLocation,
+                    previousStorageFormatVersion,
+                    previousLockedArchiveSha256,
+                    previousLockedAtUtc);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackUnlockFailure(
                     locker,
@@ -314,7 +393,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             try
             {
                 ClearAttributesForDelete(previousLocation);
-                Directory.Delete(previousLocation, recursive: true);
+                Directory.Delete(previousLocation, true);
+            }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Unlocked {locker.LockerName}, but failed to remove locked archive directory '{previousLocation}'.", ex);
             }
             catch (Exception ex)
             {
@@ -460,7 +543,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         result.AddWarning("Unlocked locker directory name should not start with period");
                     }
 
-                    var lockedSibling = Path.Combine(
+                    var lockedSibling = Path.Join(
                         Path.GetDirectoryName(locker.LockerLocation) ?? string.Empty,
                         $".{locker.LockerName}");
                     var leftoverArchivePath = LockerArchiveService.GetArchivePath(lockedSibling);
@@ -525,7 +608,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new UnauthorizedAccessException("Locker directory name does not match locker metadata.");
             }
 
-            Directory.Delete(locker.LockerLocation, recursive: true);
+            Directory.Delete(locker.LockerLocation, true);
         }
 
         private static void ValidateLockerDefinition(LockerModel locker)
@@ -597,6 +680,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     LockerArchiveService.TryDeleteDirectory(tempLockedLocation);
                 }
             }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
@@ -636,6 +723,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 {
                     File.SetAttributes(previousLocation, File.GetAttributes(previousLocation) | FileAttributes.Hidden | FileAttributes.System);
                 }
+            }
+            catch (Exception ex) when (IsLockerOperationException(ex))
+            {
+                Logger.Log(LogLevel.Error, $"Failed to fully roll back unlock operation for {locker.LockerName}", ex);
             }
             catch (Exception ex)
             {
@@ -678,6 +769,24 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+        }
+
+        private static bool IsLockerPersistenceException(Exception ex)
+        {
+            return ex is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException;
+        }
+
+        private static bool IsLockerOperationException(Exception ex)
+        {
+            return ex is IOException
+                or UnauthorizedAccessException
+                or DirectoryNotFoundException
+                or PathTooLongException
+                or ArgumentException
+                or NotSupportedException
+                or InvalidOperationException
+                or InvalidDataException
+                or System.Security.Cryptography.CryptographicException;
         }
     }
 

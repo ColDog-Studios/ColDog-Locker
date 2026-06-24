@@ -1,24 +1,25 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
-using ColDogStudios.ColDogLocker.Services.Updates;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
+using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
@@ -32,11 +33,23 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             _platformService = platformService;
         }
 
-        public IDisposable UseOwner(Window owner)
+        private Window Owner
         {
-            var previousOwner = _ownerOverride.Value;
-            _ownerOverride.Value = owner;
-            return new OwnerScope(this, previousOwner);
+            get
+            {
+                if (_ownerOverride.Value is { } owner)
+                {
+                    return owner;
+                }
+
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+                    desktop.MainWindow is { } mainWindow)
+                {
+                    return mainWindow;
+                }
+
+                throw new InvalidOperationException("No Avalonia main window is available for dialog ownership.");
+            }
         }
 
         public Task ShowMessageAsync(UpdateDialogMessage message, CancellationToken cancellationToken = default)
@@ -58,23 +71,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             return ShowDialogAsync(dialog);
         }
 
-        private Window Owner
+        public IDisposable UseOwner(Window owner)
         {
-            get
-            {
-                if (_ownerOverride.Value is { } owner)
-                {
-                    return owner;
-                }
-
-                if (global::Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
-                    desktop.MainWindow is { } mainWindow)
-                {
-                    return mainWindow;
-                }
-
-                throw new InvalidOperationException("No Avalonia main window is available for dialog ownership.");
-            }
+            var previousOwner = _ownerOverride.Value;
+            _ownerOverride.Value = owner;
+            return new OwnerScope(this, previousOwner);
         }
 
         private async Task ShowDialogAsync(Window dialog)

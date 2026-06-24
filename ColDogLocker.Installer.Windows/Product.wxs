@@ -19,7 +19,7 @@
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ColDog-Studios/ColDog-Locker" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/ColDog-Studios/ColDog-Locker/releases" />
     <Property Id="CREATE_DESKTOP_SHORTCUT" Value="1" />
-    <Property Id="REMOVE_USER_DATA_ON_UNINSTALL" Value="1" />
+    <Property Id="REMOVE_USER_DATA_ON_UNINSTALL" Value="0" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerBmp)" />
@@ -81,7 +81,7 @@
     </StandardDirectory>
 
     <Component Id="RemoveUserDataOptionComponent" Directory="INSTALLFOLDER" Guid="*" Bitness="always64">
-      <RegistryValue Root="HKCU" Key="Software\ColDog Studios\ColDog Locker" Name="RemoveUserDataOnUninstall" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\ColDog Studios\ColDog Locker" Name="RemoveUserDataOnUninstall" Type="integer" Value="0" KeyPath="yes" />
     </Component>
 
     <CustomAction Id="RemoveUserData"
@@ -118,7 +118,7 @@
       <ComponentRef Id="DesktopShortcutComponent" />
     </Feature>
 
-    <Feature Id="RemoveUserDataFeature" Title="Remove stored config and data on uninstall" Description="Remove settings, logs, locker metadata, and the default locker folder when uninstalling." Level="1">
+    <Feature Id="RemoveUserDataFeature" Title="Remove stored config and data on uninstall" Description="Opt in to removing settings, logs, locker metadata, and the default locker folder when uninstalling." Level="1">
       <ComponentRef Id="RemoveUserDataOptionComponent" />
     </Feature>
 

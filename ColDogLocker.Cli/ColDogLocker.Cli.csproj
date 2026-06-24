@@ -38,6 +38,12 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>ColDogLocker.Cli.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\ColDogLocker.Core\ColDogLocker.Core.csproj"/>
         <ProjectReference Include="..\ColDogLocker.Services\ColDogLocker.Services.csproj"/>
         <ProjectReference Include="..\ColDogLocker.Tui\ColDogLocker.Tui.csproj"/>

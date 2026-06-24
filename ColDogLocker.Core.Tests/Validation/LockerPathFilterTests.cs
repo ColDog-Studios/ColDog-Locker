@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Runtime.InteropServices;
 using ColDogStudios.ColDogLocker.Core.Validation;
@@ -37,7 +37,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAllowedPath_ShouldReturnNull()
         {
             // Arrange - A safe subdirectory under Documents is now allowed
-            var safePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "ColDog Locker", "TestLocker");
+            var safePath = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "ColDog Locker", "TestLocker");
 
             // Act
             var result = LockerPathFilter.ValidatePath(safePath);
@@ -132,7 +132,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAppData_ShouldReturnError()
         {
             // Arrange - Exact AppData root folder
-            var appDataPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData");
+            var appDataPath = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData");
 
             // Act
             var result = LockerPathFilter.ValidatePath(appDataPath);
@@ -146,7 +146,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithAppDataSubdirectory_ShouldReturnNull()
         {
             // Arrange - Subdirectory under AppData (like C:\Users\ColDog\AppData\MyHiddenLocker)
-            var appDataSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData", "MyHiddenLocker");
+            var appDataSubPath = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "AppData", "MyHiddenLocker");
 
             // Act
             var result = LockerPathFilter.ValidatePath(appDataSubPath);
@@ -172,7 +172,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithUserProfileSubdirectory_ShouldReturnNull()
         {
             // Arrange - Subdirectory under user profile (like C:\Users\ColDog\MyLocker)
-            var userProfileSub = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "MyLocker");
+            var userProfileSub = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "MyLocker");
 
             // Act
             var result = LockerPathFilter.ValidatePath(userProfileSub);
@@ -185,7 +185,7 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
         public void ValidatePath_WithSubdirectoryOfProtectedPath_ShouldReturnError()
         {
             // Arrange - Try to lock a subdirectory of Windows
-            var windowsSubPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows), "System32");
+            var windowsSubPath = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Windows), "System32");
 
             // Act
             var result = LockerPathFilter.ValidatePath(windowsSubPath);

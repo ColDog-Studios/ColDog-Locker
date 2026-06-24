@@ -2,7 +2,9 @@
 
 ## Is ColDog Locker ready for production use?
 
-Not yet. It is pre-release software. The core CLI, TUI, and Avalonia GUI exist, but release packaging and cross-platform GUI validation are still in progress. Automated prerelease assets include Windows, Linux, and experimental macOS packages. macOS `.pkg` builds are unsigned, unnotarized, and untested.
+ColDog Locker is still pre-release software.
+The packages still need release-candidate validation on clean systems before the project is declared stable.
+Windows and macOS packages are unsigned, so Windows SmartScreen or macOS Gatekeeper may display a warning.
 
 ## What is a locker?
 
@@ -66,7 +68,7 @@ Settings are stored in `settings.json`; logs are stored in `logs/`.
 
 ## Does locking delete my files?
 
-No. Locking encrypts file contents in place and replaces each plaintext file with encrypted bytes. Unlocking decrypts the files back in place.
+No. Locking writes the locker contents into an encrypted `locker.cdl` archive and removes the plaintext directory only after the archive succeeds. Unlocking authenticates and decrypts that archive back into the normal locker folder.
 
 ## Should I keep backups?
 
@@ -82,7 +84,16 @@ That is the current CLI behavior. Use `cdlocker gui` to launch the graphical int
 
 ## What GUI should I use?
 
-Use the Avalonia GUI through `cdlocker gui` on supported platforms. On macOS, `cdlocker gui` is still unsupported; experimental `.pkg` builds install `/Applications/ColDog Locker.app` for direct validation.
+Use the Avalonia GUI through `cdlocker gui` on Windows, Linux, or macOS. The macOS package installs `/Applications/ColDog Locker.app`, and the CLI launcher opens that app bundle.
+
+## What packages are available?
+
+Each package contains the CLI, TUI, and Avalonia GUI:
+
+- Windows: x64 and arm64 `.msi` and setup `.exe` installers.
+- Debian/Ubuntu-family Linux: x64 and arm64 `.deb` packages.
+- Fedora/RHEL/openSUSE-family Linux: x64 and arm64 `.rpm` packages.
+- macOS: x64 and arm64 `.pkg` installers.
 
 ## What does `verify` prove?
 

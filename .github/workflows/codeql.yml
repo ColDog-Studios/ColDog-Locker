@@ -12,10 +12,9 @@
 name: "CodeQL Advanced"
 
 on:
-  #push:
-  #  branches: [ "main" ]
-  pull_request:
-    branches: ["main, test"]
+  push:
+    branches: ["main", "test", "dev"]
+  pull_request: {}
   schedule:
     - cron: "0 0 * * *"
 
@@ -55,7 +54,7 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL

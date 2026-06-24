@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -102,7 +102,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
     ///         {
     ///             File.ReadAllText("config.json");
     ///         }
-    ///          catch (Exception ex)
+    ///         catch (Exception ex)
     ///         {
     ///             Logger.Log(LogLevel.Error, "Failed to read config file.", ex);
     ///         }
@@ -112,15 +112,15 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
     /// </summary>
     public static class Logger
     {
+        private const int MaxRetainedLogFiles = 4;
         private static readonly string _logDirectory = Path.GetFullPath(Path.Join(Path.GetFullPath(AppPaths.LocalConfig), "logs"));
         private static readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        private static readonly string _logFilePath = Path.Combine(_logDirectory, "cdl.log");
+        private static readonly string _logFilePath = Path.Join(_logDirectory, "cdl.log");
         private static readonly Lock _lockObject = new();
 
         private static LogLevel _minLogLevel = LogLevel.Info;
         private static string _logFormat = "json";
         private static int _maxFileSizeMb = 10;
-        private const int MaxRetainedLogFiles = 4;
         private static bool _enableFileLogging = true;
         private static bool _devMode;
 
@@ -348,14 +348,14 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             {
                 EnsureLogDirectory();
                 var fallbackFileName = Path.GetFileName($"fallback_{_sessionId}.txt");
-                var fallbackPath = Path.Combine(_logDirectory, fallbackFileName);
+                var fallbackPath = Path.Join(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
                     $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {loggerException.Message}){Environment.NewLine}");
                 AppFilePermissions.ApplyPrivateFile(fallbackPath);
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"An exception occurred while writing fallback log entries: {ex}");
+                Console.WriteLine($"An exception occurred while writing fallback log entries: {ex}");
             }
         }
 
@@ -408,7 +408,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             }
 
             var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-            var rotatedName = Path.Combine(_logDirectory, $"cdl_{timestamp}.log");
+            var rotatedName = Path.Join(_logDirectory, $"cdl_{timestamp}.log");
             File.Move(_logFilePath, rotatedName);
 
             // Delete oldest files beyond the retained limit
@@ -455,19 +455,19 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             }
             catch (JsonException ex)
             {
-                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (IOException ex)
             {
-                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (UnauthorizedAccessException ex)
             {
-                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
             catch (NotSupportedException ex)
             {
-                System.Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }
         }
 

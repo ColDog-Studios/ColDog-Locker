@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Runtime.InteropServices;
 using System.Text;
@@ -34,7 +34,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         public ErrorDialog()
         {
             InitializeComponent();
-            Configure("Error", "An error occurred.", exception: null, platformService: null);
+            Configure("Error", "An error occurred.", null, null);
             CopyErrorButton.Click += CopyErrorButton_Click;
             OpenLogsButton.Click += OpenLogsButton_Click;
             OkButton.Click += OkButton_Click;
@@ -84,7 +84,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             try
             {
                 var logsPath = Path.GetDirectoryName(Logger.GetCurrentLogFilePath())
-                    ?? Path.Combine(AppPaths.LocalConfig, "logs");
+                               ?? Path.Join(AppPaths.LocalConfig, "logs");
                 AppFilePermissions.EnsurePrivateDirectory(logsPath);
 
                 if (_platformService != null)
@@ -116,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 return;
             }
 
-            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            var clipboard = GetTopLevel(this)?.Clipboard;
             if (clipboard == null)
             {
                 throw new InvalidOperationException("No clipboard is available.");
@@ -141,7 +141,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             if (exception != null)
             {
-                AppendException(details, exception, level: 0);
+                AppendException(details, exception, 0);
             }
             else
             {
@@ -188,6 +188,5 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 AppendException(details, exception.InnerException, level + 1);
             }
         }
-
     }
 }

@@ -1,26 +1,25 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using ColDogStudios.ColDogLocker.Core.Environment;
-using ColDogStudios.ColDogLocker.Services.Security;
-using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Core.Models;
-using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Tui.Input;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands
@@ -50,6 +49,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
+            var lockerNameValidationError = ValidateLockerName(lockerName);
+            if (lockerNameValidationError != null)
+            {
+                Console.Error.WriteLine($"Error: {lockerNameValidationError}");
+                return 1;
+            }
+
             string? customPath = null;
             string? providedPassword = null;
 
@@ -70,8 +76,8 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
             // Determine locker location
             var lockerLocation = customPath is not null
-                ? Path.Combine(customPath, lockerName)
-                : Path.Combine(AppPaths.CdlDir, lockerName);
+                ? Path.Join(customPath, lockerName)
+                : Path.Join(AppPaths.CdlDir, lockerName);
 
             // Validate path is not protected
             var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
@@ -82,7 +88,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Check if locker already exists
-            if (LockerService.Lockers.Any(l => l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase)))
+            if (LockerService.LockerExistsInMemory(lockerName))
             {
                 Console.Error.WriteLine($"Error: Locker '{lockerName}' already exists.");
                 return 1;
@@ -111,6 +117,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 {
                     Console.WriteLine($"  - {requirement.Description}");
                 }
+
                 Console.WriteLine();
 
                 while (true)
@@ -163,6 +170,25 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
         }
 
+        private static string? ValidateLockerName(string lockerName)
+        {
+            if (string.IsNullOrWhiteSpace(lockerName))
+            {
+                return "Locker name cannot be empty.";
+            }
+
+            var trimmedName = lockerName.Trim();
+            if (trimmedName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                trimmedName.Contains(Path.DirectorySeparatorChar) ||
+                trimmedName.Contains(Path.AltDirectorySeparatorChar) ||
+                trimmedName is "." or "..")
+            {
+                return "Locker name must be a valid file name, not a path.";
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region Remove Locker
@@ -183,8 +209,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var deleteDirectory = args.Contains("--delete");
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -222,11 +247,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Remove the locker
             try
             {
-                // Use LockerService.RemoveLocker to properly delete from database
-                // Note: RemoveLocker has a Console.ReadLine() which we need to avoid in CLI
-                LockerRepository.DeleteLocker(locker.Guid);
-                LockerService.Lockers.Remove(locker);
-                Logger.Log(LogLevel.Info, $"{lockerName} removed successfully.");
+                LockerService.RemoveLocker(locker);
 
                 // Delete directory if requested
                 if (deleteDirectory && Directory.Exists(locker.LockerLocation))
@@ -282,8 +303,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -362,8 +382,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -425,32 +444,29 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             LockerService.LoadLockers();
 
             // Check for filter flags
-            bool? filterLocked = null;
-            if (args.Contains("--locked"))
-            {
-                filterLocked = true;
-            }
-            else if (args.Contains("--unlocked"))
-            {
-                filterLocked = false;
-            }
+            var showLocked = args.Contains("--locked");
+            var showUnlocked = !showLocked && args.Contains("--unlocked");
 
             // Apply filter
-            var lockers = LockerService.Lockers.AsEnumerable();
-            if (filterLocked.HasValue)
+            var lockers = LockerService.GetLockersSnapshot().AsEnumerable();
+            if (showLocked)
             {
-                lockers = lockers.Where(l => l.IsLocked == filterLocked.Value);
+                lockers = lockers.Where(l => l.IsLocked);
+            }
+            else if (showUnlocked)
+            {
+                lockers = lockers.Where(l => !l.IsLocked);
             }
 
             var lockerList = lockers.OrderBy(l => l.LockerName).ToList();
 
             if (lockerList.Count == 0)
             {
-                if (filterLocked is true)
+                if (showLocked)
                 {
                     Console.WriteLine("No locked lockers found.");
                 }
-                else if (filterLocked is false)
+                else if (showUnlocked)
                 {
                     Console.WriteLine("No unlocked lockers found.");
                 }
@@ -495,8 +511,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var lockerName = args[1];
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -579,8 +594,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {
@@ -701,8 +715,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             var lockerName = args[1];
 
             // Find the locker
-            var locker = LockerService.Lockers.FirstOrDefault(l =>
-                l.LockerName.Equals(lockerName, StringComparison.OrdinalIgnoreCase));
+            var locker = LockerService.FindLockerByName(lockerName);
 
             if (locker is null)
             {

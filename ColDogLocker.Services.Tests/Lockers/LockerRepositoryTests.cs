@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
@@ -32,13 +32,14 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             Assert.True(File.Exists(database.Path));
             Assert.Empty(LockerRepository.GetAllLockers(database.ConnectionString));
+            Assert.Equal(LockerRepository.CurrentSchemaVersion, GetSchemaVersion(database.ConnectionString));
         }
 
         [Fact]
         public void InsertAndReadMethods_ShouldPersistLockerData()
         {
             using var database = TestDatabase.CreateInitialized();
-            var locker = CreateLocker("Beta", isLocked: true);
+            var locker = CreateLocker("Beta", true);
 
             LockerRepository.InsertLocker(locker, database.ConnectionString);
 
@@ -151,6 +152,25 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             Assert.Contains("StorageFormatVersion", columns);
             Assert.Contains("LockedArchiveSha256", columns);
             Assert.Contains("LockedAtUtc", columns);
+            Assert.Equal(LockerRepository.CurrentSchemaVersion, GetSchemaVersion(database.ConnectionString));
+        }
+
+        [Fact]
+        public void InitializeDatabase_WithNewerSchemaVersion_ShouldThrowInvalidOperationException()
+        {
+            using var database = TestDatabase.Create();
+            using (var connection = new SqliteConnection(database.ConnectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"PRAGMA user_version = {LockerRepository.CurrentSchemaVersion + 1}";
+                command.ExecuteNonQuery();
+            }
+
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                LockerRepository.InitializeDatabase(database.ConnectionString));
+
+            Assert.Contains("newer than this application supports", exception.Message);
         }
 
         [Fact]
@@ -242,12 +262,21 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             };
         }
 
+        private static int GetSchemaVersion(string connectionString)
+        {
+            using var connection = new SqliteConnection(connectionString);
+            connection.Open();
+            var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA user_version";
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+
         private sealed class TestDatabase : IDisposable
         {
             private TestDatabase(string directory)
             {
                 Directory = directory;
-                Path = System.IO.Path.Combine(directory, "lockers.db");
+                Path = System.IO.Path.Join(directory, "lockers.db");
                 ConnectionString = $"Data Source={Path};Pooling=False";
                 System.IO.Directory.CreateDirectory(directory);
             }
@@ -255,18 +284,6 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             public string Directory { get; }
             public string Path { get; }
             public string ConnectionString { get; }
-
-            public static TestDatabase Create()
-            {
-                return new TestDatabase(System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}"));
-            }
-
-            public static TestDatabase CreateInitialized()
-            {
-                var database = Create();
-                LockerRepository.InitializeDatabase(database.ConnectionString);
-                return database;
-            }
 
             public void Dispose()
             {
@@ -278,7 +295,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                     {
                         if (System.IO.Directory.Exists(Directory))
                         {
-                            System.IO.Directory.Delete(Directory, recursive: true);
+                            System.IO.Directory.Delete(Directory, true);
                         }
 
                         return;
@@ -292,6 +309,18 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                         Thread.Sleep(100);
                     }
                 }
+            }
+
+            public static TestDatabase Create()
+            {
+                return new TestDatabase(System.IO.Path.Join(System.IO.Path.GetTempPath(), $"cdlocker-tests-{Guid.NewGuid():N}"));
+            }
+
+            public static TestDatabase CreateInitialized()
+            {
+                var database = Create();
+                LockerRepository.InitializeDatabase(database.ConnectionString);
+                return database;
             }
         }
     }

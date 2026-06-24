@@ -1,28 +1,24 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 namespace ColDogStudios.ColDogLocker.Core.Versioning
 {
     public class SemanticVersion : IComparable<SemanticVersion>, IEquatable<SemanticVersion>
     {
-        public int Major { get; private set; }
-        public int Minor { get; private set; }
-        public int Patch { get; private set; }
-        public string? PreRelease { get; private set; }
         private readonly string[]? _preReleaseParts; // Cache parsed prerelease identifiers
 
         /// <summary>
@@ -50,74 +46,25 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
         }
 
         /// <summary>
-        ///     Tries to parse a version string into a SemanticVersion instance. Returns true if successful, false otherwise.
+        ///     Private constructor used by TryParse to create validated SemanticVersion instances.
         /// </summary>
-        /// <param name="version">The version string to parse.</param>
-        /// <param name="result">The resulting SemanticVersion instance if parsing succeeds; null otherwise.</param>
-        /// <returns>True if parsing succeeds; false otherwise.</returns>
-        public static bool TryParse(string version, out SemanticVersion result)
+        private SemanticVersion(int major, int minor, int patch, string? preRelease, string[]? preReleaseParts)
         {
-            result = null!;
-
-            if (string.IsNullOrWhiteSpace(version))
-            {
-                return false;
-            }
-
-            try
-            {
-                var versionWithoutBuildMetadata = version.Split('+', 2)[0];
-                var mainAndPre = versionWithoutBuildMetadata.Split('-', 2);
-                var mainParts = mainAndPre[0].Split('.');
-
-                if (mainParts.Length != 3)
-                {
-                    return false;
-                }
-
-                if (!int.TryParse(mainParts[0], out int major) ||
-                    !int.TryParse(mainParts[1], out int minor) ||
-                    !int.TryParse(mainParts[2], out int patch) ||
-                    major < 0 || minor < 0 || patch < 0)
-                {
-                    return false;
-                }
-
-                var preRelease = mainAndPre.Length > 1 ? mainAndPre[1] : null;
-
-                // Validate prerelease format if present
-                if (preRelease != null && string.IsNullOrWhiteSpace(preRelease))
-                {
-                    return false;
-                }
-
-                // Validate pre-release format (no leading zeros in numeric identifiers per semver spec)
-                if (preRelease != null)
-                {
-                    var parts = preRelease.Split('.');
-                    foreach (var part in parts)
-                    {
-                        // Reject numeric identifiers with leading zeros (except "0" itself)
-                        if (part.Length > 1 && part[0] == '0' && char.IsDigit(part[1]))
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                var preReleaseParts = preRelease?.Split('.');
-                result = new SemanticVersion(major, minor, patch, preRelease, preReleaseParts);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            Major = major;
+            Minor = minor;
+            Patch = patch;
+            PreRelease = preRelease;
+            _preReleaseParts = preReleaseParts;
         }
 
+        public int Major { get; }
+        public int Minor { get; }
+        public int Patch { get; }
+        public string? PreRelease { get; }
+
         /// <summary>
-        ///    Compares this instance to another SemanticVersion instance. Returns a positive number if this instance is greater, 
-        ///    negative if less, and zero if equal.
+        ///     Compares this instance to another SemanticVersion instance. Returns a positive number if this instance is greater,
+        ///     negative if less, and zero if equal.
         /// </summary>
         /// <param name="other">The SemanticVersion instance to compare against.</param>
         /// <returns>A positive number if this instance is greater; negative if less; zero if equal.</returns>
@@ -164,16 +111,16 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
             var thisParts = _preReleaseParts!;
             var otherParts = other._preReleaseParts!;
 
-            int minLength = Math.Min(thisParts.Length, otherParts.Length);
-            for (int i = 0; i < minLength; i++)
+            var minLength = Math.Min(thisParts.Length, otherParts.Length);
+            for (var i = 0; i < minLength; i++)
             {
-                bool thisIsNumeric = int.TryParse(thisParts[i], out int thisNum);
-                bool otherIsNumeric = int.TryParse(otherParts[i], out int otherNum);
+                var thisIsNumeric = int.TryParse(thisParts[i], out var thisNum);
+                var otherIsNumeric = int.TryParse(otherParts[i], out var otherNum);
 
                 // Numeric identifiers are compared as integers
                 if (thisIsNumeric && otherIsNumeric)
                 {
-                    int numCompare = thisNum.CompareTo(otherNum);
+                    var numCompare = thisNum.CompareTo(otherNum);
                     if (numCompare != 0)
                     {
                         return numCompare;
@@ -191,7 +138,7 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
                 // Both non-numeric, compare lexically
                 else
                 {
-                    int lexCompare = string.Compare(thisParts[i], otherParts[i], StringComparison.Ordinal);
+                    var lexCompare = string.Compare(thisParts[i], otherParts[i], StringComparison.Ordinal);
                     if (lexCompare != 0)
                     {
                         return lexCompare;
@@ -208,9 +155,76 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
             return other is not null && CompareTo(other) == 0;
         }
 
-        public override bool Equals(object? obj) => obj is SemanticVersion other && Equals(other);
+        /// <summary>
+        ///     Tries to parse a version string into a SemanticVersion instance. Returns true if successful, false otherwise.
+        /// </summary>
+        /// <param name="version">The version string to parse.</param>
+        /// <param name="result">The resulting SemanticVersion instance if parsing succeeds; null otherwise.</param>
+        /// <returns>True if parsing succeeds; false otherwise.</returns>
+        public static bool TryParse(string version, out SemanticVersion result)
+        {
+            result = null!;
 
-        public override int GetHashCode() => HashCode.Combine(Major, Minor, Patch, PreRelease);
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                return false;
+            }
+
+            try
+            {
+                var versionWithoutBuildMetadata = version.Split('+', 2)[0];
+                var mainAndPre = versionWithoutBuildMetadata.Split('-', 2);
+                var mainParts = mainAndPre[0].Split('.');
+
+                if (mainParts.Length != 3)
+                {
+                    return false;
+                }
+
+                if (!int.TryParse(mainParts[0], out var major) ||
+                    !int.TryParse(mainParts[1], out var minor) ||
+                    !int.TryParse(mainParts[2], out var patch) ||
+                    major < 0 || minor < 0 || patch < 0)
+                {
+                    return false;
+                }
+
+                var preRelease = mainAndPre.Length > 1 ? mainAndPre[1] : null;
+
+                // Validate prerelease format if present
+                if (preRelease != null && string.IsNullOrWhiteSpace(preRelease))
+                {
+                    return false;
+                }
+
+                var preReleaseParts = preRelease?.Split('.');
+                if (preReleaseParts?.Any(part => part.Length > 1 && part[0] == '0' && char.IsDigit(part[1])) == true)
+                {
+                    return false;
+                }
+
+                result = new SemanticVersion(major, minor, patch, preRelease, preReleaseParts);
+                return true;
+            }
+            catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is SemanticVersion other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Major, Minor, Patch, PreRelease);
+        }
 
         public override string ToString()
         {
@@ -245,18 +259,6 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
         public static bool operator !=(SemanticVersion? v1, SemanticVersion? v2)
         {
             return !(v1 == v2);
-        }
-
-        /// <summary>
-        ///     Private constructor used by TryParse to create validated SemanticVersion instances.
-        /// </summary>
-        private SemanticVersion(int major, int minor, int patch, string? preRelease, string[]? preReleaseParts)
-        {
-            Major = major;
-            Minor = minor;
-            Patch = patch;
-            PreRelease = preRelease;
-            _preReleaseParts = preReleaseParts;
         }
     }
 }

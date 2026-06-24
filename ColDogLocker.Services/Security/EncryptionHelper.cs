@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 using System.Buffers.Binary;
 using System.Security.Cryptography;
@@ -55,7 +55,12 @@ namespace ColDogStudios.ColDogLocker.Services.Security
                     encryptedDirectories.Add(subDirectory);
                 }
             }
-            catch
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                RollBackEncryptedFiles(encryptedFiles, encryptedDirectories, password);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackEncryptedFiles(encryptedFiles, encryptedDirectories, password);
                 throw;
@@ -118,7 +123,12 @@ namespace ColDogStudios.ColDogLocker.Services.Security
 
                 ReplaceFile(encryptedFile, inputFile);
             }
-            catch
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                TryDeleteFile(encryptedFile);
+                throw;
+            }
+            catch (Exception)
             {
                 TryDeleteFile(encryptedFile);
                 throw;
@@ -147,7 +157,12 @@ namespace ColDogStudios.ColDogLocker.Services.Security
                     decryptedDirectories.Add(subDirectory);
                 }
             }
-            catch
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                RollBackDecryptedFiles(decryptedFiles, decryptedDirectories, password);
+                throw;
+            }
+            catch (Exception)
             {
                 RollBackDecryptedFiles(decryptedFiles, decryptedDirectories, password);
                 throw;
@@ -223,7 +238,12 @@ namespace ColDogStudios.ColDogLocker.Services.Security
 
                 ReplaceFile(decryptedFile, inputFile);
             }
-            catch
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                TryDeleteFile(decryptedFile);
+                throw;
+            }
+            catch (Exception)
             {
                 TryDeleteFile(decryptedFile);
                 throw;
@@ -354,7 +374,7 @@ namespace ColDogStudios.ColDogLocker.Services.Security
         {
             var directory = Path.GetDirectoryName(inputFile) ?? Directory.GetCurrentDirectory();
             var fileName = Path.GetFileName(inputFile);
-            return Path.Combine(directory, $".{fileName}.{Guid.NewGuid():N}{suffix}.tmp");
+            return Path.Join(directory, $".{fileName}.{Guid.NewGuid():N}{suffix}.tmp");
         }
 
         private static void ReplaceFile(string sourceFile, string destinationFile)
@@ -378,9 +398,14 @@ namespace ColDogStudios.ColDogLocker.Services.Security
                     File.Delete(path);
                 }
             }
-            catch
+            catch (Exception ex) when (IsFileCleanupException(ex))
             {
                 // A failed temp-file cleanup should not hide the original encryption error.
+            }
+            catch (Exception)
+            {
+                // A failed temp-file cleanup should not hide the original encryption error.
+                return;
             }
         }
 
@@ -422,6 +447,10 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             {
                 EncryptDirectory(directory, password);
             }
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting directory '{directory}'.", ex);
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting directory '{directory}'.", ex);
@@ -433,6 +462,10 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             try
             {
                 DecryptDirectory(directory, password);
+            }
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting directory '{directory}'.", ex);
             }
             catch (Exception ex)
             {
@@ -446,6 +479,10 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             {
                 EncryptFile(file, password);
             }
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting file '{file}'.", ex);
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting file '{file}'.", ex);
@@ -458,10 +495,32 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             {
                 DecryptFile(file, password);
             }
+            catch (Exception ex) when (IsEncryptionOperationException(ex))
+            {
+                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting file '{file}'.", ex);
+            }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting file '{file}'.", ex);
             }
+        }
+
+        private static bool IsEncryptionOperationException(Exception ex)
+        {
+            return ex is IOException
+                or UnauthorizedAccessException
+                or DirectoryNotFoundException
+                or PathTooLongException
+                or ArgumentException
+                or NotSupportedException
+                or InvalidDataException
+                or EndOfStreamException
+                or CryptographicException;
+        }
+
+        private static bool IsFileCleanupException(Exception ex)
+        {
+            return ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or NotSupportedException;
         }
 
         private sealed record EncryptedFileHeader(byte[] Salt, byte[] NoncePrefix, long OriginalLength, int Iterations);

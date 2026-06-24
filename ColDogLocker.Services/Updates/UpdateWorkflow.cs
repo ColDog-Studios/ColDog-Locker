@@ -1,19 +1,19 @@
 /*
-**  Copyright (C) 2026 ColDog Studios
-**
-**  This program is free software: you can redistribute it and/or modify
-**  it under the terms of the GNU General Public License as published by
-**  the Free Software Foundation, either version 3 of the License, or
-**  (at your option) any later version.
-**
-**  This program is distributed in the hope that it will be useful,
-**  but WITHOUT ANY WARRANTY; without even the implied warranty of
-**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-**  GNU General Public License for more details.
-**
-**  You should have received a copy of the GNU General Public License
-**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ **  Copyright (C) 2026 ColDog Studios
+ **
+ **  This program is free software: you can redistribute it and/or modify
+ **  it under the terms of the GNU General Public License as published by
+ **  the Free Software Foundation, either version 3 of the License, or
+ **  (at your option) any later version.
+ **
+ **  This program is distributed in the hope that it will be useful,
+ **  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **  GNU General Public License for more details.
+ **
+ **  You should have received a copy of the GNU General Public License
+ **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 namespace ColDogStudios.ColDogLocker.Services.Updates
 {
@@ -29,9 +29,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         UpdateDialogMessage FormatNoUpdate(UpdateCheckResult update);
         UpdateDialogMessage FormatManualUpdate(UpdateCheckResult update);
         UpdateDialogMessage FormatDownloadPrompt(UpdateCheckResult update);
-        UpdateDialogMessage FormatDownloadSuccess(UpdateDownloadResult download);
+        UpdateDialogMessage FormatInstallSuccess(UpdateDownloadResult download, UpdateInstallResult install);
         UpdateDialogError FormatCheckError(Exception exception);
         UpdateDialogError FormatDownloadError(Exception exception);
+        UpdateDialogError FormatInstallError(UpdateDownloadResult download, Exception exception);
     }
 
     public sealed class UpdateDialogMessage
@@ -65,9 +66,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         NoUpdate,
         ManualUpdate,
         DownloadDeclined,
-        Downloaded,
+        Installed,
         CheckFailed,
-        DownloadFailed
+        DownloadFailed,
+        InstallFailed
     }
 
     public sealed class UpdateWorkflowResult
@@ -76,47 +78,55 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             UpdateWorkflowStatus status,
             UpdateCheckResult? update,
             UpdateDownloadResult? download,
+            UpdateInstallResult? install,
             Exception? exception)
         {
             Status = status;
             Update = update;
             Download = download;
+            Install = install;
             Exception = exception;
         }
 
         public UpdateWorkflowStatus Status { get; }
         public UpdateCheckResult? Update { get; }
         public UpdateDownloadResult? Download { get; }
+        public UpdateInstallResult? Install { get; }
         public Exception? Exception { get; }
 
         public static UpdateWorkflowResult NoUpdate(UpdateCheckResult update)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.NoUpdate, update, null, null);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.NoUpdate, update, null, null, null);
         }
 
         public static UpdateWorkflowResult ManualUpdate(UpdateCheckResult update)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.ManualUpdate, update, null, null);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.ManualUpdate, update, null, null, null);
         }
 
         public static UpdateWorkflowResult DownloadDeclined(UpdateCheckResult update)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.DownloadDeclined, update, null, null);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.DownloadDeclined, update, null, null, null);
         }
 
-        public static UpdateWorkflowResult Downloaded(UpdateCheckResult update, UpdateDownloadResult download)
+        public static UpdateWorkflowResult Installed(UpdateCheckResult update, UpdateDownloadResult download, UpdateInstallResult install)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.Downloaded, update, download, null);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.Installed, update, download, install, null);
         }
 
         public static UpdateWorkflowResult CheckFailed(Exception exception)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.CheckFailed, null, null, exception);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.CheckFailed, null, null, null, exception);
         }
 
         public static UpdateWorkflowResult DownloadFailed(UpdateCheckResult update, Exception exception)
         {
-            return new UpdateWorkflowResult(UpdateWorkflowStatus.DownloadFailed, update, null, exception);
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.DownloadFailed, update, null, null, exception);
+        }
+
+        public static UpdateWorkflowResult InstallFailed(UpdateCheckResult update, UpdateDownloadResult download, Exception exception)
+        {
+            return new UpdateWorkflowResult(UpdateWorkflowStatus.InstallFailed, update, download, null, exception);
         }
     }
 
@@ -158,11 +168,12 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 $"{FormatUpdateAvailable(update)}\nWould you like to download and install it now?");
         }
 
-        public UpdateDialogMessage FormatDownloadSuccess(UpdateDownloadResult download)
+        public UpdateDialogMessage FormatInstallSuccess(UpdateDownloadResult download, UpdateInstallResult install)
         {
+            var title = install.Completed ? "Update Installed" : "Installer Started";
             return new UpdateDialogMessage(
-                "Download Complete",
-                $"Update downloaded successfully to:\n{download.FilePath}\n\nPlease run the installer to complete the update.");
+                title,
+                $"Update downloaded and verified successfully:\n{download.FilePath}\n\n{install.UserMessage}");
         }
 
         public UpdateDialogError FormatCheckError(Exception exception)
@@ -178,6 +189,14 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             return new UpdateDialogError(
                 "Download Failed",
                 $"Failed to download update: {exception.Message}",
+                exception);
+        }
+
+        public UpdateDialogError FormatInstallError(UpdateDownloadResult download, Exception exception)
+        {
+            return new UpdateDialogError(
+                "Install Failed",
+                $"The update was downloaded to:\n{download.FilePath}\n\nFailed to start or complete installation: {exception.Message}",
                 exception);
         }
 
@@ -198,9 +217,9 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
     public sealed class UpdateWorkflow
     {
-        private readonly IUpdateService _updateService;
         private readonly IUpdateDialogHost _dialogHost;
         private readonly IUpdateWorkflowMessageFormatter _formatter;
+        private readonly IUpdateService _updateService;
 
         public UpdateWorkflow(
             IUpdateService updateService,
@@ -249,8 +268,17 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             try
             {
                 var download = await _updateService.DownloadUpdateAsync(update, cancellationToken);
-                await _dialogHost.ShowMessageAsync(_formatter.FormatDownloadSuccess(download), cancellationToken);
-                return UpdateWorkflowResult.Downloaded(update, download);
+                try
+                {
+                    var install = await _updateService.InstallUpdateAsync(download, cancellationToken);
+                    await _dialogHost.ShowMessageAsync(_formatter.FormatInstallSuccess(download, install), cancellationToken);
+                    return UpdateWorkflowResult.Installed(update, download, install);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    await _dialogHost.ShowErrorAsync(_formatter.FormatInstallError(download, ex), cancellationToken);
+                    return UpdateWorkflowResult.InstallFailed(update, download, ex);
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
