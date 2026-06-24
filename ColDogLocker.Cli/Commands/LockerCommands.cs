@@ -444,32 +444,29 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             LockerService.LoadLockers();
 
             // Check for filter flags
-            bool? filterLocked = null;
-            if (args.Contains("--locked"))
-            {
-                filterLocked = true;
-            }
-            else if (args.Contains("--unlocked"))
-            {
-                filterLocked = false;
-            }
+            var showLocked = args.Contains("--locked");
+            var showUnlocked = !showLocked && args.Contains("--unlocked");
 
             // Apply filter
             var lockers = LockerService.GetLockersSnapshot().AsEnumerable();
-            if (filterLocked.HasValue)
+            if (showLocked)
             {
-                lockers = lockers.Where(l => l.IsLocked == filterLocked.Value);
+                lockers = lockers.Where(l => l.IsLocked);
+            }
+            else if (showUnlocked)
+            {
+                lockers = lockers.Where(l => !l.IsLocked);
             }
 
             var lockerList = lockers.OrderBy(l => l.LockerName).ToList();
 
             if (lockerList.Count == 0)
             {
-                if (filterLocked is true)
+                if (showLocked)
                 {
                     Console.WriteLine("No locked lockers found.");
                 }
-                else if (filterLocked is false)
+                else if (showUnlocked)
                 {
                     Console.WriteLine("No unlocked lockers found.");
                 }

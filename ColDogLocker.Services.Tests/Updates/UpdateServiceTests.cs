@@ -674,10 +674,16 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                     return Task.FromResult(response);
                 }
 
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+                return Task.FromResult(CreateNotFoundResponse(request, path));
+            }
+
+            private static HttpResponseMessage CreateNotFoundResponse(HttpRequestMessage request, string path)
+            {
+                return new HttpResponseMessage(HttpStatusCode.NotFound)
                 {
-                    RequestMessage = request, Content = new StringContent($"No stubbed response for {path}")
-                });
+                    RequestMessage = request,
+                    Content = new StringContent($"No stubbed response for {path}")
+                };
             }
         }
     }
