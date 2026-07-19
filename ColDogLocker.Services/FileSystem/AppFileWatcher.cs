@@ -107,7 +107,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
             catch (InvalidOperationException ex)
             {
-                Logger.Log(LogLevel.Error, "Invalid operation in OnSettingsChanged", ex);
+                Logger.Log(LogLevel.Error, "Failed to process settings file change.", ex);
             }
         }
 
@@ -120,13 +120,13 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Exception in OnLockersChanged", ex);
+                Logger.Log(LogLevel.Error, "Failed to process lockers database change.", ex);
             }
         }
 
         private static void OnWatcherError(object sender, ErrorEventArgs e)
         {
-            Logger.Log(LogLevel.Error, "File watcher error", e.GetException());
+            Logger.Log(LogLevel.Error, "File system watcher reported an error.", e.GetException());
         }
 
         public static void Dispose()
@@ -139,7 +139,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Error disposing file watchers", ex);
+                Logger.Log(LogLevel.Warning, "Failed to dispose file watchers.", ex);
             }
         }
     }

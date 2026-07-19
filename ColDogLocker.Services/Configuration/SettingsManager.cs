@@ -43,7 +43,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
 
             if (!File.Exists(_settingsFile))
             {
-                pendingLogs.Add((LogLevel.Warning, "Settings file not found."));
+                pendingLogs.Add((LogLevel.Info, "Settings file was not found; creating default settings."));
                 InitializeSettings();
                 Logger.ReloadConfig();
                 foreach (var (level, message) in pendingLogs)
@@ -74,19 +74,19 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or NotSupportedException or ArgumentException or System.Security.SecurityException)
                 {
-                    Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
+                    Logger.Log(LogLevel.Error, "Failed to read settings file.", ex);
                     return;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(LogLevel.Error, "Unexpected error reading settings file", ex);
+                    Logger.Log(LogLevel.Error, "Failed to read settings file.", ex);
                     return;
                 }
             }
 
             if (settingsContent == null)
             {
-                Logger.Log(LogLevel.Error, "Failed to read settings after multiple attempts. Skipping reload to avoid data loss");
+                Logger.Log(LogLevel.Error, "Could not read settings after 6 attempts; keeping the current settings.");
                 return;
             }
 
@@ -145,7 +145,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                 return;
             }
 
-            Logger.Log(LogLevel.Error, "Settings file appears malformed after retries. Backing up and initializing defaults");
+            Logger.Log(LogLevel.Warning, "Settings file remained malformed after retries; backing it up and restoring defaults.");
             BackupCorruptedSettings();
             InitializeSettings();
         }
@@ -255,13 +255,13 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
             }
             catch (Exception ex) when (ex is IOException or NotSupportedException or ArgumentException or System.Security.SecurityException)
             {
-                Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
+                Logger.Log(LogLevel.Error, "Failed to save settings.", ex);
                 CleanupTempFile();
                 throw;
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Error saving settings: {ex.Message}", ex);
+                Logger.Log(LogLevel.Error, "Failed to save settings.", ex);
                 CleanupTempFile();
                 throw;
             }
@@ -282,12 +282,12 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or ArgumentException)
             {
                 // If we can't clean up the temp file, it's not critical
-                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
+                Logger.Log(LogLevel.Warning, "Failed to remove temporary settings file after a settings save failure.", ex);
             }
             catch (Exception ex)
             {
                 // If we can't clean up the temp file, it's not critical
-                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
+                Logger.Log(LogLevel.Warning, "Failed to remove temporary settings file after a settings save failure.", ex);
             }
         }
 
@@ -309,11 +309,11 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or NotSupportedException or ArgumentException)
             {
-                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
+                Logger.Log(LogLevel.Error, "Failed to back up malformed settings file before restoring defaults.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
+                Logger.Log(LogLevel.Error, "Failed to back up malformed settings file before restoring defaults.", ex);
             }
         }
     }

@@ -23,6 +23,7 @@ using System.Text;
 using System.Text.Json;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
@@ -596,11 +597,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             catch (Exception ex) when (IsArchiveProtectionException(ex))
             {
                 // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
+                Logger.Log(LogLevel.Warning,
+                    $"Could not apply private permissions to locked archive '{archivePath}'; archive contents remain encrypted, but archive metadata or visibility may be exposed.",
+                    ex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
-                return;
+                Logger.Log(LogLevel.Warning,
+                    $"Could not apply private permissions to locked archive '{archivePath}'; archive contents remain encrypted, but archive metadata or visibility may be exposed.",
+                    ex);
             }
         }
 
@@ -617,11 +623,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             catch (Exception ex) when (IsArchiveCleanupException(ex))
             {
                 // Cleanup failures should not hide the original archive error.
+                Logger.Log(LogLevel.Error,
+                    $"Failed to remove incomplete locked archive '{filePath}' after archive creation failed; manual cleanup may be required.", ex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Cleanup failures should not hide the original archive error.
-                return;
+                Logger.Log(LogLevel.Error,
+                    $"Failed to remove incomplete locked archive '{filePath}' after archive creation failed; manual cleanup may be required.", ex);
             }
         }
 
@@ -651,11 +660,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             catch (Exception ex) when (IsArchiveCleanupException(ex))
             {
                 // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
+                Logger.Log(LogLevel.Error,
+                    $"Failed to remove rollback directory '{directoryPath}'; manual cleanup may be required.", ex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
-                return;
+                Logger.Log(LogLevel.Error,
+                    $"Failed to remove rollback directory '{directoryPath}'; manual cleanup may be required.", ex);
             }
         }
 

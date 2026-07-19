@@ -105,7 +105,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
             if (pathValidationError != null)
             {
-                Logger.Log(LogLevel.Error, $"Locker path validation failed: {pathValidationError}");
+                Logger.Log(LogLevel.Warning, $"Locker creation cancelled: path failed safety validation: {pathValidationError}.");
                 Console.WriteLine($"\nError: {pathValidationError}");
                 Console.Write("Press Enter to continue...");
                 Console.ReadLine();
@@ -114,7 +114,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             if (LockerService.LockerExistsInMemory(lockerName))
             {
-                Logger.Log(LogLevel.Warning, $"Locker creation failed: duplicate locker name {lockerName}");
+                Logger.Log(LogLevel.Debug, $"Locker creation not attempted because locker '{lockerName}' already exists.");
                 Console.Write($"\nLocker '{lockerName}' already exists. Press Enter to continue...");
                 Console.ReadLine();
                 return;
@@ -135,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Locker creation failed: {lockerName}", ex);
+                Logger.Log(LogLevel.Error, $"Failed to create locker '{lockerName}'.", ex);
                 Console.Write($"\nError creating locker: {ex.Message}. Press Enter to continue...");
                 Console.ReadLine();
             }
@@ -181,9 +181,18 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                     Console.Write($"\nAre you sure you want to remove {locker.LockerName}? (y/N): ");
                     if (Console.ReadLine()?.ToLower() == "y")
                     {
-                        // Remove locker from the metadata
-                        LockerService.RemoveLocker(locker);
-                        Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
+                        try
+                        {
+                            // Remove locker from the metadata
+                            LockerService.RemoveLocker(locker);
+                            Console.Write($"\n{locker.LockerName} removed successfully. Press Enter to continue...");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log(LogLevel.Error, $"TUI locker removal failed for '{locker.LockerName}'.", ex);
+                            Console.Write($"\nError removing locker: {ex.Message}. Press Enter to continue...");
+                        }
+
                         Console.ReadLine();
                     }
 
@@ -256,6 +265,12 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                 Console.Write($"\n{ex.Message} Press Enter to continue...");
                 Console.ReadLine();
             }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"TUI lock operation failed for '{locker.LockerName}'.", ex);
+                Console.Write($"\nError locking locker: {ex.Message}. Press Enter to continue...");
+                Console.ReadLine();
+            }
         }
 
         // Unlock an existing locker //////////////////////////////////////////////////////////////////////////////
@@ -317,6 +332,12 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             catch (UnauthorizedAccessException ex)
             {
                 Console.Write($"\n{ex.Message} Press Enter to continue...");
+                Console.ReadLine();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"TUI unlock operation failed for '{locker.LockerName}'.", ex);
+                Console.Write($"\nError unlocking locker: {ex.Message}. Press Enter to continue...");
                 Console.ReadLine();
             }
         }

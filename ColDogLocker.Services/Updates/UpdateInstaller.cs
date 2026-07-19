@@ -69,16 +69,28 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         {
             if (string.IsNullOrWhiteSpace(installerPath))
             {
+                Logger.Log(LogLevel.Error, "Update installation was requested without an installer path.");
                 throw new UpdateException(UpdateFailureKind.InstallFailed, "The update installer path is empty.");
             }
 
             var fullPath = Path.GetFullPath(installerPath);
             if (!File.Exists(fullPath))
             {
+                Logger.Log(LogLevel.Error, $"Update installation was requested, but installer '{fullPath}' was not found.");
                 throw new UpdateException(UpdateFailureKind.InstallFailed, $"The update installer was not found: {fullPath}");
             }
 
-            var command = CreateInstallCommand(fullPath, platform);
+            UpdateInstallerCommand command;
+            try
+            {
+                command = CreateInstallCommand(fullPath, platform);
+            }
+            catch (UpdateException ex)
+            {
+                Logger.Log(LogLevel.Error, $"Could not prepare update installer for '{fullPath}' on {platform.DisplayName}.", ex);
+                throw;
+            }
+
             Logger.Log(LogLevel.Info, $"Starting update installer: {command.DisplayCommand}");
 
             try
@@ -90,6 +102,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                     throw new UpdateException(UpdateFailureKind.InstallFailed,
                         $"The update installer exited with code {processResult.ExitCode}. The downloaded installer remains at {fullPath}.");
                 }
+
+                Logger.Log(LogLevel.Info, command.WaitForExit
+                    ? $"Update installer completed successfully: {command.DisplayCommand}"
+                    : $"Update installer process started: {command.DisplayCommand}");
 
                 return new UpdateInstallResult
                 {
@@ -110,6 +126,12 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 Logger.Log(LogLevel.Error, $"Failed to start update installer: {command.DisplayCommand}", ex);
                 throw new UpdateException(UpdateFailureKind.InstallFailed,
                     $"The update was downloaded, but the installer could not be started. The downloaded installer remains at {fullPath}.", ex);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Logger.Log(LogLevel.Error, $"Update installer failed unexpectedly: {command.DisplayCommand}", ex);
+                throw new UpdateException(UpdateFailureKind.InstallFailed,
+                    $"The update was downloaded, but the installer failed unexpectedly. The downloaded installer remains at {fullPath}.", ex);
             }
         }
 

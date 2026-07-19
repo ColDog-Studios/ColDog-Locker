@@ -28,14 +28,14 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         private static int Main(string[] args)
         {
-            // Initialize the application
-            Initialization.InitializeAsync().GetAwaiter().GetResult();
-
-            // New line for better readability in console output
-            Console.WriteLine();
-
             try
             {
+                // Initialize the application
+                Initialization.InitializeAsync().GetAwaiter().GetResult();
+
+                // New line for better readability in console output
+                Console.WriteLine();
+
                 int result;
 
                 // No arguments - show help
@@ -84,7 +84,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                 Console.Error.WriteLine($"Stack trace:\n{ex.StackTrace}");
 #endif
                 Console.ResetColor();
-                Logger.Log(LogLevel.Fatal, "Unhandled exception", ex);
+                Logger.Log(LogLevel.Fatal, "CLI startup or command execution failed.", ex);
                 Console.WriteLine();
                 return 1;
             }

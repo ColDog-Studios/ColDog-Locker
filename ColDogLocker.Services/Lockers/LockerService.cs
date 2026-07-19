@@ -80,7 +80,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                Logger.Log(LogLevel.Debug, "Loading lockers.");
+                Logger.Log(LogLevel.Debug, "Loading lockers from the database.");
                 var loadedLockers = LockerRepository.GetAllLockers();
                 lock (_lockerStateLock)
                 {
@@ -111,7 +111,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "An error occurred while saving lockers to database", ex);
+                Logger.Log(LogLevel.Error, "Failed to save locker metadata to the database.", ex);
                 throw;
             }
         }
@@ -128,12 +128,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             // Create locker directory if it does not exist
             if (Directory.Exists(locker.LockerLocation))
             {
-                Logger.Log(LogLevel.Debug, $"{locker.LockerName} already exists. Skipping directory creation");
+                Logger.Log(LogLevel.Debug, $"Locker directory already exists for '{locker.LockerName}'; skipping creation.");
             }
             else
             {
                 Directory.CreateDirectory(locker.LockerLocation);
-                Logger.Log(LogLevel.Debug, $"Created directory: {locker.LockerLocation}");
+                Logger.Log(LogLevel.Debug, $"Created locker directory '{locker.LockerLocation}'.");
             }
 
             // Add the locker to the database and in-memory list
@@ -143,7 +143,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 _lockers.Add(locker);
             }
 
-            Logger.Log(LogLevel.Info, $"{locker.LockerName} created successfully");
+            Logger.Log(LogLevel.Info, $"Locker '{locker.LockerName}' created successfully.");
         }
 
         /// <summary>
@@ -206,7 +206,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 _lockers.RemoveAll(existing => existing.Guid == locker.Guid);
             }
 
-            Logger.Log(LogLevel.Info, $"{locker.LockerName} removed successfully");
+            Logger.Log(LogLevel.Info, $"Locker '{locker.LockerName}' removed successfully.");
         }
 
         /// <summary>
@@ -230,27 +230,28 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var pathValidationError = LockerPathFilter.ValidatePath(locker.LockerLocation);
             if (pathValidationError != null)
             {
-                Logger.Log(LogLevel.Fatal, $"Security violation: Attempted to lock protected directory {locker.LockerLocation}");
+                Logger.Log(LogLevel.Error, $"Security validation rejected lock request for unsafe locker path '{locker.LockerLocation}'.");
                 throw new UnauthorizedAccessException($"Cannot lock this directory for security reasons: {pathValidationError}");
             }
 
             // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
-                Logger.Log(LogLevel.Warning, $"Failed to lock locker {locker.LockerName}. Incorrect password");
+                Logger.Log(LogLevel.Warning, $"Lock request rejected for locker '{locker.LockerName}': incorrect password.");
                 throw new UnauthorizedAccessException("Incorrect password.");
             }
 
             var lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
-                Logger.Log(LogLevel.Warning, $"Invalid locker location: {locker.LockerLocation}");
+                Logger.Log(LogLevel.Error, $"Cannot lock locker '{locker.LockerName}': its location has no valid parent directory.");
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
             var newLockerLocation = Path.Join(lockerDirectory, $".{locker.LockerName}");
             if (Directory.Exists(newLockerLocation))
             {
+                Logger.Log(LogLevel.Error, $"Cannot lock locker '{locker.LockerName}': target locked directory '{newLockerLocation}' already exists.");
                 throw new IOException($"Target locked locker directory already exists: {newLockerLocation}");
             }
 
@@ -280,17 +281,19 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex) when (IsLockerOperationException(ex))
             {
+                Logger.Log(LogLevel.Error, $"Lock operation failed for locker '{locker.LockerName}'; attempting rollback.", ex);
                 RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
                 throw;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"Lock operation failed for locker '{locker.LockerName}'; attempting rollback.", ex);
                 RollBackLockFailure(locker, previousLocation, newLockerLocation, tempLockedLocation, password);
                 throw;
             }
 
             // Log and display success message
-            Logger.Log(LogLevel.Info, $"Locker {locker.LockerName} locked successfully");
+            Logger.Log(LogLevel.Info, $"Locker '{locker.LockerName}' locked successfully.");
         }
 
         /// <summary>
@@ -319,7 +322,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             // Verify the password against the stored hash using bcrypt
             if (!EncryptionHelper.VerifyPassword(password, locker.Password))
             {
-                Logger.Log(LogLevel.Warning, $"Failed to unlock locker {locker.LockerName}. Incorrect password");
+                Logger.Log(LogLevel.Warning, $"Unlock request rejected for locker '{locker.LockerName}': incorrect password.");
                 throw new UnauthorizedAccessException("Incorrect password.");
             }
 
@@ -327,13 +330,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var lockerDirectory = Path.GetDirectoryName(locker.LockerLocation);
             if (string.IsNullOrEmpty(lockerDirectory))
             {
-                Logger.Log(LogLevel.Warning, $"Invalid locker location: {locker.LockerLocation}");
+                Logger.Log(LogLevel.Error, $"Cannot unlock locker '{locker.LockerName}': its location has no valid parent directory.");
                 throw new InvalidOperationException("Invalid locker location.");
             }
 
             var newLockerLocation = Path.Join(lockerDirectory, locker.LockerName);
             if (Directory.Exists(newLockerLocation))
             {
+                Logger.Log(LogLevel.Error, $"Cannot unlock locker '{locker.LockerName}': target directory '{newLockerLocation}' already exists.");
                 throw new IOException($"Target unlocked locker directory already exists: {newLockerLocation}");
             }
 
@@ -346,6 +350,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var archiveVerification = LockerArchiveService.VerifyArchive(archivePath, locker, locker.LockedArchiveSha256);
             if (!archiveVerification.IsValid)
             {
+                Logger.Log(LogLevel.Error, $"Cannot unlock locker '{locker.LockerName}': locked archive integrity verification failed.");
                 throw new InvalidDataException(string.Join(" ", archiveVerification.Errors));
             }
 
@@ -367,6 +372,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex) when (IsLockerOperationException(ex))
             {
+                Logger.Log(LogLevel.Error, $"Unlock operation failed for locker '{locker.LockerName}'; attempting rollback.", ex);
                 RollBackUnlockFailure(
                     locker,
                     previousLocation,
@@ -377,8 +383,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     previousLockedAtUtc);
                 throw;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"Unlock operation failed for locker '{locker.LockerName}'; attempting rollback.", ex);
                 RollBackUnlockFailure(
                     locker,
                     previousLocation,
@@ -397,15 +404,15 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex) when (IsLockerOperationException(ex))
             {
-                Logger.Log(LogLevel.Warning, $"Unlocked {locker.LockerName}, but failed to remove locked archive directory '{previousLocation}'.", ex);
+                Logger.Log(LogLevel.Warning, $"Locker '{locker.LockerName}' was unlocked, but cleanup of locked archive directory '{previousLocation}' failed.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Unlocked {locker.LockerName}, but failed to remove locked archive directory '{previousLocation}'.", ex);
+                Logger.Log(LogLevel.Warning, $"Locker '{locker.LockerName}' was unlocked, but cleanup of locked archive directory '{previousLocation}' failed.", ex);
             }
 
             // Log and display success message
-            Logger.Log(LogLevel.Info, $"{locker.LockerName} unlocked successfully");
+            Logger.Log(LogLevel.Info, $"Locker '{locker.LockerName}' unlocked successfully.");
         }
 
         /// <summary>
@@ -434,32 +441,32 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             // Verify the old password
             if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))
             {
-                Logger.Log(LogLevel.Warning, $"Failed to change password for {locker.LockerName}. Incorrect old password");
+                Logger.Log(LogLevel.Warning, $"Password-change request rejected for locker '{locker.LockerName}': incorrect current password.");
                 throw new UnauthorizedAccessException("Incorrect old password.");
             }
 
             // Locker must be unlocked to change password
             if (locker.IsLocked)
             {
-                Logger.Log(LogLevel.Warning, $"Cannot change password for locked locker {locker.LockerName}. Unlock it first");
+                Logger.Log(LogLevel.Warning, $"Password change rejected for locked locker '{locker.LockerName}'; unlock it first.");
                 throw new InvalidOperationException("Locker must be unlocked to change password.");
             }
 
             // Verify directory exists
             if (!Directory.Exists(locker.LockerLocation))
             {
-                Logger.Log(LogLevel.Error, $"Locker directory not found: {locker.LockerLocation}");
+                Logger.Log(LogLevel.Error, $"Cannot change password for locker '{locker.LockerName}': directory '{locker.LockerLocation}' was not found.");
                 throw new DirectoryNotFoundException($"Locker directory not found: {locker.LockerLocation}");
             }
 
             // Update password hash in database
             // Note: Files are already decrypted when locker is unlocked, so no re-encryption needed
             // The new password will be used next time the locker is locked
-            Logger.Log(LogLevel.Debug, $"Updating password for {locker.LockerName}...");
+            Logger.Log(LogLevel.Debug, $"Updating password hash for locker '{locker.LockerName}'.");
             locker.Password = EncryptionHelper.HashPassword(newPassword);
             UpdateLocker(locker);
 
-            Logger.Log(LogLevel.Info, $"Password changed successfully for {locker.LockerName}");
+            Logger.Log(LogLevel.Info, $"Password changed successfully for locker '{locker.LockerName}'.");
         }
 
         /// <summary>
@@ -478,7 +485,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 result.DirectoryExists = false;
                 result.AddError("Directory does not exist at specified location");
-                Logger.Log(LogLevel.Error, $"Verification failed for {locker.LockerName}: Directory not found.");
+                Logger.Log(LogLevel.Error, $"Locker verification failed for '{locker.LockerName}': directory '{locker.LockerLocation}' was not found.");
                 return result;
             }
 
@@ -572,13 +579,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     result.AddError("Access denied to locker directory");
                 }
 
-                Logger.Log(LogLevel.Info,
-                    $"Verification completed for {locker.LockerName}. Status: {(result.IsValid ? "Valid" : result.Errors.Count > 0 ? "Invalid" : "Warning")}");
+                var verificationLevel = result.Errors.Count > 0
+                    ? LogLevel.Error
+                    : result.Warnings.Count > 0 ? LogLevel.Warning : LogLevel.Info;
+                var verificationStatus = result.Errors.Count > 0 ? "invalid" : result.Warnings.Count > 0 ? "warning" : "valid";
+                Logger.Log(verificationLevel, $"Locker verification completed for '{locker.LockerName}': {verificationStatus}.");
             }
             catch (Exception ex)
             {
                 result.AddError($"Verification error: {ex.Message}");
-                Logger.Log(LogLevel.Error, $"Verification failed for {locker.LockerName}: {ex.Message}");
+                Logger.Log(LogLevel.Error, $"Locker verification could not complete for '{locker.LockerName}'.", ex);
             }
 
             return result;
@@ -594,6 +604,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             if (locker.IsLocked)
             {
+                Logger.Log(LogLevel.Warning, $"Cannot delete directory for locked locker '{locker.LockerName}'.");
                 throw new InvalidOperationException("Cannot delete a locked locker directory.");
             }
 
@@ -605,10 +616,19 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var directoryName = Path.GetFileName(locker.LockerLocation.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
             if (!directoryName.Equals(locker.LockerName, StringComparison.OrdinalIgnoreCase))
             {
+                Logger.Log(LogLevel.Error, $"Security validation rejected deletion of directory '{locker.LockerLocation}' for locker '{locker.LockerName}'.");
                 throw new UnauthorizedAccessException("Locker directory name does not match locker metadata.");
             }
 
-            Directory.Delete(locker.LockerLocation, true);
+            try
+            {
+                Directory.Delete(locker.LockerLocation, true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"Failed to delete directory '{locker.LockerLocation}' for locker '{locker.LockerName}'.", ex);
+                throw;
+            }
         }
 
         private static void ValidateLockerDefinition(LockerModel locker)
@@ -616,13 +636,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var nameValidationError = ValidateLockerName(locker.LockerName);
             if (nameValidationError != null)
             {
+                Logger.Log(LogLevel.Error, $"Security validation rejected unsafe locker name '{locker.LockerName}'.");
                 throw new ArgumentException(nameValidationError, nameof(locker));
             }
 
             var pathValidationError = LockerPathFilter.ValidatePath(locker.LockerLocation);
             if (pathValidationError != null)
             {
-                Logger.Log(LogLevel.Fatal, $"Security violation: Unsafe locker path rejected: {locker.LockerLocation}");
+                Logger.Log(LogLevel.Error, $"Security validation rejected unsafe locker path '{locker.LockerLocation}'.");
                 throw new UnauthorizedAccessException($"Cannot use this directory for security reasons: {pathValidationError}");
             }
         }
@@ -682,11 +703,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex) when (IsLockerOperationException(ex))
             {
-                Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
+                Logger.Log(LogLevel.Error, $"Lock rollback did not complete for locker '{locker.LockerName}'; manual recovery may be required.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to fully roll back lock operation for {locker.LockerName}", ex);
+                Logger.Log(LogLevel.Error, $"Lock rollback did not complete for locker '{locker.LockerName}'; manual recovery may be required.", ex);
             }
 
             locker.IsLocked = false;
@@ -726,11 +747,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex) when (IsLockerOperationException(ex))
             {
-                Logger.Log(LogLevel.Error, $"Failed to fully roll back unlock operation for {locker.LockerName}", ex);
+                Logger.Log(LogLevel.Error, $"Unlock rollback did not complete for locker '{locker.LockerName}'; manual recovery may be required.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to fully roll back unlock operation for {locker.LockerName}", ex);
+                Logger.Log(LogLevel.Error, $"Unlock rollback did not complete for locker '{locker.LockerName}'; manual recovery may be required.", ex);
             }
 
             if (lockedArchiveStillExists)

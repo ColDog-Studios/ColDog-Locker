@@ -401,11 +401,14 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             catch (Exception ex) when (IsFileCleanupException(ex))
             {
                 // A failed temp-file cleanup should not hide the original encryption error.
+                Logger.Log(LogLevel.Error,
+                    $"Failed to delete temporary encryption output '{path}' after operation failure; manual cleanup may be required.", ex);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // A failed temp-file cleanup should not hide the original encryption error.
-                return;
+                Logger.Log(LogLevel.Error,
+                    $"Failed to delete temporary encryption output '{path}' after operation failure; manual cleanup may be required.", ex);
             }
         }
 
@@ -449,11 +452,11 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             }
             catch (Exception ex) when (IsEncryptionOperationException(ex))
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting directory '{directory}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-encrypting directory '{directory}'; some content may remain decrypted.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting directory '{directory}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-encrypting directory '{directory}'; some content may remain decrypted.", ex);
             }
         }
 
@@ -465,11 +468,11 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             }
             catch (Exception ex) when (IsEncryptionOperationException(ex))
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting directory '{directory}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-decrypting directory '{directory}'; some content may remain encrypted.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting directory '{directory}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-decrypting directory '{directory}'; some content may remain encrypted.", ex);
             }
         }
 
@@ -481,11 +484,11 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             }
             catch (Exception ex) when (IsEncryptionOperationException(ex))
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting file '{file}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-encrypting file '{file}'; the file may remain decrypted.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while encrypting file '{file}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-encrypting file '{file}'; the file may remain decrypted.", ex);
             }
         }
 
@@ -497,11 +500,11 @@ namespace ColDogStudios.ColDogLocker.Services.Security
             }
             catch (Exception ex) when (IsEncryptionOperationException(ex))
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting file '{file}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-decrypting file '{file}'; the file may remain encrypted.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, $"Best-effort rollback failed while decrypting file '{file}'.", ex);
+                Logger.Log(LogLevel.Error, $"Rollback failed while re-decrypting file '{file}'; the file may remain encrypted.", ex);
             }
         }
 

@@ -17,6 +17,7 @@
 
 using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
@@ -46,6 +47,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, "CLI database vacuum command failed.", ex);
                 Console.Error.WriteLine($"Error vacuuming database: {ex.Message}");
                 return 1;
             }
@@ -78,6 +80,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, "CLI database information command failed.", ex);
                 Console.Error.WriteLine($"Error getting database info: {ex.Message}");
                 return 1;
             }

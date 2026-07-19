@@ -133,6 +133,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
         private static readonly Lock _workerStateLock = new();
         private static Thread? _logWorkerThread;
         private static bool _workerRunning;
+        private static int _activeLogWrites;
 
         static Logger()
         {
@@ -165,8 +166,26 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             }
 
             _minLogLevel = parsedLevel;
-            _logFormat = s.LogFormat;
-            _maxFileSizeMb = s.MaxFileSizeMb > 0 ? s.MaxFileSizeMb : 10;
+            if (string.Equals(s.LogFormat, "json", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(s.LogFormat, "text", StringComparison.OrdinalIgnoreCase))
+            {
+                _logFormat = s.LogFormat;
+            }
+            else
+            {
+                _logFormat = "json";
+                LogDirectly($"Invalid log format in settings: '{s.LogFormat}'. Defaulting to 'json'.", "WARNING");
+            }
+
+            if (s.MaxFileSizeMb > 0)
+            {
+                _maxFileSizeMb = s.MaxFileSizeMb;
+            }
+            else
+            {
+                _maxFileSizeMb = 10;
+                LogDirectly($"Invalid maximum log file size in settings: '{s.MaxFileSizeMb}'. Defaulting to 10 MB.", "WARNING");
+            }
             _enableFileLogging = s.EnableFileLogging;
             _devMode = s.DevMode;
 
@@ -205,7 +224,15 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
                 if (entry != null)
                 {
-                    WriteLogEntry(entry);
+                    Interlocked.Increment(ref _activeLogWrites);
+                    try
+                    {
+                        WriteLogEntry(entry);
+                    }
+                    finally
+                    {
+                        Interlocked.Decrement(ref _activeLogWrites);
+                    }
                 }
                 else if (!_workerRunning)
                 {
@@ -235,7 +262,10 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
             if (workerThread != null && workerThread != Thread.CurrentThread)
             {
-                workerThread.Join(TimeSpan.FromSeconds(2));
+                if (!workerThread.Join(TimeSpan.FromSeconds(2)))
+                {
+                    Console.Error.WriteLine("Logger shutdown timed out while pending log entries were being written.");
+                }
             }
         }
 
@@ -328,7 +358,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                     }
 
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
-                    AppFilePermissions.ApplyPrivateFile(_logFilePath);
+                    AppFilePermissions.ApplyPrivateFile(_logFilePath, logFailure: false);
                 }
             }
             catch (Exception ex)
@@ -339,7 +369,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
 
         private static void EnsureLogDirectory()
         {
-            AppFilePermissions.EnsurePrivateDirectory(_logDirectory);
+            AppFilePermissions.EnsurePrivateDirectory(_logDirectory, logFailure: false);
         }
 
         private static void TryWriteFallbackLog(LogEntry logEntry, Exception loggerException)
@@ -351,7 +381,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                 var fallbackPath = Path.Join(_logDirectory, fallbackFileName);
                 File.AppendAllText(fallbackPath,
                     $"[{DateTime.UtcNow:o}] {logEntry.Level}: {logEntry.Message} (Logger error: {loggerException.Message}){Environment.NewLine}");
-                AppFilePermissions.ApplyPrivateFile(fallbackPath);
+                AppFilePermissions.ApplyPrivateFile(fallbackPath, logFailure: false);
             }
             catch (Exception ex)
             {
@@ -450,7 +480,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                         ? JsonConvert.SerializeObject(logEntry, Formatting.None)
                         : FormatPlainText(logEntry);
                     File.AppendAllText(_logFilePath, line + Environment.NewLine);
-                    AppFilePermissions.ApplyPrivateFile(_logFilePath);
+                    AppFilePermissions.ApplyPrivateFile(_logFilePath, logFailure: false);
                 }
             }
             catch (JsonException ex)
@@ -468,6 +498,10 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             catch (NotSupportedException ex)
             {
                 Console.WriteLine($"An exception occurred while processing log entries: {ex}");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"An unexpected exception occurred while processing log entries: {ex}");
             }
         }
 
@@ -511,7 +545,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             {
                 lock (_logQueue)
                 {
-                    if (_logQueue.Count == 0)
+                    if (_logQueue.Count == 0 && Volatile.Read(ref _activeLogWrites) == 0)
                     {
                         return;
                     }

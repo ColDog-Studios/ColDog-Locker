@@ -17,6 +17,7 @@
 
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Updates;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Tui.Views
 {
@@ -171,6 +172,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
                         }
                         catch (Exception ex)
                         {
+                            Logger.Log(LogLevel.Error, "TUI update download or installation failed.", ex);
                             Console.WriteLine($"\nError downloading or installing update: {ex.Message}");
                         }
                     }
@@ -188,6 +190,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, "TUI update check failed.", ex);
                 Console.WriteLine($"\nAn error occurred while checking for updates: {ex.Message}");
             }
 

@@ -23,6 +23,7 @@ using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Validation;
 using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
@@ -226,10 +227,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or System.Security.SecurityException)
             {
+                Logger.Log(LogLevel.Warning, $"Could not create configured default locker directory '{defaultBasePath}'; using Documents instead.", ex);
                 return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"Could not create configured default locker directory '{defaultBasePath}'; using Documents instead.", ex);
                 return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             }
         }

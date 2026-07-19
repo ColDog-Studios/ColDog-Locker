@@ -21,6 +21,7 @@ using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Services.Updates;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -466,6 +467,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             var locker = FindLocker(item);
             if (locker == null)
             {
+                Logger.Log(LogLevel.Warning, $"GUI {title} aborted because selected locker '{item.Name}' ({item.Guid}) was no longer present.");
                 await _dialogs.ShowErrorAsync(title, "The selected locker was not found.");
                 return;
             }
@@ -487,10 +489,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                     return;
                 }
 
+                Logger.Log(LogLevel.Error, $"GUI operation '{title}' failed: access was denied.", ex);
                 await _dialogs.ShowErrorAsync(title, "Access denied.", ex);
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"GUI operation '{title}' failed: {message}", ex);
                 await _dialogs.ShowErrorAsync(title, message, ex);
             }
         }

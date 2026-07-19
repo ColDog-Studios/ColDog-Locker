@@ -43,7 +43,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                Logger.Log(LogLevel.Debug, "Initializing database");
+                Logger.Log(LogLevel.Debug, "Initializing locker database.");
 
                 using var connection = new SqliteConnection(connectionString);
                 connection.Open();
@@ -66,11 +66,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 ApplySchemaMigrations(connection);
 
                 ApplyDatabasePermissions(connectionString);
-                Logger.Log(LogLevel.Debug, "Database initialized successfully");
+                Logger.Log(LogLevel.Debug, "Locker database initialized.");
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to initialize database", ex);
+                Logger.Log(LogLevel.Error, "Failed to initialize locker database.", ex);
                 throw;
             }
         }
@@ -102,11 +102,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     lockers.Add(ReadLocker(reader));
                 }
 
-                Logger.Log(LogLevel.Info, $"Loaded {lockers.Count} lockers from database");
+                Logger.Log(LogLevel.Info, $"Loaded {lockers.Count} locker(s) from the database.");
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to load lockers from database", ex);
+                Logger.Log(LogLevel.Error, "Failed to load lockers from the database.", ex);
                 throw;
             }
 
@@ -141,7 +141,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to get locker by GUID", ex);
+                Logger.Log(LogLevel.Error, "Failed to retrieve locker by GUID.", ex);
                 throw;
             }
 
@@ -176,7 +176,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to get locker by name", ex);
+                Logger.Log(LogLevel.Error, "Failed to retrieve locker by name.", ex);
                 throw;
             }
 
@@ -215,16 +215,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 command.ExecuteNonQuery();
 
                 ApplyDatabasePermissions(connectionString);
-                Logger.Log(LogLevel.Debug, $"Inserted locker '{locker.LockerName}' into database");
+                Logger.Log(LogLevel.Debug, $"Inserted locker '{locker.LockerName}' into the database.");
             }
             catch (SqliteException ex) when (ex.SqliteErrorCode == 19) // SQLITE_CONSTRAINT
             {
-                Logger.Log(LogLevel.Warning, $"Locker with name '{locker.LockerName}' already exists");
+                Logger.Log(LogLevel.Warning, $"Locker creation rejected: a locker named '{locker.LockerName}' already exists.");
                 throw new InvalidOperationException($"Locker with name '{locker.LockerName}' already exists.", ex);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to insert locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to insert locker into the database.", ex);
                 throw;
             }
         }
@@ -270,16 +270,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 if (rowsAffected == 0)
                 {
-                    Logger.Log(LogLevel.Warning, $"Locker with GUID '{locker.Guid}' not found for update");
+                    Logger.Log(LogLevel.Debug, $"Update affected no rows for locker GUID '{locker.Guid}'.");
                     throw new InvalidOperationException($"Locker with GUID '{locker.Guid}' not found.");
                 }
 
                 ApplyDatabasePermissions(connectionString);
-                Logger.Log(LogLevel.Debug, $"Updated locker '{locker.LockerName}' in database");
+                Logger.Log(LogLevel.Debug, $"Updated locker '{locker.LockerName}' in the database.");
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to update locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to update locker in the database.", ex);
                 throw;
             }
         }
@@ -307,16 +307,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 if (rowsAffected == 0)
                 {
-                    Logger.Log(LogLevel.Warning, $"Locker with GUID '{guid}' not found for deletion");
+                    Logger.Log(LogLevel.Debug, $"Delete affected no rows for locker GUID '{guid}'.");
                     throw new InvalidOperationException($"Locker with GUID '{guid}' not found.");
                 }
 
-                Logger.Log(LogLevel.Info, $"Deleted locker with GUID '{guid}' from database");
+                Logger.Log(LogLevel.Debug, $"Deleted locker GUID '{guid}' from the database.");
                 ApplyDatabasePermissions(connectionString);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to delete locker", ex);
+                Logger.Log(LogLevel.Error, "Failed to delete locker from the database.", ex);
                 throw;
             }
         }
@@ -345,7 +345,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to check locker existence", ex);
+                Logger.Log(LogLevel.Error, "Failed to check whether a locker exists.", ex);
                 throw;
             }
         }
@@ -390,7 +390,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "Failed to vacuum database", ex);
+                Logger.Log(LogLevel.Error, "Failed to vacuum the locker database.", ex);
                 throw;
             }
         }
@@ -438,12 +438,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 var integrityResult = integrityCommand.ExecuteScalar()?.ToString();
                 info.IntegrityOk = integrityResult?.Equals("ok", StringComparison.OrdinalIgnoreCase) ?? false;
 
-                Logger.Log(LogLevel.Debug, "Database info retrieved successfully");
+                Logger.Log(LogLevel.Debug, "Retrieved locker database information.");
                 return info;
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Failed to get database info: {ex.Message}", ex);
+                Logger.Log(LogLevel.Error, "Failed to retrieve locker database information.", ex);
                 throw;
             }
         }

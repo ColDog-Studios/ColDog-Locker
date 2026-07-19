@@ -394,7 +394,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 var release = await FetchReleaseAsync(cancellationToken);
                 if (release == null)
                 {
-                    Logger.Log(LogLevel.Warning, "No GitHub releases were returned for the selected update channel.");
+                    Logger.Log(LogLevel.Info, "No published releases were found for the selected update channel.");
                     return CreateNoReleaseResult(
                         platform,
                         currentVersionText,
@@ -479,17 +479,20 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         {
             if (!updateInfo.UpdateAvailable)
             {
+                Logger.Log(LogLevel.Error, "Update download was requested when no update is available.");
                 throw new UpdateException(UpdateFailureKind.MissingAsset, "No update is available to download.");
             }
 
             if (!updateInfo.CanDownload)
             {
+                Logger.Log(LogLevel.Error, "Update download was requested for a platform or release that cannot be downloaded automatically.");
                 throw new UpdateException(UpdateFailureKind.UnsupportedPlatform,
                     updateInfo.UserMessage ?? "This update cannot be downloaded automatically on the current platform.");
             }
 
             if (string.IsNullOrWhiteSpace(updateInfo.DownloadUrl) || string.IsNullOrWhiteSpace(updateInfo.InstallerFileName))
             {
+                Logger.Log(LogLevel.Error, "Update download was requested without a release asset URL or installer file name.");
                 throw new UpdateException(UpdateFailureKind.MissingAsset, "The selected release does not include a downloadable installer asset.");
             }
 
@@ -564,7 +567,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             using var response = await _httpClient.SendAsync(request, cancellationToken);
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                Logger.Log(LogLevel.Warning, $"GitHub endpoint returned 404: {uri}");
+                Logger.Log(LogLevel.Info, "GitHub returned 404 for the release endpoint; treating it as no published release.");
                 return default;
             }
 
@@ -924,11 +927,22 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 Logger.Log(LogLevel.Error, $"Failed to download update asset '{installerFileName}'.", ex);
                 throw new UpdateException(UpdateFailureKind.Network, "The update download failed. Please check your network connection and try again.", ex);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or OperationCanceledException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 TryDeleteTempFile(tempPath);
-                Logger.Log(LogLevel.Error, $"Failed to write update asset to '{targetPath}'.", ex);
+                throw;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException)
+            {
+                TryDeleteTempFile(tempPath);
+                Logger.Log(LogLevel.Error, $"Failed to save verified update asset to '{targetPath}'.", ex);
                 throw new UpdateException(UpdateFailureKind.FileSystem, "The update was verified but could not be saved to disk.", ex);
+            }
+            catch (Exception ex)
+            {
+                TryDeleteTempFile(tempPath);
+                Logger.Log(LogLevel.Error, $"Unexpected failure while downloading update asset '{installerFileName}'.", ex);
+                throw new UpdateException(UpdateFailureKind.Unknown, "The update download failed unexpectedly. Please try again later.", ex);
             }
         }
 

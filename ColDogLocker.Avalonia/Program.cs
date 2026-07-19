@@ -16,6 +16,7 @@
  */
 
 using Avalonia;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Avalonia
 {
@@ -27,8 +28,17 @@ namespace ColDogStudios.ColDogLocker.Avalonia
         [STAThread]
         public static void Main(string[] args)
         {
-            BuildAvaloniaApp()
-                .StartWithClassicDesktopLifetime(args);
+            try
+            {
+                BuildAvaloniaApp()
+                    .StartWithClassicDesktopLifetime(args);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"ColDog Locker could not start: {ex.Message}");
+                Logger.Log(LogLevel.Fatal, "Avalonia application startup failed.", ex);
+                throw;
+            }
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.

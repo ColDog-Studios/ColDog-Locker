@@ -15,6 +15,8 @@
  **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using ColDogStudios.ColDogLocker.Services.Logging;
+
 namespace ColDogStudios.ColDogLocker.Services.FileSystem
 {
     /// <summary>
@@ -28,20 +30,20 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
         private const UnixFileMode PrivateFileMode =
             UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
-        public static void EnsurePrivateDirectory(string path)
+        public static void EnsurePrivateDirectory(string path, bool logFailure = true)
         {
             Directory.CreateDirectory(path);
-            ApplyPrivateDirectory(path);
+            ApplyPrivateDirectory(path, logFailure);
         }
 
-        public static void ApplyPrivateDirectory(string path)
+        public static void ApplyPrivateDirectory(string path, bool logFailure = true)
         {
             if (!Directory.Exists(path))
             {
                 return;
             }
 
-            TryApply(() =>
+            TryApply(path, "directory", logFailure, () =>
             {
                 if (!OperatingSystem.IsWindows())
                 {
@@ -50,14 +52,14 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             });
         }
 
-        public static void ApplyPrivateFile(string path)
+        public static void ApplyPrivateFile(string path, bool logFailure = true)
         {
             if (!File.Exists(path))
             {
                 return;
             }
 
-            TryApply(() =>
+            TryApply(path, "file", logFailure, () =>
             {
                 if (!OperatingSystem.IsWindows())
                 {
@@ -66,27 +68,35 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             });
         }
 
-        private static void TryApply(Action action)
+        private static void TryApply(string path, string kind, bool logFailure, Action action)
         {
             try
             {
                 action();
             }
-            catch (IOException)
+            catch (IOException ex)
             {
-                return;
+                LogFailure(path, kind, logFailure, ex);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
-                return;
+                LogFailure(path, kind, logFailure, ex);
             }
-            catch (PlatformNotSupportedException)
+            catch (PlatformNotSupportedException ex)
             {
-                return;
+                LogFailure(path, kind, logFailure, ex);
             }
-            catch (NotSupportedException)
+            catch (NotSupportedException ex)
             {
-                return;
+                LogFailure(path, kind, logFailure, ex);
+            }
+        }
+
+        private static void LogFailure(string path, string kind, bool logFailure, Exception ex)
+        {
+            if (logFailure)
+            {
+                Logger.Log(LogLevel.Warning, $"Could not apply private permissions to app-owned {kind} '{path}'.", ex);
             }
         }
     }

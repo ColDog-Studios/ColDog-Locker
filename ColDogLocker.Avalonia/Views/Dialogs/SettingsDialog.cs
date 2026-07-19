@@ -22,8 +22,8 @@ using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Configuration;
-using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Logging;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Updates;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
@@ -222,6 +222,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, "GUI database vacuum failed.", ex);
                 await new MessageDialog("Error", $"Failed to vacuum database: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }
@@ -327,6 +328,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Warning, $"GUI failed to open folder '{path}'.", ex);
                 await new MessageDialog("Error", $"{failureMessage}: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }

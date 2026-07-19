@@ -19,6 +19,7 @@ using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Tui.Input;
 
@@ -165,6 +166,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"CLI locker creation failed for '{lockerName}'.", ex);
                 Console.Error.WriteLine($"Error creating locker: {ex.Message}");
                 return 1;
             }
@@ -269,6 +271,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"CLI locker removal failed for '{lockerName}'.", ex);
                 Console.Error.WriteLine($"Error removing locker: {ex.Message}");
                 return 1;
             }
@@ -519,29 +522,38 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
-            // Display status
-            Console.WriteLine($"Locker: {locker.LockerName}");
-            Console.WriteLine($"Status: {(locker.IsLocked ? "Locked" : "Unlocked")}");
-            Console.WriteLine($"Location: {locker.LockerLocation}");
-            Console.WriteLine($"GUID: {locker.Guid}");
-
-            // Check if directory exists
-            if (Directory.Exists(locker.LockerLocation))
+            try
             {
-                var dirInfo = new DirectoryInfo(locker.LockerLocation);
-                Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
-                Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+                // Display status
+                Console.WriteLine($"Locker: {locker.LockerName}");
+                Console.WriteLine($"Status: {(locker.IsLocked ? "Locked" : "Unlocked")}");
+                Console.WriteLine($"Location: {locker.LockerLocation}");
+                Console.WriteLine($"GUID: {locker.Guid}");
 
-                // Count files
-                var fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
-                var folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
-                Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
+                // Check if directory exists
+                if (Directory.Exists(locker.LockerLocation))
+                {
+                    var dirInfo = new DirectoryInfo(locker.LockerLocation);
+                    Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
+                    Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
+
+                    // Count files
+                    var fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
+                    var folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
+                    Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Warning: Directory does not exist.");
+                    Console.ResetColor();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Warning: Directory does not exist.");
-                Console.ResetColor();
+                Logger.Log(LogLevel.Error, $"CLI status inspection failed for locker '{lockerName}'.", ex);
+                Console.Error.WriteLine($"Error inspecting locker status: {ex.Message}");
+                return 1;
             }
 
             return 0;
@@ -692,6 +704,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
             catch (Exception ex)
             {
+                Logger.Log(LogLevel.Error, $"CLI password change failed for locker '{lockerName}'.", ex);
                 Console.Error.WriteLine($"Error changing password: {ex.Message}");
                 return 1;
             }

@@ -78,12 +78,12 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
                 catch (Exception ex) when (ex is UpdateException or HttpRequestException or TaskCanceledException or System.Text.Json.JsonException or IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
                     // Silently ignore update check failures during initialization
-                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.", ex);
+                    Logger.Log(LogLevel.Warning, "Initial automatic update check failed; continuing startup.", ex);
                 }
                 catch (Exception ex)
                 {
                     // Silently ignore update check failures during initialization
-                    Logger.Log(LogLevel.Debug, "Update check failed during initialization.", ex);
+                    Logger.Log(LogLevel.Warning, "Initial automatic update check failed; continuing startup.", ex);
                 }
             }
 

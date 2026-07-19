@@ -58,13 +58,13 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             catch (UpdateException ex)
             {
                 Console.Error.WriteLine($"Update failed: {ex.Message}");
-                Logger.Log(LogLevel.Error, $"CLI update command failed: {ex.FailureKind}", ex);
+                Logger.Log(LogLevel.Error, $"Update command failed ({ex.FailureKind}).", ex);
                 return 1;
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Update failed: {ex.Message}");
-                Logger.Log(LogLevel.Error, "CLI update command failed unexpectedly.", ex);
+                Logger.Log(LogLevel.Error, "Update command failed unexpectedly.", ex);
                 return 1;
             }
         }

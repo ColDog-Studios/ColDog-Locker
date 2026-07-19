@@ -22,6 +22,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Logging;
 using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
@@ -135,21 +136,25 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
             catch (ArgumentException ex)
             {
+                Logger.Log(LogLevel.Error, $"Failed to save GUI locker metadata for '{_locker.LockerName}'.", ex);
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }
             catch (UnauthorizedAccessException ex)
             {
+                Logger.Log(LogLevel.Error, $"Failed to save GUI locker metadata for '{_locker.LockerName}'.", ex);
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }
             catch (InvalidOperationException ex)
             {
+                Logger.Log(LogLevel.Error, $"Failed to save GUI locker metadata for '{_locker.LockerName}'.", ex);
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }
             catch (IOException ex)
             {
+                Logger.Log(LogLevel.Error, $"Failed to save GUI locker metadata for '{_locker.LockerName}'.", ex);
                 await new MessageDialog("Error", $"Failed to save locker properties: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
             }
