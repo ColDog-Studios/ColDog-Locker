@@ -2,17 +2,17 @@
   <ItemGroup>
     <!-- Core Dependencies -->
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />
-    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.11" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
 
     <!-- Test Dependencies -->
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="12.1.1" />
     <PackageVersion Include="coverlet.collector" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
 
     <!-- UI - Avalonia -->
     <PackageVersion Include="Avalonia" Version="12.1.1" />
@@ -24,7 +24,7 @@
 
     <!-- MVVM & DI -->
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
 
     <!-- Packaging -->
     <PackageVersion Include="WixToolset.Bal.wixext" Version="6.0.2" />
