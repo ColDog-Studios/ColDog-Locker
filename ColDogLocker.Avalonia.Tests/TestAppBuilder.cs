@@ -22,7 +22,7 @@ using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 
 [assembly: AvaloniaTestApplication(typeof(ColDogStudios.ColDogLocker.Avalonia.Tests.TestAppBuilder))]
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[assembly: Parallelization(Mode = ParallelMode.None)]
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests
 {
