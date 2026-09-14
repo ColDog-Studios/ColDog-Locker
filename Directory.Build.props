@@ -28,7 +28,10 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 
-        <!-- Output all projects to root bin directory -->
+        <!-- Application output -->
         <BaseOutputPath>$(MSBuildThisFileDirectory)bin\</BaseOutputPath>
+
+        <!-- Separate output for each test project -->
+        <BaseOutputPath Condition="$(MSBuildProjectName.EndsWith('.Tests'))">$(MSBuildThisFileDirectory)bin\tests\$(MSBuildProjectName)\</BaseOutputPath>
     </PropertyGroup>
 </Project>
