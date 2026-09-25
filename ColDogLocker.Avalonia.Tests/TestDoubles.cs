@@ -29,7 +29,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             out RecordingDialogService dialogs,
             out RecordingPlatformService platform,
             out StubUpdateService updates,
-            out RecordingUpdateDialogHost updateDialogs)
+            out RecordingUpdateDialogHost updateDialogs,
+            Func<CancellationToken, IProgress<string>, bool, Task<List<global::ColDogStudios.ColDogLocker.Avalonia.Models.LockerItemViewModel>>>? loadLockerItems = null)
         {
             SettingsManager.Settings.DevMode = false;
             SettingsManager.Settings.DefaultGuiViewMode = GuiViewMode.Grid;
@@ -39,7 +40,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             updates = new StubUpdateService();
             updateDialogs = new RecordingUpdateDialogHost();
             var workflow = new UpdateWorkflow(updates, updateDialogs);
-            return new MainWindowViewModel(dialogs, platform, workflow);
+            return loadLockerItems == null ? new MainWindowViewModel(dialogs, platform, workflow) : new MainWindowViewModel(dialogs, platform, workflow, loadLockerItems);
         }
     }
 
@@ -120,6 +121,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
         public string? LastSelectedPath { get; private set; }
         public string? LastCopiedText { get; private set; }
         public Exception? OpenFolderAndSelectException { get; set; }
+        public Task OpenFolderAndSelectCompletion { get; set; } = Task.CompletedTask;
 
         public Task OpenUrlAsync(string url)
         {
@@ -141,7 +143,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             }
 
             LastSelectedPath = path;
-            return Task.CompletedTask;
+            return OpenFolderAndSelectCompletion;
         }
 
         public Task CopyTextAsync(string text)

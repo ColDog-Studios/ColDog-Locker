@@ -18,6 +18,7 @@
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Tui.Input;
@@ -247,12 +248,10 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Remove the locker
             try
             {
-                LockerService.RemoveLocker(locker);
+                LockerService.RemoveLocker(locker, deleteDirectory);
 
-                // Delete directory if requested
-                if (deleteDirectory && Directory.Exists(locker.LockerLocation))
+                if (deleteDirectory)
                 {
-                    LockerService.DeleteLockerDirectory(locker);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
                     Console.ResetColor();
@@ -532,10 +531,17 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
                 Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
 
-                // Count files
-                var fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
-                var folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
-                Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
+                try
+                {
+                    var counts = DirectoryContentScanner.Count(locker.LockerLocation);
+                    Console.WriteLine($"Contents: {counts.Files} file(s), {counts.Directories} folder(s)");
+                }
+                catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    Console.WriteLine("Contents: Unavailable (inspection incomplete)");
+                    Console.Error.WriteLine($"Content inspection failed: {ex.Message}");
+                    return 1;
+                }
             }
             else
             {
@@ -737,7 +743,9 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             Console.WriteLine($"[{(result.HasAccess ? "OK" : "FAIL")}] Directory accessible");
             if (result.DirectoryExists)
             {
-                Console.WriteLine($"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)");
+                Console.WriteLine(result.CountsComplete
+                    ? $"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)"
+                    : "      Contents: Unavailable (inspection incomplete)");
             }
 
             if (result.IsLocked)

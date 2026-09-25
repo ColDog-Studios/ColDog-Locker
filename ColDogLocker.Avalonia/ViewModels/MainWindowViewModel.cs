@@ -34,9 +34,22 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         private readonly IUserDialogService _dialogs;
         private readonly IPlatformService _platformService;
         private readonly UpdateWorkflow _updateWorkflow;
+        private int _activeOperations;
+        private readonly LockerSizeCache _sizeCache = new();
+        private CancellationTokenSource? _refreshCancellation;
+        private CancellationTokenSource? _lockerOperationCancellation;
+        private readonly Func<CancellationToken, IProgress<string>, bool, Task<List<LockerItemViewModel>>> _loadLockerItems;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(CancelRefreshCommand))]
+        private bool _isRefreshing;
 
         [ObservableProperty] private ObservableCollection<LockerItemViewModel> _filteredLockers = [];
         [ObservableProperty] private bool _isBusy;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(CancelLockerOperationCommand))]
+        private bool _canCancelLockerOperation;
+        [ObservableProperty] private bool _isLockerOperationRunning;
+        [ObservableProperty] private int? _lockerOperationPercent;
         [ObservableProperty] private bool _isDeveloperMode;
         [ObservableProperty] private bool _isGridView = true;
         [ObservableProperty] private ObservableCollection<LockerItemViewModel> _lockers = [];
@@ -50,7 +63,14 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             IUserDialogService dialogs,
             IPlatformService platformService,
             UpdateWorkflow updateWorkflow)
+            : this(dialogs, platformService, updateWorkflow, null)
         {
+        }
+
+        internal MainWindowViewModel(IUserDialogService dialogs, IPlatformService platformService,
+            UpdateWorkflow updateWorkflow, Func<CancellationToken, IProgress<string>, bool, Task<List<LockerItemViewModel>>>? loadLockerItems)
+        {
+            _loadLockerItems = loadLockerItems ?? LoadLockerItemsAsync;
             _dialogs = dialogs;
             _platformService = platformService;
             _updateWorkflow = updateWorkflow;
@@ -63,9 +83,10 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         public int UnlockedCount => Lockers.Count(locker => !locker.IsLocked);
         public int SelectedCount => SelectedLocker == null ? 0 : 1;
         public bool HasSelection => SelectedLocker != null;
-        public bool CanLockSelected => SelectedLocker is { IsLocked: false };
-        public bool CanUnlockSelected => SelectedLocker is { IsLocked: true };
-        public bool CanRemoveSelected => SelectedLocker is { IsLocked: false };
+        public bool CanLockSelected => !IsBusy && SelectedLocker is { IsLocked: false };
+        public bool CanUnlockSelected => !IsBusy && SelectedLocker is { IsLocked: true };
+        public bool CanRemoveSelected => !IsBusy && SelectedLocker is { IsLocked: false };
+        public bool IsOperationProgressIndeterminate => LockerOperationPercent is null;
         public bool IsListView => !IsGridView;
         public MaterialIconKind ToggleViewIconKind => IsGridView ? MaterialIconKind.ViewList : MaterialIconKind.ViewGrid;
         public IReadOnlyList<string> SortColumns { get; } = ["Name", "Status", "Modified", "Size", "Location"];
@@ -76,22 +97,14 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 
             await RunWithUiErrorAsync("Startup Error", "Failed to initialize ColDog Locker.", async () =>
             {
-                IsBusy = true;
                 StatusMessage = "Starting...";
-                try
-                {
-                    await appInitialization();
-                }
-                finally
-                {
-                    IsBusy = false;
-                }
+                await appInitialization();
             });
 
             await RefreshAsync(false);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanStartMutation))]
         private async Task CreateLockerAsync()
         {
             var request = await _dialogs.ShowNewLockerAsync();
@@ -102,14 +115,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 
             await RunWithUiErrorAsync("Create Locker Error", $"Failed to create locker '{request.LockerName}'.", async () =>
             {
+                var passwordHash = await Task.Run(() => EncryptionHelper.HashPassword(request.Password));
                 var locker = new LockerModel(
                     request.LockerName,
-                    EncryptionHelper.HashPassword(request.Password),
+                    passwordHash,
                     request.Location);
 
                 await Task.Run(() => LockerService.AddLocker(locker));
 
-                AddOrReplaceLockerItem(CreateLockerItem(locker));
+                AddOrReplaceLockerItem(await Task.Run(() => CreateLockerItem(locker)));
                 StatusMessage = $"{TotalLockers} locker{(TotalLockers == 1 ? string.Empty : "s")} loaded";
                 await _dialogs.ShowMessageAsync("Locker Created", $"Locker '{request.LockerName}' was created.");
             });
@@ -129,9 +143,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 return;
             }
 
-            await RunLockerOperationAsync(SelectedLocker, "Lock Error", async locker =>
+            await RunLockerOperationAsync(SelectedLocker, "Lock Error", async (locker, progress, cancellationToken) =>
             {
-                await Task.Run(() => LockerService.Lock(locker, password));
+                await Task.Run(() => LockerService.Lock(locker, password, progress, cancellationToken));
                 await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Locker Locked", $"Locked: {locker.LockerName}");
             });
@@ -151,9 +165,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 return;
             }
 
-            await RunLockerOperationAsync(SelectedLocker, "Unlock Error", async locker =>
+            await RunLockerOperationAsync(SelectedLocker, "Unlock Error", async (locker, progress, cancellationToken) =>
             {
-                await Task.Run(() => LockerService.Unlock(locker, password));
+                await Task.Run(() => LockerService.Unlock(locker, password, progress, cancellationToken));
                 await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Locker Unlocked", $"Unlocked: {locker.LockerName}");
             });
@@ -181,7 +195,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 return;
             }
 
-            await RunLockerOperationAsync(SelectedLocker, "Remove Error", async locker =>
+            await RunLockerOperationAsync(SelectedLocker, "Remove Error", async (locker, _, _) =>
             {
                 await Task.Run(() => LockerService.RemoveLocker(locker));
                 await RefreshAsync(false);
@@ -335,37 +349,97 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             OnPropertyChanged(nameof(ToggleViewIconKind));
         }
 
-        private async Task RefreshAsync(bool showMessage)
+        partial void OnIsBusyChanged(bool value)
         {
-            await RunWithUiErrorAsync("Refresh Error", "Failed to refresh lockers.", async () =>
-            {
-                IsBusy = true;
-                try
-                {
-                    var items = await LoadLockerItemsAsync();
-                    Lockers = new ObservableCollection<LockerItemViewModel>(items);
-                    ApplyFilterAndSort();
-                    StatusMessage = $"{TotalLockers} locker{(TotalLockers == 1 ? string.Empty : "s")} loaded";
-                    if (showMessage)
-                    {
-                        await _dialogs.ShowMessageAsync("Refresh", StatusMessage);
-                    }
-                }
-                finally
-                {
-                    IsBusy = false;
-                }
-            });
+            CreateLockerCommand.NotifyCanExecuteChanged();
+            NotifySelectionStateChanged();
         }
 
-        private static async Task<List<LockerItemViewModel>> LoadLockerItemsAsync()
+        partial void OnLockerOperationPercentChanged(int? value)
+        {
+            OnPropertyChanged(nameof(IsOperationProgressIndeterminate));
+        }
+
+        [RelayCommand(CanExecute = nameof(IsRefreshing))]
+        private void CancelRefresh() => _refreshCancellation?.Cancel();
+
+        [RelayCommand(CanExecute = nameof(CanCancelLockerOperation))]
+        private void CancelLockerOperation()
+        {
+            CanCancelLockerOperation = false;
+            StatusMessage = "Cancellation requested. Waiting for a safe stopping point...";
+            _lockerOperationCancellation?.Cancel();
+        }
+
+        private async Task RefreshAsync(bool showMessage)
+        {
+            _refreshCancellation?.Cancel();
+            using var cancellation = new CancellationTokenSource();
+            _refreshCancellation = cancellation;
+            IsRefreshing = true;
+            StatusMessage = "Refreshing lockers...";
+            var scanning = true;
+            var progress = new Progress<string>(message =>
+            {
+                if (scanning && ReferenceEquals(_refreshCancellation, cancellation) && !cancellation.IsCancellationRequested)
+                {
+                    StatusMessage = message;
+                }
+            });
+            try
+            {
+                await RunWithUiErrorAsync("Refresh Error", "Failed to refresh lockers.", async () =>
+                {
+                    try
+                    {
+                        var items = await _loadLockerItems(cancellation.Token, progress, showMessage);
+                        scanning = false;
+                        cancellation.Token.ThrowIfCancellationRequested();
+                        Lockers = new ObservableCollection<LockerItemViewModel>(items);
+                        ApplyFilterAndSort();
+                        StatusMessage = $"{TotalLockers} locker{(TotalLockers == 1 ? string.Empty : "s")} loaded";
+                        if (showMessage)
+                        {
+                            await _dialogs.ShowMessageAsync("Refresh", StatusMessage);
+                        }
+                    }
+                    catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+                    {
+                        if (ReferenceEquals(_refreshCancellation, cancellation))
+                        {
+                            StatusMessage = "Refresh cancelled. The previous list is still displayed.";
+                        }
+                    }
+                });
+            }
+            finally
+            {
+                scanning = false;
+                if (ReferenceEquals(_refreshCancellation, cancellation))
+                {
+                    _refreshCancellation = null;
+                    IsRefreshing = false;
+                }
+            }
+        }
+
+        private async Task<List<LockerItemViewModel>> LoadLockerItemsAsync(CancellationToken cancellationToken, IProgress<string> progress, bool forceSizeScan)
         {
             return await Task.Run(() =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 LockerService.LoadLockers();
                 var snapshot = LockerService.GetLockersSnapshot();
-                return snapshot.Select(CreateLockerItem).ToList();
-            });
+                var items = new List<LockerItemViewModel>();
+                foreach (var locker in snapshot)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    progress.Report($"Loading locker {items.Count + 1} of {snapshot.Count}: {locker.LockerName}");
+                    items.Add(CreateLockerItem(locker, cancellationToken, forceSizeScan));
+                }
+
+                return items;
+            }, cancellationToken);
         }
 
         private void AddOrReplaceLockerItem(LockerItemViewModel item)
@@ -417,7 +491,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             NotifySelectionStateChanged();
         }
 
-        private static LockerItemViewModel CreateLockerItem(LockerModel locker)
+        private LockerItemViewModel CreateLockerItem(LockerModel locker, CancellationToken cancellationToken = default, bool forceSizeScan = false)
         {
             return new LockerItemViewModel
             {
@@ -426,31 +500,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 IsLocked = locker.IsLocked,
                 Location = locker.LockerLocation,
                 LastModified = Directory.Exists(locker.LockerLocation) ? Directory.GetLastWriteTime(locker.LockerLocation) : DateTime.MinValue,
-                Size = CalculateDirectorySize(locker.LockerLocation)
+                Size = _sizeCache.GetSize(locker, forceSizeScan, cancellationToken)
             };
-        }
-
-        private static long CalculateDirectorySize(string path)
-        {
-            try
-            {
-                if (!Directory.Exists(path))
-                {
-                    return 0;
-                }
-
-                return new DirectoryInfo(path)
-                    .EnumerateFiles("*", SearchOption.AllDirectories)
-                    .Sum(file => file.Length);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or System.Security.SecurityException)
-            {
-                return 0;
-            }
-            catch (Exception)
-            {
-                return 0;
-            }
         }
 
         private LockerModel? FindLocker(LockerItemViewModel item)
@@ -461,7 +512,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         private async Task RunLockerOperationAsync(
             LockerItemViewModel item,
             string title,
-            Func<LockerModel, Task> operation)
+            Func<LockerModel, IProgress<LockerOperationProgress>, CancellationToken, Task> operation)
         {
             var locker = FindLocker(item);
             if (locker == null)
@@ -470,11 +521,53 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                 return;
             }
 
-            await RunWithUiErrorAsync(title, $"Failed to update '{item.Name}'.", () => operation(locker));
+            using var cancellation = new CancellationTokenSource();
+            _lockerOperationCancellation = cancellation;
+            IsLockerOperationRunning = true;
+            LockerOperationPercent = null;
+            var progress = new Progress<LockerOperationProgress>(update =>
+            {
+                if (!ReferenceEquals(_lockerOperationCancellation, cancellation))
+                {
+                    return;
+                }
+
+                CanCancelLockerOperation = update.CanCancel;
+                LockerOperationPercent = update.Percent;
+                StatusMessage = $"{update.Stage}: {update.Message}";
+            });
+            try
+            {
+                await RunWithUiErrorAsync(title, $"Failed to update '{item.Name}'.",
+                    () => operation(locker, progress, cancellation.Token));
+            }
+            finally
+            {
+                if (ReferenceEquals(_lockerOperationCancellation, cancellation))
+                {
+                    _lockerOperationCancellation = null;
+                    CanCancelLockerOperation = false;
+                    IsLockerOperationRunning = false;
+                    LockerOperationPercent = null;
+                }
+            }
+        }
+
+        public bool TryRequestClose()
+        {
+            if (_activeOperations == 0)
+            {
+                return true;
+            }
+
+            StatusMessage = "Work is still running. Wait for it to finish, then close the window.";
+            return false;
         }
 
         private async Task RunWithUiErrorAsync(string title, string message, Func<Task> operation)
         {
+            _activeOperations++;
+            IsBusy = true;
             try
             {
                 await operation();
@@ -489,9 +582,21 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
 
                 await _dialogs.ShowErrorAsync(title, "Access denied.", ex);
             }
+            catch (OperationCanceledException)
+            {
+                StatusMessage = "Operation cancelled before publication. No source files were removed.";
+            }
+            catch (IOException ex) when (ex.Message.Contains("free space", StringComparison.OrdinalIgnoreCase))
+            {
+                await _dialogs.ShowErrorAsync(title, ex.Message, ex);
+            }
             catch (Exception ex)
             {
                 await _dialogs.ShowErrorAsync(title, message, ex);
+            }
+            finally
+            {
+                IsBusy = --_activeOperations > 0;
             }
         }
 
@@ -508,5 +613,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             ShowPropertiesCommand.NotifyCanExecuteChanged();
             OpenLocationCommand.NotifyCanExecuteChanged();
         }
+
+        private bool CanStartMutation() => !IsBusy;
     }
 }

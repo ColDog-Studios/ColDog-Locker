@@ -17,18 +17,21 @@
 
 using System.Buffers.Binary;
 using System.Formats.Tar;
+using System.Globalization;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
+using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
     public static class LockerArchiveService
     {
-        public const int CurrentStorageFormatVersion = 1;
+        public const int CurrentStorageFormatVersion = 2;
         public const string ArchiveFileName = "locker.cdl";
 
         private const int BufferSize = 81920;
@@ -37,11 +40,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         private const int NonceSize = 12;
         private const int TagSize = 16;
         private const int KeySize = 32;
-        private const int Pbkdf2Iterations = 210000;
+        private const int Pbkdf2Iterations = 600000;
         private const int MaxMetadataLength = 1024 * 1024;
         private const int MaxArchiveEntries = 200000;
         private const int MaxArchiveEntryNameLength = 4096;
-        private const long MaxExtractedBytes = 1L * 1024 * 1024 * 1024 * 1024;
+        internal const long MaxExtractedBytes = 1L * 1024 * 1024 * 1024 * 1024;
+        private const string WindowsAttributesPaxKey = "CDL.windowsAttributes";
+        private const string WindowsCreationTimePaxKey = "CDL.windowsCreationTimeUtc";
         private static readonly byte[] _magic = Encoding.ASCII.GetBytes("CDLARC1");
         private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -51,13 +56,48 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             LockerModel locker,
             string password)
         {
+            return CreateFromDirectory(sourceDirectory, archivePath, locker, password, MaxExtractedBytes);
+        }
+
+        internal static LockerArchiveCreationResult CreateFromDirectory(
+            string sourceDirectory,
+            string archivePath,
+            LockerModel locker,
+            string password,
+            long maxExtractedBytes,
+            Func<string, Stream>? openSource = null,
+            int maxArchiveEntries = MaxArchiveEntries,
+            CancellationToken cancellationToken = default,
+            Action<string, int?>? reportProgress = null,
+            Func<string, long?>? getAvailableBytes = null)
+        {
             ArgumentNullException.ThrowIfNull(locker);
+            ArgumentOutOfRangeException.ThrowIfNegative(maxExtractedBytes);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(maxExtractedBytes, MaxExtractedBytes);
+            ArgumentOutOfRangeException.ThrowIfNegative(maxArchiveEntries);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(maxArchiveEntries, MaxArchiveEntries);
             if (!Directory.Exists(sourceDirectory))
             {
                 throw new DirectoryNotFoundException($"Locker directory not found: {sourceDirectory}");
             }
 
-            var sourceEntries = GetSourceArchiveEntries(sourceDirectory);
+            cancellationToken.ThrowIfCancellationRequested();
+            reportProgress?.Invoke("Inspecting locker contents", 0);
+            var sourcePathIdentity = FileSystemPathIdentity.CaptureDirectory(sourceDirectory);
+            var sourceEntries = GetSourceArchiveEntries(sourceDirectory, maxExtractedBytes, maxArchiveEntries,
+                cancellationToken, reportProgress);
+            sourcePathIdentity.EnsureUnchanged();
+            var logicalBytes = GetLogicalByteCount(sourceEntries);
+            var requiredBytes = EstimateArchiveSpace(logicalBytes, sourceEntries.Count);
+            var availableBytes = (getAvailableBytes ?? TryGetAvailableBytes)(archivePath);
+            reportProgress?.Invoke(DescribeArchiveCapacity(sourceEntries.Count, logicalBytes, availableBytes), 10);
+            if (availableBytes is { } available && available < requiredBytes)
+            {
+                throw new IOException(
+                    $"Not enough free space to lock this locker. At least {FormatBytes(requiredBytes)} is required " +
+                    $"at the encrypted destination, but only {FormatBytes(available)} is available.");
+            }
+
             var archiveDirectory = Path.GetDirectoryName(archivePath);
             if (!string.IsNullOrEmpty(archiveDirectory))
             {
@@ -65,44 +105,81 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             var lockedAtUtc = DateTime.UtcNow;
+            var rootMode = GetSupportedUnixMode(sourceDirectory);
+            var rootModifiedUtc = Directory.GetLastWriteTimeUtc(sourceDirectory);
+            var rootInfo = new DirectoryInfo(sourceDirectory);
+            var rootWindowsAttributes = GetSupportedWindowsAttributes(rootInfo);
+            var rootCreationTimeUtc = GetSupportedCreationTimeUtc(rootInfo);
             var metadata = new LockerArchiveMetadata(
                 CurrentStorageFormatVersion,
                 locker.Guid,
                 locker.LockerName,
                 lockedAtUtc,
                 AppInfo.SemanticVersion,
-                "tar+gzip");
+                "tar+gzip",
+                OperatingSystem.IsWindows() ? null : rootMode,
+                rootModifiedUtc,
+                OperatingSystem.IsWindows() ? rootWindowsAttributes : null,
+                OperatingSystem.IsWindows() ? rootCreationTimeUtc : null);
 
             var metadataBytes = JsonSerializer.SerializeToUtf8Bytes(metadata, _jsonOptions);
 
+            var archiveCreated = false;
             try
             {
-                using (var fileStream = new FileStream(archivePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                using (var encryptedStream = new EncryptedArchiveWriteStream(fileStream, password, metadataBytes))
-                using (var gzipStream = new GZipStream(encryptedStream, CompressionLevel.SmallestSize, false))
-                using (var tarWriter = new TarWriter(gzipStream, TarEntryFormat.Pax, true))
+                string sourceTreeSha256;
+                using (var sourceManifest = LockerTreeManifestDigest.Create())
                 {
-                    WriteSourceEntries(tarWriter, sourceEntries);
+                    LockerTreeManifestDigest.AppendEntry(
+                        sourceManifest,
+                        string.Empty,
+                        isDirectory: true,
+                        0,
+                        rootMode,
+                        rootModifiedUtc,
+                        rootWindowsAttributes,
+                        rootCreationTimeUtc,
+                        sourcePathIdentity.LeafIdentity);
+                    using (var fileStream = new FileStream(archivePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    {
+                        archiveCreated = true;
+                        using var encryptedStream = new EncryptedArchiveWriteStream(fileStream, password, metadataBytes);
+                        using var gzipStream = new GZipStream(encryptedStream, CompressionLevel.SmallestSize, false);
+                        using var tarWriter = new TarWriter(gzipStream, TarEntryFormat.Pax, true);
+                        if (sourceEntries.Count == 0)
+                        {
+                            // TarWriter emits no end records when it writes no entries.
+                            // Supply the two zero blocks of a valid empty TAR ourselves.
+                            gzipStream.Write(new byte[1024]);
+                        }
+                        else
+                        {
+                            WriteSourceEntries(tarWriter, sourceEntries, sourceManifest, openSource,
+                                cancellationToken, reportProgress);
+                        }
+                    }
+
+                    sourcePathIdentity.EnsureUnchanged();
+                    sourceTreeSha256 = LockerTreeManifestDigest.Complete(sourceManifest);
                 }
 
                 SetArchiveFileProtection(archivePath);
-                return new LockerArchiveCreationResult(archivePath, ComputeSha256(archivePath), lockedAtUtc);
-            }
-            catch (Exception ex) when (IsArchiveOperationException(ex))
-            {
-                TryDeleteFile(archivePath);
-                throw;
+                return new LockerArchiveCreationResult(archivePath, ComputeSha256(archivePath), lockedAtUtc, sourceTreeSha256);
             }
             catch (Exception)
             {
-                TryDeleteFile(archivePath);
+                if (archiveCreated)
+                {
+                    TryDeleteFile(archivePath);
+                }
+
                 throw;
             }
         }
 
         public static LockerArchiveMetadata ReadMetadata(string archivePath)
         {
-            using var fileStream = new FileStream(archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var fileStream = FileSystemEntryPolicy.OpenRead(archivePath);
             var header = ReadHeader(fileStream);
             return DeserializeMetadata(header.MetadataBytes);
         }
@@ -144,10 +221,6 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     result.AddError("Locked archive metadata does not match locker metadata.");
                 }
             }
-            catch (Exception ex) when (IsArchiveReadException(ex))
-            {
-                result.AddError($"Locked archive metadata could not be read: {ex.Message}");
-            }
             catch (Exception ex)
             {
                 result.AddError($"Locked archive metadata could not be read: {ex.Message}");
@@ -162,30 +235,106 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             LockerModel locker,
             string password)
         {
+            ExtractToDirectory(archivePath, destinationDirectory, locker, password, default, null);
+        }
+
+        internal static void ExtractToDirectory(
+            string archivePath,
+            string destinationDirectory,
+            LockerModel locker,
+            string password,
+            CancellationToken cancellationToken,
+            Action<string, int?>? reportProgress)
+        {
             ArgumentNullException.ThrowIfNull(locker);
+            cancellationToken.ThrowIfCancellationRequested();
             if (Directory.Exists(destinationDirectory))
             {
                 throw new IOException($"Destination directory already exists: {destinationDirectory}");
             }
 
-            Directory.CreateDirectory(destinationDirectory);
+            CreatePrivateDirectory(destinationDirectory);
 
             try
             {
-                using var fileStream = new FileStream(archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var fileStream = FileSystemEntryPolicy.OpenRead(archivePath);
                 using var encryptedStream = new EncryptedArchiveReadStream(fileStream, password, out var metadata);
                 if (!MetadataMatches(metadata, locker, true))
                 {
                     throw new InvalidDataException("Locked archive metadata does not match locker metadata.");
                 }
 
-                using var gzipStream = new GZipStream(encryptedStream, CompressionMode.Decompress, false);
-                ExtractValidatedTar(gzipStream, destinationDirectory);
-            }
-            catch (Exception ex) when (IsArchiveOperationException(ex))
-            {
-                TryDeleteDirectory(destinationDirectory);
-                throw;
+                if (!OperatingSystem.IsWindows() &&
+                    (metadata.RootWindowsAttributes != null || metadata.RootCreationTimeUtc != null))
+                {
+                    throw new PlatformNotSupportedException("This archive contains Windows filesystem metadata and must be restored on Windows.");
+                }
+
+                if (OperatingSystem.IsWindows() && metadata.RootWindowsAttributes is { } rootWindowsAttributes)
+                {
+                    ValidateWindowsAttributes(rootWindowsAttributes);
+                }
+
+                using var gzipStream = new GZipStream(encryptedStream, CompressionMode.Decompress, true);
+                var restoredEntries = ExtractValidatedTar(gzipStream, destinationDirectory,
+                    cancellationToken, reportProgress);
+                // Tar EOF is not encrypted-stream EOF. Authenticate everything before publishing output.
+                var trailingBytes = 0;
+                int value;
+                while ((value = gzipStream.ReadByte()) != -1)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (value != 0 || ++trailingBytes > MaxMetadataLength)
+                    {
+                        throw new InvalidDataException("Unexpected data after the tar archive.");
+                    }
+                }
+
+                if (encryptedStream.ReadByte() != -1)
+                {
+                    throw new InvalidDataException("Unexpected encrypted payload after the compressed archive.");
+                }
+
+                // Apply permissions only after complete authentication, children before parents.
+                foreach (var restored in restoredEntries.OrderByDescending(item => item.Path.Length))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (OperatingSystem.IsWindows() && restored.CreationUtc is { } creationUtc)
+                    {
+                        File.SetCreationTimeUtc(restored.Path, creationUtc);
+                    }
+
+                    File.SetLastWriteTimeUtc(restored.Path, restored.ModifiedUtc);
+                    if (OperatingSystem.IsWindows() && restored.WindowsAttributes is { } windowsAttributes)
+                    {
+                        ApplyWindowsAttributes(restored.Path, windowsAttributes);
+                    }
+                    else if (!OperatingSystem.IsWindows())
+                    {
+                        File.SetUnixFileMode(restored.Path, restored.Mode);
+                    }
+                }
+
+                if (OperatingSystem.IsWindows() && metadata.RootCreationTimeUtc is { } rootCreation)
+                {
+                    Directory.SetCreationTimeUtc(destinationDirectory, rootCreation);
+                }
+
+                if (metadata.RootLastWriteTimeUtc is { } rootModified)
+                {
+                    Directory.SetLastWriteTimeUtc(destinationDirectory, rootModified);
+                }
+
+                if (!OperatingSystem.IsWindows() && metadata.RootUnixMode is { } rootMode)
+                {
+                    ValidateUnixMode(rootMode);
+                    File.SetUnixFileMode(destinationDirectory, rootMode);
+                }
+
+                else if (OperatingSystem.IsWindows() && metadata.RootWindowsAttributes is { } rootAttributes)
+                {
+                    ApplyWindowsAttributes(destinationDirectory, rootAttributes);
+                }
             }
             catch (Exception)
             {
@@ -201,61 +350,203 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
         public static string ComputeSha256(string filePath)
         {
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var stream = FileSystemEntryPolicy.OpenRead(filePath);
             var hash = SHA256.HashData(stream);
             return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
-        private static List<SourceArchiveEntry> GetSourceArchiveEntries(string sourceDirectory)
+        internal static long EstimateArchiveSpace(long logicalBytes, int entryCount)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(logicalBytes);
+            ArgumentOutOfRangeException.ThrowIfNegative(entryCount);
+
+            // TAR/PAX metadata, gzip worst-case expansion, authenticated chunk tags and a fixed
+            // safety margin all consume space beyond the logical file payload.
+            return checked(logicalBytes + Math.Max(1024L * 1024, logicalBytes / 100) + checked((long)entryCount * 4096));
+        }
+
+        internal static long? TryGetAvailableBytes(string path)
+        {
+            try
+            {
+                var fullPath = Path.GetFullPath(path);
+                var comparison = OperatingSystem.IsWindows()
+                    ? StringComparison.OrdinalIgnoreCase
+                    : StringComparison.Ordinal;
+                var drive = DriveInfo.GetDrives()
+                    .Where(candidate => candidate.IsReady)
+                    .Where(candidate => IsPathWithinRoot(fullPath, candidate.RootDirectory.FullName, comparison))
+                    .OrderByDescending(candidate => candidate.RootDirectory.FullName.Length)
+                    .FirstOrDefault();
+                return drive?.AvailableFreeSpace;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        internal static string DescribeAvailableSpace(string path)
+        {
+            var available = TryGetAvailableBytes(path);
+            return available is { } bytes
+                ? $"{FormatBytes(bytes)} available at the destination"
+                : "available destination space could not be determined";
+        }
+
+        private static long GetLogicalByteCount(IEnumerable<SourceArchiveEntry> entries)
+        {
+            long total = 0;
+            foreach (var entry in entries)
+            {
+                total = checked(total + entry.Length);
+            }
+
+            return total;
+        }
+
+        private static string DescribeArchiveCapacity(int entryCount, long logicalBytes, long? availableBytes)
+        {
+            var capacity = availableBytes is { } bytes
+                ? $"{FormatBytes(bytes)} available at the encrypted destination"
+                : "available destination space could not be determined";
+            return $"Inspected {entryCount:N0} item{(entryCount == 1 ? string.Empty : "s")} " +
+                   $"containing {FormatBytes(logicalBytes)}; {capacity}";
+        }
+
+        private static bool IsPathWithinRoot(string path, string root, StringComparison comparison)
+        {
+            var normalizedRoot = root.EndsWith(Path.DirectorySeparatorChar)
+                ? root
+                : root + Path.DirectorySeparatorChar;
+            return path.Equals(root.TrimEnd(Path.DirectorySeparatorChar), comparison) ||
+                   path.StartsWith(normalizedRoot, comparison);
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            string[] suffixes = ["B", "KiB", "MiB", "GiB", "TiB"];
+            var value = (double)bytes;
+            var suffix = 0;
+            while (value >= 1024 && suffix < suffixes.Length - 1)
+            {
+                value /= 1024;
+                suffix++;
+            }
+
+            return $"{value:0.##} {suffixes[suffix]}";
+        }
+
+        private static List<SourceArchiveEntry> GetSourceArchiveEntries(string sourceDirectory, long maxExtractedBytes,
+            int maxArchiveEntries, CancellationToken cancellationToken, Action<string, int?>? reportProgress)
         {
             var sourceRoot = Path.GetFullPath(sourceDirectory);
             var rootInfo = new DirectoryInfo(sourceRoot);
             EnsureNotReparsePoint(rootInfo, "Locker root directory");
+            FileSystemMetadataPolicy.EnsureSupported(rootInfo);
+            _ = GetSupportedUnixMode(sourceRoot);
 
             var entries = new List<SourceArchiveEntry>();
+            long totalBytes = 0;
             var directories = new Stack<DirectoryInfo>();
             directories.Push(rootInfo);
 
             while (directories.Count > 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var directory = directories.Pop();
                 EnsureNotReparsePoint(directory, "Locker directory");
 
-                foreach (var entry in directory.EnumerateFileSystemInfos().OrderBy(entry => entry.FullName, StringComparer.Ordinal))
+                foreach (var entry in directory.EnumerateFileSystemInfos())
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (entries.Count >= maxArchiveEntries)
+                    {
+                        throw new InvalidDataException("Locker contains too many entries to archive safely.");
+                    }
+
                     EnsureNotReparsePoint(entry, "Locker entry");
+                    FileSystemMetadataPolicy.EnsureSupported(entry);
                     var relativeName = GetArchiveEntryName(sourceRoot, entry.FullName);
                     if (entry is DirectoryInfo childDirectory)
                     {
-                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, true, 0, entry.LastWriteTimeUtc));
+                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, true, 0, entry.LastWriteTimeUtc,
+                            GetSupportedUnixMode(entry.FullName), GetSupportedWindowsAttributes(entry), GetSupportedCreationTimeUtc(entry),
+                            FileSystemIdentity.CaptureDirectory(entry.FullName)));
                         directories.Push(childDirectory);
                     }
                     else if (entry is FileInfo file)
                     {
-                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, false, file.Length, file.LastWriteTimeUtc));
+                        totalBytes = checked(totalBytes + file.Length);
+                        if (totalBytes > maxExtractedBytes)
+                        {
+                            throw new InvalidDataException("Locker exceeds the maximum supported extracted size. Original files have not been removed.");
+                        }
+
+                        entries.Add(new SourceArchiveEntry(relativeName, entry.FullName, false, file.Length, file.LastWriteTimeUtc,
+                            GetSupportedUnixMode(file.FullName), GetSupportedWindowsAttributes(file), GetSupportedCreationTimeUtc(file),
+                            FileSystemIdentity.CaptureFile(file.FullName)));
                     }
                     else
                     {
                         throw new InvalidDataException($"Unsupported locker entry type: {entry.FullName}");
                     }
 
-                    if (entries.Count > MaxArchiveEntries)
+                    if (entries.Count == 1 || entries.Count % 256 == 0)
                     {
-                        throw new InvalidDataException("Locker contains too many entries to archive safely.");
+                        reportProgress?.Invoke($"Inspecting locker contents ({entries.Count:N0} items)", null);
                     }
                 }
             }
 
-            return entries.OrderBy(entry => entry.RelativeName, StringComparer.Ordinal).ToList();
+            // Sort only the bounded result, preserving deterministic archive order
+            // without materializing an unbounded directory or a second result list.
+            entries.Sort((left, right) => StringComparer.Ordinal.Compare(left.RelativeName, right.RelativeName));
+            return entries;
         }
 
-        private static void WriteSourceEntries(TarWriter tarWriter, IReadOnlyList<SourceArchiveEntry> entries)
+        private static void WriteSourceEntries(
+            TarWriter tarWriter,
+            IReadOnlyList<SourceArchiveEntry> entries,
+            IncrementalHash sourceManifest,
+            Func<string, Stream>? openSource,
+            CancellationToken cancellationToken,
+            Action<string, int?>? reportProgress)
         {
-            foreach (var sourceEntry in entries)
+            var lastReportedPercent = -1;
+            for (var index = 0; index < entries.Count; index++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                var sourceEntry = entries[index];
+                var percent = 15 + (int)(65L * index / entries.Count);
+                if (index == 0 || index == entries.Count - 1 || percent != lastReportedPercent)
+                {
+                    reportProgress?.Invoke($"Archiving item {index + 1:N0} of {entries.Count:N0}", percent);
+                    lastReportedPercent = percent;
+                }
+
+                LockerTreeManifestDigest.AppendEntry(
+                    sourceManifest,
+                    sourceEntry.RelativeName,
+                    sourceEntry.IsDirectory,
+                    sourceEntry.Length,
+                    sourceEntry.Mode,
+                    sourceEntry.LastWriteTimeUtc,
+                    sourceEntry.WindowsAttributes,
+                    sourceEntry.CreationTimeUtc,
+                    sourceEntry.Identity);
                 if (sourceEntry.IsDirectory)
                 {
-                    var entry = new PaxTarEntry(TarEntryType.Directory, sourceEntry.RelativeName) { ModificationTime = sourceEntry.LastWriteTimeUtc };
+                    if (FileSystemIdentity.CaptureDirectory(sourceEntry.FullPath) != sourceEntry.Identity)
+                    {
+                        throw new IOException($"Locker directory changed while it was being archived: {sourceEntry.FullPath}");
+                    }
+
+                    var entry = new PaxTarEntry(TarEntryType.Directory, sourceEntry.RelativeName, GetPlatformPaxAttributes(sourceEntry))
+                    {
+                        ModificationTime = sourceEntry.LastWriteTimeUtc,
+                        Mode = sourceEntry.Mode
+                    };
                     tarWriter.WriteEntry(entry);
                     continue;
                 }
@@ -264,31 +555,41 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 EnsureNotReparsePoint(fileInfo, "Locker file");
                 EnsureUnchanged(sourceEntry, fileInfo);
 
-                using var sourceStream = new FileStream(sourceEntry.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var sourceStream = openSource != null ? openSource(sourceEntry.FullPath)
+                    : FileSystemEntryPolicy.OpenRead(sourceEntry.FullPath, rejectHardLinks: true,
+                        expectedIdentity: sourceEntry.Identity);
+                using var boundedSource = new ExactLengthReadStream(sourceStream, sourceEntry.Length, sourceManifest,
+                    cancellationToken);
                 EnsureUnchanged(sourceEntry, new FileInfo(sourceEntry.FullPath));
 
-                var fileEntry = new PaxTarEntry(TarEntryType.RegularFile, sourceEntry.RelativeName)
+                var fileEntry = new PaxTarEntry(TarEntryType.RegularFile, sourceEntry.RelativeName, GetPlatformPaxAttributes(sourceEntry))
                 {
-                    DataStream = sourceStream, ModificationTime = sourceEntry.LastWriteTimeUtc
+                    DataStream = boundedSource,
+                    ModificationTime = sourceEntry.LastWriteTimeUtc,
+                    Mode = sourceEntry.Mode
                 };
                 tarWriter.WriteEntry(fileEntry);
+                boundedSource.EnsureComplete();
                 EnsureUnchanged(sourceEntry, new FileInfo(sourceEntry.FullPath));
             }
         }
 
-        internal static void ExtractValidatedTar(Stream archiveStream, string destinationDirectory)
+        internal static List<RestoredArchiveEntry> ExtractValidatedTar(Stream archiveStream, string destinationDirectory,
+            CancellationToken cancellationToken = default, Action<string, int?>? reportProgress = null)
         {
             var destinationRoot = Path.GetFullPath(destinationDirectory);
-            Directory.CreateDirectory(destinationRoot);
+            CreatePrivateDirectory(destinationRoot);
+            var restoredEntries = new List<RestoredArchiveEntry>();
             EnsureNotReparsePoint(new DirectoryInfo(destinationRoot), "Destination directory");
 
-            using var tarReader = new TarReader(archiveStream);
+            using var tarReader = new TarReader(archiveStream, leaveOpen: true);
             TarEntry? entry;
             var entryCount = 0;
             long totalExtractedBytes = 0;
 
             while ((entry = tarReader.GetNextEntry()) is not null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 entryCount++;
                 if (entryCount > MaxArchiveEntries)
                 {
@@ -296,10 +597,17 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 }
 
                 var destinationPath = GetSafeDestinationPath(destinationRoot, entry.Name);
+                ValidateUnixMode(entry.Mode);
+                restoredEntries.Add(ReadRestoredEntryMetadata(entry, destinationPath));
+                if (entryCount == 1 || entryCount % 128 == 0)
+                {
+                    reportProgress?.Invoke($"Restoring item {entryCount:N0}", null);
+                }
+
                 switch (entry.EntryType)
                 {
                     case TarEntryType.Directory:
-                        Directory.CreateDirectory(destinationPath);
+                        CreatePrivateDirectory(destinationPath);
                         EnsureNotReparsePoint(new DirectoryInfo(destinationPath), "Extracted directory");
                         break;
 
@@ -317,16 +625,24 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                             throw new InvalidDataException("Locked archive entry has an invalid parent directory.");
                         }
 
-                        Directory.CreateDirectory(parentDirectory);
+                        CreatePrivateDirectory(parentDirectory);
                         EnsureNotReparsePoint(new DirectoryInfo(parentDirectory), "Extracted parent directory");
-                        if (entry.DataStream is null)
+                        if (entry.DataStream is null && entry.Length != 0)
                         {
                             throw new InvalidDataException("Locked archive file entry is missing data.");
                         }
 
-                        using (var output = new FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                        var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+                        if (!OperatingSystem.IsWindows())
                         {
-                            CopyEntryData(entry.DataStream, output, entry.Length);
+                            options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+                        }
+
+                        using (var output = new FileStream(destinationPath, options))
+                        {
+                            // TarReader represents a valid empty regular file with no data stream.
+                            CopyEntryData(entry.DataStream ?? Stream.Null, output, entry.Length, cancellationToken);
+                            output.Flush(flushToDisk: true);
                         }
 
                         EnsureNotReparsePoint(new FileInfo(destinationPath), "Extracted file");
@@ -336,9 +652,127 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         throw new InvalidDataException($"Locked archive contains unsupported entry type: {entry.EntryType}");
                 }
             }
+
+            return restoredEntries;
         }
 
-        private static void CopyEntryData(Stream source, Stream destination, long expectedLength)
+        internal static void CreatePrivateDirectory(string path)
+        {
+            PrivateDirectory.Ensure(path);
+        }
+
+        private static UnixFileMode GetSupportedUnixMode(string path)
+        {
+            var mode = OperatingSystem.IsWindows()
+                ? UnixFileMode.UserRead | UnixFileMode.UserWrite | (Directory.Exists(path) ? UnixFileMode.UserExecute : 0)
+                : File.GetUnixFileMode(path);
+            ValidateUnixMode(mode);
+            return mode;
+        }
+
+        private static void ValidateUnixMode(UnixFileMode mode)
+        {
+            if (((int)mode & ~0x1ff) != 0)
+            {
+                throw new InvalidDataException("Special Unix permission bits are not supported. Original files have not been removed.");
+            }
+        }
+
+        private static FileAttributes GetSupportedWindowsAttributes(FileSystemInfo entry)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return 0;
+            }
+
+            var attributes = entry.Attributes & ~FileAttributes.Directory;
+            ValidateWindowsAttributes(attributes);
+            return attributes;
+        }
+
+        private static DateTime GetSupportedCreationTimeUtc(FileSystemInfo entry)
+            => OperatingSystem.IsWindows() ? entry.CreationTimeUtc : DateTime.UnixEpoch;
+
+        private static Dictionary<string, string> GetPlatformPaxAttributes(SourceArchiveEntry entry)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return [];
+            }
+
+            return new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [WindowsAttributesPaxKey] = ((int)entry.WindowsAttributes).ToString(CultureInfo.InvariantCulture),
+                [WindowsCreationTimePaxKey] = entry.CreationTimeUtc.Ticks.ToString(CultureInfo.InvariantCulture)
+            };
+        }
+
+        private static RestoredArchiveEntry ReadRestoredEntryMetadata(TarEntry entry, string destinationPath)
+        {
+            FileAttributes? windowsAttributes = null;
+            DateTime? creationTimeUtc = null;
+            if (entry is PaxTarEntry pax)
+            {
+                var hasAttributes = pax.ExtendedAttributes.TryGetValue(WindowsAttributesPaxKey, out var attributeText);
+                var hasCreation = pax.ExtendedAttributes.TryGetValue(WindowsCreationTimePaxKey, out var creationText);
+                if (hasAttributes != hasCreation)
+                {
+                    throw new InvalidDataException("Locked archive contains incomplete Windows filesystem metadata.");
+                }
+
+                if (hasAttributes)
+                {
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        throw new PlatformNotSupportedException("This archive contains Windows filesystem metadata and must be restored on Windows.");
+                    }
+
+                    if (!int.TryParse(attributeText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var encodedAttributes) ||
+                        !long.TryParse(creationText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var encodedCreation))
+                    {
+                        throw new InvalidDataException("Locked archive contains invalid Windows filesystem metadata.");
+                    }
+
+                    windowsAttributes = (FileAttributes)encodedAttributes;
+                    ValidateWindowsAttributes(windowsAttributes.Value);
+                    try
+                    {
+                        creationTimeUtc = new DateTime(encodedCreation, DateTimeKind.Utc);
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        throw new InvalidDataException("Locked archive contains an invalid Windows creation time.", ex);
+                    }
+                }
+            }
+
+            return new RestoredArchiveEntry(
+                destinationPath,
+                entry.Mode,
+                entry.ModificationTime.UtcDateTime,
+                windowsAttributes,
+                creationTimeUtc);
+        }
+
+        private static void ApplyWindowsAttributes(string path, FileAttributes attributes)
+        {
+            ValidateWindowsAttributes(attributes);
+            File.SetAttributes(path, attributes == 0 ? FileAttributes.Normal : attributes);
+        }
+
+        private static void ValidateWindowsAttributes(FileAttributes attributes)
+        {
+            const FileAttributes Supported = FileAttributes.Normal | FileAttributes.ReadOnly | FileAttributes.Hidden |
+                FileAttributes.System | FileAttributes.Archive | FileAttributes.Temporary | FileAttributes.NotContentIndexed;
+            if ((attributes & ~Supported) != 0 ||
+                ((attributes & FileAttributes.Normal) != 0 && attributes != FileAttributes.Normal))
+            {
+                throw new InvalidDataException("Locked archive contains unsupported Windows file attributes.");
+            }
+        }
+
+        private static void CopyEntryData(Stream source, Stream destination, long expectedLength,
+            CancellationToken cancellationToken = default)
         {
             if (expectedLength < 0)
             {
@@ -348,8 +782,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             var buffer = new byte[BufferSize];
             long copied = 0;
             int read;
-            while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                read = source.Read(buffer, 0, buffer.Length);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (read == 0)
+                {
+                    break;
+                }
+
                 copied += read;
                 if (copied > expectedLength)
                 {
@@ -426,6 +868,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 throw new InvalidDataException($"{description} uses a link or reparse point, which is not supported in locked archives.");
             }
+
+            FileSystemEntryPolicy.EnsureSupported(entry, rejectHardLinks: true);
         }
 
         private static void EnsureUnchanged(SourceArchiveEntry expected, FileInfo actual)
@@ -434,9 +878,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             if (!actual.Exists ||
                 (actual.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint ||
                 actual.Length != expected.Length ||
-                actual.LastWriteTimeUtc != expected.LastWriteTimeUtc)
+                actual.LastWriteTimeUtc != expected.LastWriteTimeUtc ||
+                GetSupportedWindowsAttributes(actual) != expected.WindowsAttributes ||
+                GetSupportedCreationTimeUtc(actual) != expected.CreationTimeUtc)
             {
                 throw new IOException($"Locker file changed while it was being archived: {expected.FullPath}");
+            }
+
+            if (FileSystemIdentity.CaptureFile(actual.FullName) != expected.Identity)
+            {
+                throw new IOException($"Locker file identity changed while it was being archived: {expected.FullPath}");
             }
         }
 
@@ -495,6 +946,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             var metadataBytes = new byte[metadataLength];
             ReadExactly(stream, metadataBytes);
+            var version = DeserializeMetadata(metadataBytes).FormatVersion;
+            if (version != CurrentStorageFormatVersion)
+            {
+                throw new InvalidDataException("This archive format version is unsupported. Only the current prerelease archive format is accepted.");
+            }
+
             return new ArchiveHeader(metadataBytes, salt, noncePrefix, iterations);
         }
 
@@ -593,14 +1050,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.SetUnixFileMode(archivePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
                 }
             }
-            catch (Exception ex) when (IsArchiveProtectionException(ex))
-            {
-                // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
-            }
             catch (Exception)
             {
                 // Best-effort protection must not make a valid archive unusable on filesystems with limited attribute support.
-                return;
             }
         }
 
@@ -614,14 +1066,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.Delete(filePath);
                 }
             }
-            catch (Exception ex) when (IsArchiveCleanupException(ex))
+            catch (Exception ex)
             {
-                // Cleanup failures should not hide the original archive error.
-            }
-            catch (Exception)
-            {
-                // Cleanup failures should not hide the original archive error.
-                return;
+                Logger.Log(LogLevel.Warning, $"Failed to remove archive staging file '{filePath}'.", ex);
             }
         }
 
@@ -648,43 +1095,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     File.GetAttributes(directoryPath) & ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 Directory.Delete(directoryPath, true);
             }
-            catch (Exception ex) when (IsArchiveCleanupException(ex))
+            catch (Exception ex)
             {
-                // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
+                Logger.Log(LogLevel.Warning, $"Failed to remove archive staging directory '{directoryPath}'. Plaintext data may remain on disk.", ex);
             }
-            catch (Exception)
-            {
-                // Best-effort cleanup keeps rollback code simple and preserves the primary failure.
-                return;
-            }
-        }
-
-        private static bool IsArchiveOperationException(Exception ex)
-        {
-            return ex is IOException
-                or UnauthorizedAccessException
-                or DirectoryNotFoundException
-                or PathTooLongException
-                or ArgumentException
-                or NotSupportedException
-                or InvalidDataException
-                or JsonException
-                or CryptographicException;
-        }
-
-        private static bool IsArchiveReadException(Exception ex)
-        {
-            return IsArchiveOperationException(ex);
-        }
-
-        private static bool IsArchiveProtectionException(Exception ex)
-        {
-            return ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException or NotSupportedException or ArgumentException;
-        }
-
-        private static bool IsArchiveCleanupException(Exception ex)
-        {
-            return ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or PathTooLongException or ArgumentException or NotSupportedException;
         }
 
         private sealed class EncryptedArchiveWriteStream : Stream
@@ -709,7 +1123,15 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 RandomNumberGenerator.Fill(_noncePrefix);
 
                 _key = Rfc2898DeriveBytes.Pbkdf2(password, salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, KeySize);
-                WriteHeader(_baseStream, salt, _noncePrefix, _metadataBytes);
+                try
+                {
+                    WriteHeader(_baseStream, salt, _noncePrefix, _metadataBytes);
+                }
+                catch
+                {
+                    CryptographicOperations.ZeroMemory(_key);
+                    throw;
+                }
             }
 
             public override bool CanRead => false;
@@ -749,9 +1171,28 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 if (!_disposed && disposing)
                 {
-                    Flush();
-                    _baseStream.Dispose();
                     _disposed = true;
+                    try
+                    {
+                        Flush();
+                        // A zero-length authenticated chunk commits the final chunk count.
+                        var tag = new byte[TagSize];
+                        using var aes = new AesGcm(_key, TagSize);
+                        aes.Encrypt(CreateNonce(_noncePrefix, _chunkIndex), ReadOnlySpan<byte>.Empty,
+                            Span<byte>.Empty, tag, CreateAad(_metadataBytes, _chunkIndex, 0));
+                        WriteChunk(_baseStream, 0, tag, ReadOnlySpan<byte>.Empty);
+                        _baseStream.Flush();
+                        if (_baseStream is FileStream archiveFile)
+                        {
+                            archiveFile.Flush(flushToDisk: true);
+                        }
+                    }
+                    finally
+                    {
+                        CryptographicOperations.ZeroMemory(_key);
+                        CryptographicOperations.ZeroMemory(_buffer);
+                        _baseStream.Dispose();
+                    }
                 }
 
                 base.Dispose(disposing);
@@ -790,7 +1231,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 Array.Clear(_buffer, 0, _bufferLength);
                 _bufferLength = 0;
-                _chunkIndex++;
+                _chunkIndex = checked(_chunkIndex + 1);
             }
         }
 
@@ -811,8 +1252,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 var header = ReadHeader(_baseStream);
                 _metadataBytes = header.MetadataBytes;
                 _noncePrefix = header.NoncePrefix;
-                _key = Rfc2898DeriveBytes.Pbkdf2(password, header.Salt, header.Iterations, HashAlgorithmName.SHA256, KeySize);
                 metadata = DeserializeMetadata(_metadataBytes);
+                _key = Rfc2898DeriveBytes.Pbkdf2(password, header.Salt, header.Iterations, HashAlgorithmName.SHA256, KeySize);
             }
 
             public override bool CanRead => true;
@@ -863,6 +1304,18 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new NotSupportedException();
             }
 
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                {
+                    CryptographicOperations.ZeroMemory(_key);
+                    CryptographicOperations.ZeroMemory(_plainBuffer);
+                    _baseStream.Dispose();
+                }
+
+                base.Dispose(disposing);
+            }
+
             private bool LoadNextChunk()
             {
                 if (_endOfArchive)
@@ -872,11 +1325,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 if (!TryReadChunkLength(_baseStream, out var chunkLength))
                 {
-                    _endOfArchive = true;
-                    return false;
+                    throw new InvalidDataException("Locked archive is missing its authenticated terminator.");
                 }
 
-                if (chunkLength <= 0 || chunkLength > BufferSize)
+                if (chunkLength < 0 || chunkLength > BufferSize)
                 {
                     throw new InvalidDataException("Locked archive contains an invalid encrypted chunk length.");
                 }
@@ -891,21 +1343,61 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 var aad = CreateAad(_metadataBytes, _chunkIndex, chunkLength);
 
                 using var aes = new AesGcm(_key, TagSize);
-                aes.Decrypt(nonce, ciphertext, tag, plaintext, aad);
+                try
+                {
+                    aes.Decrypt(nonce, ciphertext, tag, plaintext, aad);
+                }
+                catch
+                {
+                    CryptographicOperations.ZeroMemory(plaintext);
+                    throw;
+                }
+
+                CryptographicOperations.ZeroMemory(_plainBuffer);
+                if (chunkLength == 0)
+                {
+                    if (_baseStream.ReadByte() != -1)
+                    {
+                        throw new InvalidDataException("Locked archive has data after its authenticated terminator.");
+                    }
+
+                    _endOfArchive = true;
+                    return false;
+                }
 
                 _plainBuffer = plaintext;
                 _plainOffset = 0;
-                _chunkIndex++;
+                _chunkIndex = checked(_chunkIndex + 1);
                 return true;
             }
         }
 
-        private sealed record SourceArchiveEntry(string RelativeName, string FullPath, bool IsDirectory, long Length, DateTime LastWriteTimeUtc);
+        private sealed record SourceArchiveEntry(
+            string RelativeName,
+            string FullPath,
+            bool IsDirectory,
+            long Length,
+            DateTime LastWriteTimeUtc,
+            UnixFileMode Mode,
+            FileAttributes WindowsAttributes,
+            DateTime CreationTimeUtc,
+            FileSystemIdentity Identity);
+
+        internal sealed record RestoredArchiveEntry(
+            string Path,
+            UnixFileMode Mode,
+            DateTime ModifiedUtc,
+            FileAttributes? WindowsAttributes,
+            DateTime? CreationUtc);
 
         private sealed record ArchiveHeader(byte[] MetadataBytes, byte[] Salt, byte[] NoncePrefix, int Iterations);
     }
 
-    public sealed record LockerArchiveCreationResult(string ArchivePath, string Sha256, DateTime LockedAtUtc);
+    public sealed record LockerArchiveCreationResult(
+        string ArchivePath,
+        string Sha256,
+        DateTime LockedAtUtc,
+        string SourceTreeSha256);
 
     public sealed record LockerArchiveMetadata(
         int FormatVersion,
@@ -913,7 +1405,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         string LockerName,
         DateTime LockedAtUtc,
         string AppVersion,
-        string CompressionArchiveFormat);
+        string CompressionArchiveFormat,
+        UnixFileMode? RootUnixMode = null,
+        DateTime? RootLastWriteTimeUtc = null,
+        FileAttributes? RootWindowsAttributes = null,
+        DateTime? RootCreationTimeUtc = null);
 
     public sealed class LockerArchiveVerificationResult
     {

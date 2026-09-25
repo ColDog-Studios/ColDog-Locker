@@ -31,19 +31,22 @@
 
     <StackPanel Margin="18" Spacing="14">
         <StackPanel Spacing="4">
-            <TextBlock Text="Name"
+            <TextBlock x:Name="NameLabel" Text="Name"
                        FontWeight="SemiBold"
                        Margin="0,0,0,4" />
-            <TextBox x:Name="NameBox" PlaceholderText="Locker name" />
+            <TextBox x:Name="NameBox"
+                     AutomationProperties.LabeledBy="{Binding #NameLabel}"
+                     PlaceholderText="Locker name" />
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Location"
+            <TextBlock x:Name="LocationLabel" Text="Location"
                        FontWeight="SemiBold"
                        Margin="0,0,0,4" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <TextBox x:Name="LocationBox"
                          Grid.Column="0"
+                         AutomationProperties.LabeledBy="{Binding #LocationLabel}"
                          PlaceholderText="Folder path" />
                 <Button x:Name="BrowseButton"
                         Grid.Column="1"
@@ -56,10 +59,12 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Password"
+            <TextBlock x:Name="PasswordLabel" Text="Password"
                        FontWeight="SemiBold"
                        Margin="0,0,0,4" />
             <TextBox x:Name="PasswordBox"
+                     AutomationProperties.LabeledBy="{Binding #PasswordLabel}"
+                     AutomationProperties.HelpText="Use at least 12 characters with upper and lowercase letters, a number, and a symbol."
                      PasswordChar="*"
                      PlaceholderText="Password" />
             <StackPanel x:Name="PasswordRequirementsPanel"
@@ -68,15 +73,17 @@
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Confirm Password"
+            <TextBlock x:Name="ConfirmPasswordLabel" Text="Confirm Password"
                        FontWeight="SemiBold"
                        Margin="0,0,0,4" />
             <TextBox x:Name="ConfirmBox"
+                     AutomationProperties.LabeledBy="{Binding #ConfirmPasswordLabel}"
                      PasswordChar="*"
                      PlaceholderText="Confirm password" />
         </StackPanel>
 
         <TextBlock x:Name="ErrorText"
+                   AutomationProperties.LiveSetting="Assertive"
                    Foreground="Firebrick"
                    TextWrapping="Wrap" />
 

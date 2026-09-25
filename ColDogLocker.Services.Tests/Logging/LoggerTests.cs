@@ -420,7 +420,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Logging
             // Arrange & Act
             var exceptionInfo = new ExceptionInfo
             {
-                Type = "ArgumentNullException", Message = "Argument was null", StackTrace = "at Method() in File.cs:line 99"
+                Type = "ArgumentNullException",
+                Message = "Argument was null",
+                StackTrace = "at Method() in File.cs:line 99"
             };
 
             // Assert

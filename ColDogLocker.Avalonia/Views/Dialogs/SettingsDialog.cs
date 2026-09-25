@@ -30,9 +30,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
     public sealed partial class SettingsDialog : Window
     {
-        private static readonly string[] ThemeChoices = ["Auto", "Light", "Dark", "ColDog Studios"];
-        private static readonly string[] LogLevelChoices = ["Debug", "Info", "Warning", "Error", "Fatal"];
-        private static readonly string[] LogFormatChoices = ["json", "text"];
+        private static readonly string[] _themeChoices = ["Auto", "Light", "Dark", "ColDog Studios"];
+        private static readonly string[] _logLevelChoices = ["Debug", "Info", "Warning", "Error", "Fatal"];
+        private static readonly string[] _logFormatChoices = ["json", "text"];
         private readonly IPlatformService? _platformService;
 
         private readonly IAppThemeService? _themeService;
@@ -65,9 +65,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private void ConfigureControls()
         {
-            ThemeBox.ItemsSource = ThemeChoices;
-            LogLevelBox.ItemsSource = LogLevelChoices;
-            LogFormatBox.ItemsSource = LogFormatChoices;
+            ThemeBox.ItemsSource = _themeChoices;
+            LogLevelBox.ItemsSource = _logLevelChoices;
+            LogFormatBox.ItemsSource = _logFormatChoices;
             LogLevelBox.SelectionChanged += (_, _) => UpdateLogLevelDescription();
             ThemeBox.SelectionChanged += (_, _) => ApplyThemeImmediately();
 
@@ -115,8 +115,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 UnstableChannelRadio.IsChecked = settings.UpdateChannel == UpdateChannel.Unstable;
                 DevModeCheckBox.IsChecked = settings.DevMode;
                 EnableFileLoggingCheckBox.IsChecked = settings.EnableFileLogging;
-                LogLevelBox.SelectedItem = ChoiceOrDefault(LogLevelChoices, settings.LogLevel, "Info");
-                LogFormatBox.SelectedItem = ChoiceOrDefault(LogFormatChoices, settings.LogFormat, "json");
+                LogLevelBox.SelectedItem = ChoiceOrDefault(_logLevelChoices, settings.LogLevel, "Info");
+                LogFormatBox.SelectedItem = ChoiceOrDefault(_logFormatChoices, settings.LogFormat, "json");
                 MaxFileSizeTextBox.Text = settings.MaxFileSizeMb.ToString();
                 DbVacuumIntervalTextBox.Text = settings.DatabaseVacuumInterval.ToString();
                 UpdateLogLevelDescription();
@@ -138,7 +138,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Select default locker folder", AllowMultiple = false
+                Title = "Select default locker folder",
+                AllowMultiple = false
             });
 
             var folder = folders.FirstOrDefault();

@@ -8,6 +8,7 @@
     <RuntimeIdentifier Condition="'$(PackageArchitecture)' == 'arm64'">osx-arm64</RuntimeIdentifier>
 
     <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <DotNetRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildSDKsPath)', '..', '..', '..'))</DotNetRoot>
     <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
     <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
     <PublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)'))</PublishRoot>
@@ -80,6 +81,10 @@
     <Copy SourceFiles="$(CliPublishRoot)cdlocker" DestinationFolder="$(PackageRoot)usr/local/bin" />
     <Copy SourceFiles="$(ManPageSource)" DestinationFiles="$(PackageRoot)usr/local/share/man/man1/cdlocker.1" />
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(AppResourcesRoot)" />
+    <Copy SourceFiles="$(RepoRoot)THIRD-PARTY-NOTICES.md" DestinationFolder="$(AppResourcesRoot)" />
+    <Copy SourceFiles="$(RepoRoot)packaging/third-party-components.json" DestinationFiles="$(AppResourcesRoot)THIRD-PARTY-COMPONENTS.json" />
+    <Copy SourceFiles="$(DotNetRoot)LICENSE.txt" DestinationFiles="$(AppResourcesRoot)DOTNET-LICENSE.txt" />
+    <Copy SourceFiles="$(DotNetRoot)ThirdPartyNotices.txt" DestinationFiles="$(AppResourcesRoot)DOTNET-THIRD-PARTY-NOTICES.txt" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(AppResourcesRoot)" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(AppResourcesRoot)" />
     <WriteLinesToFile File="$(AppContentsRoot)Info.plist" Lines="$(InfoPlistXmlDeclaration);@(InfoPlistLines)" Overwrite="true" />

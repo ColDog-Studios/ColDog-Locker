@@ -21,6 +21,7 @@
     <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28385256</DotNetRuntimeSize>
 
     <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <DotNetRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildSDKsPath)', '..', '..', '..'))</DotNetRoot>
     <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
     <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
     <InstallerPublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)', 'app'))</InstallerPublishRoot>
@@ -73,6 +74,10 @@
     <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=false -p:PublishDir="$(InstallerPublishPath)"' />
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(InstallerPublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)THIRD-PARTY-NOTICES.md" DestinationFolder="$(InstallerPublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)packaging/third-party-components.json" DestinationFiles="$(InstallerPublishRoot)THIRD-PARTY-COMPONENTS.json" />
+    <Copy SourceFiles="$(DotNetRoot)LICENSE.txt" DestinationFiles="$(InstallerPublishRoot)DOTNET-LICENSE.txt" />
+    <Copy SourceFiles="$(DotNetRoot)ThirdPartyNotices.txt" DestinationFiles="$(InstallerPublishRoot)DOTNET-THIRD-PARTY-NOTICES.txt" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(InstallerPublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(InstallerPublishRoot)" />
   </Target>

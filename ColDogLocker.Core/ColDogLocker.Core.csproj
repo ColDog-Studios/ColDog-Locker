@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
@@ -16,9 +16,10 @@
     <!-- Auto-generate AppInfo.g.cs at build time -->
     <Target Name="GenerateAppInfo" BeforeTargets="CoreCompile">
         <PropertyGroup>
-            <BuildNumber>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</BuildNumber>
-            <BuildDate>$([System.DateTime]::UtcNow.ToString(yyyy-MM-dd))</BuildDate>
-            <BuildTime>$([System.DateTime]::UtcNow.ToString(HH:mm:ss)) UTC</BuildTime>
+            <BuildNumber Condition="'$(SourceRevisionId)' != ''">$(SourceRevisionId)</BuildNumber>
+            <BuildNumber Condition="'$(BuildNumber)' == ''">source</BuildNumber>
+            <BuildDate>Not recorded</BuildDate>
+            <BuildTime>Not recorded</BuildTime>
             <BuildVersionFull>$(Version)+$(BuildNumber)</BuildVersionFull>
             <AppInfoContent>
                 // &lt;auto-generated&gt;
@@ -42,13 +43,13 @@
                 /// &lt;summary&gt;Full semantic version with build metadata (e.g., "0.1.0-pre+202512301445")&lt;/summary&gt;
                 public const string BuildVersion = "$(BuildVersionFull)"%3B
 
-                /// &lt;summary&gt;Build number based on UTC date/time (e.g., "202512301445")&lt;/summary&gt;
+                /// &lt;summary&gt;Source revision when available. No wall-clock metadata is embedded.&lt;/summary&gt;
                 public const string BuildNumber = "$(BuildNumber)"%3B
 
-                /// &lt;summary&gt;Build date in ISO format (e.g., "2025-12-30")&lt;/summary&gt;
+                /// &lt;summary&gt;Build date is deliberately omitted for reproducibility&lt;/summary&gt;
                 public const string BuildDate = "$(BuildDate)"%3B
 
-                /// &lt;summary&gt;Build time in UTC (e.g., "14:45:32 UTC")&lt;/summary&gt;
+                /// &lt;summary&gt;Build time is deliberately omitted for reproducibility&lt;/summary&gt;
                 public const string BuildTime = "$(BuildTime)"%3B
                 }
             </AppInfoContent>

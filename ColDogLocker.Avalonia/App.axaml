@@ -20,6 +20,7 @@
              x:Class="ColDogStudios.ColDogLocker.Avalonia.App"
              xmlns:local="using:ColDogStudios.ColDogLocker.Avalonia"
              xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+             Name="ColDog Locker"
              RequestedThemeVariant="Default">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 

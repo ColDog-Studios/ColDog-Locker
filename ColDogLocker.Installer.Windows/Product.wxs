@@ -92,7 +92,9 @@
                   ExeCommand='cmd.exe /c rmdir /s /q "%LOCALAPPDATA%\ColDog Studios\ColDog Locker" &amp; rmdir /s /q "%USERPROFILE%\Documents\ColDog Locker"' />
 
     <InstallExecuteSequence>
-      <Custom Action="RemoveUserData" Before="RemoveFiles" Condition='REMOVE="ALL" AND !RemoveUserDataFeature=3 AND REMOVE_USER_DATA_ON_UNINSTALL="1"' />
+      <!-- Major upgrades uninstall the old product too. Never run destructive user-data
+           cleanup during that removal, even if an opt-in property was supplied. -->
+      <Custom Action="RemoveUserData" Before="RemoveFiles" Condition='Installed AND REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE AND !RemoveUserDataFeature=3 AND REMOVE_USER_DATA_ON_UNINSTALL="1"' />
     </InstallExecuteSequence>
 
     <!-- The MSI is a combined app installer: CLI and Avalonia GUI ship together. -->
@@ -118,7 +120,7 @@
       <ComponentRef Id="DesktopShortcutComponent" />
     </Feature>
 
-    <Feature Id="RemoveUserDataFeature" Title="Remove stored config and data on uninstall" Description="Opt in to removing settings, logs, locker metadata, and the default locker folder when uninstalling." Level="1">
+    <Feature Id="RemoveUserDataFeature" Title="Optional permanent deletion of user data" Description="REMOVE_USER_DATA_ON_UNINSTALL=1 permanently deletes settings, logs, the database and ALL locked/unlocked files in the default locker folder during a standalone uninstall. Back up first. Disabled by default; excluded during upgrades." Level="1">
       <ComponentRef Id="RemoveUserDataOptionComponent" />
     </Feature>
 

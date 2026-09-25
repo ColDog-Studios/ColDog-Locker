@@ -28,6 +28,11 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
     {
         public static async Task InitializeAsync()
         {
+            await InitializeAsync(checkForUpdates: true);
+        }
+
+        public static async Task InitializeAsync(bool checkForUpdates)
+        {
             // Load settings immediately to ensure logging is configured correctly from the start
             SettingsManager.LoadSettings();
 
@@ -68,7 +73,7 @@ namespace ColDogStudios.ColDogLocker.Services.Startup
             AppFileWatcher.Initialize();
 
             // Check for updates if auto-update is enabled
-            if (SettingsManager.Settings.AutoUpdate)
+            if (checkForUpdates && SettingsManager.Settings.AutoUpdate)
             {
                 Logger.Log(LogLevel.Debug, "Auto-update is enabled. Checking for updates.");
                 try

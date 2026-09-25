@@ -1,6 +1,6 @@
 # How to Use ColDog Locker
 
-ColDog Locker manages directories called lockers. A locker is an ordinary folder while it is unlocked. When you lock it, ColDog Locker encrypts the files inside it, renames the folder with a leading dot, and marks it hidden/system where the platform supports those attributes.
+ColDog Locker manages directories called lockers. A locker is an ordinary folder while it is unlocked. When you lock it, ColDog Locker creates an encrypted archive, removes the original plaintext folder, and publishes the archive in a folder with a leading dot. It marks that folder hidden/system where the platform supports those attributes.
 
 > Important: There is no password recovery. If you forget a locker password, ColDog Locker cannot decrypt the files.
 
@@ -22,12 +22,12 @@ Prerequisite:
 dotnet --version
 ```
 
-The repo targets .NET 10.
+Install the exact .NET SDK version in the repository’s `global.json` (currently `10.0.112`); SDK roll-forward is disabled.
 
 Build everything:
 
 ```bash
-dotnet restore
+dotnet restore --locked-mode
 dotnet build
 ```
 
@@ -60,7 +60,7 @@ cdlocker new MyLocker
 By default, lockers are created under:
 
 - Windows: `%USERPROFILE%\Documents\ColDog Locker`
-- Linux/macOS: the platform's documents folder as reported by .NET, under `ColDog Locker`
+- Linux/macOS: the platform's documents folder as reported by .NET, under `ColDog Locker`; if unavailable, the user profile is used
 
 Create a locker under a specific parent directory:
 
@@ -73,12 +73,14 @@ This creates `D:\Private\Taxes`. The `--path` value is the parent directory, not
 You can pass a password for automation:
 
 ```bash
-cdlocker new MyLocker --password "Use-A-Strong-Password-123!"
+cdlocker new MyLocker --password "River!Cobalt8Fern"
 ```
 
 Prefer the interactive prompt for normal use. Shell history, scripts, logs, or process monitors may expose command-line passwords.
 
 ## Lock and Unlock
+
+Keep an independent backup first. Close editors and other programs writing to the locker, and pause synchronization for that folder. Locking compares the exact archived contents with an atomically claimed source tree and aborts when it detects a create, overwrite, truncate, rename or deletion. A program that keeps a native writable file handle open across that cutover cannot be stopped portably, so closing writers is still required.
 
 Lock a locker:
 
@@ -133,8 +135,10 @@ cdlocker change-password MyLocker
 For automation, provide both the current and new password:
 
 ```bash
-cdlocker change-password MyLocker --old-password "Old-Strong-Password-123!" --new-password "New-Strong-Password-123!"
+cdlocker change-password MyLocker --old-password "River!Cobalt8Fern" --new-password "Meadow7!CopperBirch"
 ```
+
+These passwords are examples; choose your own unique password.
 
 Prefer the interactive prompt for normal use. Shell history, scripts, logs, or process monitors may expose command-line passwords.
 
@@ -185,6 +189,10 @@ cdlocker settings update-channel stable
 
 Settings are stored as JSON under the per-user local app data directory.
 
+## Backup and Recovery
+
+Use [Backup and Recovery](backup-and-recovery.md) before collecting backups or resolving an interrupted operation. `db-backup` saves registration and recovery records; locker files must be backed up separately. After a failure, preserve every reported path and inspect `cdlocker recovery-list` before retrying.
+
 ## Database Maintenance
 
 Show database information:
@@ -227,13 +235,7 @@ ColDog Locker stores application data per user:
 - `lockers.db`
 - `logs/`
 
-The base location is:
-
-```text
-%LOCALAPPDATA%\ColDog Studios\ColDog Locker
-```
-
-On non-Windows platforms, the exact local app data root comes from .NET's `LocalApplicationData` special folder.
+Typical base locations are `%LOCALAPPDATA%\ColDog Studios\ColDog Locker` on Windows, `${XDG_DATA_HOME:-$HOME/.local/share}/ColDog Studios/ColDog Locker` on Linux, and `$HOME/Library/Application Support/ColDog Studios/ColDog Locker` on macOS. Run `cdlocker dev` to see the authoritative local configuration location for the current account. See [Platform and Storage Support](platform-support.md) for runtime and filesystem limits.
 
 ## Safe Locker Locations
 

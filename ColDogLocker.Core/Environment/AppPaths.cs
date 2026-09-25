@@ -23,11 +23,11 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
     /// </summary>
     public static class AppPaths
     {
-        private static readonly string LocalApplicationData = GetAbsoluteSpecialFolderPath(
+        private static readonly string _localApplicationData = GetAbsoluteSpecialFolderPath(
             System.Environment.SpecialFolder.LocalApplicationData,
             System.Environment.SpecialFolder.UserProfile);
 
-        private static readonly string Documents = GetAbsoluteSpecialFolderPath(
+        private static readonly string _documents = GetAbsoluteSpecialFolderPath(
             System.Environment.SpecialFolder.MyDocuments,
             System.Environment.SpecialFolder.UserProfile);
 
@@ -35,7 +35,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         ///     Local configuration directory
         /// </summary>
         public static readonly string LocalConfig = Path.Join(
-            LocalApplicationData,
+            _localApplicationData,
             "ColDog Studios",
             "ColDog Locker"
         );
@@ -44,7 +44,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         ///     Default ColDog Locker Directory
         /// </summary>
         public static readonly string CdlDir = Path.Join(
-            Documents,
+            _documents,
             "ColDog Locker"
         );
 

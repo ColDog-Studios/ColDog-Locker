@@ -34,6 +34,59 @@ namespace ColDogStudios.ColDogLocker.Core.Tests.Validation
     public class LockerPathFilterTests
     {
         [Fact]
+        public void ValidatePath_FilesystemRootIsAlwaysProtected()
+        {
+            var root = Path.GetPathRoot(Path.GetFullPath("."))!;
+            Assert.NotNull(LockerPathFilter.ValidatePath(root));
+            Assert.NotNull(LockerPathFilter.ValidatePath(root + Path.DirectorySeparatorChar));
+        }
+
+        [Theory]
+        [InlineData("/etc")]
+        [InlineData("/usr/local")]
+        [InlineData("/var/lib")]
+        [InlineData("/proc")]
+        public void ValidatePath_UnixSystemDirectoriesAreProtected(string path)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                Assert.NotNull(LockerPathFilter.ValidatePath(path));
+            }
+        }
+
+        [Fact]
+        public void ValidatePath_AncestorSymlinkCannotBypassProtectedPath()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return;
+            }
+
+            var parent = Path.Join(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), $"cdl-path-{Guid.NewGuid():N}");
+            Directory.CreateDirectory(parent);
+            var link = Path.Join(parent, "alias");
+            try
+            {
+                Directory.CreateSymbolicLink(link, Path.GetTempPath());
+                Assert.Contains("link", LockerPathFilter.ValidatePath(Path.Join(link, "new-locker"))!, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                Directory.Delete(link);
+                Directory.Delete(parent);
+            }
+        }
+
+        [Fact]
+        public void NormalizePath_PreservesUnixCase()
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                Assert.NotEqual(LockerPathFilter.NormalizePath("/Example"), LockerPathFilter.NormalizePath("/example"));
+            }
+        }
+
+        [Fact]
         public void ValidatePath_WithAllowedPath_ShouldReturnNull()
         {
             // Arrange - A safe subdirectory under Documents is now allowed

@@ -17,11 +17,9 @@
 
 using Avalonia;
 using Avalonia.Headless;
-using Avalonia.Headless.XUnit;
 using Avalonia.Media;
 using Avalonia.Themes.Fluent;
 
-[assembly: AvaloniaTestApplication(typeof(ColDogStudios.ColDogLocker.Avalonia.Tests.TestAppBuilder))]
 [assembly: Xunit.v3.Parallelization(Mode = Xunit.Sdk.ParallelMode.None)]
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests

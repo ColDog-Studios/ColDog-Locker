@@ -25,7 +25,35 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
     /// </summary>
     public static class DatabaseCommands
     {
-        public static int DbVacuum(string[] args)
+        public static int DbRestore(string[] args)
+        {
+            if (args.Length != 2)
+            {
+                Console.Error.WriteLine("Usage: cdlocker db-restore <backup-lockers.db>");
+                return 1;
+            }
+
+            var path = LockerRepository.RestoreDatabase(args[1]);
+            Console.WriteLine($"Restored database: {path}");
+            Console.WriteLine("Locker files were not changed. Run recovery-list to inspect retained unfinished operations.");
+            return 0;
+        }
+
+        public static int DbBackup(string[] args)
+        {
+            if (args.Length != 2)
+            {
+                Console.Error.WriteLine("Usage: cdlocker db-backup <new-directory>");
+                return 1;
+            }
+
+            var path = LockerRepository.BackupDatabase(args[1]);
+            Console.WriteLine($"Verified database backup: {path}");
+            Console.WriteLine("This contains registrations and recovery records, not locker contents. Back up locker archives and any retained recovery files separately.");
+            return 0;
+        }
+
+        public static int DbVacuum()
         {
             // Usage: cdlocker db-vacuum
 
@@ -51,7 +79,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             }
         }
 
-        public static int DbInfo(string[] args)
+        public static int DbInfo()
         {
             // Usage: cdlocker db-info
 
