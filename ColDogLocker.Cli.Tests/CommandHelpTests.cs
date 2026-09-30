@@ -30,6 +30,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
 
                 var corruptArchive = Path.Join(root, "corrupt.cdl");
                 File.Copy(archive, corruptArchive);
+                File.SetAttributes(corruptArchive, FileAttributes.Normal);
                 var corruptBytes = File.ReadAllBytes(corruptArchive);
                 corruptBytes[^1] ^= 0x01;
                 File.WriteAllBytes(corruptArchive, corruptBytes);

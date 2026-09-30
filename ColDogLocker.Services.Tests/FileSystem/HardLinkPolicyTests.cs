@@ -7,7 +7,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
 {
     public sealed class HardLinkPolicyTests : IDisposable
     {
-        private readonly string _root = Directory.CreateTempSubdirectory("cdl-hardlink-").FullName;
+        private readonly string _root = Directory.CreateDirectory(Path.Join(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"cdl-hardlink-{Guid.NewGuid():N}")).FullName;
 
         [Theory]
         [InlineData(false)]

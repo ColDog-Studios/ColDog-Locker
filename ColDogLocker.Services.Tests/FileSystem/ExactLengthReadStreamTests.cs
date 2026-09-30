@@ -82,7 +82,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
         [InlineData(8)]
         public void ArchiveFailureRemovesOutputAndPreservesOriginal(int newLength)
         {
-            var root = Directory.CreateTempSubdirectory("cdl-read-limit-").FullName;
+            var root = Directory.CreateDirectory(Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"cdl-read-limit-{Guid.NewGuid():N}")).FullName;
             try
             {
                 var source = Directory.CreateDirectory(Path.Join(root, "Vault")).FullName;

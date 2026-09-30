@@ -49,12 +49,24 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         internal static string Complete(IncrementalHash digest)
             => Convert.ToHexString(digest.GetHashAndReset()).ToLowerInvariant();
 
-        internal static string Compute(string directory)
+        internal static string Compute(string directory, string? expectedMovedWindowsAccessControl = null)
         {
             var root = Path.GetFullPath(directory);
             var rootInfo = new DirectoryInfo(root);
             FileSystemEntryPolicy.EnsureSupported(rootInfo);
-            FileSystemMetadataPolicy.EnsureSupported(rootInfo);
+            if (expectedMovedWindowsAccessControl == null)
+            {
+                FileSystemMetadataPolicy.EnsureSupported(rootInfo);
+            }
+            else if (OperatingSystem.IsWindows())
+            {
+                FileSystemMetadataPolicy.EnsureClaimedRootSupported(rootInfo, expectedMovedWindowsAccessControl);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Moved-root access-control validation is only used on Windows.");
+            }
+
             var rootIdentity = FileSystemIdentity.CaptureDirectory(root);
             var entries = new List<ManifestEntry>();
             var pending = new Stack<DirectoryInfo>();

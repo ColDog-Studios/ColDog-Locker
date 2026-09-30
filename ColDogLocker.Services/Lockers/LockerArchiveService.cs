@@ -301,10 +301,25 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     cancellationToken.ThrowIfCancellationRequested();
                     if (OperatingSystem.IsWindows() && restored.CreationUtc is { } creationUtc)
                     {
-                        File.SetCreationTimeUtc(restored.Path, creationUtc);
+                        if (restored.IsDirectory)
+                        {
+                            Directory.SetCreationTimeUtc(restored.Path, creationUtc);
+                        }
+                        else
+                        {
+                            File.SetCreationTimeUtc(restored.Path, creationUtc);
+                        }
                     }
 
-                    File.SetLastWriteTimeUtc(restored.Path, restored.ModifiedUtc);
+                    if (restored.IsDirectory)
+                    {
+                        Directory.SetLastWriteTimeUtc(restored.Path, restored.ModifiedUtc);
+                    }
+                    else
+                    {
+                        File.SetLastWriteTimeUtc(restored.Path, restored.ModifiedUtc);
+                    }
+
                     if (OperatingSystem.IsWindows() && restored.WindowsAttributes is { } windowsAttributes)
                     {
                         ApplyWindowsAttributes(restored.Path, windowsAttributes);
@@ -748,6 +763,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             return new RestoredArchiveEntry(
                 destinationPath,
+                entry.EntryType == TarEntryType.Directory,
                 entry.Mode,
                 entry.ModificationTime.UtcDateTime,
                 windowsAttributes,
@@ -1385,6 +1401,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
         internal sealed record RestoredArchiveEntry(
             string Path,
+            bool IsDirectory,
             UnixFileMode Mode,
             DateTime ModifiedUtc,
             FileAttributes? WindowsAttributes,

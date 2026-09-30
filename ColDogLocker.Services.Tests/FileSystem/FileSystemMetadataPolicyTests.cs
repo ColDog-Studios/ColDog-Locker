@@ -235,6 +235,20 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
         {
             if (Directory.Exists(_root))
             {
+                foreach (var file in Directory.EnumerateFiles(_root, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(file, File.GetAttributes(file) &
+                        ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                foreach (var directory in Directory.EnumerateDirectories(_root, "*", SearchOption.AllDirectories))
+                {
+                    File.SetAttributes(directory, File.GetAttributes(directory) &
+                        ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
+                }
+
+                File.SetAttributes(_root, File.GetAttributes(_root) &
+                    ~FileAttributes.Hidden & ~FileAttributes.ReadOnly & ~FileAttributes.System);
                 Directory.Delete(_root, recursive: true);
             }
         }

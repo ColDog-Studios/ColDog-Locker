@@ -316,6 +316,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             var previousLocation = locker.LockerLocation;
+            string? sourceRootWindowsAccessControl = null;
+            if (OperatingSystem.IsWindows())
+            {
+                var sourceRoot = new DirectoryInfo(previousLocation);
+                FileSystemMetadataPolicy.EnsureSupported(sourceRoot);
+                sourceRootWindowsAccessControl = FileSystemMetadataPolicy.CaptureWindowsAccessControl(sourceRoot);
+            }
+
             var tempLockedLocation = Path.Join(lockerDirectory, $".{locker.LockerName}.{Guid.NewGuid():N}.locking");
             var claimedSourceLocation = Path.Join(tempLockedLocation, "source");
             journal?.Begin(locker, "Lock", newLockerLocation, tempLockedLocation);
@@ -334,6 +342,14 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     cancellationToken: cancellationToken,
                     reportProgress: (message, percent) =>
                         Report(progress, "Archiving", message, percent, canCancel: true));
+                if (OperatingSystem.IsWindows() && !string.Equals(
+                    FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(previousLocation)),
+                    sourceRootWindowsAccessControl,
+                    StringComparison.Ordinal))
+                {
+                    throw new IOException("The locker root access-control list changed while the archive was being created.");
+                }
+
                 DurableFileSystem.FlushDirectory(tempLockedLocation);
                 LockerOperationBoundary.Reached("Lock.ArchiveDurable");
 
@@ -356,8 +372,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 sourceSentinel = CreateSourceSentinel(previousLocation, out sourceSentinelToken);
                 LockerOperationBoundary.Reached("Lock.SourceSentinelDurable");
                 afterSourceClaim?.Invoke(previousLocation);
-                FileSystemMetadataPolicy.EnsureTreeSupported(claimedSourceLocation);
-                var claimedTreeSha256 = LockerTreeDigest.Compute(claimedSourceLocation);
+                var claimedTreeSha256 = LockerTreeDigest.Compute(claimedSourceLocation, sourceRootWindowsAccessControl);
                 if (!claimedTreeSha256.Equals(archive.SourceTreeSha256, StringComparison.Ordinal))
                 {
                     throw new IOException("Locker contents changed while the archive was being created. Locking was refused and the changed source was preserved.");
