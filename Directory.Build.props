@@ -13,6 +13,8 @@
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <!-- Keep the SDK linker/analyzer dependency identical for build and RID publish. -->
         <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+        <!-- Distro SDKs can repackage the offline ILLink archive with a different content hash. -->
+        <DisableImplicitLibraryPacksFolder>true</DisableImplicitLibraryPacksFolder>
         <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
         <Nullable>enable</Nullable>
         <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;linux-musl-x64;linux-musl-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
