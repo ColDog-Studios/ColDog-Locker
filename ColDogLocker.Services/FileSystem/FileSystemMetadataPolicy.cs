@@ -43,13 +43,25 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
         }
 
-        [SupportedOSPlatform("windows")]
-        internal static void EnsureClaimedRootSupported(FileSystemInfo entry, string expectedAccessControl)
+        internal static void NormalizePublishedTree(string root)
         {
-            EnsureWindowsMetadataSupported(entry, allowExplicitRules: true);
+            if (!OperatingSystem.IsWindows())
+            {
+                return;
+            }
+
+            var rootInfo = new DirectoryInfo(Path.GetFullPath(root));
+            NormalizeInheritedWindowsAccessControl(rootInfo);
+            EnsureTreeSupported(root);
+        }
+
+        [SupportedOSPlatform("windows")]
+        internal static void EnsureExpectedRootSupported(FileSystemInfo entry, string expectedAccessControl)
+        {
+            EnsureWindowsMetadataSupported(entry, allowExplicitRules: true, allowProtectedRules: true);
             if (!CaptureWindowsAccessControl(entry).Equals(expectedAccessControl, StringComparison.Ordinal))
             {
-                throw new IOException("The locker root access-control list changed while the source was being claimed.");
+                throw new IOException("The locker root access-control list changed during filesystem validation.");
             }
         }
 
@@ -210,7 +222,10 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
         }
 
         [SupportedOSPlatform("windows")]
-        private static void EnsureWindowsMetadataSupported(FileSystemInfo entry, bool allowExplicitRules = false)
+        private static void EnsureWindowsMetadataSupported(
+            FileSystemInfo entry,
+            bool allowExplicitRules = false,
+            bool allowProtectedRules = false)
         {
             const FileAttributes SupportedAttributes = FileAttributes.Directory | FileAttributes.Normal |
                 FileAttributes.ReadOnly | FileAttributes.Hidden | FileAttributes.System | FileAttributes.Archive |
@@ -227,7 +242,8 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             var tokenOwner = identity.Owner ?? user;
             var security = ReadWindowsSecurity(entry);
             var actualOwner = security.GetOwner(typeof(SecurityIdentifier));
-            if ((!user.Equals(actualOwner) && !tokenOwner.Equals(actualOwner)) || security.AreAccessRulesProtected)
+            if ((!user.Equals(actualOwner) && !tokenOwner.Equals(actualOwner)) ||
+                (!allowProtectedRules && security.AreAccessRulesProtected))
             {
                 throw new InvalidDataException($"Custom ownership or protected access-control lists are not supported in lockers: {entry.FullName}");
             }
@@ -248,6 +264,36 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             FileInfo file => file.GetAccessControl(AccessControlSections.Access | AccessControlSections.Owner),
             _ => throw new InvalidDataException($"Unsupported filesystem entry: {entry.FullName}")
         };
+
+        [SupportedOSPlatform("windows")]
+        private static void NormalizeInheritedWindowsAccessControl(FileSystemInfo entry)
+        {
+            var security = ReadWindowsSecurity(entry);
+            var explicitRules = security
+                .GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
+                .Cast<FileSystemAccessRule>()
+                .ToList();
+            foreach (var rule in explicitRules)
+            {
+                security.RemoveAccessRuleSpecific(rule);
+            }
+
+            security.SetAccessRuleProtection(isProtected: false, preserveInheritance: false);
+            switch (entry)
+            {
+                case DirectoryInfo directory:
+                    directory.SetAccessControl((DirectorySecurity)security);
+                    break;
+                case FileInfo file:
+                    file.SetAccessControl((FileSecurity)security);
+                    break;
+                default:
+                    throw new InvalidDataException($"Unsupported filesystem entry: {entry.FullName}");
+            }
+
+            entry.Refresh();
+            EnsureWindowsMetadataSupported(entry);
+        }
 
         [SupportedOSPlatform("windows")]
         private static void EnsureNoAlternateDataStreams(string path)

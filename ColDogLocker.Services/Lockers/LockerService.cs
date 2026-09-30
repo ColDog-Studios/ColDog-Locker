@@ -633,16 +633,19 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             FileSystemIdentity? plaintextIdentity = null;
             try
             {
-                LockerArchiveService.ExtractToDirectory(archivePath, stagingLocation, locker, password,
+                var stagingWindowsAccessControl = LockerArchiveService.ExtractToDirectory(
+                    archivePath, stagingLocation, locker, password,
                     cancellationToken, (message, percent) =>
                         Report(progress, "Restoring", message, percent, canCancel: true));
                 DurableFileSystem.FlushDirectoryTree(stagingLocation);
                 plaintextIdentity = FileSystemIdentity.CaptureDirectory(stagingLocation);
                 LockerOperationBoundary.Reached("Unlock.ExtractionDurable");
 
+                string? outputTreeSha256 = null;
                 if (journal != null)
                 {
-                    journal.Advance("ExtractionReady", LockerTreeDigest.Compute(stagingLocation));
+                    outputTreeSha256 = LockerTreeDigest.Compute(stagingLocation, stagingWindowsAccessControl);
+                    journal.Advance("ExtractionReady", outputTreeSha256);
                 }
 
                 LockerOperationBoundary.Reached("Unlock.ExtractionReady");
@@ -655,6 +658,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 if (FileSystemIdentity.CaptureDirectory(newLockerLocation) != plaintextIdentity)
                 {
                     throw new IOException("The published plaintext directory does not match the authenticated staging directory. Recovery files were preserved.");
+                }
+
+                FileSystemMetadataPolicy.NormalizePublishedTree(newLockerLocation);
+                if (outputTreeSha256 != null && LockerTreeDigest.Compute(newLockerLocation) != outputTreeSha256)
+                {
+                    throw new IOException("The published plaintext tree changed while its Windows access control was normalized. Recovery files were preserved.");
                 }
 
                 LockerOperationBoundary.Reached("Unlock.PlaintextPublished");

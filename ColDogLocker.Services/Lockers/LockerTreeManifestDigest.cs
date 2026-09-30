@@ -60,7 +60,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
             else if (OperatingSystem.IsWindows())
             {
-                FileSystemMetadataPolicy.EnsureClaimedRootSupported(rootInfo, expectedMovedWindowsAccessControl);
+                FileSystemMetadataPolicy.EnsureExpectedRootSupported(rootInfo, expectedMovedWindowsAccessControl);
             }
             else
             {

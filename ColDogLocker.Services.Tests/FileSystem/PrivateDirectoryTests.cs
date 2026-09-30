@@ -69,6 +69,27 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
                 (rule.FileSystemRights & FileSystemRights.FullControl) == FileSystemRights.FullControl);
         }
 
+        [WindowsFact]
+        [SupportedOSPlatform("windows")]
+        public void NormalizePublishedTree_ReplacesPrivateAclWithInheritedAcl()
+        {
+            var path = PrivateDirectory.Ensure(Path.Join(_root, "staging"));
+            var child = Path.Join(path, "secret.txt");
+            File.WriteAllText(child, "secret");
+            var privateAccessControl = FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(path));
+
+            FileSystemMetadataPolicy.EnsureExpectedRootSupported(new DirectoryInfo(path), privateAccessControl);
+
+            FileSystemMetadataPolicy.NormalizePublishedTree(path);
+
+            FileSystemMetadataPolicy.EnsureTreeSupported(path);
+            var rootSecurity = new DirectoryInfo(path).GetAccessControl(AccessControlSections.Access);
+            Assert.False(rootSecurity.AreAccessRulesProtected);
+            Assert.Empty(
+                rootSecurity.GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
+                    .Cast<FileSystemAccessRule>());
+        }
+
         public void Dispose()
         {
             if (Directory.Exists(_root))

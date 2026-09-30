@@ -182,6 +182,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new IOException("The published recovery directory does not match authenticated staging. Recovery records were preserved.");
             }
 
+            FileSystemMetadataPolicy.NormalizePublishedTree(destination);
+
             LockerOperationBoundary.Reached("Recovery.PlaintextPublished");
             var restored = current.Copy();
             restored.LockerLocation = destination;
@@ -230,6 +232,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 {
                     throw new IOException("The published recovery directory does not match authenticated staging.");
                 }
+
+                FileSystemMetadataPolicy.NormalizePublishedTree(destination);
             }
             catch
             {

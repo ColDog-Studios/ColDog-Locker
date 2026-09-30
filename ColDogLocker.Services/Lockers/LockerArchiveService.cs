@@ -238,7 +238,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             ExtractToDirectory(archivePath, destinationDirectory, locker, password, default, null);
         }
 
-        internal static void ExtractToDirectory(
+        internal static string? ExtractToDirectory(
             string archivePath,
             string destinationDirectory,
             LockerModel locker,
@@ -254,6 +254,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             CreatePrivateDirectory(destinationDirectory);
+            var rootWindowsAccessControl = OperatingSystem.IsWindows()
+                ? FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(destinationDirectory))
+                : null;
 
             try
             {
@@ -350,6 +353,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 {
                     ApplyWindowsAttributes(destinationDirectory, rootAttributes);
                 }
+
+                return rootWindowsAccessControl;
             }
             catch (Exception)
             {
