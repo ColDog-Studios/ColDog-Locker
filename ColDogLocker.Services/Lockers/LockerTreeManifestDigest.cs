@@ -112,6 +112,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 using var input = FileSystemEntryPolicy.OpenRead(file.FullName, rejectHardLinks: true,
                     expectedIdentity: manifestEntry.Identity);
                 using var exactInput = new ExactLengthReadStream(input, length, digest);
+                // Reading to EOF feeds every byte into the manifest digest through exactInput.
                 while (exactInput.Read(buffer) != 0)
                 {
                 }

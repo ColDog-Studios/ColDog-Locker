@@ -401,7 +401,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 {
                     ReleaseSourceSentinel(ref sourceSentinel, ref sourceSentinelToken, previousLocation);
                 }
-                catch (Exception sentinelException)
+                catch (Exception sentinelException) when (sentinelException is IOException
+                    or UnauthorizedAccessException
+                    or InvalidOperationException)
                 {
                     Logger.Log(LogLevel.Warning, $"Failed to release source sentinel '{previousLocation}'.", sentinelException);
                 }
@@ -413,7 +415,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         DurableFileSystem.MoveDirectory(claimedSourceLocation, previousLocation);
                         sourceClaimed = false;
                     }
-                    catch (Exception restoreException)
+                    catch (Exception restoreException) when (restoreException is IOException
+                        or UnauthorizedAccessException)
                     {
                         Logger.Log(LogLevel.Error, $"Failed to restore claimed source '{claimedSourceLocation}' to '{previousLocation}'.", restoreException);
                     }
