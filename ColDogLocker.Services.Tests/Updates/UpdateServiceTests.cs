@@ -663,7 +663,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
         private static string CreateTempDirectory()
         {
-            var path = Path.Join(Path.GetTempPath(), $"cdl-update-tests-{Guid.NewGuid():N}");
+            var path = Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                $"cdl-update-tests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(path);
             return path;
         }

@@ -7,7 +7,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 {
     public sealed class UpdateInstallerVerificationTests : IDisposable
     {
-        private readonly string _directory = Path.Join(Path.GetTempPath(), $"cdl-install-verify-{Guid.NewGuid():N}");
+        private readonly string _directory = Path.Join(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            $"cdl-install-verify-{Guid.NewGuid():N}");
         private readonly UpdatePlatform _platform = new() { OperatingSystem = UpdateOperatingSystem.Windows };
         private int _launches;
 

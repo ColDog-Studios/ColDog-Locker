@@ -98,8 +98,11 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
         internal static void EnsureSupported(FileSystemInfo entry, bool rejectHardLinks = false)
         {
             entry.Refresh();
-            if (!entry.Exists || entry.LinkTarget != null ||
-                (entry.Attributes & (FileAttributes.ReparsePoint | FileAttributes.Device)) != 0)
+            // On macOS use one authoritative type check: getattrlist with
+            // FSOPT_NOFOLLOW rejects links without the managed/native metadata
+            // disagreement seen for ordinary APFS entries.
+            if (!OperatingSystem.IsMacOS() && (!entry.Exists || entry.LinkTarget != null ||
+                (entry.Attributes & (FileAttributes.ReparsePoint | FileAttributes.Device)) != 0))
             {
                 throw new InvalidDataException("Missing entries, links, reparse points and devices are not supported in lockers.");
             }

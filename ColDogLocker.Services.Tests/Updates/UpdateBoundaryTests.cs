@@ -36,7 +36,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         [InlineData(true)]
         public async Task Download_StalledBodyHonorsDeadlineOrCallerCancellationAndCleansTemp(bool cancelByCaller)
         {
-            var directory = Path.Join(Path.GetTempPath(), $"cdl-deadline-{Guid.NewGuid():N}");
+            var directory = Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                $"cdl-deadline-{Guid.NewGuid():N}");
             Directory.CreateDirectory(directory);
             var stream = new StalledStream();
             using var client = new HttpClient(new ResponseHandler(_ =>

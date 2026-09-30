@@ -18,6 +18,7 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
         private const uint DarwinOwnerAndGroup = 0x00018000;
         private const int DarwinAclTypeExtended = 0x100;
         private const int DarwinAclFirstEntry = 0;
+        private const int ErrorNoEntry = 2;
         private const int ErrorHandleEof = 38;
         private static readonly nint _invalidHandle = new(-1);
 
@@ -149,6 +150,14 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             var acl = DarwinGetAcl(path, DarwinAclTypeExtended);
             if (acl == nint.Zero)
             {
+                // macOS reports ENOENT when the entry exists but has no extended
+                // ACL. The following no-follow xattr inspection still detects a
+                // path that actually disappeared between metadata checks.
+                if (Marshal.GetLastPInvokeError() == ErrorNoEntry)
+                {
+                    return;
+                }
+
                 throw NativeIOException($"Could not inspect the access-control list for '{path}'.");
             }
 
@@ -183,15 +192,18 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
                 throw new InvalidDataException($"This entry has Windows attributes that are not supported in lockers: {entry.FullName}");
             }
 
-            var owner = WindowsIdentity.GetCurrent().User
+            using var identity = WindowsIdentity.GetCurrent();
+            var user = identity.User
                 ?? throw new UnauthorizedAccessException("Cannot identify the current user for filesystem metadata inspection.");
+            var tokenOwner = identity.Owner ?? user;
             FileSystemSecurity security = entry switch
             {
                 DirectoryInfo directory => directory.GetAccessControl(AccessControlSections.Access | AccessControlSections.Owner),
                 FileInfo file => file.GetAccessControl(AccessControlSections.Access | AccessControlSections.Owner),
                 _ => throw new InvalidDataException($"Unsupported filesystem entry: {entry.FullName}")
             };
-            if (!owner.Equals(security.GetOwner(typeof(SecurityIdentifier))) || security.AreAccessRulesProtected)
+            var actualOwner = security.GetOwner(typeof(SecurityIdentifier));
+            if ((!user.Equals(actualOwner) && !tokenOwner.Equals(actualOwner)) || security.AreAccessRulesProtected)
             {
                 throw new InvalidDataException($"Custom ownership or protected access-control lists are not supported in lockers: {entry.FullName}");
             }
