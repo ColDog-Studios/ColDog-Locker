@@ -71,14 +71,20 @@ jobs:
       run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj --configuration Release --runtime win-x64 --self-contained true --no-restore --output crash-cli
 
     - name: Check interrupted-operation recovery boundaries
-      run: python .github/scripts/check_crash_boundaries.py --cli .\crash-cli\cdlocker.exe
+      shell: pwsh
+      run: |
+        python .github/scripts/check_crash_boundaries.py --cli .\crash-cli\cdlocker.exe *>&1 |
+          Tee-Object -FilePath crash-boundaries-windows.log
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     - name: Upload Test Results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       if: always()
       with:
         name: unit-test-results-windows
-        path: '**/test-results.trx'
+        path: |
+          **/test-results.trx
+          crash-boundaries-windows.log
 
   unit-tests-linux:
     name: Unit Tests (Linux)
@@ -114,14 +120,16 @@ jobs:
       run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj --configuration Release --runtime linux-x64 --self-contained true --no-restore --output crash-cli
 
     - name: Check interrupted-operation recovery boundaries
-      run: python .github/scripts/check_crash_boundaries.py --cli ./crash-cli/cdlocker
+      run: python .github/scripts/check_crash_boundaries.py --cli ./crash-cli/cdlocker 2>&1 | tee crash-boundaries-linux.log
 
     - name: Upload Test Results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       if: always()
       with:
         name: unit-test-results-linux
-        path: '**/test-results.trx'
+        path: |
+          **/test-results.trx
+          crash-boundaries-linux.log
 
   unit-tests-macos:
     name: Unit Tests (macOS - ${{ matrix.arch }})
@@ -165,14 +173,16 @@ jobs:
       run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj --configuration Release --runtime osx-${{ matrix.arch }} --self-contained true --no-restore --output crash-cli
 
     - name: Check interrupted-operation recovery boundaries
-      run: python .github/scripts/check_crash_boundaries.py --cli ./crash-cli/cdlocker
+      run: python .github/scripts/check_crash_boundaries.py --cli ./crash-cli/cdlocker 2>&1 | tee crash-boundaries-macos-${{ matrix.arch }}.log
 
     - name: Upload Test Results
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       if: always()
       with:
         name: unit-test-results-macos-${{ matrix.arch }}
-        path: '**/test-results.trx'
+        path: |
+          **/test-results.trx
+          crash-boundaries-macos-${{ matrix.arch }}.log
 
   build-cli-windows:
     name: Build CLI (Windows)
@@ -284,7 +294,6 @@ jobs:
     if: always()
     env:
       CLI_PATH: .\cli-publish\cdlocker.exe
-      CLI_E2E_WORK_DIR: .\cli-e2e-work
 
     steps:
     - name: Checkout code
@@ -302,7 +311,18 @@ jobs:
         path: ./cli-publish/
 
     - name: Run CLI E2E Tests
-      run: python .github/scripts/cli_e2e.py --cli "$env:CLI_PATH" --work-dir "$env:CLI_E2E_WORK_DIR"
+      shell: pwsh
+      run: |
+        python .github/scripts/cli_e2e.py --cli "$env:CLI_PATH" *>&1 |
+          Tee-Object -FilePath cli-e2e-windows.log
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    - name: Upload CLI E2E results
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      if: always()
+      with:
+        name: cli-e2e-results-windows
+        path: cli-e2e-windows.log
 
   cli-e2e-tests-linux:
     name: CLI E2E Tests (Linux - ${{ matrix.distro }})
@@ -360,7 +380,6 @@ jobs:
     if: always()
     env:
       CLI_PATH: ./cli-publish/cdlocker
-      CLI_E2E_WORK_DIR: ./cli-e2e-work
     strategy:
       fail-fast: false
       matrix:
@@ -394,7 +413,14 @@ jobs:
       run: chmod +x "$CLI_PATH"
 
     - name: Run CLI E2E Tests
-      run: python3 .github/scripts/cli_e2e.py --cli "$CLI_PATH" --work-dir "$CLI_E2E_WORK_DIR"
+      run: python3 .github/scripts/cli_e2e.py --cli "$CLI_PATH" 2>&1 | tee cli-e2e-macos-${{ matrix.arch }}.log
+
+    - name: Upload CLI E2E results
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      if: always()
+      with:
+        name: cli-e2e-results-macos-${{ matrix.arch }}
+        path: cli-e2e-macos-${{ matrix.arch }}.log
 
   test-summary:
     name: Test Summary

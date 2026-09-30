@@ -1039,7 +1039,23 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
                 var parent = Directory.GetParent(Path)?.FullName;
                 if (parent != null && Directory.Exists(parent))
                 {
-                    DeleteDirectory(parent);
+                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                    for (var attempt = 1; attempt <= 5; attempt++)
+                    {
+                        try
+                        {
+                            DeleteDirectory(parent);
+                            return;
+                        }
+                        catch (IOException) when (attempt < 5)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        catch (UnauthorizedAccessException) when (attempt < 5)
+                        {
+                            Thread.Sleep(100);
+                        }
+                    }
                 }
             }
 

@@ -246,14 +246,17 @@ class CrashBoundaryCheck:
 
     def run(self) -> None:
         for boundary in LOCK_BOUNDARIES:
+            print(f"RUN {boundary}", flush=True)
             self.lock_boundary(boundary)
-            print(f"PASS {boundary}")
+            print(f"PASS {boundary}", flush=True)
         for boundary in UNLOCK_BOUNDARIES:
+            print(f"RUN {boundary}", flush=True)
             self.unlock_boundary(boundary)
-            print(f"PASS {boundary}")
+            print(f"PASS {boundary}", flush=True)
         for boundary in RECOVERY_BOUNDARIES:
+            print(f"RUN {boundary}", flush=True)
             self.recovery_boundary(boundary)
-            print(f"PASS {boundary}")
+            print(f"PASS {boundary}", flush=True)
 
 
 def main() -> int:
