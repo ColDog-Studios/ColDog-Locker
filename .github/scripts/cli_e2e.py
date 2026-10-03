@@ -16,6 +16,7 @@ import sys
 import tempfile
 import threading
 import uuid
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -198,7 +199,7 @@ class CliE2E:
         observed = False
         try:
             deadline = time.monotonic() + 30
-            with sqlite3.connect(databases[0], timeout=1) as connection:
+            with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
                 while process.poll() is None and time.monotonic() < deadline:
                     row = connection.execute(
                         "SELECT Phase FROM LockerOperations WHERE SourcePath = ?", (str(source),)).fetchone()
@@ -225,7 +226,7 @@ class CliE2E:
         self.expect_contains(text, "requires recovery", "Retry did not fail on the persistent journal")
         if hashlib.sha256(payload.read_bytes()).hexdigest() != expected_hash:
             raise AssertionError("Blocked retries changed source data")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             operation_id, staging = connection.execute(
                 "SELECT OperationId, StagingPath FROM LockerOperations WHERE SourcePath = ?", (str(source),)).fetchone()
         self.run_cli("recovery-cancel", operation_id)
@@ -248,30 +249,39 @@ class CliE2E:
             raise AssertionError("Expected one isolated database")
         process = subprocess.Popen([str(self.cli), "lock", name, "--password", self.password],
                                    env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        observed = None
+        observed_destructive_state = False
+        process_output = ""
         try:
             deadline = time.monotonic() + 45
-            with sqlite3.connect(databases[0], timeout=1) as connection:
-                while process.poll() is None and time.monotonic() < deadline:
-                    connection.execute("BEGIN")
-                    row = connection.execute(
-                        "SELECT OperationId, Phase, StagingPath, TargetPath FROM LockerOperations WHERE SourcePath = ?", (str(source),)).fetchone()
-                    if row and row[1] in ("SourceRemovalStarted", "Published"):
-                        observed = row
-                        # Hold this read transaction until termination so the next journal
-                        # commit cannot race ahead under SQLite's rollback-journal mode.
-                        process.kill()
-                        process.communicate(timeout=15)
-                        connection.rollback()
-                        break
-                    connection.rollback()
-                    time.sleep(0.001)
-            if observed is None:
-                raise AssertionError("Did not observe the destructive lock boundary")
+            while process.poll() is None and time.monotonic() < deadline:
+                # The source root stops being a directory only after the durable
+                # SourceRemovalStarted journal commit. Watching that filesystem
+                # transition avoids a tight SQLite read loop starving the writer
+                # under Windows' rollback-journal locking behavior.
+                if not source.is_dir():
+                    observed_destructive_state = True
+                    process.kill()
+                    break
+                time.sleep(0.001)
+            stdout, stderr = process.communicate(timeout=15)
+            process_output = f"stdout:\n{stdout}\nstderr:\n{stderr}"
+            if not observed_destructive_state:
+                raise AssertionError(
+                    f"Did not observe the destructive lock boundary\n{process_output}"
+                )
         finally:
             if process.poll() is None:
                 process.kill()
                 process.communicate(timeout=15)
+        with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
+            observed = connection.execute(
+                "SELECT OperationId, Phase, StagingPath, TargetPath FROM LockerOperations WHERE SourcePath = ?",
+                (str(source),),
+            ).fetchone()
+        if observed is None or observed[1] not in ("SourceRemovalStarted", "Published"):
+            raise AssertionError(
+                f"Destructive lock did not retain its recovery journal: {observed!r}\n{process_output}"
+            )
         operation_id, _, staging, target = observed
         candidates = [Path(staging) / "locker.cdl", Path(target) / "locker.cdl"]
         archives = [path for path in candidates if path.is_file()]
@@ -291,7 +301,7 @@ class CliE2E:
         partial_staging = None
         try:
             deadline = time.monotonic() + 45
-            with sqlite3.connect(databases[0], timeout=1) as connection:
+            with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
                 while recovery.poll() is None and time.monotonic() < deadline:
                     row = connection.execute(
                         "SELECT StagingPath FROM LockerRecoveryAttempts "
@@ -584,14 +594,15 @@ class CliE2E:
         databases = list(self.app_data_dir.rglob("lockers.db"))
         if len(databases) != 1:
             raise AssertionError("Expected one isolated registry")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             connection.execute("UPDATE Lockers SET Password = ? WHERE LockerName = ?", (legacy, name))
+            connection.commit()
         result = self.run_cli("lock", name, "--password", "Legacy!Pass582", check=False)
         text = self.expect_failed(result, "Unsupported password verifier authorized locking")
         self.expect_contains(text, "Unsupported password verifier format", "Unexpected verifier failure")
         if original.read_text(encoding="utf-8") != "preserve unsupported-verifier bytes":
             raise AssertionError("Verifier refusal changed original contents")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             row = connection.execute("SELECT Password, IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
         if row != (legacy, 0, str(directory)):
             raise AssertionError("Verifier refusal changed registration")
@@ -652,7 +663,7 @@ class CliE2E:
         databases = list(self.app_data_dir.rglob("lockers.db"))
         if len(databases) != 1:
             raise AssertionError("Expected one isolated registry")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             locker = connection.execute("SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
         if locker != (0, str(directory)):
             raise AssertionError("Hard-link rejection changed registration")
@@ -681,7 +692,7 @@ class CliE2E:
         databases = list(self.app_data_dir.rglob("lockers.db"))
         if len(databases) != 1:
             raise AssertionError("Expected one isolated registry")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             row = connection.execute("SELECT OperationId, Phase FROM LockerOperations").fetchone()
             locker = connection.execute("SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
         if row is not None:
@@ -713,7 +724,7 @@ class CliE2E:
         databases = list(self.app_data_dir.rglob("lockers.db"))
         if len(databases) != 1:
             raise AssertionError("Expected one isolated registry")
-        with sqlite3.connect(databases[0]) as connection:
+        with closing(sqlite3.connect(databases[0])) as connection:
             pending = connection.execute("SELECT OperationId FROM LockerOperations").fetchone()
             locker = connection.execute(
                 "SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)
@@ -735,7 +746,7 @@ class CliE2E:
         self.expect_contains(self.output(completed), "Verified database backup", "Backup did not report success.")
         backup_file = destination / "lockers.db"
         before = hashlib.sha256(backup_file.read_bytes()).hexdigest()
-        with sqlite3.connect(backup_file) as connection:
+        with closing(sqlite3.connect(backup_file)) as connection:
             row = connection.execute("SELECT LockerName, IsLocked, LockedArchiveSha256 FROM Lockers WHERE LockerName = ?", (LOCKER_NAME,)).fetchone()
             if row is None or row[1] != 1 or not row[2]:
                 raise AssertionError("Backup did not preserve locked registration and archive hash.")
@@ -760,7 +771,7 @@ class CliE2E:
         restored = list(profile.rglob("lockers.db"))
         if len(restored) != 1:
             raise AssertionError("Restore did not create exactly one registry in the fresh profile.")
-        with sqlite3.connect(restored[0]) as connection:
+        with closing(sqlite3.connect(restored[0])) as connection:
             row = connection.execute("SELECT LockerName, IsLocked FROM Lockers WHERE LockerName = ?", (LOCKER_NAME,)).fetchone()
             if row != (LOCKER_NAME, 1):
                 raise AssertionError("Restored registration does not match the locked backup.")
