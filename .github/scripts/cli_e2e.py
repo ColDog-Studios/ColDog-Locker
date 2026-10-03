@@ -30,6 +30,50 @@ UPDATE_INSTALLER_NAME = "ColDogLocker-e2e-win-x64.msi"
 UPDATE_INSTALLER_BYTES = b"fake installer payload for cli e2e"
 
 
+def set_extended_attribute(path: Path, name: str, value: bytes) -> None:
+    if hasattr(os, "setxattr"):
+        os.setxattr(path, name, value)
+        return
+    if sys.platform == "darwin":
+        subprocess.run(
+            ["xattr", "-wx", name, value.hex(), str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    raise AssertionError("This platform cannot create the extended-attribute test fixture.")
+
+
+def get_extended_attribute(path: Path, name: str) -> bytes:
+    if hasattr(os, "getxattr"):
+        return os.getxattr(path, name)
+    if sys.platform == "darwin":
+        completed = subprocess.run(
+            ["xattr", "-px", name, str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return bytes.fromhex(completed.stdout)
+    raise AssertionError("This platform cannot read the extended-attribute test fixture.")
+
+
+def remove_extended_attribute(path: Path, name: str) -> None:
+    if hasattr(os, "removexattr"):
+        os.removexattr(path, name)
+        return
+    if sys.platform == "darwin":
+        subprocess.run(
+            ["xattr", "-d", name, str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    raise AssertionError("This platform cannot remove the extended-attribute test fixture.")
+
+
 @dataclass
 class Result:
     name: str
@@ -109,6 +153,7 @@ class CliE2E:
         env["HOME"] = str(self.app_data_dir / "home")
         env["XDG_DATA_HOME"] = str(self.app_data_dir / "xdg-data")
         env["XDG_CONFIG_HOME"] = str(self.app_data_dir / "xdg-config")
+        env["COLDOG_LOCKER_DATA_HOME"] = str(self.app_data_dir / "local")
         for folder in ("local", "roaming", "user-profile", "home", "xdg-data", "xdg-config"):
             (self.app_data_dir / folder).mkdir(parents=True, exist_ok=True)
         return env
@@ -713,13 +758,13 @@ class CliE2E:
         directory = self.create_locker_with_name(name)
         original = directory / "original.txt"
         original.write_text("preserve xattr bytes", encoding="utf-8")
-        attribute = "user.coldog-test"
+        attribute = "com.coldog-test" if sys.platform == "darwin" else "user.coldog-test"
         value = b"unsupported metadata"
-        os.setxattr(original, attribute, value)
+        set_extended_attribute(original, attribute, value)
         failure = self.run_cli("lock", name, "--password", self.password, check=False)
         text = self.expect_failed(failure, "Locker containing an extended attribute was accepted.")
         self.expect_contains(text, "Extended attributes", "Lock failed for an unexpected reason.")
-        if original.read_text(encoding="utf-8") != "preserve xattr bytes" or os.getxattr(original, attribute) != value:
+        if original.read_text(encoding="utf-8") != "preserve xattr bytes" or get_extended_attribute(original, attribute) != value:
             raise AssertionError("Rejected lock changed the extended-attribute source")
         databases = list(self.app_data_dir.rglob("lockers.db"))
         if len(databases) != 1:
@@ -733,7 +778,7 @@ class CliE2E:
             raise AssertionError("Extended-attribute rejection changed durable state")
         if (directory.parent / f".{name}").exists() or list(directory.parent.glob(f".{name}.*.locking")):
             raise AssertionError("Extended-attribute rejection left archive output")
-        os.removexattr(original, attribute)
+        remove_extended_attribute(original, attribute)
         self.run_cli("lock", name, "--password", self.password)
         self.run_cli("unlock", name, "--password", self.password)
         if original.read_text(encoding="utf-8") != "preserve xattr bytes":
@@ -766,6 +811,7 @@ class CliE2E:
             path = profile / folder
             path.mkdir(parents=True, exist_ok=True)
             overrides[key] = str(path)
+        overrides["COLDOG_LOCKER_DATA_HOME"] = str(profile / "local")
         completed = self.run_cli("db-restore", str(backup), extra_env=overrides)
         self.expect_contains(self.output(completed), "Restored database", "Fresh-profile restore failed.")
         restored = list(profile.rglob("lockers.db"))

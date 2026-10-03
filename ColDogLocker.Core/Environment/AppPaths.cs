@@ -23,9 +23,10 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
     /// </summary>
     public static class AppPaths
     {
-        private static readonly string _localApplicationData = GetAbsoluteSpecialFolderPath(
-            System.Environment.SpecialFolder.LocalApplicationData,
-            System.Environment.SpecialFolder.UserProfile);
+        /// <summary>Optional absolute base directory for isolated or portable application state.</summary>
+        public const string DataHomeEnvironmentVariable = "COLDOG_LOCKER_DATA_HOME";
+
+        private static readonly string _localApplicationData = GetLocalApplicationData();
 
         private static readonly string _documents = GetAbsoluteSpecialFolderPath(
             System.Environment.SpecialFolder.MyDocuments,
@@ -65,6 +66,25 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
             }
 
             return Path.GetFullPath(".");
+        }
+
+        private static string GetLocalApplicationData()
+        {
+            var configured = System.Environment.GetEnvironmentVariable(DataHomeEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                return GetAbsoluteSpecialFolderPath(
+                    System.Environment.SpecialFolder.LocalApplicationData,
+                    System.Environment.SpecialFolder.UserProfile);
+            }
+
+            if (!Path.IsPathRooted(configured))
+            {
+                throw new InvalidOperationException(
+                    $"{DataHomeEnvironmentVariable} must contain an absolute path.");
+            }
+
+            return Path.GetFullPath(configured);
         }
     }
 }

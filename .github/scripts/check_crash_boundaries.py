@@ -87,6 +87,7 @@ class CrashBoundaryCheck:
         for key, path in locations.items():
             path.mkdir(parents=True, exist_ok=True)
             env[key] = str(path)
+        env["COLDOG_LOCKER_DATA_HOME"] = str(locations["LOCALAPPDATA"])
 
         settings = {
             "DevMode": False,
