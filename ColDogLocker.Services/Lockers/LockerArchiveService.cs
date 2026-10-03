@@ -627,7 +627,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 switch (entry.EntryType)
                 {
                     case TarEntryType.Directory:
-                        CreatePrivateDirectory(destinationPath);
+                        CreatePrivateDescendantDirectory(destinationPath);
                         EnsureNotReparsePoint(new DirectoryInfo(destinationPath), "Extracted directory");
                         break;
 
@@ -645,7 +645,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                             throw new InvalidDataException("Locked archive entry has an invalid parent directory.");
                         }
 
-                        CreatePrivateDirectory(parentDirectory);
+                        CreatePrivateDescendantDirectory(parentDirectory);
                         EnsureNotReparsePoint(new DirectoryInfo(parentDirectory), "Extracted parent directory");
                         if (entry.DataStream is null && entry.Length != 0)
                         {
@@ -679,6 +679,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         internal static void CreatePrivateDirectory(string path)
         {
             PrivateDirectory.Ensure(path);
+        }
+
+        private static void CreatePrivateDescendantDirectory(string path)
+        {
+            PrivateDirectory.EnsureDescendant(path);
         }
 
         private static UnixFileMode GetSupportedUnixMode(string path)

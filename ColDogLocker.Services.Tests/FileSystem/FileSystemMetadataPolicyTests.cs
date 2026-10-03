@@ -140,8 +140,11 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
         public void RoundTrip_PreservesWindowsAttributesCreationAndModificationTimes()
         {
             var source = Directory.CreateDirectory(Path.Join(_root, "Vault")).FullName;
+            var child = Directory.CreateDirectory(Path.Join(source, "nested")).FullName;
             var file = Path.Join(source, "secret.txt");
+            var nestedFile = Path.Join(child, "nested.txt");
             File.WriteAllText(file, "secret");
+            File.WriteAllText(nestedFile, "nested");
             var rootCreation = new DateTime(2000, 1, 2, 3, 4, 6, DateTimeKind.Utc);
             var fileCreation = new DateTime(2001, 2, 3, 4, 5, 6, DateTimeKind.Utc);
             var modified = new DateTime(2002, 3, 4, 5, 6, 8, DateTimeKind.Utc);
@@ -165,6 +168,14 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
                 File.GetAttributes(restoredFile) & ~FileAttributes.Directory);
             Assert.Equal(rootCreation, Directory.GetCreationTimeUtc(restored));
             Assert.True((File.GetAttributes(restored) & FileAttributes.Hidden) != 0);
+            var restoredChildSecurity = new DirectoryInfo(Path.Join(restored, "nested"))
+                .GetAccessControl(AccessControlSections.Access);
+            Assert.False(restoredChildSecurity.AreAccessRulesProtected);
+            Assert.Empty(restoredChildSecurity
+                .GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
+                .Cast<FileSystemAccessRule>());
+            var restoredAccessControl = FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(restored));
+            Assert.Equal(64, LockerTreeDigest.Compute(restored, restoredAccessControl).Length);
         }
 
         [UnixFact]

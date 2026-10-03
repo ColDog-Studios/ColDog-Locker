@@ -41,6 +41,29 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             return fullPath;
         }
 
+        internal static string EnsureDescendant(string path)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return Ensure(path);
+            }
+
+            var fullPath = Path.GetFullPath(path);
+            if (File.Exists(fullPath))
+            {
+                throw new IOException($"Private directory path is occupied by a file: {fullPath}");
+            }
+
+            if (LockerPathFilter.FindLinkedAncestor(fullPath) is { } linkedPath)
+            {
+                throw new InvalidDataException($"Private directory contains a link or reparse point: {linkedPath}");
+            }
+
+            Directory.CreateDirectory(fullPath);
+            FileSystemEntryPolicy.EnsureSupported(new DirectoryInfo(fullPath));
+            return fullPath;
+        }
+
         [SupportedOSPlatform("windows")]
         private static void EnsureWindowsOwnerOnly(string path)
         {
