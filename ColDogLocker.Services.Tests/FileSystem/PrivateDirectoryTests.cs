@@ -2,6 +2,7 @@ using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using ColDogStudios.ColDogLocker.Services.FileSystem;
+using ColDogStudios.ColDogLocker.Services.Lockers;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
 {
@@ -88,6 +89,32 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.FileSystem
             Assert.Empty(
                 rootSecurity.GetAccessRules(includeExplicit: true, includeInherited: false, typeof(SecurityIdentifier))
                     .Cast<FileSystemAccessRule>());
+        }
+
+        [WindowsFact]
+        [SupportedOSPlatform("windows")]
+        public void MovedOrdinaryTree_IsValidatedUnderUnchangedPrivateParent()
+        {
+            var source = Directory.CreateDirectory(Path.Join(_root, "source")).FullName;
+            var child = Directory.CreateDirectory(Path.Join(source, "child")).FullName;
+            File.WriteAllText(Path.Join(child, "secret.txt"), "secret");
+            FileSystemMetadataPolicy.EnsureTreeSupported(source);
+            var staging = PrivateDirectory.Ensure(Path.Join(_root, "staging"));
+            var expectedStagingAccessControl =
+                FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(staging));
+            var claimed = Path.Join(staging, "source");
+
+            DurableFileSystem.MoveDirectory(source, claimed);
+
+            Assert.Equal(
+                64,
+                LockerTreeDigest.ComputeClaimedWindowsSource(
+                    claimed,
+                    staging,
+                    expectedStagingAccessControl).Length);
+            FileSystemMetadataPolicy.EnsureExpectedRootSupported(
+                new DirectoryInfo(staging),
+                expectedStagingAccessControl);
         }
 
         public void Dispose()

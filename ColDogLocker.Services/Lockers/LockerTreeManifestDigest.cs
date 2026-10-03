@@ -67,6 +67,33 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new PlatformNotSupportedException("Moved-root access-control validation is only used on Windows.");
             }
 
+            return ComputeValidated(root, rootInfo);
+        }
+
+        internal static string ComputeClaimedWindowsSource(
+            string directory,
+            string privateParent,
+            string expectedPrivateParentAccessControl)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                throw new PlatformNotSupportedException("Claimed-source access-control validation is only used on Windows.");
+            }
+
+            var parentInfo = new DirectoryInfo(Path.GetFullPath(privateParent));
+            FileSystemEntryPolicy.EnsureSupported(parentInfo);
+            FileSystemMetadataPolicy.EnsureExpectedRootSupported(parentInfo, expectedPrivateParentAccessControl);
+            var root = Path.GetFullPath(directory);
+            var rootInfo = new DirectoryInfo(root);
+            FileSystemEntryPolicy.EnsureSupported(rootInfo);
+            FileSystemMetadataPolicy.EnsureMovedRootSupported(rootInfo);
+            var result = ComputeValidated(root, rootInfo);
+            FileSystemMetadataPolicy.EnsureExpectedRootSupported(parentInfo, expectedPrivateParentAccessControl);
+            return result;
+        }
+
+        private static string ComputeValidated(string root, DirectoryInfo rootInfo)
+        {
             var rootIdentity = FileSystemIdentity.CaptureDirectory(root);
             var entries = new List<ManifestEntry>();
             var pending = new Stack<DirectoryInfo>();

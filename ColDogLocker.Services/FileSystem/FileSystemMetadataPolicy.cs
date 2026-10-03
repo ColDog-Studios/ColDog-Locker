@@ -65,6 +65,12 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             }
         }
 
+        [SupportedOSPlatform("windows")]
+        internal static void EnsureMovedRootSupported(FileSystemInfo entry)
+        {
+            EnsureWindowsMetadataSupported(entry, allowExplicitRules: true, allowProtectedRules: true);
+        }
+
         internal static void EnsureSupported(FileSystemInfo entry)
         {
             entry.Refresh();

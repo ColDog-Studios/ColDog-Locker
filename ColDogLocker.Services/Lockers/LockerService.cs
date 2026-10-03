@@ -336,6 +336,9 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             try
             {
                 LockerArchiveService.CreatePrivateDirectory(tempLockedLocation);
+                var privateStagingWindowsAccessControl = OperatingSystem.IsWindows()
+                    ? FileSystemMetadataPolicy.CaptureWindowsAccessControl(new DirectoryInfo(tempLockedLocation))
+                    : null;
                 var archivePath = LockerArchiveService.GetArchivePath(tempLockedLocation);
                 var archive = LockerArchiveService.CreateFromDirectory(previousLocation, archivePath, locker, password,
                     maxExtractedBytes: LockerArchiveService.MaxExtractedBytes,
@@ -358,6 +361,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 beforeSourceClaim?.Invoke(previousLocation);
                 cancellationToken.ThrowIfCancellationRequested();
                 sourcePathIdentity.EnsureUnchanged();
+                if (OperatingSystem.IsWindows())
+                {
+                    FileSystemMetadataPolicy.EnsureExpectedRootSupported(
+                        new DirectoryInfo(previousLocation),
+                        sourceRootWindowsAccessControl!);
+                    FileSystemMetadataPolicy.EnsureExpectedRootSupported(
+                        new DirectoryInfo(tempLockedLocation),
+                        privateStagingWindowsAccessControl!);
+                }
+
                 Report(progress, "Publishing", "Publishing the encrypted locker; cancellation is no longer safe", 85, canCancel: false);
                 journal?.Advance("SourceRemovalStarted");
                 LockerOperationBoundary.Reached("Lock.SourceRemovalStarted");
@@ -372,7 +385,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 sourceSentinel = CreateSourceSentinel(previousLocation, out sourceSentinelToken);
                 LockerOperationBoundary.Reached("Lock.SourceSentinelDurable");
                 afterSourceClaim?.Invoke(previousLocation);
-                var claimedTreeSha256 = LockerTreeDigest.Compute(claimedSourceLocation, sourceRootWindowsAccessControl);
+                var claimedTreeSha256 = OperatingSystem.IsWindows()
+                    ? LockerTreeDigest.ComputeClaimedWindowsSource(
+                        claimedSourceLocation,
+                        tempLockedLocation,
+                        privateStagingWindowsAccessControl!)
+                    : LockerTreeDigest.Compute(claimedSourceLocation);
                 if (!claimedTreeSha256.Equals(archive.SourceTreeSha256, StringComparison.Ordinal))
                 {
                     throw new IOException("Locker contents changed while the archive was being created. Locking was refused and the changed source was preserved.");

@@ -7,5 +7,16 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             return LockerTreeManifestDigest.Compute(directory, expectedMovedWindowsAccessControl);
         }
+
+        internal static string ComputeClaimedWindowsSource(
+            string directory,
+            string privateParent,
+            string expectedPrivateParentAccessControl)
+        {
+            return LockerTreeManifestDigest.ComputeClaimedWindowsSource(
+                directory,
+                privateParent,
+                expectedPrivateParentAccessControl);
+        }
     }
 }
