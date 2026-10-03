@@ -1,0 +1,9 @@
+{
+  "name": "coldog-locker-release-tools",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "conventional-changelog": "7.2.0",
+    "conventional-changelog-conventionalcommits": "9.3.1"
+  }
+}

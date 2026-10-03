@@ -29,6 +29,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
         public MainWindow()
         {
             InitializeComponent();
+            Closing += (_, args) =>
+            {
+                if (DataContext is MainWindowViewModel viewModel && !viewModel.TryRequestClose())
+                {
+                    args.Cancel = true;
+                }
+            };
         }
 
         public MainWindow(MainWindowViewModel viewModel)

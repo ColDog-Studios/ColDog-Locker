@@ -28,51 +28,72 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         private static int Main(string[] args)
         {
-            // Initialize the application
-            Initialization.InitializeAsync().GetAwaiter().GetResult();
+            return Run(args, () => Initialization.InitializeAsync(checkForUpdates: false).GetAwaiter().GetResult());
+        }
 
-            // New line for better readability in console output
-            Console.WriteLine();
-
+        internal static int Run(string[] args, Action initialize)
+        {
             try
             {
-                int result;
-
-                // No arguments - show help
-                if (args.Length == 0)
+                // Help and version must work even when the database, configuration,
+                // or network is unavailable. Do not initialize logging for them.
+                if (args.Length == 0 || args[0].Equals("help", StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.Log(LogLevel.Debug, "No CLI command provided");
-                    result = HelpCommand(args);
-                }
-                else
-                {
-                    // Parse the first argument as the command/subcommand
-                    var command = args[0].ToLowerInvariant();
-                    Logger.Log(LogLevel.Debug, $"Received CLI command: {command}");
-
-                    result = command switch
-                    {
-                        "gui" => LaunchGui(),
-                        "terminal" or "tui" => LaunchTui(),
-                        "update" => UpdateCommands.Update(args),
-                        "new" => LockerCommands.New(args),
-                        "remove" => LockerCommands.Remove(args),
-                        "lock" => LockerCommands.Lock(args),
-                        "unlock" => LockerCommands.Unlock(args),
-                        "list" => LockerCommands.List(args),
-                        "status" => LockerCommands.Status(args),
-                        "change-password" => LockerCommands.ChangePassword(args),
-                        "verify" => LockerCommands.Verify(args),
-                        "settings" => SettingsCommands.Settings(args),
-                        "db-vacuum" => DatabaseCommands.DbVacuum(args),
-                        "db-info" => DatabaseCommands.DbInfo(args),
-                        "help" => HelpCommand(args),
-                        "dev" => DevCommand(),
-                        "--version" or "-v" => VersionCommand(),
-                        _ => UnknownCommand(command)
-                    };
+                    return HelpCommand(args);
                 }
 
+                if (args[0].Equals("--version", StringComparison.OrdinalIgnoreCase) ||
+                    args[0].Equals("-v", StringComparison.OrdinalIgnoreCase))
+                {
+                    return VersionCommand();
+                }
+
+                // Recovery must remain available when the metadata database is missing or corrupt.
+                if (args[0].Equals("recover", StringComparison.OrdinalIgnoreCase))
+                {
+                    return RecoveryCommands.Recover(args);
+                }
+
+                if (args[0].Equals("db-backup", StringComparison.OrdinalIgnoreCase))
+                {
+                    return DatabaseCommands.DbBackup(args);
+                }
+
+                if (args[0].Equals("db-restore", StringComparison.OrdinalIgnoreCase))
+                {
+                    return DatabaseCommands.DbRestore(args);
+                }
+
+                initialize();
+                Console.WriteLine();
+                // Parse the first argument as the command/subcommand
+                var command = args[0].ToLowerInvariant();
+                Logger.Log(LogLevel.Debug, $"Received CLI command: {command}");
+
+                var result = command switch
+                {
+                    "gui" => LaunchGui(),
+                    "terminal" or "tui" => LaunchTui(),
+                    "update" => UpdateCommands.Update(args),
+                    "new" => LockerCommands.New(args),
+                    "remove" => LockerCommands.Remove(args),
+                    "lock" => LockerCommands.Lock(args),
+                    "unlock" => LockerCommands.Unlock(args),
+                    "list" => LockerCommands.List(args),
+                    "status" => LockerCommands.Status(args),
+                    "change-password" => LockerCommands.ChangePassword(args),
+                    "verify" => LockerCommands.Verify(args),
+                    "settings" => SettingsCommands.Settings(args),
+                    "db-vacuum" => DatabaseCommands.DbVacuum(),
+                    "db-info" => DatabaseCommands.DbInfo(),
+                    "recovery-list" => RecoveryCommands.ListPending(),
+                    "recovery-cancel" => RecoveryCommands.CancelPrepared(args),
+                    "recovery-restore" => RecoveryCommands.RestoreOperation(args),
+                    "recovery-finish" => RecoveryCommands.FinishCommitted(args),
+                    "recovery-history" => RecoveryCommands.ListHistory(),
+                    "dev" => DevCommand(),
+                    _ => UnknownCommand(command)
+                };
                 Console.WriteLine();
                 return result;
             }

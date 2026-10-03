@@ -42,15 +42,16 @@
                                    FontWeight="SemiBold" />
 
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Name" FontWeight="SemiBold" />
-                            <TextBox x:Name="NameBox" />
+                            <TextBlock x:Name="NameLabel" Text="Name" FontWeight="SemiBold" />
+                            <TextBox x:Name="NameBox" AutomationProperties.LabeledBy="{Binding #NameLabel}" />
                         </StackPanel>
 
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Location" FontWeight="SemiBold" />
+                            <TextBlock x:Name="LocationLabel" Text="Location" FontWeight="SemiBold" />
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                 <TextBox x:Name="LocationBox"
                                          Grid.Column="0"
+                                         AutomationProperties.LabeledBy="{Binding #LocationLabel}"
                                          IsReadOnly="True" />
                                 <Button x:Name="BrowseButton"
                                         Grid.Column="1"

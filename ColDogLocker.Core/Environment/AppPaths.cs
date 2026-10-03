@@ -23,11 +23,12 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
     /// </summary>
     public static class AppPaths
     {
-        private static readonly string LocalApplicationData = GetAbsoluteSpecialFolderPath(
-            System.Environment.SpecialFolder.LocalApplicationData,
-            System.Environment.SpecialFolder.UserProfile);
+        /// <summary>Optional absolute base directory for isolated or portable application state.</summary>
+        public const string DataHomeEnvironmentVariable = "COLDOG_LOCKER_DATA_HOME";
 
-        private static readonly string Documents = GetAbsoluteSpecialFolderPath(
+        private static readonly string _localApplicationData = GetLocalApplicationData();
+
+        private static readonly string _documents = GetAbsoluteSpecialFolderPath(
             System.Environment.SpecialFolder.MyDocuments,
             System.Environment.SpecialFolder.UserProfile);
 
@@ -35,7 +36,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         ///     Local configuration directory
         /// </summary>
         public static readonly string LocalConfig = Path.Join(
-            LocalApplicationData,
+            _localApplicationData,
             "ColDog Studios",
             "ColDog Locker"
         );
@@ -44,7 +45,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
         ///     Default ColDog Locker Directory
         /// </summary>
         public static readonly string CdlDir = Path.Join(
-            Documents,
+            _documents,
             "ColDog Locker"
         );
 
@@ -65,6 +66,25 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
             }
 
             return Path.GetFullPath(".");
+        }
+
+        private static string GetLocalApplicationData()
+        {
+            var configured = System.Environment.GetEnvironmentVariable(DataHomeEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                return GetAbsoluteSpecialFolderPath(
+                    System.Environment.SpecialFolder.LocalApplicationData,
+                    System.Environment.SpecialFolder.UserProfile);
+            }
+
+            if (!Path.IsPathRooted(configured))
+            {
+                throw new InvalidOperationException(
+                    $"{DataHomeEnvironmentVariable} must contain an absolute path.");
+            }
+
+            return Path.GetFullPath(configured);
         }
     }
 }

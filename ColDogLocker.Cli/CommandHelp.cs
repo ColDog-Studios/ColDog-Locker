@@ -46,12 +46,20 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine("LOCKER MANAGEMENT:");
             Console.WriteLine("  change-password <name> [options]       Change locker password");
             Console.WriteLine("  verify <name>                          Verify locker integrity");
+            Console.WriteLine("  recover <archive> <new-destination>    Recover files without the database");
+            Console.WriteLine("  recovery-list                          List unfinished operations and recovery paths");
+            Console.WriteLine("  recovery-cancel <operation-id>         Cancel eligible preparation; retain all files");
+            Console.WriteLine("  recovery-history                       Show retained paths and recovery attempts");
+            Console.WriteLine("  recovery-finish <operation-id>         Verify committed state; preserve all files");
+            Console.WriteLine("  recovery-restore <id> <archive> <path>  Restore and register an interrupted locker");
             Console.WriteLine();
 
             Console.WriteLine("SETTINGS & DATABASE:");
             Console.WriteLine("  settings [set <key> <value>]           View or modify settings");
             Console.WriteLine("  db-vacuum                              Optimize database");
             Console.WriteLine("  db-info                                Show database information");
+            Console.WriteLine("  db-backup <new-directory>              Create a verified database snapshot");
+            Console.WriteLine("  db-restore <backup-lockers.db>         Restore an absent registry from backup");
             Console.WriteLine();
 
             Console.WriteLine("OTHER:");
@@ -70,6 +78,31 @@ namespace ColDogStudios.ColDogLocker.Cli
 
             switch (command)
             {
+                case "recovery-finish":
+                    Console.WriteLine("USAGE: cdlocker recovery-finish <operation-id>");
+                    Console.WriteLine("Verify an already committed operation and archive its journal without changing files.");
+                    break;
+                case "recovery-restore":
+                    Console.WriteLine("USAGE: cdlocker recovery-restore <operation-id> <archive.cdl> <new-destination> [--password <password>]");
+                    Console.WriteLine("Authenticate retained data into a new directory and repair registration; preserve all original artifacts.");
+                    break;
+                case "recovery-cancel":
+                    Console.WriteLine("USAGE: cdlocker recovery-cancel <operation-id>");
+                    Console.WriteLine("Cancels eligible interrupted preparation without modifying files. Later phases require verified recovery.");
+                    break;
+                case "recovery-history":
+                    Console.WriteLine("USAGE: cdlocker recovery-history");
+                    Console.WriteLine("Lists resolved preparation records and retained staging paths.");
+                    break;
+                case "recovery-list":
+                    Console.WriteLine("USAGE: cdlocker recovery-list");
+                    Console.WriteLine("Lists journal phases and source, target and staging paths without modifying files.");
+                    break;
+                case "recover":
+                    Console.WriteLine("USAGE: cdlocker recover <archive.cdl> <new-destination> [--password <password>]");
+                    Console.WriteLine("Authenticates and restores files without the database. Requires a new destination and preserves the archive.");
+                    Console.WriteLine("Omit --password for an interactive prompt; command-line passwords may be visible to other processes.");
+                    break;
                 case "new":
                     Console.WriteLine("CREATE NEW LOCKER:");
                     Console.WriteLine("  cdlocker new <Locker Name> [--path <path>]");
@@ -220,6 +253,16 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  cdlocker settings db-vacuum-interval 30");
                     break;
 
+                case "db-restore":
+                    Console.WriteLine("USAGE: cdlocker db-restore <backup-lockers.db>");
+                    Console.WriteLine("Close other app instances first. Requires an absent registry with no SQLite sidecars; never replaces existing state.");
+                    Console.WriteLine("Checks compatible schema and registered locations/archive hashes. Keeps recovery journals and does not move locker files.");
+                    break;
+                case "db-backup":
+                    Console.WriteLine("USAGE: cdlocker db-backup <new-directory>");
+                    Console.WriteLine("Creates a private lockers.db snapshot, including recovery records. Requires an existing compatible database and a new destination directory.");
+                    Console.WriteLine("Does not include locker contents; copy archives and retained recovery files separately.");
+                    break;
                 case "db-vacuum":
                     Console.WriteLine("VACUUM DATABASE:");
                     Console.WriteLine("  cdlocker db-vacuum");

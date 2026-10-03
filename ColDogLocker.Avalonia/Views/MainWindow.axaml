@@ -54,14 +54,15 @@
                 <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
         </DockPanel.Styles>
-        <Menu DockPanel.Dock="Top"
+        <Menu x:Name="MainMenu"
+              DockPanel.Dock="Top"
               Background="{DynamicResource AppMenuBackgroundBrush}"
               Foreground="{DynamicResource AppMenuForegroundBrush}">
-            <MenuItem Classes="top-menu">
+            <MenuItem Classes="top-menu" AutomationProperties.Name="File">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_File" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding CreateLockerCommand}">
+                <MenuItem Command="{Binding CreateLockerCommand}" AutomationProperties.Name="New locker">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="FolderPlus" />
@@ -70,7 +71,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Click="Exit_Click">
+                <MenuItem Click="Exit_Click" AutomationProperties.Name="Exit">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="ExitToApp" />
@@ -79,11 +80,11 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Classes="top-menu">
+            <MenuItem Classes="top-menu" AutomationProperties.Name="Locker">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Locker" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding LockSelectedCommand}">
+                <MenuItem Command="{Binding LockSelectedCommand}" AutomationProperties.Name="Lock">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="Lock" />
@@ -91,7 +92,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding UnlockSelectedCommand}">
+                <MenuItem Command="{Binding UnlockSelectedCommand}" AutomationProperties.Name="Unlock">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="LockOpen" />
@@ -100,7 +101,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Command="{Binding RemoveSelectedCommand}">
+                <MenuItem Command="{Binding RemoveSelectedCommand}" AutomationProperties.Name="Remove">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="Delete" />
@@ -109,7 +110,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Command="{Binding ShowPropertiesCommand}">
+                <MenuItem Command="{Binding ShowPropertiesCommand}" AutomationProperties.Name="Properties">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="InformationOutline" />
@@ -117,7 +118,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding OpenLocationCommand}">
+                <MenuItem Command="{Binding OpenLocationCommand}" AutomationProperties.Name="Open location">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="FolderOpen" />
@@ -126,11 +127,11 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Classes="top-menu">
+            <MenuItem Classes="top-menu" AutomationProperties.Name="View">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_View" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding ToggleViewCommand}">
+                <MenuItem Command="{Binding ToggleViewCommand}" AutomationProperties.Name="Toggle grid or list view">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="{Binding ToggleViewIconKind}" />
@@ -138,7 +139,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding RefreshCommand}">
+                <MenuItem Command="{Binding RefreshCommand}" AutomationProperties.Name="Refresh">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="Refresh" />
@@ -147,11 +148,11 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Classes="top-menu">
+            <MenuItem Classes="top-menu" AutomationProperties.Name="Tools">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Tools" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding ShowSettingsCommand}">
+                <MenuItem Command="{Binding ShowSettingsCommand}" AutomationProperties.Name="Settings">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="Cog" />
@@ -159,7 +160,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding CheckForUpdatesCommand}">
+                <MenuItem Command="{Binding CheckForUpdatesCommand}" AutomationProperties.Name="Check for updates">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="Update" />
@@ -168,11 +169,11 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem x:Name="DeveloperMenu" Classes="top-menu" IsVisible="{Binding IsDeveloperMode}">
+            <MenuItem x:Name="DeveloperMenu" Classes="top-menu" AutomationProperties.Name="Developer" IsVisible="{Binding IsDeveloperMode}">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Developer" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding ShowDevInfoCommand}">
+                <MenuItem Command="{Binding ShowDevInfoCommand}" AutomationProperties.Name="Developer information">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="DeveloperBoard" />
@@ -181,7 +182,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Command="{Binding TestMessageInfoDialogCommand}">
+                <MenuItem Command="{Binding TestMessageInfoDialogCommand}" AutomationProperties.Name="Test information message">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="InformationOutline" />
@@ -189,7 +190,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding TestMessageWarningDialogCommand}">
+                <MenuItem Command="{Binding TestMessageWarningDialogCommand}" AutomationProperties.Name="Test warning message">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="AlertOutline" />
@@ -197,7 +198,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding TestMessageErrorDialogCommand}">
+                <MenuItem Command="{Binding TestMessageErrorDialogCommand}" AutomationProperties.Name="Test error message">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="AlertCircleOutline" />
@@ -206,7 +207,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Command="{Binding TestErrorDialogCommand}">
+                <MenuItem Command="{Binding TestErrorDialogCommand}" AutomationProperties.Name="Test detailed error dialog">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="BugOutline" />
@@ -214,7 +215,7 @@
                         </StackPanel>
                     </MenuItem.Header>
                 </MenuItem>
-                <MenuItem Command="{Binding TestProgressDialogCommand}">
+                <MenuItem Command="{Binding TestProgressDialogCommand}" AutomationProperties.Name="Test progress dialog">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="ProgressCheck" />
@@ -223,11 +224,11 @@
                     </MenuItem.Header>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Classes="top-menu">
+            <MenuItem Classes="top-menu" AutomationProperties.Name="Help">
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Help" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Command="{Binding OpenDocumentationCommand}">
+                <MenuItem Command="{Binding OpenDocumentationCommand}" AutomationProperties.Name="Documentation">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="BookOpenPageVariant" />
@@ -236,7 +237,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Command="{Binding ShowAboutCommand}">
+                <MenuItem Command="{Binding ShowAboutCommand}" AutomationProperties.Name="About">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
                             <materialIcons:MaterialIcon Kind="InformationOutline" />
@@ -252,15 +253,34 @@
                 BorderBrush="{DynamicResource AppBorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="12,8">
-            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="12">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="12">
                 <TextBlock Grid.Column="0" Foreground="{DynamicResource AppForegroundBrush}" Text="{Binding TotalLockers, StringFormat='{}{0} lockers'}" />
                 <Border Grid.Column="1" Width="1" Background="{DynamicResource AppBorderBrush}" />
                 <TextBlock Grid.Column="2" Foreground="{DynamicResource AppForegroundBrush}" Text="{Binding LockedCount, StringFormat='{}{0} locked'}" />
                 <Border Grid.Column="3" Width="1" Background="{DynamicResource AppBorderBrush}" />
                 <TextBlock Grid.Column="4" Foreground="{DynamicResource AppForegroundBrush}" Text="{Binding UnlockedCount, StringFormat='{}{0} unlocked'}" />
                 <Border Grid.Column="5" Width="1" Background="{DynamicResource AppBorderBrush}" />
-                <TextBlock Grid.Column="6" Foreground="{DynamicResource AppSecondaryForegroundBrush}" Text="{Binding StatusMessage}" />
+                <TextBlock x:Name="StatusMessageText"
+                           Grid.Column="6"
+                           Foreground="{DynamicResource AppSecondaryForegroundBrush}"
+                           AutomationProperties.LiveSetting="Polite"
+                           Text="{Binding StatusMessage}" />
                 <TextBlock Grid.Column="7" Foreground="{DynamicResource AppForegroundBrush}" Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
+                <ProgressBar x:Name="LockerOperationProgressBar"
+                             Grid.Column="8"
+                             Width="120"
+                             AutomationProperties.Name="Locker operation progress"
+                             Minimum="0"
+                             Maximum="100"
+                             Value="{Binding LockerOperationPercent}"
+                             IsIndeterminate="{Binding IsOperationProgressIndeterminate}"
+                             IsVisible="{Binding IsLockerOperationRunning}" />
+                <Button x:Name="CancelLockerOperationButton"
+                        Grid.Column="9"
+                        Content="Cancel operation"
+                        Command="{Binding CancelLockerOperationCommand}"
+                        IsVisible="{Binding IsLockerOperationRunning}" />
+                <Button x:Name="CancelRefreshButton" Grid.Column="10" Content="Cancel refresh" Command="{Binding CancelRefreshCommand}" IsVisible="{Binding IsRefreshing}" />
             </Grid>
         </Border>
 
@@ -271,45 +291,49 @@
                     BorderThickness="0,0,0,1"
                     Padding="10">
                 <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,220,120,Auto" ColumnSpacing="8">
-                    <Button Grid.Column="0" Classes="tool-button" Width="42" Height="38" Command="{Binding CreateLockerCommand}" ToolTip.Tip="New locker">
+                    <Button x:Name="NewLockerButton" Grid.Column="0" Classes="tool-button" Width="42" Height="38" Command="{Binding CreateLockerCommand}"
+                            AutomationProperties.Name="New locker" ToolTip.Tip="New locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderPlus" />
                     </Button>
                     <Button x:Name="LockButton" Grid.Column="1" Classes="tool-button" Width="42" Height="38" Command="{Binding LockSelectedCommand}"
-                            ToolTip.Tip="Lock selected locker">
+                            AutomationProperties.Name="Lock selected locker" ToolTip.Tip="Lock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Lock" />
                     </Button>
                     <Button x:Name="UnlockButton" Grid.Column="2" Classes="tool-button" Width="42" Height="38" Command="{Binding UnlockSelectedCommand}"
-                            ToolTip.Tip="Unlock selected locker">
+                            AutomationProperties.Name="Unlock selected locker" ToolTip.Tip="Unlock selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="LockOpen" />
                     </Button>
                     <Button x:Name="RemoveButton" Grid.Column="3" Classes="tool-button" Width="42" Height="38" Command="{Binding RemoveSelectedCommand}"
-                            ToolTip.Tip="Remove selected locker">
+                            AutomationProperties.Name="Remove selected locker" ToolTip.Tip="Remove selected locker">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Delete" />
                     </Button>
                     <Border Grid.Column="4" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
-                    <Button Grid.Column="5" Classes="tool-button" Width="42" Height="38" Command="{Binding OpenLocationCommand}"
-                            ToolTip.Tip="Open selected locker in Explorer">
+                    <Button x:Name="OpenLocationButton" Grid.Column="5" Classes="tool-button" Width="42" Height="38" Command="{Binding OpenLocationCommand}"
+                            AutomationProperties.Name="Open selected locker location" ToolTip.Tip="Open selected locker location">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="FolderOpen" />
                     </Button>
-                    <Button Grid.Column="6" Classes="tool-button" Width="42" Height="38" Command="{Binding ShowPropertiesCommand}"
-                            ToolTip.Tip="Show selected locker properties">
+                    <Button x:Name="PropertiesButton" Grid.Column="6" Classes="tool-button" Width="42" Height="38" Command="{Binding ShowPropertiesCommand}"
+                            AutomationProperties.Name="Show selected locker properties" ToolTip.Tip="Show selected locker properties">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="InformationOutline" />
                     </Button>
                     <Button x:Name="ToggleViewButton" Grid.Column="7" Classes="tool-button" Width="42" Height="38" Command="{Binding ToggleViewCommand}"
-                            ToolTip.Tip="Toggle grid/list view">
+                            AutomationProperties.Name="Toggle grid or list view" ToolTip.Tip="Toggle grid/list view">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="{Binding ToggleViewIconKind}" />
                     </Button>
-                    <Button Grid.Column="8" Classes="tool-button" Width="42" Height="38" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh locker list">
+                    <Button x:Name="RefreshButton" Grid.Column="8" Classes="tool-button" Width="42" Height="38" Command="{Binding RefreshCommand}"
+                            AutomationProperties.Name="Refresh locker list" ToolTip.Tip="Refresh locker list">
                         <materialIcons:MaterialIcon Width="22" Height="22" Kind="Refresh" />
                     </Button>
                     <Border Grid.Column="9" Width="1" Margin="4,2" Background="{DynamicResource AppBorderBrush}" />
                     <TextBox x:Name="SearchBox" Grid.Column="11"
+                             AutomationProperties.Name="Filter lockers"
                              PlaceholderText="Filter lockers"
                              Height="38"
                              VerticalAlignment="Center"
                              VerticalContentAlignment="Center"
                              Text="{Binding SearchText, Mode=TwoWay}" />
                     <ComboBox x:Name="SortBox" Grid.Column="12"
+                              AutomationProperties.Name="Sort lockers by"
                               Height="38"
                               VerticalAlignment="Center"
                               VerticalContentAlignment="Center"
@@ -340,6 +364,7 @@
                         </Grid>
                     </Border>
                     <ListBox x:Name="ListLockerList" Grid.Row="1"
+                             AutomationProperties.Name="Lockers"
                              ItemsSource="{Binding FilteredLockers}"
                              SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                              Background="Transparent"
@@ -381,6 +406,7 @@
                 </Grid>
 
                 <ListBox x:Name="GridLockerList" ItemsSource="{Binding FilteredLockers}"
+                         AutomationProperties.Name="Lockers"
                          SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                          IsVisible="{Binding IsGridView}"
                          Background="Transparent"

@@ -1,0 +1,72 @@
+{
+  "captured_utc": "2026-09-21T02:03:21.728979+00:00",
+  "platform": "Linux-7.1.13-200.fc44.x86_64-x86_64-with-glibc2.43",
+  "architecture": "x86_64",
+  "logical_cpus": 20,
+  "cli_sha256": "0d7fb58e84aaff6a3123846fe71ff0ed400bb8fcf8955f4c7bd9a8ca7fde9248",
+  "cli_version": "ColDog Locker 0.11.1-beta\nBuild Version: 0.11.1-beta+9d1a618f21d75e46b330ea94e232b740bc5a11ce\nAssembly Version: 0.11.1.0\nBuild Date: Not recorded\nBuild Time: Not recorded",
+  "method": "Sequential local runs, seeded incompressible fixtures, uncontrolled OS caches. Timings include process startup, KDF, archive I/O, journaling and cleanup; fixture generation and post-unlock verification excluded. No RSS/CPU profiling or cold-cache claim.",
+  "workloads": [
+    {
+      "name": "SmallFiles",
+      "files": 5000,
+      "source_bytes": 20480000,
+      "median_lock_seconds": 1.9707409020011255,
+      "median_unlock_seconds": 7.10243574299966,
+      "samples": [
+        {
+          "cycle": 1,
+          "lock_seconds": 1.9578334289981285,
+          "unlock_seconds": 7.10243574299966,
+          "archive_bytes": 20743300,
+          "verification_seconds": 0.4777831920000608
+        },
+        {
+          "cycle": 2,
+          "lock_seconds": 1.9707409020011255,
+          "unlock_seconds": 7.094531921000453,
+          "archive_bytes": 20743304,
+          "verification_seconds": 0.4734505429987621
+        },
+        {
+          "cycle": 3,
+          "lock_seconds": 2.03543137700035,
+          "unlock_seconds": 7.102484046998143,
+          "archive_bytes": 20743278,
+          "verification_seconds": 0.48408945000119274
+        }
+      ]
+    },
+    {
+      "name": "LargeFile",
+      "files": 1,
+      "source_bytes": 268435456,
+      "median_lock_seconds": 9.686018911001156,
+      "median_unlock_seconds": 1.9360985109997273,
+      "samples": [
+        {
+          "cycle": 1,
+          "lock_seconds": 9.686018911001156,
+          "unlock_seconds": 1.903934832997038,
+          "archive_bytes": 268583340,
+          "verification_seconds": 0.5407201240013819
+        },
+        {
+          "cycle": 2,
+          "lock_seconds": 9.64961836799921,
+          "unlock_seconds": 1.9413323670014506,
+          "archive_bytes": 268583341,
+          "verification_seconds": 0.5280699640024977
+        },
+        {
+          "cycle": 3,
+          "lock_seconds": 9.750057613000536,
+          "unlock_seconds": 1.9360985109997273,
+          "archive_bytes": 268583340,
+          "verification_seconds": 0.5116832769999746
+        }
+      ]
+    }
+  ],
+  "filesystem": "btrfs"
+}

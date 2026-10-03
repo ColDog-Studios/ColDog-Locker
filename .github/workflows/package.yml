@@ -29,33 +29,59 @@ on:
           - Debug
         default: Release
 
+env:
+  RestoreLockedMode: 'true'
+
 jobs:
   windows-msi:
     name: Windows Installer (${{ matrix.arch }})
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
     strategy:
       fail-fast: false
       matrix:
-        arch: [ x64, arm64 ]
+        include:
+          - arch: x64
+            runner: windows-latest
+            expected_arch: X64
+          - arch: arm64
+            runner: windows-11-arm
+            expected_arch: Arm64
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: '10.0.x'
+        global-json-file: global.json
 
     - name: Restore installer project
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
 
+    - name: Run native service tests
+      run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ inputs.configuration || 'Release' }}" --verbosity normal
+
+    - name: Build upgrade baseline MSI and setup EXE
+      run: |
+        dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ inputs.configuration || 'Release' }}" -p:PackageArchitecture=${{ matrix.arch }} -p:Version=0.0.1 --no-restore
+        Move-Item "artifacts/packages/dist/ColDogLocker-0.0.1-win-${{ matrix.arch }}.msi" "$env:RUNNER_TEMP\ColDogLocker-baseline.msi"
+        Move-Item "artifacts/packages/dist/ColDogLocker-0.0.1-win-${{ matrix.arch }}-setup.exe" "$env:RUNNER_TEMP\ColDogLocker-baseline-setup.exe"
+
     - name: Build MSI and setup EXE
       run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ inputs.configuration || 'Release' }}" -p:PackageArchitecture=${{ matrix.arch }} --no-restore
 
+    - name: Validate installed Windows package
+      shell: pwsh
+      run: |
+        $msi = @(Get-ChildItem "artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}.msi")
+        $setup = @(Get-ChildItem "artifacts/packages/dist/ColDogLocker-*-win-${{ matrix.arch }}-setup.exe")
+        if ($msi.Count -ne 1 -or $setup.Count -ne 1) { throw "Expected exactly one MSI and setup EXE." }
+        .github/scripts/windows_installed_e2e.ps1 -MsiPath $msi[0].FullName -SetupPath $setup[0].FullName -BaselineMsiPath "$env:RUNNER_TEMP\ColDogLocker-baseline.msi" -BaselineSetupPath "$env:RUNNER_TEMP\ColDogLocker-baseline-setup.exe" -ReviewScripts ".github/scripts" -ExpectedArchitecture "${{ matrix.expected_arch }}"
+
     - name: Upload Windows packages
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: package-win-${{ matrix.arch }}
         path: |
@@ -65,21 +91,25 @@ jobs:
 
   linux-deb:
     name: Linux DEB (${{ matrix.arch }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
     strategy:
       fail-fast: false
       matrix:
-        arch: [ x64, arm64 ]
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: '10.0.x'
+        global-json-file: global.json
 
     - name: Install package tools
       run: |
@@ -89,8 +119,24 @@ jobs:
     - name: Build DEB
       run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
 
+    - name: Verify reproducible DEB (${{ matrix.arch }})
+      shell: bash
+      run: |
+        package=(artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.deb)
+        [ "${#package[@]}" -eq 1 ]
+        cp "${package[0]}" "${RUNNER_TEMP}/first.deb"
+        dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
+        cmp "${RUNNER_TEMP}/first.deb" "${package[0]}"
+
+    - name: Validate installed DEB (${{ matrix.arch }})
+      run: >-
+        docker run --rm
+        -v "${{ github.workspace }}/artifacts/packages/dist:/packages:ro"
+        -v "${{ github.workspace }}/.github/scripts:/review-scripts:ro"
+        ubuntu:24.04 bash /review-scripts/linux_installed_e2e.sh deb ${{ matrix.arch }}
+
     - name: Upload DEB
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: package-linux-${{ matrix.arch }}-deb
         path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.deb
@@ -111,12 +157,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: '10.0.x'
+        global-json-file: global.json
 
     - name: Install package tools
       run: |
@@ -126,8 +172,24 @@ jobs:
     - name: Build RPM
       run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
 
+    - name: Verify reproducible RPM (${{ matrix.arch }})
+      shell: bash
+      run: |
+        package=(artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.rpm)
+        [ "${#package[@]}" -eq 1 ]
+        cp "${package[0]}" "${RUNNER_TEMP}/first.rpm"
+        dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
+        cmp "${RUNNER_TEMP}/first.rpm" "${package[0]}"
+
+    - name: Validate installed RPM (${{ matrix.arch }})
+      run: >-
+        docker run --rm
+        -v "${{ github.workspace }}/artifacts/packages/dist:/packages:ro"
+        -v "${{ github.workspace }}/.github/scripts:/review-scripts:ro"
+        fedora:43 bash /review-scripts/linux_installed_e2e.sh rpm ${{ matrix.arch }}
+
     - name: Upload RPM
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: package-linux-${{ matrix.arch }}-rpm
         path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.rpm
@@ -148,18 +210,28 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: '10.0.x'
+        global-json-file: global.json
+
+    - name: Run native service tests
+      run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ inputs.configuration || 'Release' }}" --verbosity normal
 
     - name: Build unsigned PKG
       run: dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ inputs.configuration || 'Release' }}"
 
+    - name: Validate installed macOS package
+      shell: bash
+      run: |
+        package=(artifacts/packages/dist/ColDogLocker-*-macos-${{ matrix.arch }}.pkg)
+        [ "${#package[@]}" -eq 1 ]
+        bash .github/scripts/macos_installed_e2e.sh "${package[0]}" ".github/scripts" "${{ matrix.arch }}"
+
     - name: Upload PKG
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: package-macos-${{ matrix.arch }}-pkg
         path: artifacts/packages/dist/ColDogLocker-*-macos-${{ matrix.arch }}.pkg

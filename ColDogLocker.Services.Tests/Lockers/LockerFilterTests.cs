@@ -82,9 +82,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             // Assert
             Assert.Equal(2, result.Count);
-            Assert.Contains(lockedLocker1, result);
-            Assert.Contains(lockedLocker2, result);
-            Assert.DoesNotContain(unlockedLocker, result);
+            Assert.Contains(result, item => item.Guid == lockedLocker1.Guid && item.IsLocked == lockedLocker1.IsLocked);
+            Assert.Contains(result, item => item.Guid == lockedLocker2.Guid && item.IsLocked == lockedLocker2.IsLocked);
+            Assert.DoesNotContain(result, item => item.Guid == unlockedLocker.Guid && item.IsLocked == unlockedLocker.IsLocked);
         }
 
         [Fact]
@@ -102,9 +102,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             // Assert
             Assert.Equal(2, result.Count);
-            Assert.Contains(unlockedLocker1, result);
-            Assert.Contains(unlockedLocker2, result);
-            Assert.DoesNotContain(lockedLocker, result);
+            Assert.Contains(result, item => item.Guid == unlockedLocker1.Guid && item.IsLocked == unlockedLocker1.IsLocked);
+            Assert.Contains(result, item => item.Guid == unlockedLocker2.Guid && item.IsLocked == unlockedLocker2.IsLocked);
+            Assert.DoesNotContain(result, item => item.Guid == lockedLocker.Guid && item.IsLocked == lockedLocker.IsLocked);
         }
 
         [Fact]
@@ -127,12 +127,12 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             Assert.Equal(3, lockedResult.Count);
             Assert.Equal(2, unlockedResult.Count);
 
-            Assert.Contains(locker1, lockedResult);
-            Assert.Contains(locker3, lockedResult);
-            Assert.Contains(locker5, lockedResult);
+            Assert.Contains(lockedResult, item => item.Guid == locker1.Guid && item.IsLocked == locker1.IsLocked);
+            Assert.Contains(lockedResult, item => item.Guid == locker3.Guid && item.IsLocked == locker3.IsLocked);
+            Assert.Contains(lockedResult, item => item.Guid == locker5.Guid && item.IsLocked == locker5.IsLocked);
 
-            Assert.Contains(locker2, unlockedResult);
-            Assert.Contains(locker4, unlockedResult);
+            Assert.Contains(unlockedResult, item => item.Guid == locker2.Guid && item.IsLocked == locker2.IsLocked);
+            Assert.Contains(unlockedResult, item => item.Guid == locker4.Guid && item.IsLocked == locker4.IsLocked);
         }
 
         [Fact]
@@ -163,7 +163,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             // Assert
             Assert.Single(result);
-            Assert.Contains(locker, result);
+            Assert.Contains(result, item => item.Guid == locker.Guid && item.IsLocked == locker.IsLocked);
         }
 
         [Fact]
@@ -178,7 +178,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
 
             // Assert
             Assert.Single(result);
-            Assert.Contains(locker, result);
+            Assert.Contains(result, item => item.Guid == locker.Guid && item.IsLocked == locker.IsLocked);
         }
 
         [Fact]

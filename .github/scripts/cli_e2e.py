@@ -9,11 +9,14 @@ import http.server
 import json
 import os
 import shutil
+import sqlite3
+import time
 import subprocess
 import sys
 import tempfile
 import threading
 import uuid
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -25,6 +28,50 @@ WRONG_PASSWORD = "WrongPassword123!"
 DELETE_LOCKER_NAME = "E2EDeleteLocker"
 UPDATE_INSTALLER_NAME = "ColDogLocker-e2e-win-x64.msi"
 UPDATE_INSTALLER_BYTES = b"fake installer payload for cli e2e"
+
+
+def set_extended_attribute(path: Path, name: str, value: bytes) -> None:
+    if hasattr(os, "setxattr"):
+        os.setxattr(path, name, value)
+        return
+    if sys.platform == "darwin":
+        subprocess.run(
+            ["xattr", "-wx", name, value.hex(), str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    raise AssertionError("This platform cannot create the extended-attribute test fixture.")
+
+
+def get_extended_attribute(path: Path, name: str) -> bytes:
+    if hasattr(os, "getxattr"):
+        return os.getxattr(path, name)
+    if sys.platform == "darwin":
+        completed = subprocess.run(
+            ["xattr", "-px", name, str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return bytes.fromhex(completed.stdout)
+    raise AssertionError("This platform cannot read the extended-attribute test fixture.")
+
+
+def remove_extended_attribute(path: Path, name: str) -> None:
+    if hasattr(os, "removexattr"):
+        os.removexattr(path, name)
+        return
+    if sys.platform == "darwin":
+        subprocess.run(
+            ["xattr", "-d", name, str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    raise AssertionError("This platform cannot remove the extended-attribute test fixture.")
 
 
 @dataclass
@@ -90,6 +137,8 @@ class CliE2E:
         self.results: list[Result] = []
         self.base_dir = (work_dir if work_dir is not None else Path.home() / "Documents" / "ColDog Locker").resolve()
         self.app_data_dir = self.base_dir / ".app-data"
+        self.backup_dir = self.base_dir / f"database-backup-{uuid.uuid4()}"
+        self.restore_profile_dir = self.base_dir / f".restore-profile-{uuid.uuid4()}"
         self.test_dir = self.base_dir / f"e2e-test-locker-{uuid.uuid4()}"
         self.locker_dir = self.test_dir / LOCKER_NAME
         self.password = PASSWORD
@@ -104,6 +153,9 @@ class CliE2E:
         env["HOME"] = str(self.app_data_dir / "home")
         env["XDG_DATA_HOME"] = str(self.app_data_dir / "xdg-data")
         env["XDG_CONFIG_HOME"] = str(self.app_data_dir / "xdg-config")
+        env["COLDOG_LOCKER_DATA_HOME"] = str(self.app_data_dir / "local")
+        for folder in ("local", "roaming", "user-profile", "home", "xdg-data", "xdg-config"):
+            (self.app_data_dir / folder).mkdir(parents=True, exist_ok=True)
         return env
 
     def seed_settings(self) -> None:
@@ -145,7 +197,7 @@ class CliE2E:
         if extra_env is not None:
             env.update(extra_env)
 
-        completed = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
+        completed = subprocess.run(command, capture_output=True, text=True, check=False, env=env, timeout=120)
         if check and completed.returncode != 0:
             raise AssertionError(
                 f"Command failed with exit code {completed.returncode}: {' '.join(command)}\n"
@@ -170,6 +222,181 @@ class CliE2E:
         if completed.returncode == 0:
             raise AssertionError(f"{message}\nCommand unexpectedly succeeded.\nActual:\n{text}")
         return text
+
+    def no_pending_operations(self) -> None:
+        text = self.output(self.run_cli("recovery-list"))
+        self.expect_contains(text, "No unfinished locker operations", "Successful operations left a journal")
+
+    def interrupted_lock_is_recorded(self) -> None:
+        name = "InterruptedLocker"
+        source = self.create_locker_with_name(name)
+        payload = source / "payload.bin"
+        block = os.urandom(1024 * 1024)
+        with payload.open("wb") as stream:
+            for _ in range(32):
+                stream.write(block)
+        expected_hash = hashlib.sha256(payload.read_bytes()).hexdigest()
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError(f"Expected one isolated database, got {databases}")
+        process = subprocess.Popen([str(self.cli), "lock", name, "--password", self.password],
+                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        observed = False
+        try:
+            deadline = time.monotonic() + 30
+            with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
+                while process.poll() is None and time.monotonic() < deadline:
+                    row = connection.execute(
+                        "SELECT Phase FROM LockerOperations WHERE SourcePath = ?", (str(source),)).fetchone()
+                    if row and row[0] == "Preparing":
+                        observed = True
+                        process.kill()
+                        break
+                    time.sleep(0.005)
+            process.communicate(timeout=15)
+            if not observed:
+                raise AssertionError("Could not observe the journal before archive completion")
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate(timeout=15)
+        if hashlib.sha256(payload.read_bytes()).hexdigest() != expected_hash:
+            raise AssertionError("Source changed before archive completion")
+        text = self.output(self.run_cli("recovery-list"))
+        self.expect_contains(text, "Preparing", "Restart did not expose the retained journal")
+        self.expect_contains(text, str(source), "Recovery listing omitted the original path")
+        # The first attempt may additionally report an abandoned OS mutex.
+        self.expect_failed(self.run_cli("lock", name, "--password", self.password, check=False), "Interrupted operation was allowed to restart")
+        text = self.expect_failed(self.run_cli("lock", name, "--password", self.password, check=False), "Interrupted operation was allowed to restart")
+        self.expect_contains(text, "requires recovery", "Retry did not fail on the persistent journal")
+        if hashlib.sha256(payload.read_bytes()).hexdigest() != expected_hash:
+            raise AssertionError("Blocked retries changed source data")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            operation_id, staging = connection.execute(
+                "SELECT OperationId, StagingPath FROM LockerOperations WHERE SourcePath = ?", (str(source),)).fetchone()
+        self.run_cli("recovery-cancel", operation_id)
+        history = self.output(self.run_cli("recovery-history"))
+        self.expect_contains(history, operation_id, "Cancelled journal lost its history")
+        self.expect_contains(history, staging, "Cancelled journal lost its retained staging path")
+        self.run_cli("lock", name, "--password", self.password)
+        self.run_cli("unlock", name, "--password", self.password)
+        if hashlib.sha256(payload.read_bytes()).hexdigest() != expected_hash:
+            raise AssertionError("Retry after cancellation changed original bytes")
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def interrupted_deletion_can_be_restored(self) -> None:
+        name = "InterruptedDeletionLocker"
+        source = self.create_locker_with_name(name)
+        for index in range(3000):
+            (source / f"file-{index:04}.txt").write_text(f"original bytes {index}\n", encoding="utf-8")
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError("Expected one isolated database")
+        process = subprocess.Popen([str(self.cli), "lock", name, "--password", self.password],
+                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        observed_destructive_state = False
+        process_output = ""
+        try:
+            deadline = time.monotonic() + 45
+            while process.poll() is None and time.monotonic() < deadline:
+                # The source root stops being a directory only after the durable
+                # SourceRemovalStarted journal commit. Watching that filesystem
+                # transition avoids a tight SQLite read loop starving the writer
+                # under Windows' rollback-journal locking behavior.
+                if not source.is_dir():
+                    observed_destructive_state = True
+                    process.kill()
+                    break
+                time.sleep(0.001)
+            stdout, stderr = process.communicate(timeout=15)
+            process_output = f"stdout:\n{stdout}\nstderr:\n{stderr}"
+            if not observed_destructive_state:
+                raise AssertionError(
+                    f"Did not observe the destructive lock boundary\n{process_output}"
+                )
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate(timeout=15)
+        with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
+            observed = connection.execute(
+                "SELECT OperationId, Phase, StagingPath, TargetPath FROM LockerOperations WHERE SourcePath = ?",
+                (str(source),),
+            ).fetchone()
+        if observed is None or observed[1] not in ("SourceRemovalStarted", "Published"):
+            raise AssertionError(
+                f"Destructive lock did not retain its recovery journal: {observed!r}\n{process_output}"
+            )
+        operation_id, _, staging, target = observed
+        candidates = [Path(staging) / "locker.cdl", Path(target) / "locker.cdl"]
+        archives = [path for path in candidates if path.is_file()]
+        if len(archives) != 1:
+            raise AssertionError(f"Expected one retained complete archive, got {archives}")
+        archive = archives[0]
+        archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
+        survivors = {path.name: path.read_bytes() for path in source.glob("*.txt")} if source.exists() else {}
+        destination = self.test_dir / "Recovered" / name
+        recovery = subprocess.Popen(
+            [str(self.cli), "recovery-restore", operation_id, str(archive), str(destination), "--password", self.password],
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        partial_staging = None
+        try:
+            deadline = time.monotonic() + 45
+            with closing(sqlite3.connect(databases[0], timeout=1)) as connection:
+                while recovery.poll() is None and time.monotonic() < deadline:
+                    row = connection.execute(
+                        "SELECT StagingPath FROM LockerRecoveryAttempts "
+                        "WHERE OperationId = ? AND State = 'Restoring' ORDER BY rowid DESC LIMIT 1",
+                        (operation_id,),
+                    ).fetchone()
+                    if row:
+                        candidate = Path(row[0])
+                        if candidate.is_dir() and next(candidate.rglob("*"), None) is not None:
+                            partial_staging = candidate
+                            recovery.kill()
+                            break
+                    time.sleep(0.001)
+            recovery.communicate(timeout=15)
+            if partial_staging is None:
+                raise AssertionError("Did not observe partial recovery staging before recovery completed")
+        finally:
+            if recovery.poll() is None:
+                recovery.kill()
+                recovery.communicate(timeout=15)
+        if destination.exists():
+            raise AssertionError("Killed recovery published its final destination")
+        if not partial_staging.is_dir() or next(partial_staging.rglob("*"), None) is None:
+            raise AssertionError("Killed recovery did not retain partial plaintext staging")
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != archive_hash:
+            raise AssertionError("Killed recovery modified its retained archive")
+        self.expect_contains(self.output(self.run_cli("recovery-list")), operation_id,
+                             "Killed recovery lost its pending operation")
+
+        # The first acquisition after process termination can report an abandoned
+        # named mutex while releasing it. The second must resume from durable state.
+        first_retry = self.run_cli("recovery-restore", operation_id, str(archive), str(destination),
+                                   "--password", self.password, check=False)
+        if first_retry.returncode != 0:
+            self.expect_contains(self.output(first_retry), "terminated unexpectedly",
+                                 "Recovery retry failed for an unexpected reason")
+            self.run_cli("recovery-restore", operation_id, str(archive), str(destination),
+                         "--password", self.password)
+        if len(list(destination.glob("*.txt"))) != 3000:
+            raise AssertionError("Recovered file count differs")
+        for index in range(3000):
+            if (destination / f"file-{index:04}.txt").read_text(encoding="utf-8") != f"original bytes {index}\n":
+                raise AssertionError(f"Recovered content differs for file {index}")
+        for name, content in survivors.items():
+            if (source / name).read_bytes() != content:
+                raise AssertionError("Recovery modified a surviving original")
+        if hashlib.sha256(archive.read_bytes()).hexdigest() != archive_hash:
+            raise AssertionError("Recovery modified its retained archive")
+        self.expect_contains(self.output(self.run_cli("recovery-history")), operation_id, "Recovery history missing")
+        self.no_pending_operations()
 
     def create_locker_with_name(self, name: str, password: str | None = None) -> Path:
         locker_dir = self.test_dir / name
@@ -403,6 +630,203 @@ class CliE2E:
         print(text)
         self.expect_contains(text, "Database vacuumed successfully", "db-vacuum did not report success.")
 
+    def unsupported_verifier_preserves_source(self) -> None:
+        name = "UnsupportedVerifier"
+        directory = self.create_locker_with_name(name)
+        original = directory / "original.txt"
+        original.write_text("preserve unsupported-verifier bytes", encoding="utf-8")
+        legacy = "$2a$04$b9STetOS4I7Zinp/E655pO6q0DttM8rC0frGST6cq81p0LIJsCLBC"
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError("Expected one isolated registry")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            connection.execute("UPDATE Lockers SET Password = ? WHERE LockerName = ?", (legacy, name))
+            connection.commit()
+        result = self.run_cli("lock", name, "--password", "Legacy!Pass582", check=False)
+        text = self.expect_failed(result, "Unsupported password verifier authorized locking")
+        self.expect_contains(text, "Unsupported password verifier format", "Unexpected verifier failure")
+        if original.read_text(encoding="utf-8") != "preserve unsupported-verifier bytes":
+            raise AssertionError("Verifier refusal changed original contents")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            row = connection.execute("SELECT Password, IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
+        if row != (legacy, 0, str(directory)):
+            raise AssertionError("Verifier refusal changed registration")
+        self.no_pending_operations()
+        if (directory.parent / f".{name}").exists() or list(directory.parent.glob(f".{name}.*.locking")):
+            raise AssertionError("Verifier refusal left archive output")
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def empty_locker_and_file_round_trip(self) -> None:
+        name = "EmptyRoundTrip"
+        directory = self.create_locker_with_name(name)
+        for with_file in (False, True):
+            if with_file:
+                (directory / "empty.txt").write_bytes(b"")
+            self.run_cli("lock", name, "--password", self.password)
+            self.run_cli("unlock", name, "--password", self.password)
+            if with_file:
+                if sorted(path.name for path in directory.iterdir()) != ["empty.txt"] or (directory / "empty.txt").read_bytes() != b"":
+                    raise AssertionError("Zero-length file did not survive lock/unlock")
+            elif list(directory.iterdir()):
+                raise AssertionError("Empty locker gained unexpected contents")
+        self.no_pending_operations()
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def linked_content_inspection_is_refused(self) -> None:
+        name = "LinkedInspection"
+        directory = self.create_locker_with_name(name)
+        original = directory / "original.txt"
+        original.write_text("preserve inspection bytes", encoding="utf-8")
+        cycle = directory / "cycle"
+        cycle.symlink_to(directory, target_is_directory=True)
+        try:
+            for command in ("status", "verify"):
+                failed = self.run_cli(command, name, check=False)
+                text = self.expect_failed(failed, f"{command} accepted a linked directory cycle")
+                self.expect_contains(text, "Contents: Unavailable", "Incomplete counts were not reported")
+                self.expect_not_contains(text, "0 file(s)", "Incomplete inspection was reported as empty")
+            if original.read_text(encoding="utf-8") != "preserve inspection bytes":
+                raise AssertionError("Inspection changed source bytes")
+        finally:
+            cycle.unlink()
+        self.run_cli("verify", name)
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def hard_link_rejected_without_source_loss(self) -> None:
+        name = "HardLinkedEntry"
+        directory = self.create_locker_with_name(name)
+        original = directory / "original.txt"
+        alias = self.test_dir / "external-alias.txt"
+        original.write_text("preserve linked bytes", encoding="utf-8")
+        os.link(original, alias)
+        failure = self.run_cli("lock", name, "--password", self.password, check=False)
+        text = self.expect_failed(failure, "Locker containing a hard link was accepted.")
+        self.expect_contains(text, "Hard-linked", "Lock failed for an unexpected reason.")
+        for path in (original, alias):
+            if path.read_text(encoding="utf-8") != "preserve linked bytes" or path.stat().st_nlink != 2:
+                raise AssertionError("Rejected lock changed the hard-linked source")
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError("Expected one isolated registry")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            locker = connection.execute("SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
+        if locker != (0, str(directory)):
+            raise AssertionError("Hard-link rejection changed registration")
+        self.no_pending_operations()
+        if (directory.parent / f".{name}").exists() or list(directory.parent.glob(f".{name}.*.locking")):
+            raise AssertionError("Hard-link rejection left archive output")
+        alias.unlink()
+        self.run_cli("lock", name, "--password", self.password)
+        self.run_cli("unlock", name, "--password", self.password)
+        if original.read_text(encoding="utf-8") != "preserve linked bytes":
+            raise AssertionError("Retry after removing the alias changed contents")
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def fifo_rejected_without_source_loss(self) -> None:
+        name = "UnsupportedEntry"
+        directory = self.create_locker_with_name(name)
+        original = directory / "original.txt"
+        original.write_text("preserve original bytes", encoding="utf-8")
+        fifo = directory / "pipe"
+        os.mkfifo(fifo)
+        failure = self.run_cli("lock", name, "--password", self.password, check=False)
+        text = self.expect_failed(failure, "Locker containing a FIFO was accepted.")
+        self.expect_contains(text, "Only regular files and directories", "Lock failed for an unexpected reason.")
+        if original.read_text(encoding="utf-8") != "preserve original bytes" or not fifo.exists():
+            raise AssertionError("Failed lock modified the source")
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError("Expected one isolated registry")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            row = connection.execute("SELECT OperationId, Phase FROM LockerOperations").fetchone()
+            locker = connection.execute("SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)).fetchone()
+        if row is not None:
+            raise AssertionError("Cleanly rejected preparation retained an unfinished journal")
+        if locker != (0, str(directory)):
+            raise AssertionError("Rejected source changed the registration")
+        if (directory.parent / f".{name}").exists() or list(directory.parent.glob(f".{name}.*.locking")):
+            raise AssertionError("Rejected source left archive output")
+        fifo.unlink()
+        self.run_cli("lock", name, "--password", self.password)
+        self.run_cli("unlock", name, "--password", self.password)
+        if original.read_text(encoding="utf-8") != "preserve original bytes":
+            raise AssertionError("Retry did not preserve original contents")
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def extended_attribute_rejected_without_source_loss(self) -> None:
+        name = "ExtendedAttributeEntry"
+        directory = self.create_locker_with_name(name)
+        original = directory / "original.txt"
+        original.write_text("preserve xattr bytes", encoding="utf-8")
+        attribute = "com.coldog-test" if sys.platform == "darwin" else "user.coldog-test"
+        value = b"unsupported metadata"
+        set_extended_attribute(original, attribute, value)
+        failure = self.run_cli("lock", name, "--password", self.password, check=False)
+        text = self.expect_failed(failure, "Locker containing an extended attribute was accepted.")
+        self.expect_contains(text, "Extended attributes", "Lock failed for an unexpected reason.")
+        if original.read_text(encoding="utf-8") != "preserve xattr bytes" or get_extended_attribute(original, attribute) != value:
+            raise AssertionError("Rejected lock changed the extended-attribute source")
+        databases = list(self.app_data_dir.rglob("lockers.db"))
+        if len(databases) != 1:
+            raise AssertionError("Expected one isolated registry")
+        with closing(sqlite3.connect(databases[0])) as connection:
+            pending = connection.execute("SELECT OperationId FROM LockerOperations").fetchone()
+            locker = connection.execute(
+                "SELECT IsLocked, LockerLocation FROM Lockers WHERE LockerName = ?", (name,)
+            ).fetchone()
+        if pending is not None or locker != (0, str(directory)):
+            raise AssertionError("Extended-attribute rejection changed durable state")
+        if (directory.parent / f".{name}").exists() or list(directory.parent.glob(f".{name}.*.locking")):
+            raise AssertionError("Extended-attribute rejection left archive output")
+        remove_extended_attribute(original, attribute)
+        self.run_cli("lock", name, "--password", self.password)
+        self.run_cli("unlock", name, "--password", self.password)
+        if original.read_text(encoding="utf-8") != "preserve xattr bytes":
+            raise AssertionError("Retry after removing the extended attribute changed contents")
+        self.run_cli("remove", name, "--force", "--delete")
+
+    def database_backup(self) -> None:
+        destination = self.backup_dir
+        completed = self.run_cli("db-backup", str(destination))
+        self.expect_contains(self.output(completed), "Verified database backup", "Backup did not report success.")
+        backup_file = destination / "lockers.db"
+        before = hashlib.sha256(backup_file.read_bytes()).hexdigest()
+        with closing(sqlite3.connect(backup_file)) as connection:
+            row = connection.execute("SELECT LockerName, IsLocked, LockedArchiveSha256 FROM Lockers WHERE LockerName = ?", (LOCKER_NAME,)).fetchone()
+            if row is None or row[1] != 1 or not row[2]:
+                raise AssertionError("Backup did not preserve locked registration and archive hash.")
+            if connection.execute("SELECT COUNT(*) FROM LockerOperations").fetchone()[0] != 0:
+                raise AssertionError("Backup unexpectedly contains a pending operation.")
+        self.expect_failed(self.run_cli("db-backup", str(destination), check=False), "Backup overwrote an existing destination.")
+        if hashlib.sha256(backup_file.read_bytes()).hexdigest() != before:
+            raise AssertionError("Rejected overwrite changed the backup.")
+
+    def database_restore(self) -> None:
+        backup = self.backup_dir / "lockers.db"
+        before = hashlib.sha256(backup.read_bytes()).hexdigest()
+        profile = self.restore_profile_dir
+        overrides = {}
+        for key, folder in {"LOCALAPPDATA": "local", "APPDATA": "roaming", "USERPROFILE": "user-profile",
+                            "HOME": "home", "XDG_DATA_HOME": "xdg-data", "XDG_CONFIG_HOME": "xdg-config"}.items():
+            path = profile / folder
+            path.mkdir(parents=True, exist_ok=True)
+            overrides[key] = str(path)
+        overrides["COLDOG_LOCKER_DATA_HOME"] = str(profile / "local")
+        completed = self.run_cli("db-restore", str(backup), extra_env=overrides)
+        self.expect_contains(self.output(completed), "Restored database", "Fresh-profile restore failed.")
+        restored = list(profile.rglob("lockers.db"))
+        if len(restored) != 1:
+            raise AssertionError("Restore did not create exactly one registry in the fresh profile.")
+        with closing(sqlite3.connect(restored[0])) as connection:
+            row = connection.execute("SELECT LockerName, IsLocked FROM Lockers WHERE LockerName = ?", (LOCKER_NAME,)).fetchone()
+            if row != (LOCKER_NAME, 1):
+                raise AssertionError("Restored registration does not match the locked backup.")
+        self.expect_contains(self.output(self.run_cli("list", extra_env=overrides)), LOCKER_NAME, "Restored locker is not listed.")
+        self.run_cli("verify", LOCKER_NAME, extra_env=overrides)
+        self.expect_failed(self.run_cli("db-restore", str(backup), check=False, extra_env=overrides), "Restore replaced an existing registry.")
+        if hashlib.sha256(backup.read_bytes()).hexdigest() != before:
+            raise AssertionError("Restore changed its input backup.")
+
     def create_locker(self) -> None:
         self.base_dir.mkdir(parents=True, exist_ok=True)
         completed = self.run_cli("new", LOCKER_NAME, "--path", str(self.test_dir), "--password", self.password)
@@ -632,6 +1056,9 @@ class CliE2E:
 
         if self.app_data_dir.exists():
             shutil.rmtree(self.app_data_dir, ignore_errors=True)
+        for artifact in (self.backup_dir, self.restore_profile_dir):
+            if artifact.exists():
+                shutil.rmtree(artifact, ignore_errors=True)
 
     def run(self) -> int:
         tests = [
@@ -651,6 +1078,8 @@ class CliE2E:
             ("List Lockers", self.list_lockers),
             ("Lock Locker", self.lock_locker),
             ("Verify Locked", self.verify_locked),
+            ("Database Backup", self.database_backup),
+            ("Database Restore", self.database_restore),
             ("Verify Locked Command", self.verify_locked_command),
             ("Already Locked Locker", self.already_locked_locker),
             ("Remove Locked Rejected", self.remove_locked_rejected),
@@ -668,7 +1097,18 @@ class CliE2E:
             ("Remove Locker Delete", self.remove_locker_delete),
             ("Remove Locker", self.remove_locker),
             ("Verify Removal", self.verify_removal),
+            ("Successful Operation Journals Cleared", self.no_pending_operations),
+            ("Killed Lock Remains Recorded", self.interrupted_lock_is_recorded),
+            ("Killed Destructive Lock Restored", self.interrupted_deletion_can_be_restored),
         ]
+
+        tests.append(("Unsupported Verifier Preserves Source", self.unsupported_verifier_preserves_source))
+        tests.append(("Empty Locker And File Round Trip", self.empty_locker_and_file_round_trip))
+        tests.append(("Hard Link Rejected Without Source Loss", self.hard_link_rejected_without_source_loss))
+        if os.name != "nt":
+            tests.append(("FIFO Rejected Without Source Loss", self.fifo_rejected_without_source_loss))
+            tests.append(("Extended Attribute Rejected Without Source Loss", self.extended_attribute_rejected_without_source_loss))
+            tests.append(("Linked Content Inspection Refused", self.linked_content_inspection_is_refused))
 
         try:
             for name, func in tests:

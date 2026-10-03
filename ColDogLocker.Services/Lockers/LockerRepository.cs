@@ -24,9 +24,9 @@ using Microsoft.Data.Sqlite;
 
 namespace ColDogStudios.ColDogLocker.Services.Lockers
 {
-    public static class LockerRepository
+    public static partial class LockerRepository
     {
-        internal const int CurrentSchemaVersion = 1;
+        internal const int CurrentSchemaVersion = 7;
 
         private static readonly string _databasePath = Path.Join(AppPaths.LocalConfig, Path.GetFileName("lockers.db"));
         private static readonly string _connectionString = $"Data Source={_databasePath}";
@@ -45,8 +45,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             {
                 Logger.Log(LogLevel.Debug, "Initializing database");
 
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText = @"
@@ -89,12 +88,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers ORDER BY LockerName";
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc, Revision FROM Lockers ORDER BY LockerName";
 
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -125,12 +123,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE Guid = $guid";
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc, Revision FROM Lockers WHERE Guid = $guid";
                 command.Parameters.AddWithValue("$guid", guid);
 
                 using var reader = command.ExecuteReader();
@@ -160,12 +157,11 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText =
-                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
+                    "SELECT Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc, Revision FROM Lockers WHERE LockerName = $name COLLATE CDL_NAME";
                 command.Parameters.AddWithValue("$name", name);
 
                 using var reader = command.ExecuteReader();
@@ -195,10 +191,12 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
+                using var transaction = connection.BeginTransaction(deferred: false);
+                ValidatePathOwnership(connection, transaction, locker);
 
                 var command = connection.CreateCommand();
+                command.Transaction = transaction;
                 command.CommandText = @"
                     INSERT INTO Lockers (Guid, LockerName, Password, LockerLocation, IsLocked, StorageFormatVersion, LockedArchiveSha256, LockedAtUtc)
                     VALUES ($guid, $name, $password, $location, $isLocked, $storageFormatVersion, $lockedArchiveSha256, $lockedAtUtc)";
@@ -214,6 +212,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
 
                 command.ExecuteNonQuery();
 
+                transaction.Commit();
                 ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, $"Inserted locker '{locker.LockerName}' into database");
             }
@@ -237,14 +236,26 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             UpdateLocker(locker, _connectionString);
         }
 
-        internal static void UpdateLocker(LockerModel locker, string connectionString)
+        internal static void CommitOperation(LockerModel locker)
+        {
+            UpdateLocker(locker, _connectionString, commitOperation: true);
+        }
+
+        internal static void UpdateLocker(LockerModel locker, string connectionString, bool commitOperation = false)
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                var nextRevision = checked(locker.Revision + 1);
+                using var connection = OpenConnection(connectionString);
+                using var transaction = connection.BeginTransaction(deferred: false);
+                ValidatePathOwnership(connection, transaction, locker);
+                if (!commitOperation)
+                {
+                    EnsureNoPendingOperation(connection, transaction, locker.Guid);
+                }
 
                 var command = connection.CreateCommand();
+                command.Transaction = transaction;
                 command.CommandText = @"
                     UPDATE Lockers
                     SET LockerName = $name,
@@ -254,10 +265,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                         StorageFormatVersion = $storageFormatVersion,
                         LockedArchiveSha256 = $lockedArchiveSha256,
                         LockedAtUtc = $lockedAtUtc,
-                        UpdatedAt = datetime('now')
-                    WHERE Guid = $guid";
+                        UpdatedAt = datetime('now'),
+                        Revision = $nextRevision
+                    WHERE Guid = $guid AND Revision = $expectedRevision";
 
                 command.Parameters.AddWithValue("$guid", locker.Guid);
+                command.Parameters.AddWithValue("$expectedRevision", locker.Revision);
+                command.Parameters.AddWithValue("$nextRevision", nextRevision);
                 command.Parameters.AddWithValue("$name", locker.LockerName);
                 command.Parameters.AddWithValue("$password", locker.Password);
                 command.Parameters.AddWithValue("$location", locker.LockerLocation);
@@ -271,17 +285,129 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 if (rowsAffected == 0)
                 {
                     Logger.Log(LogLevel.Warning, $"Locker with GUID '{locker.Guid}' not found for update");
-                    throw new InvalidOperationException($"Locker with GUID '{locker.Guid}' not found.");
+                    throw new InvalidOperationException($"Locker with GUID '{locker.Guid}' was not found or was changed by another operation. Reload it before retrying.");
                 }
 
+                if (commitOperation)
+                {
+                    using var journal = connection.CreateCommand();
+                    journal.Transaction = transaction;
+                    journal.CommandText = "UPDATE LockerOperations SET Phase = 'MetadataCommitted' WHERE LockerGuid = $guid AND Phase = 'Published'";
+                    journal.Parameters.AddWithValue("$guid", locker.Guid);
+                    if (journal.ExecuteNonQuery() != 1)
+                    {
+                        throw new InvalidOperationException("Missing published operation journal. Metadata was not committed.");
+                    }
+                }
+
+                transaction.Commit();
+                locker.Revision = nextRevision;
                 ApplyDatabasePermissions(connectionString);
                 Logger.Log(LogLevel.Debug, $"Updated locker '{locker.LockerName}' in database");
+            }
+            catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+            {
+                throw new InvalidOperationException($"Locker with name '{locker.LockerName}' already exists.", ex);
             }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Error, "Failed to update locker", ex);
                 throw;
             }
+        }
+
+        public static void EnsureCurrent(LockerModel expected)
+        {
+            EnsureCurrent(expected, _connectionString);
+        }
+
+        internal static void EnsureCurrent(LockerModel expected, string connectionString)
+        {
+            var current = GetLockerByGuid(expected.Guid, connectionString);
+            if (current == null || current.Revision != expected.Revision ||
+                current.LockerName != expected.LockerName || current.LockerLocation != expected.LockerLocation ||
+                current.Password != expected.Password || current.IsLocked != expected.IsLocked ||
+                current.StorageFormatVersion != expected.StorageFormatVersion ||
+                current.LockedArchiveSha256 != expected.LockedArchiveSha256 || current.LockedAtUtc != expected.LockedAtUtc)
+            {
+                throw new InvalidOperationException("Locker state changed or no longer exists. Reload the locker before retrying.");
+            }
+
+            // Also reject conflicts inherited from older databases before touching either tree.
+            using var connection = OpenConnection(connectionString);
+            using var transaction = connection.BeginTransaction(deferred: false);
+            EnsureNoPendingOperation(connection, transaction, expected.Guid);
+            ValidatePathOwnership(connection, transaction, expected);
+        }
+
+        private static void ValidatePathOwnership(SqliteConnection connection, SqliteTransaction transaction, LockerModel proposed)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = """
+                SELECT Guid, LockerName, LockerLocation FROM Lockers WHERE Guid <> $guid
+                UNION ALL
+                SELECT o.LockerGuid, l.LockerName, o.StagingPath FROM LockerOperations o
+                    JOIN Lockers l ON l.Guid = o.LockerGuid WHERE o.LockerGuid <> $guid
+                UNION ALL
+                SELECT a.LockerGuid, l.LockerName, a.DestinationPath FROM LockerRecoveryAttempts a
+                    JOIN LockerOperations o ON o.OperationId = a.OperationId
+                    JOIN Lockers l ON l.Guid = a.LockerGuid WHERE a.LockerGuid <> $guid
+                UNION ALL
+                SELECT a.LockerGuid, l.LockerName, a.StagingPath FROM LockerRecoveryAttempts a
+                    JOIN LockerOperations o ON o.OperationId = a.OperationId
+                    JOIN Lockers l ON l.Guid = a.LockerGuid WHERE a.LockerGuid <> $guid
+                """;
+            command.Parameters.AddWithValue("$guid", proposed.Guid);
+            using var reader = command.ExecuteReader();
+            var proposedPaths = GetOwnedPaths(proposed.LockerName, proposed.LockerLocation);
+            foreach (var path in proposedPaths.Distinct(LockerPathComparer()).Where(Directory.Exists))
+            {
+                _ = FileSystemPathIdentity.CaptureDirectory(path);
+            }
+
+            while (reader.Read())
+            {
+                var existingName = reader.GetString(1);
+                var existingPaths = GetOwnedPaths(existingName, reader.GetString(2));
+                if (proposedPaths.Any(candidate => existingPaths.Any(existing => PathsOverlap(candidate, existing))))
+                {
+                    throw new InvalidOperationException($"A locker already exists with an overlapping directory: '{existingName}'. Choose a separate directory.");
+                }
+            }
+        }
+
+        private static string[] GetOwnedPaths(string name, string location)
+        {
+            var current = Path.TrimEndingDirectorySeparator(Path.GetFullPath(location));
+            var parent = Path.GetDirectoryName(current) ?? current;
+            // Reserve both representations even while one is absent from disk.
+            return [current, Path.GetFullPath(Path.Join(parent, name)), Path.GetFullPath(Path.Join(parent, "." + name))];
+        }
+
+        private static bool PathsOverlap(string first, string second)
+        {
+            // Conservatively treat macOS paths as case-insensitive, including case-sensitive volumes.
+            var comparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+            var lexicalOverlap = first.Equals(second, comparison) ||
+                first.StartsWith((Path.EndsInDirectorySeparator(second) ? second : second + Path.DirectorySeparatorChar), comparison) ||
+                second.StartsWith((Path.EndsInDirectorySeparator(first) ? first : first + Path.DirectorySeparatorChar), comparison);
+            if (lexicalOverlap || !Directory.Exists(first) || !Directory.Exists(second))
+            {
+                return lexicalOverlap;
+            }
+
+            return FileSystemPathIdentity.CaptureDirectory(first)
+                .Overlaps(FileSystemPathIdentity.CaptureDirectory(second));
+        }
+
+        private static StringComparer LockerPathComparer()
+        {
+            return OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
         }
 
         /// <summary>
@@ -292,16 +418,25 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             DeleteLocker(guid, _connectionString);
         }
 
-        internal static void DeleteLocker(string guid, string connectionString)
+        public static void DeleteLocker(string guid, long expectedRevision)
+        {
+            DeleteLocker(guid, _connectionString, expectedRevision);
+        }
+
+        internal static void DeleteLocker(string guid, string connectionString, long? expectedRevision = null)
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText = "DELETE FROM Lockers WHERE Guid = $guid";
                 command.Parameters.AddWithValue("$guid", guid);
+                if (expectedRevision.HasValue)
+                {
+                    command.CommandText += " AND Revision = $revision";
+                    command.Parameters.AddWithValue("$revision", expectedRevision.Value);
+                }
 
                 var rowsAffected = command.ExecuteNonQuery();
 
@@ -333,11 +468,10 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
         {
             try
             {
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT COUNT(*) FROM Lockers WHERE LockerName = $name COLLATE NOCASE";
+                command.CommandText = "SELECT COUNT(*) FROM Lockers WHERE LockerName = $name COLLATE CDL_NAME";
                 command.Parameters.AddWithValue("$name", name);
 
                 var count = (long)command.ExecuteScalar()!;
@@ -370,8 +504,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                     sizeBefore = new FileInfo(databasePath).Length;
                 }
 
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 var command = connection.CreateCommand();
                 command.CommandText = "VACUUM";
@@ -419,8 +552,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 info.Created = fileInfo.CreationTime;
                 info.LastModified = fileInfo.LastWriteTime;
 
-                using var connection = new SqliteConnection(connectionString);
-                connection.Open();
+                using var connection = OpenConnection(connectionString);
 
                 // Get locker count
                 var countCommand = connection.CreateCommand();
@@ -448,10 +580,30 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
         }
 
-        private static void EnsureColumn(SqliteConnection connection, string columnName, string definition)
+        private static SqliteConnection OpenConnection(string connectionString)
+        {
+            var connection = new SqliteConnection(connectionString);
+            try
+            {
+                connection.Open();
+                using var durability = connection.CreateCommand();
+                durability.CommandText = "PRAGMA synchronous = FULL";
+                durability.ExecuteNonQuery();
+                connection.CreateCollation("CDL_NAME", (left, right) => StringComparer.OrdinalIgnoreCase.Compare(left, right));
+                return connection;
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
+        }
+
+        private static void EnsureColumn(SqliteConnection connection, string columnName, string definition, SqliteTransaction? transaction = null, string tableName = "Lockers")
         {
             using var command = connection.CreateCommand();
-            command.CommandText = "PRAGMA table_info(Lockers)";
+            command.Transaction = transaction;
+            command.CommandText = $"PRAGMA table_info({tableName})";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -463,7 +615,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             }
 
             using var alterCommand = connection.CreateCommand();
-            alterCommand.CommandText = $"ALTER TABLE Lockers ADD COLUMN {columnName} {definition}";
+            alterCommand.Transaction = transaction;
+            alterCommand.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition}";
             alterCommand.ExecuteNonQuery();
         }
 
@@ -478,6 +631,101 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 EnsureColumn(connection, "LockedAtUtc", "TEXT NULL");
                 SetSchemaVersion(connection, 1);
                 schemaVersion = 1;
+            }
+
+            if (schemaVersion < 2)
+            {
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "CREATE UNIQUE INDEX IF NOT EXISTS IX_Lockers_Name ON Lockers(LockerName COLLATE CDL_NAME)";
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+                {
+                    throw new InvalidOperationException("The database contains locker names that differ only by case. Restore a backup or resolve the duplicate names before upgrading. No lockers have been deleted.", ex);
+                }
+
+                command.CommandText = "PRAGMA user_version = 2";
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            if (schemaVersion < 3)
+            {
+                using var transaction = connection.BeginTransaction();
+                EnsureColumn(connection, "Revision", "INTEGER NOT NULL DEFAULT 0", transaction);
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "PRAGMA user_version = 3";
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            if (schemaVersion < 4)
+            {
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = """
+                    CREATE TABLE IF NOT EXISTS LockerOperations (
+                        OperationId TEXT PRIMARY KEY, LockerGuid TEXT NOT NULL UNIQUE,
+                        Kind TEXT NOT NULL, Phase TEXT NOT NULL,
+                        SourcePath TEXT NOT NULL, TargetPath TEXT NOT NULL,
+                        StagingPath TEXT NOT NULL, BeforeJson TEXT NOT NULL);
+                    PRAGMA user_version = 4;
+                    """;
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            if (schemaVersion < 5)
+            {
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = """
+                    CREATE TABLE IF NOT EXISTS LockerOperationHistory (
+                        OperationId TEXT PRIMARY KEY, LockerGuid TEXT NOT NULL,
+                        Kind TEXT NOT NULL, Phase TEXT NOT NULL,
+                        SourcePath TEXT NOT NULL, TargetPath TEXT NOT NULL,
+                        StagingPath TEXT NOT NULL, BeforeJson TEXT NOT NULL,
+                        Resolution TEXT NOT NULL,
+                        ResolvedAtUtc TEXT NOT NULL DEFAULT (datetime('now')));
+                    PRAGMA user_version = 5;
+                    """;
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            if (schemaVersion < 6)
+            {
+                using var transaction = connection.BeginTransaction();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = """
+                    CREATE TABLE IF NOT EXISTS LockerRecoveryAttempts (
+                        AttemptId TEXT PRIMARY KEY, OperationId TEXT NOT NULL, LockerGuid TEXT NOT NULL,
+                        ArchivePath TEXT NOT NULL, ArchiveSha256 TEXT NOT NULL,
+                        DestinationPath TEXT NOT NULL, StagingPath TEXT NOT NULL, State TEXT NOT NULL);
+                    PRAGMA user_version = 6;
+                    """;
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            if (schemaVersion < 7)
+            {
+                using var transaction = connection.BeginTransaction();
+                EnsureColumn(connection, "OutputTreeSha256", "TEXT NULL", transaction, "LockerOperations");
+                EnsureColumn(connection, "OutputTreeSha256", "TEXT NULL", transaction, "LockerOperationHistory");
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "PRAGMA user_version = 7";
+                command.ExecuteNonQuery();
+                transaction.Commit();
             }
 
             if (schemaVersion > CurrentSchemaVersion)
@@ -543,7 +791,8 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 IsLocked = reader.GetInt32(4) == 1,
                 StorageFormatVersion = reader.IsDBNull(5) ? null : reader.GetInt32(5),
                 LockedArchiveSha256 = reader.IsDBNull(6) ? null : reader.GetString(6),
-                LockedAtUtc = reader.IsDBNull(7) ? null : ParseDateTime(reader.GetString(7))
+                LockedAtUtc = reader.IsDBNull(7) ? null : ParseDateTime(reader.GetString(7)),
+                Revision = reader.GetInt64(8)
             };
         }
 

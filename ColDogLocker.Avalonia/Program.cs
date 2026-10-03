@@ -1,4 +1,4 @@
-﻿/*
+/*
  **  Copyright (C) 2026 ColDog Studios
  **
  **  This program is free software: you can redistribute it and/or modify
@@ -35,9 +35,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
-#if DEBUG
-                .WithDeveloperTools()
-#endif
                 .WithInterFont()
                 .LogToTrace();
     }

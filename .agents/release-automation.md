@@ -7,8 +7,8 @@ Current policy:
 - Pushes to `main` publish an automated release.
 - Other branches do not publish releases automatically.
 - `workflow_dispatch` can run the same release flow manually.
-- Repository branch protection should require pull requests for `main` and require the `Test Summary`, `Dependency Audit`, and `Analyze (csharp)` checks before merge.
-- macOS `.pkg` assets are included. They remain unsigned and unnotarized until project signing credentials are available.
+- The active public `Main Branch Rules` ruleset protects the default branch from deletion, requires a pull request, requires test contexts including `Test Summary`, and enforces CodeQL results.
+- Package signing on every platform, including macOS notarization, is explicitly deferred by the maintainer. Packages remain unsigned; checksums and the release manifest do not authenticate a publisher.
 - `conventional-changelog` generates release notes from Conventional Commit messages so the app can render the release markdown through update checks.
 - Release note sections are configured in `.github/conventional-changelog.config.mjs`.
 
@@ -39,8 +39,8 @@ v0.8.0
 GitHub release classification is label-specific:
 
 - Stable versions with no suffix are full releases and are explicitly marked latest.
-- `rc` versions keep the sequenced `-rc.<sequence>` tag, but are published as full releases and explicitly marked latest.
-- `alpha` and `beta` versions are published as prereleases and explicitly marked not latest.
+- `alpha`, `beta`, and `rc` versions are published as prereleases and explicitly marked not latest.
+- The stable client independently rejects draft, prerelease-flagged, and semantically prerelease builds, including older RCs incorrectly marked latest.
 
 Automated package builds override the MSBuild `Version` value with the computed release version. Package filenames, package metadata, and the generated `AppInfo.SemanticVersion` value inside the app therefore match the GitHub release tag used by update checks.
 
@@ -56,22 +56,24 @@ For `main` and manual dispatch:
 6. Build Linux x64 and arm64 `.deb` packages.
 7. Build Linux x64 and arm64 `.rpm` packages.
 8. Build unsigned macOS x64 and arm64 `.pkg` packages.
-9. Download all package artifacts into one release asset directory.
-10. Create the GitHub release for the computed tag.
-11. Upload `.msi`, `.exe`, `.deb`, `.rpm`, and `.pkg` assets.
-12. Generate release notes from Conventional Commit messages with the `conventionalcommits` preset.
+9. On native x64 and ARM64 runners, rebuild each Linux package and require byte identity, then validate it in clean Ubuntu 24.04 or Fedora 43 containers (architecture, installed CLI E2E, GUI startup, reinstall, uninstall).
+10. Download package artifacts and generate `SHA256SUMS` plus `release-manifest.json` with the source commit, pinned SDK, artifact sizes/hashes, dependency lock contents, and the validated third-party component inventory. Add the project license and third-party notice/inventory as release assets.
+11. Create a signed GitHub artifact attestation over every subject in `SHA256SUMS` using the workflow's short-lived OIDC identity. Verify a downloaded artifact with `gh attestation verify <artifact> --repo ColDog-Studios/ColDog-Locker`.
+12. Generate release notes using the npm lock file and `conventionalcommits` preset.
+13. Create the release and upload installers, checksums, and manifest.
 
-The release job uses `contents: write` so it can create tags and GitHub Releases.
+The release job alone uses `contents: write` so it can create tags and GitHub Releases. It also has `id-token: write` and `attestations: write` for short-lived signed provenance; build jobs retain read-only repository permission.
 
 ## Main Branch Protection
 
-Configure the GitHub `main` branch or a repository ruleset to:
+The public GitHub API confirmed an active `Main Branch Rules` ruleset on the default branch on 2026-09-25. It currently:
 
-- Require a pull request before merging.
-- Require `Test Summary` from `.github/workflows/test.yml`.
-- Require `Dependency Audit` from `.github/workflows/test.yml`.
-- Require `Analyze (csharp)` from `.github/workflows/codeql.yml`.
-- Require branches to be up to date before merging.
+- prevents branch deletion;
+- requires a pull request;
+- requires `Test Summary` and the listed Windows/Linux/macOS unit and CLI E2E contexts; and
+- enforces CodeQL high-or-higher security alerts and error-level analysis results.
+
+The ruleset does not currently require a branch to be up to date before merging. Enable strict required-status-check behavior if stale-base merges are not acceptable. Keep `Test Summary` required because it fails unless the dependency audit and every unit/CLI matrix dependency succeed.
 
 The dependency audit restores with NuGet security warnings `NU1901` through `NU1904` promoted to errors, then prints the full direct and transitive vulnerability report.
 
@@ -104,8 +106,22 @@ dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Bui
 
 After the release is published:
 
-1. Confirm all expected Windows, Linux, and macOS assets are attached.
+1. Confirm all expected Windows, Linux, and macOS assets plus `LICENSE`, `THIRD-PARTY-NOTICES.md`, and `THIRD-PARTY-COMPONENTS.json` are attached.
 2. Confirm GitHub shows digest metadata for package assets.
 3. Confirm `cdlocker update` renders the generated Conventional Commit release notes when the app is on the matching update channel.
 4. Confirm `cdlocker update --download` downloads and verifies the matching package. On Windows, this should be the `.msi` asset when both `.msi` and setup `.exe` assets are attached. On macOS, it should select the matching `.pkg` and open Installer.
 5. Test installers on clean Windows, Linux, and macOS machines or VMs before treating the release as broadly usable.
+
+## Pinned inputs
+
+Workflow actions use immutable commit references. `global.json` selects SDK 10.0.112 without roll-forward; all CI .NET setup steps read it, including Linux container builds. NuGet lock files are checked in and workflows set `RestoreLockedMode=true`. Single-file analysis stays enabled for ordinary builds as well as publishes, keeping the SDK analyzer package graph stable. `DisableImplicitLibraryPacksFolder` prevents distro-repacked SDK archives from writing non-portable package hashes into those locks. Regenerate locks deliberately with `dotnet restore ColDogLocker.slnx --force-evaluate` after changing dependency versions, and restore `.github/scripts/crash_probe/CrashProbe.csproj` separately. Restore the WiX project separately to update its lock.
+
+Release-note dependencies live in `.github/package.json` and `.github/package-lock.json` and install through `npm ci --ignore-scripts`. Build metadata records a source revision, not the current clock. Linux package archives normalize ordering, ownership and timestamps through `SourceDateEpoch`; repeated-package comparison is enforced for x64 and ARM64. Current WiX releases still generate random MSI package codes and current summary timestamps, so Windows installer byte identity is not claimed. macOS package byte identity also remains unverified. The JSON release manifest is unsigned metadata, while GitHub's artifact attestation binds the checksummed release subjects to the workflow identity and source revision. It does not replace platform code signing. The checked-in notices and component inventory are shipped in each installer and as release assets; they are an engineering inventory, not a legal-compliance opinion.
+
+## Security incident and release rollback
+
+Handle vulnerability reports in a private GitHub security advisory. Record the affected source revision, package names, release-manifest digests, archive/database format versions and reproduction evidence before changing public assets. If a published artifact may be compromised, remove that artifact from distribution, publish a visible warning and prepare a higher-version replacement from reviewed source. Do not silently replace an asset under the same filename or digest.
+
+Use a forward security release. Prerelease format changes can make downgrade unsafe, and the updater has no transactional application rollback. Release notes and the advisory must identify affected versions, whether users should unlock/export first, any database/archive compatibility boundary, recovery steps, and the new asset digests. Run the full source suite, crash-boundary harness, package inventory check and native install/update matrix before restoring normal publication. Rotate any exposed repository, signing or package credentials and replace compromised action/tool pins before rebuilding.
+
+After publication, verify the public assets and digests independently, confirm the update client selects the fixed release, and update the advisory with remediation and disclosure timing. Preserve evidence and withdrawn artifacts in restricted storage for investigation; do not leave known-vulnerable packages available merely to support downgrade.

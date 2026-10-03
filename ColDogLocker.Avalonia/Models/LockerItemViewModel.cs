@@ -16,6 +16,7 @@
  */
 
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Material.Icons;
 
@@ -23,21 +24,21 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Models
 {
     public partial class LockerItemViewModel : ObservableObject
     {
-        private static readonly IBrush LockedBrush = new SolidColorBrush(Color.Parse("#FF6923"));
-        private static readonly IBrush UnlockedBrush = new SolidColorBrush(Color.Parse("#0077B6"));
+        private static readonly IBrush _lockedBrush = new ImmutableSolidColorBrush(Color.Parse("#FF6923"));
+        private static readonly IBrush _unlockedBrush = new ImmutableSolidColorBrush(Color.Parse("#0077B6"));
 
         [ObservableProperty] private string _guid = string.Empty;
         [ObservableProperty] private bool _isLocked;
         [ObservableProperty] private DateTime _lastModified;
         [ObservableProperty] private string _location = string.Empty;
         [ObservableProperty] private string _name = string.Empty;
-        [ObservableProperty] private long _size;
+        [ObservableProperty] private long? _size;
 
         public string StatusText => IsLocked ? "Locked" : "Unlocked";
         public bool CanRemove => !IsLocked;
         public MaterialIconKind StatusIconKind => IsLocked ? MaterialIconKind.Lock : MaterialIconKind.LockOpen;
-        public IBrush StatusBrush => IsLocked ? LockedBrush : UnlockedBrush;
-        public string SizeText => FormatBytes(Size);
+        public IBrush StatusBrush => IsLocked ? _lockedBrush : _unlockedBrush;
+        public string SizeText => Size is { } bytes ? FormatBytes(bytes) : "Unknown";
 
         partial void OnIsLockedChanged(bool value)
         {
@@ -47,7 +48,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Models
             OnPropertyChanged(nameof(StatusBrush));
         }
 
-        partial void OnSizeChanged(long value)
+        partial void OnSizeChanged(long? value)
         {
             OnPropertyChanged(nameof(SizeText));
         }

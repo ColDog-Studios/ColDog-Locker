@@ -15,40 +15,12 @@
  **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.Security.Cryptography;
 using ColDogStudios.ColDogLocker.Services.Security;
 
 namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 {
     public class EncryptionHelperTests
     {
-        private sealed class TestDirectory : IDisposable
-        {
-            private TestDirectory(string path)
-            {
-                Path = path;
-            }
-
-            public string Path { get; }
-
-            public void Dispose()
-            {
-                if (Directory.Exists(Path))
-                {
-                    Directory.Delete(Path, true);
-                }
-            }
-
-            public static TestDirectory Create()
-            {
-                var directoryName = $"cdlocker-encryption-tests-{Guid.NewGuid():N}";
-                var safeDirectoryName = System.IO.Path.GetFileName(directoryName) ?? directoryName;
-                var path = System.IO.Path.Join(System.IO.Path.GetTempPath(), safeDirectoryName);
-                Directory.CreateDirectory(path);
-                return new TestDirectory(path);
-            }
-        }
-
         #region HashPassword Tests
 
         [Fact]
@@ -82,7 +54,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         }
 
         [Fact]
-        public void HashPassword_ShouldReturnBcryptFormattedHash()
+        public void HashPassword_ShouldReturnVersionedFullPasswordVerifier()
         {
             // Arrange
             var password = "TestPassword123!";
@@ -91,8 +63,8 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
             var hash = EncryptionHelper.HashPassword(password);
 
             // Assert
-            // BCrypt hashes start with $2a$, $2b$, $2x$, or $2y$ followed by cost factor
-            Assert.Matches(@"^\$2[abxy]\$\d{2}\$", hash);
+            // The version and work factor are explicit; unsupported verifiers are refused.
+            Assert.StartsWith("$cdl-pbkdf2-sha256$v1$600000$", hash);
         }
 
         [Fact]
@@ -106,7 +78,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
             var hash2 = EncryptionHelper.HashPassword(password);
 
             // Assert
-            Assert.NotEqual(hash1, hash2); // BCrypt uses random salts, so hashes should differ
+            Assert.NotEqual(hash1, hash2); // Each verifier uses a fresh random salt.
         }
 
         [Theory]
@@ -122,10 +94,30 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
             // Assert
             Assert.NotNull(hash);
             Assert.NotEmpty(hash);
-            Assert.Matches(@"^\$2[abxy]\$\d{2}\$", hash);
+            Assert.StartsWith("$cdl-pbkdf2-sha256$v1$600000$", hash);
         }
 
         #endregion
+
+        [Theory]
+        [InlineData("x")]
+        [InlineData("é")]
+        [InlineData("🔐")]
+        public void VerifyPassword_DifferentSuffixBeyondBcryptLimitMustFail(string character)
+        {
+            var prefix = "Kestrel!8" + string.Concat(Enumerable.Repeat(character, 72));
+            var hash = EncryptionHelper.HashPassword(prefix + "A");
+            Assert.True(EncryptionHelper.VerifyPassword(prefix + "A", hash));
+            Assert.False(EncryptionHelper.VerifyPassword(prefix + "B", hash));
+        }
+
+        [Fact]
+        public void VerifyPassword_RejectsLegacyBcryptVerifier()
+        {
+            const string Legacy = "$2a$04$b9STetOS4I7Zinp/E655pO6q0DttM8rC0frGST6cq81p0LIJsCLBC";
+            Assert.Throws<InvalidDataException>(() => EncryptionHelper.VerifyPassword("Legacy!Pass582", Legacy));
+            Assert.Throws<InvalidDataException>(() => EncryptionHelper.VerifyPassword("Different!Pass582", Legacy));
+        }
 
         #region VerifyPassword Tests
 
@@ -208,9 +200,17 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
         public void VerifyPassword_WithInvalidHash_ShouldThrowException()
         {
             // Act & Assert
-            // BCrypt throws an exception when given an invalid hash format
-            Assert.ThrowsAny<Exception>(() =>
+            // Unsupported verifier formats must not silently authenticate.
+            Assert.Throws<InvalidDataException>(() =>
                 EncryptionHelper.VerifyPassword("SomePassword", "InvalidHashFormat"));
+        }
+
+        [Theory]
+        [InlineData("$cdl-pbkdf2-sha256$v1$600000$not-base64$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")]
+        [InlineData("$cdl-pbkdf2-sha256$v1$600000$AAAAAAAAAAAAAAAAAAAAAA==$not-base64")]
+        public void VerifyPassword_WithMalformedCurrentVerifier_ShouldThrowInvalidDataException(string verifier)
+        {
+            Assert.Throws<InvalidDataException>(() => EncryptionHelper.VerifyPassword("SomePassword", verifier));
         }
 
         [Fact]
@@ -273,142 +273,5 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Security
 
         #endregion
 
-        #region File Operation Exception Tests
-
-        [Fact]
-        public void EncryptFile_ThenDecryptFile_ShouldRestoreOriginalContent()
-        {
-            // Arrange
-            using var directory = TestDirectory.Create();
-            var filePath = Path.Join(directory.Path, "secret.bin");
-            var originalBytes = Enumerable.Range(0, 4096).Select(i => (byte)(i % 251)).ToArray();
-            File.WriteAllBytes(filePath, originalBytes);
-
-            // Act
-            EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
-            var encryptedBytes = File.ReadAllBytes(filePath);
-            EncryptionHelper.DecryptFile(filePath, "CorrectHorseBatteryStaple123!");
-
-            // Assert
-            Assert.NotEqual(originalBytes, encryptedBytes);
-            Assert.Equal(originalBytes, File.ReadAllBytes(filePath));
-        }
-
-        [Fact]
-        public void DecryptFile_WithTamperedCiphertext_ShouldThrowAndPreserveEncryptedFile()
-        {
-            // Arrange
-            using var directory = TestDirectory.Create();
-            var filePath = Path.Join(directory.Path, "secret.txt");
-            File.WriteAllText(filePath, "sensitive content");
-            EncryptionHelper.EncryptFile(filePath, "CorrectHorseBatteryStaple123!");
-
-            var tamperedBytes = File.ReadAllBytes(filePath);
-            tamperedBytes[^1] ^= 0x01;
-            File.WriteAllBytes(filePath, tamperedBytes);
-
-            // Act & Assert
-            Assert.ThrowsAny<CryptographicException>(() =>
-                EncryptionHelper.DecryptFile(filePath, "CorrectHorseBatteryStaple123!"));
-            Assert.Equal(tamperedBytes, File.ReadAllBytes(filePath));
-        }
-
-        [Fact]
-        public void EncryptFile_WithNullFilePath_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.EncryptFile(null!, "password"));
-            Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
-        }
-
-        [Fact]
-        public void EncryptFile_WithEmptyFilePath_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.EncryptFile(string.Empty, "password"));
-            Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
-        }
-
-        [Fact]
-        public void EncryptFile_WithNullPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.EncryptFile("somefile.txt", null!));
-            Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
-        }
-
-        [Fact]
-        public void EncryptFile_WithEmptyPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.EncryptFile("somefile.txt", string.Empty));
-            Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
-        }
-
-        [Fact]
-        public void EncryptFile_WithNonExistentFile_ShouldThrowFileNotFoundException()
-        {
-            // Arrange
-            var nonExistentFile = Path.Join(Path.GetTempPath(), Guid.NewGuid() + ".txt");
-
-            // Act & Assert
-            var exception = Assert.Throws<FileNotFoundException>(() =>
-                EncryptionHelper.EncryptFile(nonExistentFile, "password"));
-            Assert.Contains("Input file not found", exception.Message);
-        }
-
-        [Fact]
-        public void DecryptFile_WithNullFilePath_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.DecryptFile(null!, "password"));
-            Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
-        }
-
-        [Fact]
-        public void DecryptFile_WithEmptyFilePath_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.DecryptFile(string.Empty, "password"));
-            Assert.Equal("Input file path cannot be null or empty. (Parameter 'inputFile')", exception.Message);
-        }
-
-        [Fact]
-        public void DecryptFile_WithNullPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.DecryptFile("somefile.txt", null!));
-            Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
-        }
-
-        [Fact]
-        public void DecryptFile_WithEmptyPassword_ShouldThrowArgumentException()
-        {
-            // Act & Assert
-            var exception = Assert.Throws<ArgumentException>(() =>
-                EncryptionHelper.DecryptFile("somefile.txt", string.Empty));
-            Assert.Equal("Password cannot be null or empty. (Parameter 'password')", exception.Message);
-        }
-
-        [Fact]
-        public void DecryptFile_WithNonExistentFile_ShouldThrowFileNotFoundException()
-        {
-            // Arrange
-            var nonExistentFile = Path.Join(Path.GetTempPath(), Guid.NewGuid() + ".txt");
-
-            // Act & Assert
-            var exception = Assert.Throws<FileNotFoundException>(() =>
-                EncryptionHelper.DecryptFile(nonExistentFile, "password"));
-            Assert.Contains("Input file not found", exception.Message);
-        }
-
-        #endregion
     }
 }

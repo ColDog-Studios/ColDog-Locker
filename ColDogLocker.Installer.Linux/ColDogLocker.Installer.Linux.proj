@@ -13,6 +13,7 @@
     <RpmArchitecture Condition="'$(PackageArchitecture)' == 'arm64'">aarch64</RpmArchitecture>
 
     <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <DotNetRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildSDKsPath)', '..', '..', '..'))</DotNetRoot>
     <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
     <PublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)', 'app'))</PublishRoot>
     <StageRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'staging', '$(RuntimeIdentifier)'))</StageRoot>
@@ -23,6 +24,8 @@
     <ManPageSource>$(RepoRoot)packaging/man/cdlocker.1</ManPageSource>
     <PackageId>coldog-locker</PackageId>
     <PackageFileBase>ColDogLocker-$(Version)-linux-$(PackageArchitecture)</PackageFileBase>
+    <SourceDateEpoch Condition="'$(SourceDateEpoch)' == '' and '$(SOURCE_DATE_EPOCH)' != ''">$(SOURCE_DATE_EPOCH)</SourceDateEpoch>
+    <SourceDateEpoch Condition="'$(SourceDateEpoch)' == ''">0</SourceDateEpoch>
     <PackageVersionBase>$(Version.Split('-')[0])</PackageVersionBase>
     <DebianVersion>$([System.String]::Copy('$(Version)').Replace('-', '~'))</DebianVersion>
     <RpmRelease>1</RpmRelease>
@@ -43,6 +46,10 @@
     <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishDir="$(PublishRoot)"' />
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(PublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)THIRD-PARTY-NOTICES.md" DestinationFolder="$(PublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)packaging/third-party-components.json" DestinationFiles="$(PublishRoot)THIRD-PARTY-COMPONENTS.json" />
+    <Copy SourceFiles="$(DotNetRoot)LICENSE.txt" DestinationFiles="$(PublishRoot)DOTNET-LICENSE.txt" />
+    <Copy SourceFiles="$(DotNetRoot)ThirdPartyNotices.txt" DestinationFiles="$(PublishRoot)DOTNET-THIRD-PARTY-NOTICES.txt" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(PublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(PublishRoot)" />
     <Exec Command='chmod +x "$(PublishRoot)cdlocker" "$(PublishRoot)ColDogLocker"' />
@@ -85,7 +92,7 @@
     <Copy SourceFiles="$(ManPageSource)" DestinationFiles="$(PackageRoot)usr/share/man/man1/cdlocker.1" />
     <WriteLinesToFile File="$(PackageRoot)usr/share/applications/coldog-locker.desktop" Lines="@(GuiDesktopLines)" Overwrite="true" />
     <WriteLinesToFile File="$(PackageRoot)usr/share/applications/cdlocker.desktop" Lines="@(CliDesktopLines)" Overwrite="true" />
-    <Exec Command='gzip -f -9 "$(PackageRoot)usr/share/man/man1/cdlocker.1"' />
+    <Exec Command='gzip -n -f -9 "$(PackageRoot)usr/share/man/man1/cdlocker.1"' />
     <Exec Command='ln -sfn "../../opt/coldog-locker/cdlocker" "$(PackageRoot)usr/bin/cdlocker"' />
   </Target>
 
@@ -103,29 +110,19 @@
       <DebControlLines Include="Section: utils" />
       <DebControlLines Include="Priority: optional" />
       <DebControlLines Include="Architecture: $(DebArchitecture)" />
+      <DebControlLines Include="Depends: ca-certificates, tzdata, libc6 (&gt;= 2.28), libgcc-s1, libstdc++6, zlib1g, libssl3t64 | libssl3, libicu78 | libicu77 | libicu76 | libicu74 | libicu72 | libicu70 | libicu67, libx11-6, libice6, libsm6, libfontconfig1, libxcb1, libxrender1, libxrandr2, libxi6, libxcursor1, libxext6" />
       <DebControlLines Include="Maintainer: Collin Laney &lt;collin.laney@coldogstudios.com&gt;" />
       <DebControlLines Include="Homepage: https://github.com/ColDog-Studios/ColDog-Locker" />
       <DebControlLines Include="Description: Desktop app and CLI for managing encrypted file lockers." />
-      <DebControlLines Include=" ColDog Locker installs the cdlocker command and Avalonia desktop app" />
-      <DebControlLines Include=" under /opt/coldog-locker. Runtime settings, logs, and locker metadata" />
-      <DebControlLines Include=" are stored per user by the application." />
 
-      <DebPostRemoveLines Include="#!/bin/sh" />
-      <DebPostRemoveLines Include="set -e" />
-      <DebPostRemoveLines Include="if [ &quot;$$1&quot; = &quot;purge&quot; ]; then" />
-      <DebPostRemoveLines Include="    rm -rf /etc/coldog-locker /var/lib/coldog-locker" />
-      <DebPostRemoveLines Include="fi" />
-      <DebPostRemoveLines Include="exit 0" />
     </ItemGroup>
 
     <WriteLinesToFile File="$(PackageRoot)DEBIAN/control" Lines="@(DebControlLines)" Overwrite="true" />
-    <WriteLinesToFile File="$(PackageRoot)DEBIAN/postrm" Lines="@(DebPostRemoveLines)" Overwrite="true" />
-    <Exec Command='chmod 755 "$(PackageRoot)DEBIAN/postrm"' />
     <Exec Command='printf "2.0\n" &gt; "$(DebWorkRoot)debian-binary"' />
-    <Exec Command='tar --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)control.tar.gz" -C "$(PackageRoot)DEBIAN" .' />
-    <Exec Command='tar --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)data.tar.gz" -C "$(PackageRoot)" --exclude=./DEBIAN .' />
+    <Exec Command='tar --sort=name --mtime="@$(SourceDateEpoch)" --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)control.tar.gz" -C "$(PackageRoot)DEBIAN" .' />
+    <Exec Command='tar --sort=name --mtime="@$(SourceDateEpoch)" --owner=0 --group=0 --numeric-owner -czf "$(DebWorkRoot)data.tar.gz" -C "$(PackageRoot)" --exclude=./DEBIAN .' />
     <Exec Command='rm -f "$(DebOutput)"' />
-    <Exec Command='ar rc "$(DebOutput)" "$(DebWorkRoot)debian-binary" "$(DebWorkRoot)control.tar.gz" "$(DebWorkRoot)data.tar.gz"' />
+    <Exec Command='ar rcsD "$(DebOutput)" "$(DebWorkRoot)debian-binary" "$(DebWorkRoot)control.tar.gz" "$(DebWorkRoot)data.tar.gz"' />
     <Message Importance="high" Text="Built $(DebOutput)" />
   </Target>
 
@@ -142,7 +139,7 @@
     <RemoveDir Directories="$(RpmTopDir);$(RpmSourceRoot)" />
     <MakeDir Directories="$(RpmTopDir)BUILD;$(RpmTopDir)BUILDROOT;$(RpmTopDir)RPMS;$(RpmTopDir)SOURCES;$(RpmTopDir)SPECS;$(RpmTopDir)SRPMS;$(RpmSourceRoot)" />
     <Exec Command='cp -a "$(PackageRoot)opt" "$(PackageRoot)usr" "$(RpmSourceRoot)/"' />
-    <Exec Command='tar -czf "$(RpmTopDir)SOURCES/$(PackageId)-$(PackageVersionBase).tar.gz" -C "$(RpmWorkRoot)" "$(PackageId)-$(PackageVersionBase)"' />
+    <Exec Command='tar --sort=name --mtime="@$(SourceDateEpoch)" --owner=0 --group=0 --numeric-owner -czf "$(RpmTopDir)SOURCES/$(PackageId)-$(PackageVersionBase).tar.gz" -C "$(RpmWorkRoot)" "$(PackageId)-$(PackageVersionBase)"' />
 
     <ItemGroup>
       <RpmSpecLines Include="%25global debug_package %{nil}" />
@@ -155,7 +152,13 @@
       <RpmSpecLines Include="URL:            https://github.com/ColDog-Studios/ColDog-Locker" />
       <RpmSpecLines Include="Source0:        %{name}-%{version}.tar.gz" />
       <RpmSpecLines Include="BuildArch:      $(RpmArchitecture)" />
+      <!-- Bundled single-file libraries are not visible to RPM automatic ELF scanning. -->
       <RpmSpecLines Include="AutoReqProv:    no" />
+      <RpmSpecLines Include="Requires:       ca-certificates, tzdata" />
+      <RpmSpecLines Include="Requires:       libc.so.6(GLIBC_2.28)(64bit), libgcc_s.so.1()(64bit), libstdc++.so.6()(64bit), libz.so.1()(64bit), libssl.so.3()(64bit)" />
+      <RpmSpecLines Include="Requires:       (libicuuc.so.78()(64bit) or libicuuc.so.77()(64bit) or libicuuc.so.76()(64bit) or libicuuc.so.75()(64bit) or libicuuc.so.74()(64bit) or libicuuc.so.73()(64bit) or libicuuc.so.72()(64bit) or libicuuc.so.70()(64bit) or libicuuc.so.67()(64bit))" />
+      <RpmSpecLines Include="Requires:       libX11.so.6()(64bit), libICE.so.6()(64bit), libSM.so.6()(64bit), libfontconfig.so.1()(64bit), libxcb.so.1()(64bit)" />
+      <RpmSpecLines Include="Requires:       libXrender.so.1()(64bit), libXrandr.so.2()(64bit), libXi.so.6()(64bit), libXcursor.so.1()(64bit), libXext.so.6()(64bit)" />
       <RpmSpecLines Include="%25description" />
       <RpmSpecLines Include="ColDog Locker installs the cdlocker command and Avalonia desktop app" />
       <RpmSpecLines Include="under /opt/coldog-locker. Runtime settings, logs, and locker metadata" />
@@ -179,7 +182,7 @@
     </ItemGroup>
 
     <WriteLinesToFile File="$(RpmSpec)" Lines="@(RpmSpecLines)" Overwrite="true" />
-    <Exec Command='rpmbuild -bb --target "$(RpmArchitecture)" --define="_topdir $(RpmTopDir.TrimEnd(`/`))" "$(RpmSpec)"' />
+    <Exec Command='SOURCE_DATE_EPOCH="$(SourceDateEpoch)" rpmbuild -bb --target "$(RpmArchitecture)" --define="_topdir $(RpmTopDir.TrimEnd(`/`))" --define="use_source_date_epoch_as_buildtime 1" --define="clamp_mtime_to_source_date_epoch 1" "$(RpmSpec)"' />
     <Exec Command='rm -f "$(RpmOutput)"' />
     <Exec Command='cp "$(RpmTopDir)RPMS/$(RpmArchitecture)"/*.rpm "$(RpmOutput)"' />
     <Message Importance="high" Text="Built $(RpmOutput)" />

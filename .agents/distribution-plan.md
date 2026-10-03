@@ -20,10 +20,10 @@ The CLI project is configured so RID-based publishes are:
 
 - Single-file.
 - Self-contained.
-- Trimmed.
+- Untrimmed: reflection-based JSON paths require this.
 - Including native libraries for self-extract.
 
-This differs from older framework-dependent, separate-DLL planning.
+Windows MSI packaging explicitly overrides this to framework-dependent, separate-file publication for both entry points; Linux and macOS packages use self-contained publication.
 
 ## Primary Artifacts
 
@@ -124,7 +124,7 @@ ColDog Locker\
 └── README.md
 ```
 
-In the recommended package, `ColDogLocker.exe` is the Avalonia GUI. If the release stays self-contained/single-file for CLI, keep that packaging choice explicit in release notes.
+In the Windows package, `ColDogLocker.exe` is the Avalonia GUI. The directory also contains the framework-dependent DLLs, native libraries and runtime configuration files; the simplified list above only identifies the main entry points.
 
 ## User Data
 
@@ -137,7 +137,7 @@ User data is per-user and remains outside Program Files and `/opt`:
 └── logs\
 ```
 
-The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `0` so user data is preserved unless cleanup is explicitly requested. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal leaves per-user app data in place, and Debian purge removes reserved system config/data directories if future versions add them.
+The MSI includes an uninstall cleanup action controlled by the `REMOVE_USER_DATA_ON_UNINSTALL` property, defaulted to `0`. Cleanup requires explicit opt-in during standalone full removal of an installed product and is excluded when `UPGRADINGPRODUCTCODE` is set. The current installer UI has no cleanup checkbox. Cleanup permanently removes local app data and the default locker folder; see [packaging](packaging.md#windows-installer-behavior) for the pending Windows validation matrix and limitations of older cached MSI packages. MSI same-version major upgrades are enabled so prerelease and stable packages that share the same numeric Windows Installer `ProductVersion` can still replace each other. Linux package managers do not provide an interactive per-user uninstall checkbox; package removal and Debian purge preserve per-user app data. The current packages have no purge script that removes reserved system config/data directories.
 
 The macOS `.pkg` does not provide a native uninstall checkbox. Remove `/Applications/ColDog Locker.app` and `/usr/local/bin/cdlocker` manually.
 
@@ -151,8 +151,8 @@ Current behavior:
 - Unstable channel scans published non-draft releases.
 - Platform detection chooses Windows, Linux DEB, Linux RPM, macOS, or unsupported.
 - Automatic download requires a matching asset and a GitHub `sha256:` digest.
-- Downloads go to the user's Downloads folder.
-- `cdlocker update --download` starts installation after the digest check. Windows launches the verified installer elevated. Linux runs the verified `.deb`/`.rpm` through the local package manager with root, `pkexec`, or `sudo`. macOS opens the verified `.pkg` with Installer.
+- Downloads go to an owner-only `updates` staging directory under the app's local data directory. Linked staging ancestors are refused; Unix mode is enforced as `0700`, and Windows uses a protected owner-only DACL.
+- `cdlocker update --download` rechecks the digest through a no-follow regular-file handle before elevation. The privileged launcher copies the source into a new private root/administrator-owned staging directory and verifies the copy before passing it to `msiexec`, the Linux package manager or macOS Installer. A changed source is refused before package consumption.
 
 Release assets should use names that the update selector can match by OS, architecture, and package family.
 On Windows, the updater prefers the `.msi` asset when both `.msi` and setup `.exe` assets are present because the installed app already has the required .NET runtime available.
@@ -213,4 +213,4 @@ CI also runs unit and CLI E2E tests on Windows, Linux, and macOS. CLI unit tests
 ## Open Distribution Decisions
 
 - Add Developer ID signing and notarization if project signing credentials become available.
-- Whether Linux GUI package dependencies should be declared explicitly once clean distro VM testing identifies the minimum native library set.
+- Validate the declared native runtime and desktop-library dependencies on clean distro installations for every supported architecture.

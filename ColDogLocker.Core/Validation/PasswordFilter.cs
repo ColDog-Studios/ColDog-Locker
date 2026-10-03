@@ -136,7 +136,6 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 }
             }
 
-
             var commonPattern = CommonPatternRegex().Match(password);
             if (commonPattern.Success)
             {

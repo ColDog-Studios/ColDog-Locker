@@ -6,14 +6,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
-  DOTNET_VERSION: '10.0.x'
+  RestoreLockedMode: 'true'
   CONFIGURATION: Release
   TEST_PROJECTS: |
     ColDogLocker.Cli.Tests/ColDogLocker.Cli.Tests.csproj
@@ -31,10 +31,11 @@ jobs:
       tag_name: ${{ steps.metadata.outputs.tag_name }}
       release_name: ${{ steps.metadata.outputs.release_name }}
       release_flags: ${{ steps.metadata.outputs.release_flags }}
+      source_date_epoch: ${{ steps.metadata.outputs.source_date_epoch }}
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Compute release metadata
       id: metadata
@@ -69,7 +70,7 @@ jobs:
             ]
             next_sequence = max(existing_sequences, default=0) + 1
             release_version = f"{base_version}-{prerelease_label}.{next_sequence}"
-            release_flags = "--prerelease --latest=false" if prerelease_label in {"alpha", "beta"} else "--latest"
+            release_flags = "--prerelease --latest=false"
         else:
             release_version = version
             release_flags = "--latest"
@@ -83,6 +84,7 @@ jobs:
         print(f"release_name={release_version}")
         print(f"release_flags={release_flags}")
         PY
+        echo "source_date_epoch=$(git show -s --format=%ct HEAD)" >> "$GITHUB_OUTPUT"
 
   tests:
     name: Release Tests
@@ -90,12 +92,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        global-json-file: global.json
 
     - name: Fail on vulnerable NuGet packages
       shell: bash
@@ -104,6 +106,9 @@ jobs:
     - name: Report vulnerable packages
       shell: bash
       run: dotnet list ColDogLocker.slnx package --vulnerable --include-transitive
+
+    - name: Verify third-party inventory
+      run: python3 .github/scripts/release_manifest.py --check-only
 
     - name: Restore dependencies
       shell: bash
@@ -131,7 +136,7 @@ jobs:
 
     - name: Publish CLI for E2E
       shell: bash
-      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c "${{ env.CONFIGURATION }}" -o ./cli-publish
+      run: dotnet publish ColDogLocker.Cli/ColDogLocker.Cli.csproj -c "${{ env.CONFIGURATION }}" -r linux-x64 -o ./cli-publish
 
     - name: Run CLI E2E tests
       shell: bash
@@ -141,30 +146,58 @@ jobs:
 
   windows-packages:
     name: Windows Packages (${{ matrix.arch }})
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     needs: [ version, tests ]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.version.outputs.source_date_epoch }}
     strategy:
       fail-fast: false
       matrix:
-        arch: [ x64, arm64 ]
+        include:
+          - arch: x64
+            runner: windows-latest
+            expected_arch: X64
+          - arch: arm64
+            runner: windows-11-arm
+            expected_arch: Arm64
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        global-json-file: global.json
 
     - name: Restore installer project
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
 
+    - name: Run native service tests
+      run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ env.CONFIGURATION }}" --verbosity normal
+
+    - name: Build upgrade baseline MSI and setup EXE
+      run: |
+        dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ env.CONFIGURATION }}" -p:PackageArchitecture=${{ matrix.arch }} -p:Version=0.0.1 --no-restore
+        Move-Item "artifacts/packages/dist/ColDogLocker-0.0.1-win-${{ matrix.arch }}.msi" "$env:RUNNER_TEMP\ColDogLocker-baseline.msi"
+        Move-Item "artifacts/packages/dist/ColDogLocker-0.0.1-win-${{ matrix.arch }}-setup.exe" "$env:RUNNER_TEMP\ColDogLocker-baseline-setup.exe"
+
     - name: Build MSI and setup EXE
       run: dotnet build ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj -c "${{ env.CONFIGURATION }}" -p:PackageArchitecture=${{ matrix.arch }} -p:Version=${{ needs.version.outputs.release_version }} --no-restore
 
+    - name: Validate installed Windows package
+      shell: pwsh
+      run: >-
+        .github/scripts/windows_installed_e2e.ps1
+        -MsiPath "artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-win-${{ matrix.arch }}.msi"
+        -SetupPath "artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-win-${{ matrix.arch }}-setup.exe"
+        -BaselineMsiPath "$env:RUNNER_TEMP\ColDogLocker-baseline.msi"
+        -BaselineSetupPath "$env:RUNNER_TEMP\ColDogLocker-baseline-setup.exe"
+        -ReviewScripts ".github/scripts"
+        -ExpectedArchitecture "${{ matrix.expected_arch }}"
+
     - name: Upload Windows packages
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: release-win-${{ matrix.arch }}
         path: |
@@ -174,41 +207,10 @@ jobs:
 
   linux-deb:
     name: Linux DEB (${{ matrix.arch }})
-    runs-on: ubuntu-latest
-    needs: [ version, tests ]
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [ x64, arm64 ]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v7
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v6
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Install package tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y binutils tar gzip
-
-    - name: Build DEB
-      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
-
-    - name: Upload DEB
-      uses: actions/upload-artifact@v7
-      with:
-        name: release-linux-${{ matrix.arch }}-deb
-        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.deb
-        if-no-files-found: error
-
-  linux-rpm:
-    name: Linux RPM (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     needs: [ version, tests ]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.version.outputs.source_date_epoch }}
     strategy:
       fail-fast: false
       matrix:
@@ -220,12 +222,66 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        global-json-file: global.json
+
+    - name: Install package tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y binutils tar gzip
+
+    - name: Build DEB
+      run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
+
+    - name: Verify reproducible DEB (${{ matrix.arch }})
+      shell: bash
+      run: |
+        package="artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.deb"
+        cp "$package" "${RUNNER_TEMP}/first.deb"
+        dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=deb -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
+        cmp "${RUNNER_TEMP}/first.deb" "$package"
+
+    - name: Validate installed DEB (${{ matrix.arch }})
+      run: >-
+        docker run --rm
+        -v "${{ github.workspace }}/artifacts/packages/dist:/packages:ro"
+        -v "${{ github.workspace }}/.github/scripts:/review-scripts:ro"
+        ubuntu:24.04 bash /review-scripts/linux_installed_e2e.sh deb ${{ matrix.arch }}
+
+    - name: Upload DEB
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      with:
+        name: release-linux-${{ matrix.arch }}-deb
+        path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.deb
+        if-no-files-found: error
+
+  linux-rpm:
+    name: Linux RPM (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [ version, tests ]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.version.outputs.source_date_epoch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+      with:
+        global-json-file: global.json
 
     - name: Install package tools
       run: |
@@ -235,8 +291,23 @@ jobs:
     - name: Build RPM
       run: dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
 
+    - name: Verify reproducible RPM (${{ matrix.arch }})
+      shell: bash
+      run: |
+        package="artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.rpm"
+        cp "$package" "${RUNNER_TEMP}/first.rpm"
+        dotnet msbuild ColDogLocker.Installer.Linux/ColDogLocker.Installer.Linux.proj -t:Build -p:PackageFormat=rpm -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
+        cmp "${RUNNER_TEMP}/first.rpm" "$package"
+
+    - name: Validate installed RPM (${{ matrix.arch }})
+      run: >-
+        docker run --rm
+        -v "${{ github.workspace }}/artifacts/packages/dist:/packages:ro"
+        -v "${{ github.workspace }}/.github/scripts:/review-scripts:ro"
+        fedora:43 bash /review-scripts/linux_installed_e2e.sh rpm ${{ matrix.arch }}
+
     - name: Upload RPM
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: release-linux-${{ matrix.arch }}-rpm
         path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-linux-${{ matrix.arch }}.rpm
@@ -246,6 +317,8 @@ jobs:
     name: macOS PKG (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
     needs: [ version, tests ]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.version.outputs.source_date_epoch }}
     strategy:
       fail-fast: false
       matrix:
@@ -257,18 +330,28 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v6
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        global-json-file: global.json
+
+    - name: Run native service tests
+      run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ env.CONFIGURATION }}" --verbosity normal
 
     - name: Build unsigned PKG
       run: dotnet msbuild ColDogLocker.Installer.Mac/ColDogLocker.Installer.Mac.proj -t:Build -p:PackageArchitecture=${{ matrix.arch }} -p:Configuration="${{ env.CONFIGURATION }}" -p:Version=${{ needs.version.outputs.release_version }}
 
+    - name: Validate installed macOS package
+      run: >-
+        bash .github/scripts/macos_installed_e2e.sh
+        "artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-macos-${{ matrix.arch }}.pkg"
+        ".github/scripts"
+        "${{ matrix.arch }}"
+
     - name: Upload PKG
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: release-macos-${{ matrix.arch }}-pkg
         path: artifacts/packages/dist/ColDogLocker-${{ needs.version.outputs.release_version }}-macos-${{ matrix.arch }}.pkg
@@ -276,21 +359,35 @@ jobs:
 
   publish:
     name: Publish Release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     needs: [ version, tests, windows-packages, linux-deb, linux-rpm, macos-pkg ]
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.version.outputs.source_date_epoch }}
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         fetch-depth: 0
 
     - name: Download package artifacts
-      uses: actions/download-artifact@v8
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
       with:
         pattern: release-*
         path: release-assets
         merge-multiple: true
+
+    - name: Generate checksums and release manifest
+      run: python3 .github/scripts/release_manifest.py release-assets
+
+    - name: Attest release artifact provenance
+      uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+      with:
+        subject-checksums: release-assets/SHA256SUMS
 
     - name: List release assets
       shell: bash
@@ -298,7 +395,7 @@ jobs:
         find release-assets -maxdepth 1 -type f -printf '%f\n' | sort
 
     - name: Setup Node
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
       with:
         node-version: '22'
 
@@ -318,11 +415,9 @@ jobs:
         }
         EOF
 
-        npm install --no-save --no-audit --no-fund \
-          conventional-changelog@7.2.0 \
-          conventional-changelog-conventionalcommits@9.3.1
+        npm ci --prefix .github --ignore-scripts --no-audit --no-fund
 
-        npx conventional-changelog \
+        .github/node_modules/.bin/conventional-changelog \
           --config .github/conventional-changelog.config.mjs \
           --tag-prefix v \
           --release-count 1 \
