@@ -7,10 +7,12 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import tempfile
 import time
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 
@@ -45,6 +47,24 @@ RECOVERY_BOUNDARIES = (
     "Recovery.PlaintextPublished",
     "Recovery.MetadataCommitted",
 )
+
+
+@contextmanager
+def temporary_workspace(root: Path, prefix: str):
+    directory = Path(tempfile.mkdtemp(prefix=prefix, dir=root))
+    try:
+        yield directory
+    finally:
+        for attempt in range(10):
+            try:
+                shutil.rmtree(directory)
+                break
+            except FileNotFoundError:
+                break
+            except PermissionError:
+                if os.name != "nt" or attempt == 9:
+                    raise
+                time.sleep(0.1)
 
 
 class CrashBoundaryCheck:
@@ -132,7 +152,9 @@ class CrashBoundaryCheck:
 
     @staticmethod
     def pending(database: Path) -> tuple[str, str, Path, Path, Path] | None:
-        with sqlite3.connect(database) as connection:
+        # sqlite3.Connection context management controls transactions; it does
+        # not close the handle needed before Windows workspace cleanup.
+        with closing(sqlite3.connect(database)) as connection:
             row = connection.execute(
                 "SELECT OperationId, Phase, SourcePath, TargetPath, StagingPath FROM LockerOperations"
             ).fetchone()
@@ -174,8 +196,7 @@ class CrashBoundaryCheck:
         self.assert_payload(destination)
 
     def lock_boundary(self, boundary: str) -> None:
-        with tempfile.TemporaryDirectory(prefix="cdl-lock-crash-", dir=self.root) as temporary:
-            directory = Path(temporary)
+        with temporary_workspace(self.root, "cdl-lock-crash-") as directory:
             env = self.environment(directory)
             name = "LockBoundary"
             source = self.create_locker(directory, env, name)
@@ -185,8 +206,7 @@ class CrashBoundaryCheck:
                 self.assert_payload(source)
 
     def unlock_boundary(self, boundary: str) -> None:
-        with tempfile.TemporaryDirectory(prefix="cdl-unlock-crash-", dir=self.root) as temporary:
-            directory = Path(temporary)
+        with temporary_workspace(self.root, "cdl-unlock-crash-") as directory:
             env = self.environment(directory)
             name = "UnlockBoundary"
             self.create_locker(directory, env, name)
@@ -215,8 +235,7 @@ class CrashBoundaryCheck:
                 self.assert_payload(destination)
 
     def recovery_boundary(self, boundary: str) -> None:
-        with tempfile.TemporaryDirectory(prefix="cdl-recovery-crash-", dir=self.root) as temporary:
-            directory = Path(temporary)
+        with temporary_workspace(self.root, "cdl-recovery-crash-") as directory:
             env = self.environment(directory)
             name = "RecoveryBoundary"
             self.create_locker(directory, env, name)
