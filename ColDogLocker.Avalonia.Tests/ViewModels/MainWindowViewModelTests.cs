@@ -276,6 +276,39 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
             Assert.Equal("No Updates Available", message.Title);
         }
 
+        [Theory]
+        [InlineData(null, null, null)]
+        [InlineData("current", null, null)]
+        [InlineData("current", "new", null)]
+        [InlineData("current", "new", "different")]
+        public async Task PasswordCancellationAndMismatchDoNotStartAMutation(string? current, string? password, string? confirmation)
+        {
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+            viewModel.Lockers = CreateLockers();
+            viewModel.SelectedLocker = viewModel.Lockers[0];
+            dialogs.PasswordResponses.Enqueue(current);
+            dialogs.PasswordResponses.Enqueue(password);
+            dialogs.PasswordResponses.Enqueue(confirmation);
+            await viewModel.ChangePasswordCommand.ExecuteAsync(null);
+            Assert.Empty(dialogs.Errors);
+            Assert.Empty(dialogs.Messages);
+            Assert.False(viewModel.IsBusy);
+            Assert.Equal(confirmation == "different" ? 1 : 0, dialogs.Warnings.Count);
+        }
+
+        [Fact]
+        public async Task DecliningFileDeletionLeavesTheLockerSelected()
+        {
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+            viewModel.Lockers = CreateLockers();
+            var selected = viewModel.SelectedLocker = viewModel.Lockers[0];
+            dialogs.ConfirmationResponse = false;
+            await viewModel.DeleteSelectedCommand.ExecuteAsync(null);
+            Assert.Same(selected, viewModel.SelectedLocker);
+            Assert.Contains(selected, viewModel.Lockers);
+            Assert.Empty(dialogs.Errors);
+        }
+
         private static MainWindowViewModel CreateViewModel()
         {
             return TestViewModelFactory.Create(out _, out _, out _, out _);

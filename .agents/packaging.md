@@ -30,8 +30,8 @@ Each installer/package is intentionally a combined app package. The CLI and GUI 
 
 ## Prerequisites
 
-- .NET SDK 10.
-- WiX 6 is restored through `WixToolset.Sdk` and NuGet when building Windows installers.
+- The exact SDK in `global.json`.
+- WiX 7.0.0 is restored through `WixToolset.Sdk` and NuGet when building Windows installers. The maintainer explicitly authorized its [OSMF EULA](https://wixtoolset.org/osmf/) acceptance for this repository; the installer project passes `AcceptEula=wix7` for local and CI builds.
 - A Windows host for `.msi` and `.exe` setup bundles; WiX restores on Linux but Windows installer build execution is Windows-only.
 - `ar`, `tar`, and `gzip` for `.deb`.
 - `rpmbuild` for `.rpm`.
@@ -238,6 +238,10 @@ The declarations follow [Avalonia Linux deployment](https://docs.avaloniaui.net/
 
 ## Disposable installed-package checks
 
-`.github/scripts/linux_installed_e2e.sh` runs as root only inside a disposable container. Mount exactly one x64 package of the requested format under `/packages` and the repository scripts under `/review-scripts`, then run `bash /review-scripts/linux_installed_e2e.sh deb` in Ubuntu 24.04 or `rpm` in Fedora 43. Both package and release workflows run these checks for x64.
+The manual Packages and automated Release workflows define native Windows x64/ARM64, Linux x64/ARM64 and macOS x64/ARM64 checks. Defining a job is not execution evidence; record inspected run results in [launch remediation](launch-fixes.md).
 
-The script installs dependencies through the native package manager, creates an unprivileged test user, runs the 33-scenario CLI E2E suite, checks GUI startup under Xvfb, reinstalls the package, and removes it while checking a user-owned marker survives. The GUI check only detects startup/native-library failures. Interactive behavior, accessibility, upgrades from older schemas, and ARM/Windows/macOS validation remain separate requirements.
+`linux_installed_e2e.sh` runs as root only inside a disposable Ubuntu 24.04 or Fedora 43 container. Mount exactly one matching architecture/format package under `/packages` and scripts under `/review-scripts`, then pass `deb x64`, `rpm x64`, `deb arm64` or `rpm arm64`. It resolves dependencies, creates an unprivileged user, runs the current CLI E2E suite, checks GUI startup under Xvfb, reinstalls and removes while verifying a user marker survives. Run ARM64 on a native ARM64 host.
+
+`windows_installed_e2e.ps1` checks setup/runtime bootstrap, native process architecture, CLI, GUI startup, baseline major upgrade, downgrade refusal, repair, reinstall and removal preservation; explicit user-data cleanup is tested only in an isolated profile. `macos_installed_e2e.sh` checks PKG install, architecture, CLI, GUI startup, reinstall and removal preservation. These scripts do not prove actual screen-reader speech, Gatekeeper/SmartScreen UX or complete GUI interaction; those remain manual.
+
+Combined packages install CLI, TUI and GUI together. Musl RID support is a source-publish option, not a advertised DEB/RPM/musl graphical package guarantee. Avoid duplicating this layout in another distribution-plan file.

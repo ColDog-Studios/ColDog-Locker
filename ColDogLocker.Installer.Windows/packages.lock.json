@@ -4,21 +4,21 @@
     "native,Version=v0.0": {
       "WixToolset.Bal.wixext": {
         "type": "Direct",
-        "requested": "[6.0.2, )",
-        "resolved": "6.0.2",
-        "contentHash": "WeO0Qo28apmrEKQ+fEmWBEwnsez+4/B/NP5WnCnK2ZzKNcBr9xiRx01XHPBr08VqibDZGgXraDqFJ7Flws2QDw=="
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "ez5czOEoIE+mDS7dEI4AQBzWzbLZ8/JydLnfYaqG+cjdUEGE5Cvm2F38Tf6k/iRPU3XJLlq3NK9n7dmqeiKkpw=="
       },
       "WixToolset.Netfx.wixext": {
         "type": "Direct",
-        "requested": "[6.0.2, )",
-        "resolved": "6.0.2",
-        "contentHash": "Q4NdMLOJ9BywVhNdN22nycnpOxleeDblVqX0VB7RkHMtFVAe9Z3UbyqQBD5PShW50esA0PUrk7hJB95eZzh57Q=="
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "vG580BGQdA7l0bTDOcoRRNYJtKouIp/PAabGs1cMorbzQ2NnGGgruMMyO3l/I8mEUVtFutIEC0zDPESMz7kEqA=="
       },
       "WixToolset.UI.wixext": {
         "type": "Direct",
-        "requested": "[6.0.2, )",
-        "resolved": "6.0.2",
-        "contentHash": "1Hq+Kp4WTb9TLRLRpv/iGod6MnNadz1ZrmY1USS6SL/WVxFuiBvQVGGLXrcdQld9J7oVWCZ8k9eMFtaYJOJ5AQ=="
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "8gjhm6oWo++97yEKkm8wEkw2EqY5em3yCUXrSh/AIyU23IaazB2zrrpbayh4CnGJSaG2ZAHfhA5m9VrwqmPw0A=="
       }
     },
     "native,Version=v0.0/linux-arm64": {},

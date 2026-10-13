@@ -36,6 +36,11 @@
         MinWidth="900"
         MinHeight="540">
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding CreateLockerCommand}" />
+        <KeyBinding Gesture="F5" Command="{Binding RefreshCommand}" />
+        <KeyBinding Gesture="Ctrl+I" Command="{Binding ShowPropertiesCommand}" />
+    </Window.KeyBindings>
     <DockPanel>
         <DockPanel.Styles>
             <Style Selector="MenuItem.top-menu">
@@ -101,6 +106,8 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="_Change Password" Command="{Binding ChangePasswordCommand}" AutomationProperties.Name="Change password" />
+                <MenuItem Header="_Verify Integrity" Command="{Binding VerifySelectedCommand}" AutomationProperties.Name="Verify integrity" />
                 <MenuItem Command="{Binding RemoveSelectedCommand}" AutomationProperties.Name="Remove">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
@@ -110,6 +117,7 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="Delete Locker and _Files…" Command="{Binding DeleteSelectedCommand}" AutomationProperties.Name="Delete locker and files" />
                 <MenuItem Command="{Binding ShowPropertiesCommand}" AutomationProperties.Name="Properties">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
@@ -152,6 +160,8 @@
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Tools" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
+                <MenuItem Header="_Backup and Recovery…" Command="{Binding ShowMaintenanceCommand}" AutomationProperties.Name="Backup and recovery" />
+                <Separator />
                 <MenuItem Command="{Binding ShowSettingsCommand}" AutomationProperties.Name="Settings">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
@@ -349,6 +359,7 @@
             </Border>
 
             <Grid Grid.Row="1" Margin="12">
+
                 <Grid x:Name="ListViewPanel" RowDefinitions="Auto,*" IsVisible="{Binding IsListView}">
                     <Border Grid.Row="0"
                             Padding="10,8"
@@ -365,7 +376,7 @@
                     </Border>
                     <ListBox x:Name="ListLockerList" Grid.Row="1"
                              AutomationProperties.Name="Lockers"
-                             ItemsSource="{Binding FilteredLockers}"
+                             ItemsSource="{Binding FilteredLockers}" DoubleTapped="LockerList_DoubleTapped"
                              SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                              Background="Transparent"
                              BorderThickness="0">
@@ -381,12 +392,15 @@
                                             <Separator />
                                             <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
                                             <MenuItem Header="Properties" Click="ContextProperties_Click" />
+                                            <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click" />
+                                            <MenuItem Header="Verify Integrity" Click="ContextVerify_Click" />
                                             <Separator />
                                             <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
+                                            <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click" />
                                         </ContextMenu>
                                     </Border.ContextMenu>
                                     <Grid ColumnDefinitions="2*,*,*,*,3*" ColumnSpacing="12">
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}" TextTrimming="CharacterEllipsis"
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" ToolTip.Tip="{Binding Name}" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource AppForegroundBrush}" />
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                                             <materialIcons:MaterialIcon Width="16" Height="16" Kind="{Binding StatusIconKind}"
@@ -396,7 +410,7 @@
                                         <TextBlock Grid.Column="2" Text="{Binding LastModified, StringFormat='{}{0:g}'}"
                                                    Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                         <TextBlock Grid.Column="3" Text="{Binding SizeText}" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
-                                        <TextBlock Grid.Column="4" Text="{Binding Location}" TextTrimming="CharacterEllipsis"
+                                        <TextBlock Grid.Column="4" Text="{Binding Location}" ToolTip.Tip="{Binding Location}" TextTrimming="CharacterEllipsis"
                                                    Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                     </Grid>
                                 </Border>
@@ -405,7 +419,7 @@
                     </ListBox>
                 </Grid>
 
-                <ListBox x:Name="GridLockerList" ItemsSource="{Binding FilteredLockers}"
+                <ListBox x:Name="GridLockerList" ItemsSource="{Binding FilteredLockers}" DoubleTapped="LockerList_DoubleTapped"
                          AutomationProperties.Name="Lockers"
                          SelectedItem="{Binding SelectedLocker, Mode=TwoWay}"
                          IsVisible="{Binding IsGridView}"
@@ -434,13 +448,16 @@
                                         <Separator />
                                         <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
                                         <MenuItem Header="Properties" Click="ContextProperties_Click" />
+                                        <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click" />
+                                        <MenuItem Header="Verify Integrity" Click="ContextVerify_Click" />
                                         <Separator />
                                         <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
+                                        <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <StackPanel Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{Binding Name}"
+                                        <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}"
                                                    FontSize="16"
                                                    FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"
@@ -455,7 +472,7 @@
                                             </StackPanel>
                                         </Border>
                                     </Grid>
-                                    <TextBlock Text="{Binding Location}" TextTrimming="CharacterEllipsis"
+                                    <TextBlock Text="{Binding Location}" ToolTip.Tip="{Binding Location}" TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock Text="{Binding LastModified, StringFormat='{}{0:g}'}"
@@ -467,6 +484,11 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                <StackPanel IsVisible="{Binding HasNoVisibleLockers}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                    <materialIcons:MaterialIcon Kind="FolderLockOutline" Width="48" Height="48" HorizontalAlignment="Center" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                    <TextBlock Text="{Binding EmptyStateMessage}" FontSize="18" TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
+                    <Button Content="New Locker" Command="{Binding CreateLockerCommand}" HorizontalAlignment="Center" />
+                </StackPanel>
             </Grid>
         </Grid>
     </DockPanel>

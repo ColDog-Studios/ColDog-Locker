@@ -1,5 +1,7 @@
-<Project Sdk="WixToolset.Sdk/6.0.2">
+<Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
+    <!-- WiX 7 OSMF EULA acceptance explicitly authorized by the maintainer. -->
+    <AcceptEula>wix7</AcceptEula>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <PackageArchitecture Condition="'$(PackageArchitecture)' == ''">x64</PackageArchitecture>
@@ -10,15 +12,15 @@
     <DotNetPlatform Condition="'$(PackageArchitecture)' == 'x64'">x64</DotNetPlatform>
     <DotNetPlatform Condition="'$(PackageArchitecture)' == 'arm64'">arm64</DotNetPlatform>
     <!-- WiX remote EXE payloads are pinned so Burn can verify the downloaded runtime. -->
-    <DotNetRuntimeVersion>10.0.9</DotNetRuntimeVersion>
+    <DotNetRuntimeVersion>10.0.12</DotNetRuntimeVersion>
     <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'x64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-x64.exe</DotNetRuntimeFileName>
     <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'arm64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-arm64.exe</DotNetRuntimeFileName>
     <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'x64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
     <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'arm64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
-    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'x64'">b1fc25347750b6dbfa91fdf2f6d3615cc370582b299328bea6e09218f19386088d5170e739a16caab04ffa0a0a1aa5ae301ea542f3604b62c40da88e82d06093</DotNetRuntimeSha512>
-    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'arm64'">99aa9aebd5224cb908971bf3426df2e33c6134e5b954b7c69e43fb7e7d3cf81d7e1b2a4adcaf5538376aadff4471eae44f22844430608ceec7f8e7ab871c4323</DotNetRuntimeSha512>
-    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'x64'">30548720</DotNetRuntimeSize>
-    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28385256</DotNetRuntimeSize>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'x64'">b937ae539c4ab21f885b033178dadea98018baad777252c76251e760d81c18463b2f802e86b6a67ea066690e9ede2d66a6bc3c3e614e391505e98c4c41121400</DotNetRuntimeSha512>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'arm64'">45c8fcf4102c5c0d36bd9a85f9f35f10225f37415bf2479cf85b9f460b8a8e279d9e9210c5e7ac53604aea19e4aafa8ae35279f6bbfaf31816f6f27c1f2750df</DotNetRuntimeSha512>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'x64'">30663104</DotNetRuntimeSize>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28447832</DotNetRuntimeSize>
 
     <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
     <DotNetRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildSDKsPath)', '..', '..', '..'))</DotNetRoot>

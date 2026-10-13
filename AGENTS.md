@@ -6,7 +6,6 @@ Use `.agents/` for project context that helps future coding agents and maintaine
 
 - `.agents/architecture.md`
 - `.agents/gui-plans.md`
-- `.agents/distribution-plan.md`
 - `.agents/packaging.md`
 - `.agents/release-automation.md`
 

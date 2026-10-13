@@ -50,7 +50,7 @@ For `main` and manual dispatch:
 
 1. Check out the triggering commit.
 2. Read `Version` from `Directory.Build.props`.
-3. Restore, build, and test the Core, Services, and Avalonia test projects in `Release`.
+3. Restore, build, and test the CLI, Core, Services, and Avalonia test projects in `Release`.
 4. Publish the CLI and run the CLI E2E workflow against the published binary.
 5. Build Windows x64 and arm64 `.msi` plus setup `.exe` installers.
 6. Build Linux x64 and arm64 `.deb` packages.
@@ -114,7 +114,9 @@ After the release is published:
 
 ## Pinned inputs
 
-Workflow actions use immutable commit references. `global.json` selects SDK 10.0.112 without roll-forward; all CI .NET setup steps read it, including Linux container builds. NuGet lock files are checked in and workflows set `RestoreLockedMode=true`. Single-file analysis stays enabled for ordinary builds as well as publishes, keeping the SDK analyzer package graph stable. `DisableImplicitLibraryPacksFolder` prevents distro-repacked SDK archives from writing non-portable package hashes into those locks. Regenerate locks deliberately with `dotnet restore ColDogLocker.slnx --force-evaluate` after changing dependency versions, and restore `.github/scripts/crash_probe/CrashProbe.csproj` separately. Restore the WiX project separately to update its lock.
+Workflow actions use immutable commit references. `global.json` selects SDK 10.0.401 without roll-forward; all CI .NET setup steps read it, including Linux container builds. NuGet lock files are checked in and workflows set `RestoreLockedMode=true`. Single-file analysis stays enabled for ordinary builds as well as publishes, keeping the SDK analyzer package graph stable. `DisableImplicitLibraryPacksFolder` prevents distro-repacked SDK archives from writing non-portable package hashes into those locks. Regenerate locks deliberately with `dotnet restore ColDogLocker.slnx --force-evaluate` after changing dependency versions, and restore `.github/scripts/crash_probe/CrashProbe.csproj` separately. Restore the WiX project separately to update its lock.
+
+The compatible SkiaSharp/HarfBuzzSharp runtime graph remains at the versions declared by Avalonia 12.1.4 (3.119.4 / 8.3.1.3); newer standalone major releases are deliberately not forced underneath Avalonia. Direct NuGet dependencies and compatible transitive updates were checked against the configured feed. WiX 7.0.0 is enabled with explicitly authorized maintainer EULA acceptance in the installer project.
 
 Release-note dependencies live in `.github/package.json` and `.github/package-lock.json` and install through `npm ci --ignore-scripts`. Build metadata records a source revision, not the current clock. Linux package archives normalize ordering, ownership and timestamps through `SourceDateEpoch`; repeated-package comparison is enforced for x64 and ARM64. Current WiX releases still generate random MSI package codes and current summary timestamps, so Windows installer byte identity is not claimed. macOS package byte identity also remains unverified. The JSON release manifest is unsigned metadata, while GitHub's artifact attestation binds the checksummed release subjects to the workflow identity and source revision. It does not replace platform code signing. The checked-in notices and component inventory are shipped in each installer and as release assets; they are an engineering inventory, not a legal-compliance opinion.
 

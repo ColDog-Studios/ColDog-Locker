@@ -33,11 +33,6 @@
           "SQLitePCLRaw.config.e_sqlite3": "3.0.5"
         }
       },
-      "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
-      },
       "SQLitePCLRaw.config.e_sqlite3": {
         "type": "Transitive",
         "resolved": "3.0.5",
@@ -61,62 +56,76 @@
       },
       "coldoglocker.core": {
         "type": "Project"
+      },
+      "SQLite": {
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/linux-arm64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/linux-musl-arm64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/linux-musl-x64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/linux-x64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/osx-arm64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/osx-x64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/win-arm64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     },
     "net10.0/win-x64": {
       "SQLite": {
-        "type": "Transitive",
-        "resolved": "3.53.4",
-        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+        "type": "CentralTransitive",
+        "requested": "[3.54.0, )",
+        "resolved": "3.54.0",
+        "contentHash": "aqx98DxxJq1GoRFQ/QJSEOL1bqugkxjZrcRpiLAV/4ujlZiazMUIZlk13BFvmpfwWyHDUa9Uvj6rvuI7Vxu5Ag=="
       }
     }
   }

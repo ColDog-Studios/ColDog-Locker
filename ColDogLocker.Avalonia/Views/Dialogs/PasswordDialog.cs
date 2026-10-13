@@ -26,6 +26,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             InitializeComponent();
 
+            Opened += (_, _) => PasswordBox.Focus();
+            Closed += (_, _) => PasswordBox.Text = string.Empty;
+            ShowPasswordCheckBox.IsCheckedChanged += (_, _) => PasswordBox.PasswordChar = ShowPasswordCheckBox.IsChecked == true ? '\0' : '*';
             OkButton.Click += OkButton_Click;
             CancelButton.Click += CancelButton_Click;
             PasswordBox.PropertyChanged += (_, args) =>

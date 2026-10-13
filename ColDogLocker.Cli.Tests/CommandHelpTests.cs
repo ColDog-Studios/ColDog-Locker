@@ -60,6 +60,14 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         }
 
         [Fact]
+        public void AboutDoesNotInitializeAnUnavailableDatabase()
+        {
+            var output = CaptureOutput(() => Assert.Equal(0, Program.Run(["about"], () => throw new IOException("Database unavailable"))));
+            Assert.Contains("Avalonia 12.1.4", output);
+            Assert.DoesNotContain("BCrypt", output);
+        }
+
+        [Fact]
         public void ShowGeneralHelp_IncludesCliEntryPointsAndAliases()
         {
             var output = CaptureOutput(CommandHelp.ShowGeneralHelp);
@@ -72,6 +80,9 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         }
 
         [Theory]
+        [InlineData("edit", "USAGE: cdlocker edit")]
+        [InlineData("open", "USAGE: cdlocker open")]
+        [InlineData("about", "USAGE: cdlocker about")]
         [InlineData("new", "CREATE NEW LOCKER:")]
         [InlineData("remove", "REMOVE LOCKER:")]
         [InlineData("lock", "LOCK LOCKER:")]

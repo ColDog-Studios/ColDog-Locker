@@ -40,6 +40,9 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine("  lock <name> [--password <pass>]        Lock a locker");
             Console.WriteLine("  unlock <name> [--password <pass>]      Unlock a locker");
             Console.WriteLine("  list [--locked|--unlocked]             List all lockers");
+            Console.WriteLine("  edit <name> [--name <name>] [--location <directory>]  Edit registration");
+            Console.WriteLine("  open <name>                            Open locker location");
+            Console.WriteLine("  about                                  Show acknowledgements and licenses");
             Console.WriteLine("  status <name>                          Show locker status");
             Console.WriteLine();
 
@@ -55,7 +58,7 @@ namespace ColDogStudios.ColDogLocker.Cli
             Console.WriteLine();
 
             Console.WriteLine("SETTINGS & DATABASE:");
-            Console.WriteLine("  settings [set <key> <value>]           View or modify settings");
+            Console.WriteLine("  settings [<key> [<value>]]           View or modify settings");
             Console.WriteLine("  db-vacuum                              Optimize database");
             Console.WriteLine("  db-info                                Show database information");
             Console.WriteLine("  db-backup <new-directory>              Create a verified database snapshot");
@@ -78,6 +81,18 @@ namespace ColDogStudios.ColDogLocker.Cli
 
             switch (command)
             {
+                case "edit":
+                    Console.WriteLine("USAGE: cdlocker edit <name> [--name <new-name>] [--location <existing-directory>]");
+                    Console.WriteLine("Edit an unlocked registration. This does not rename or move files; the directory leaf must match the chosen name.");
+                    break;
+                case "open":
+                    Console.WriteLine("USAGE: cdlocker open <name>");
+                    Console.WriteLine("Open the registered location in the desktop file manager.");
+                    break;
+                case "about":
+                    Console.WriteLine("USAGE: cdlocker about");
+                    Console.WriteLine("Show the current third-party acknowledgements and licenses.");
+                    break;
                 case "recovery-finish":
                     Console.WriteLine("USAGE: cdlocker recovery-finish <operation-id>");
                     Console.WriteLine("Verify an already committed operation and archive its journal without changing files.");
@@ -238,7 +253,14 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine();
                     Console.WriteLine("AVAILABLE SETTINGS:");
                     Console.WriteLine("  debug                 Enable/disable debug mode (true/false)");
-                    Console.WriteLine("  log-retention         Days to keep log files (1-3650)");
+                    Console.WriteLine("  default-location      Parent directory for new lockers");
+                    Console.WriteLine("  theme                 auto/light/dark/cds");
+                    Console.WriteLine("  view                  grid/list");
+                    Console.WriteLine("  reset                 Reset settings; preserve lockers");
+                    Console.WriteLine("  log-level             debug/info/warning/error/fatal");
+                    Console.WriteLine("  log-format            json/text");
+                    Console.WriteLine("  max-file-size         Log rotation size in MB (1-1024)");
+                    Console.WriteLine("  file-logging          true/false");
                     Console.WriteLine("  auto-update           Enable/disable auto-updates (true/false)");
                     Console.WriteLine("  update-channel        Update channel (stable/unstable)");
                     Console.WriteLine("  db-vacuum-interval    Days between database optimizations (0=disabled, 1-365)");
@@ -246,7 +268,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker settings");
                     Console.WriteLine("  cdlocker settings debug true");
-                    Console.WriteLine("  cdlocker settings log-retention 60");
+                    Console.WriteLine("  cdlocker settings log-level info");
                     Console.WriteLine("  cdlocker settings auto-update true");
                     Console.WriteLine("  cdlocker settings update-channel stable");
                     Console.WriteLine("  cdlocker settings update-channel unstable");
@@ -347,7 +369,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine($"No help available for command: {command}");
                     Console.WriteLine();
                     Console.WriteLine(
-                        "Available commands: new, remove, lock, unlock, list, status, change-password, verify, settings, db-vacuum, db-info, update, gui, tui");
+                        "Available commands: new, edit, open, remove, lock, unlock, list, status, change-password, verify, recover, recovery-list, recovery-history, recovery-cancel, recovery-finish, recovery-restore, settings, db-vacuum, db-info, db-backup, db-restore, update, about, dev, gui, tui");
                     break;
             }
         }

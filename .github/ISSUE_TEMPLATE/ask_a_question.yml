@@ -22,15 +22,12 @@ body:
           placeholder: What is your Question?
       validations:
           required: true
-    - type: dropdown
+    - type: input
       id: version
       attributes:
           label: Version
-          description: What version of ColDog Locker are you running?
-          options:
-              - 0.11.x-beta
-              - Built from source
-              - Other
+          description: Paste the version shown by cdlocker --version or Help > About.
+          placeholder: "1.0.0-beta+123.abcd123 (or source commit)"
       validations:
           required: false
     - type: dropdown
@@ -44,6 +41,7 @@ body:
               - Debian
               - Fedora
               - Ubuntu
+              - macOS
               - Windows 11
               - Windows Server
               - Other (put OS in description)

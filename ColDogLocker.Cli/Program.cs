@@ -48,6 +48,16 @@ namespace ColDogStudios.ColDogLocker.Cli
                     return VersionCommand();
                 }
 
+                if (args[0].Equals("gui", StringComparison.OrdinalIgnoreCase))
+                {
+                    return LaunchGui();
+                }
+
+                if (args[0].Equals("about", StringComparison.OrdinalIgnoreCase))
+                {
+                    return AboutCommand();
+                }
+
                 // Recovery must remain available when the metadata database is missing or corrupt.
                 if (args[0].Equals("recover", StringComparison.OrdinalIgnoreCase))
                 {
@@ -72,9 +82,10 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                 var result = command switch
                 {
-                    "gui" => LaunchGui(),
                     "terminal" or "tui" => LaunchTui(),
                     "update" => UpdateCommands.Update(args),
+                    "edit" => LockerCommands.Edit(args),
+                    "open" => LockerCommands.Open(args),
                     "new" => LockerCommands.New(args),
                     "remove" => LockerCommands.Remove(args),
                     "lock" => LockerCommands.Lock(args),
@@ -137,6 +148,13 @@ namespace ColDogStudios.ColDogLocker.Cli
 
             var command = args[1].ToLowerInvariant();
             CommandHelp.ShowCommandHelp(command);
+            return 0;
+        }
+
+        private static int AboutCommand()
+        {
+            Console.WriteLine($"ColDog Locker {AppInfo.SemanticVersion} — GNU GPL v3.0");
+            Console.WriteLine(ThirdPartyAcknowledgements.Text);
             return 0;
         }
 

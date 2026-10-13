@@ -48,6 +48,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
     {
         public NewLockerRequest? NewLockerRequest { get; set; }
         public string? PasswordResponse { get; set; }
+        public Queue<string?> PasswordResponses { get; } = new();
         public bool ConfirmationResponse { get; set; }
         public List<(string Title, string Message)> Messages { get; } = [];
         public List<(string Title, string Message)> Warnings { get; } = [];
@@ -79,7 +80,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
 
         public Task<string?> PromptPasswordAsync(string title)
         {
-            return Task.FromResult(PasswordResponse);
+            return Task.FromResult(PasswordResponses.Count > 0 ? PasswordResponses.Dequeue() : PasswordResponse);
         }
 
         public Task<NewLockerRequest?> ShowNewLockerAsync()
@@ -97,6 +98,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
         {
             return Task.CompletedTask;
         }
+
+        public Task ShowMaintenanceAsync() => Task.CompletedTask;
 
         public Task ShowAboutAsync()
         {

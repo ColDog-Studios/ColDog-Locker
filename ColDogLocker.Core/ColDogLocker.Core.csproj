@@ -4,6 +4,10 @@
         <RootNamespace>ColDogStudios.ColDogLocker.Core</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="../packaging/third-party-components.json" LogicalName="ThirdPartyComponents.json" />
+    </ItemGroup>
+
     <!-- Include the generated file unconditionally at the top level -->
     <ItemGroup>
         <Compile Include="$(IntermediateOutputPath)AppInfo.g.cs">
@@ -40,7 +44,7 @@
                 /// &lt;/summary&gt;
                 public const string SemanticVersion = "$(Version)"%3B
 
-                /// &lt;summary&gt;Full semantic version with build metadata (e.g., "0.1.0-pre+202512301445")&lt;/summary&gt;
+                /// &lt;summary&gt;Full semantic version with build metadata (e.g., "1.0.0-beta.1+commit-sha")&lt;/summary&gt;
                 public const string BuildVersion = "$(BuildVersionFull)"%3B
 
                 /// &lt;summary&gt;Source revision when available. No wall-clock metadata is embedded.&lt;/summary&gt;

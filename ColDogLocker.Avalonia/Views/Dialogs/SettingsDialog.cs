@@ -41,11 +41,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private bool _hasChanges;
         private bool _isLoading;
+        private bool _isVacuuming;
 
         public SettingsDialog()
         {
             InitializeComponent();
 
+            Closing += (_, e) => e.Cancel = _isVacuuming;
             ConfigureControls();
             LoadCurrentSettings(true);
         }
@@ -212,7 +214,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             try
             {
-                var reclaimed = LockerRepository.VacuumDatabase();
+                _isVacuuming = true;
+                VacuumDatabaseButton.IsEnabled = false;
+                SaveButton.IsEnabled = false;
+                CancelButton.IsEnabled = false;
+                var reclaimed = await Task.Run(LockerRepository.VacuumDatabase);
+                SettingsManager.Settings.LastDatabaseVacuum = DateTime.Now;
+                SettingsManager.SaveSettings();
                 var reclaimedKb = reclaimed / 1024.0;
                 var message = reclaimed > 0
                     ? $"Database optimized successfully.\n\nSpace reclaimed: {reclaimedKb:F2} KB"
@@ -225,6 +233,10 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 await new MessageDialog("Error", $"Failed to vacuum database: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
+            }
+            finally
+            {
+                VacuumDatabaseButton.IsEnabled = true;
             }
         }
 
@@ -304,7 +316,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             settings.LogLevel = LogLevelBox.SelectedItem?.ToString() ?? "Info";
             settings.LogFormat = LogFormatBox.SelectedItem?.ToString() ?? "json";
             settings.MaxFileSizeMb = ReadInt(MaxFileSizeTextBox, 10, 1, 1024);
-            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, 30, 7, 90);
+            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, 30, 0, 365);
         }
 
         private static void RestoreDefaultSettings()
@@ -367,7 +379,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private void UpdateSaveButtonState()
         {
-            SaveButton.IsEnabled = _hasChanges;
+            SaveButton.IsEnabled = _hasChanges && !_isVacuuming;
         }
 
         private static int ReadInt(TextBox textBox, int defaultValue, int min, int max)

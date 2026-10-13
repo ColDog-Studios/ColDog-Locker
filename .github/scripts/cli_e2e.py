@@ -455,6 +455,41 @@ class CliE2E:
             self.results.append(Result(name, True))
             print(f"PASS: {name}")
 
+    def interface_parity(self) -> None:
+        parent = self.test_dir / "SavedDefault"
+        parent.mkdir(parents=True)
+        name = "ParityLocker"
+        original_default = self.run_cli("settings", "default-location").stdout.strip()
+        try:
+            self.run_cli("settings", "default-location", str(parent))
+            self.run_cli("new", name, "--password", self.password)
+            source = parent / name
+            marker = source / "proof.txt"
+            marker.write_text("registration edits preserve bytes", encoding="utf-8")
+            new_name = "RenamedParityLocker"
+            renamed = parent / new_name
+            source.rename(renamed)
+            self.run_cli("edit", name, "--name", new_name, "--location", str(renamed))
+            self.expect_contains(self.output(self.run_cli("status", new_name)), str(renamed), "CLI edit did not update registration.")
+            self.run_cli("lock", new_name, "--password", self.password)
+            self.expect_failed(self.run_cli("edit", new_name, "--name", "Forbidden", check=False), "Locked edit was accepted.")
+            self.run_cli("unlock", new_name, "--password", self.password)
+            assert (renamed / "proof.txt").read_text(encoding="utf-8") == "registration edits preserve bytes"
+            for key, value in (("theme", "dark"), ("view", "list")):
+                self.run_cli("settings", key, value)
+                self.expect_contains(self.run_cli("settings", key).stdout.lower(), value, f"Setting {key} did not round trip.")
+            self.run_cli("settings", "reset")
+            self.expect_contains(self.run_cli("settings", "theme").stdout, "Auto", "Reset did not restore theme.")
+            self.expect_contains(self.output(self.run_cli("status", new_name)), new_name, "Reset deleted registration.")
+            self.run_cli("remove", new_name, "--force", "--delete")
+            credits = self.output(self.run_cli("about"))
+            assert "BCrypt" not in credits
+            self.expect_contains(credits, "Avalonia 12.1.4", "Acknowledgements are stale.")
+        finally:
+            self.run_cli("settings", "default-location", original_default)
+            self.run_cli("settings", "auto-update", "false")
+            self.run_cli("settings", "update-channel", "unstable")
+
     def version_command(self) -> None:
         completed = self.run_cli("--version")
         text = self.output(completed)
@@ -1071,6 +1106,7 @@ class CliE2E:
             ("List Empty Lockers", self.list_empty_lockers),
             ("Settings Command", self.settings_command),
             ("Database Commands", self.database_commands),
+            ("GUI and CLI Parity", self.interface_parity),
             ("New Command Validation Errors", self.new_command_validation_errors),
             ("Create Locker", self.create_locker),
             ("Created Locker Validation Errors", self.created_locker_validation_errors),

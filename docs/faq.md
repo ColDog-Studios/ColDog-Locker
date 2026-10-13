@@ -12,7 +12,7 @@ A locker is a managed directory. While unlocked, it behaves like a normal folder
 
 ## Where are lockers created by default?
 
-By default, `cdlocker new <name>` creates lockers under the user's Documents folder in a `ColDog Locker` directory.
+GUI and CLI creation use the saved default locker location. Initially, it is the user's Documents folder in a `ColDog Locker` directory (or the user profile when no documents folder is available). Change it in GUI Settings or with `cdlocker settings default-location <parent-directory>`.
 
 On Windows, that is usually:
 

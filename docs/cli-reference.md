@@ -50,7 +50,7 @@ Notes:
 
 - `<name>` must be a relative locker name, not an absolute path.
 - With `--path "D:\Private"` and name `Taxes`, the created locker path is `D:\Private\Taxes`.
-- If `--path` is omitted, the locker is created under the default ColDog Locker documents directory.
+- If `--path` is omitted, the locker is created under the saved `default-location` setting, initially the ColDog Locker documents directory.
 - Passwords must meet the active password rules.
 
 Examples:
@@ -187,6 +187,14 @@ cdlocker remove MyLocker --force
 cdlocker remove MyLocker --force --delete
 ```
 
+### `cdlocker edit <name> [--name <new-name>] [--location <existing-directory>]`
+
+Edit an unlocked registration using the same validation as GUI Properties. At least one option is required; unknown, duplicate or incomplete options are refused. This does not move or rename files. The directory leaf must match the new locker name and overlapping or protected paths are rejected.
+
+### `cdlocker open <name>`
+
+Open the locker location in the platform's desktop file manager. A graphical desktop and file manager must be available.
+
 ## Settings Commands
 
 ### `cdlocker settings`
@@ -205,10 +213,13 @@ Supported keys:
 
 | Key | Values |
 | --- | --- |
+| `default-location` | safe parent directory for future lockers |
+| `theme` | `auto`, `light`, `dark`, `cds` |
+| `view` | `grid`, `list` |
 | `debug` | `true`, `false` |
-| `log-level` | logger level name |
-| `log-format` | logger format string/name |
-| `max-file-size` | positive integer, MB |
+| `log-level` | `debug`, `info`, `warning`, `error`, `fatal` |
+| `log-format` | `json`, `text` |
+| `max-file-size` | integer from `1` to `1024`, MB |
 | `file-logging` | `true`, `false` |
 | `auto-update` | `true`, `false` |
 | `update-channel` | `stable`, `s`, `unstable`, `u`, `prerelease`, `pre`, `p` |
@@ -222,6 +233,19 @@ cdlocker settings auto-update true
 cdlocker settings update-channel unstable
 cdlocker settings db-vacuum-interval 30
 ```
+
+### GUI settings from the CLI
+
+These settings complement the logging, update and vacuum settings above:
+
+```bash
+cdlocker settings default-location "/home/user/Private"
+cdlocker settings theme dark
+cdlocker settings view list
+cdlocker settings reset
+```
+
+`default-location` is a parent directory for future lockers; existing lockers are not moved. `theme` accepts `auto`, `light`, `dark` or `cds`. `view` accepts `grid` or `list`. `reset` restores defaults and preserves registrations and files. Logging rotation size is 1–1024 MB, and the vacuum interval is 0–365 days (0 disables automatic vacuum).
 
 ## Database Commands
 
@@ -245,7 +269,7 @@ Options:
 
 Release notes are printed automatically when available.
 
-On Windows, the installer is launched after verification. On Linux, the verified `.deb` or `.rpm` package is installed through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package.
+On Windows, the installer is launched after verification. On macOS, the verified `.pkg` is opened with Installer. On Linux, the verified `.deb` or `.rpm` package is installed through the local package manager and may prompt for administrator approval through `pkexec` or `sudo`. Linux package updates remove the installed `coldog-locker` package first, then install the verified package.
 
 ## Other Commands
 
@@ -255,7 +279,7 @@ Shows general help or command-specific help.
 
 ### `cdlocker --version`
 
-Shows semantic version, build version, assembly version, build date, and build time.
+Shows semantic version, full build version with the source commit SHA (or `source` when unavailable), and numeric assembly version. Build date/time display `Not recorded` so rebuilding identical source does not add wall-clock metadata.
 
 Alias:
 
@@ -337,3 +361,7 @@ cdlocker list
 The backup must use this application's current database schema. Restore checks database integrity, locker names and paths, and the recorded archive hashes for locked registrations. Ordinary registrations must still have their recorded folders. Pending operations retain their journals and continue to block ordinary mutations until recovery resolves them. The command changes no locker contents and preserves the input backup.
 
 Restore uses the original paths; it does not relocate archives or prove that an unlocked folder still has its earlier contents. If paths have moved, an archive differs, or a current registry already exists, use `recover` to authenticate the archive into a new directory instead. Keep your original passwords: database restoration does not reset them.
+
+### `cdlocker about`
+
+Show version, application license and alphabetically sorted third-party acknowledgements from the inventory shipped with installers. Works without database initialization.

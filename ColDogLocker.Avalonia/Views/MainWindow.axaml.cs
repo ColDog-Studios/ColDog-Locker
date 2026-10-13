@@ -91,6 +91,18 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views
             ExecuteSelectedCommand(sender, vm => vm.ShowPropertiesCommand);
         }
 
+        private void LockerList_DoubleTapped(object? sender, TappedEventArgs e)
+        {
+            if (e.Source is Control { DataContext: LockerItemViewModel } item)
+            {
+                ExecuteSelectedCommand(item, vm => vm.ShowPropertiesCommand);
+            }
+        }
+
+        private void ContextChangePassword_Click(object? sender, RoutedEventArgs e) => ExecuteSelectedCommand(sender, vm => vm.ChangePasswordCommand);
+        private void ContextVerify_Click(object? sender, RoutedEventArgs e) => ExecuteSelectedCommand(sender, vm => vm.VerifySelectedCommand);
+        private void ContextDelete_Click(object? sender, RoutedEventArgs e) => ExecuteSelectedCommand(sender, vm => vm.DeleteSelectedCommand);
+
         private void ContextRemove_Click(object? sender, RoutedEventArgs e)
         {
             ExecuteSelectedCommand(sender, vm => vm.RemoveSelectedCommand);

@@ -30,6 +30,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         Task ShowLockerPropertiesAsync(LockerModel locker);
         Task ShowSettingsAsync();
         Task ShowAboutAsync();
+        Task ShowMaintenanceAsync();
         Task ShowDevInfoAsync();
         Task ShowProgressTestAsync();
     }

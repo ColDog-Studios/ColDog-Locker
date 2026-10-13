@@ -2,6 +2,12 @@
 
 ColDog Locker is prerelease software. Keep independent, tested copies of important files. Detected concurrent changes abort locking, but writers retaining native handles across the source cutover and interrupted operations can still cause data loss; a recovery journal does not guarantee recovery after power loss.
 
+## Graphical recovery
+
+Open **Tools > Backup and Recovery**. The **Recover files** tab accepts an archive, its original password, and a new destination, and does not depend on the database. Expand **Interrupted operations and recovery history** and select an unfinished operation to restore and repair registration, cancel eligible preparation, or finish verified committed output. Reload operations after a change; Show recovery history lists retained paths and attempts. The **Database** tab creates verified backups, restores a missing registry, shows information and optimizes the database.
+
+Browse buttons select existing inputs or a parent directory. You can edit the proposed destination name; operation restoration requires the original locker name. Read the result before continuing. The dialog prevents closing while work is running, clears the password after an action, and preserves the same refusal and recovery rules as the CLI commands below.
+
 ## Make a complete backup
 
 A complete backup needs both your files and the information needed to find and decrypt them:

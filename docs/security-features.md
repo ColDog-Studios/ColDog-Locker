@@ -222,7 +222,7 @@ Use GitHub's private security advisory flow for the repository and include:
 
 New archives preserve Unix permission modes and file/directory modification times, including the locker root. Unix extraction staging starts with directory mode `0700` and file mode `0600`; original modes are applied after the entire archive authenticates. Special Unix permission bits (set-user-ID, set-group-ID, sticky) are rejected before archiving. Older archives cannot recover metadata that was never recorded.
 
-Windows staging is created with an owner-only inheritable access rule. Ordinary inherited ACLs come from the destination parent; explicit or protected ACLs and alternate data streams are rejected before source deletion. Unix ownership must match the current user and group, and unsupported extended attributes are rejected. Hard-linked source files are rejected instead of being restored as independent files. These native policies have automated platform tests, but Windows/macOS hosted results are still required before public launch.
+Windows staging is created with an owner-only inheritable access rule. Ordinary inherited ACLs come from the destination parent; explicit or protected ACLs and alternate data streams are rejected before source deletion. Unix ownership must match the current user and group, and unsupported extended attributes are rejected. Hard-linked source files are rejected instead of being restored as independent files. The recorded Windows/macOS hosted matrix passed these native policy tests at the revision listed in [Platform and Storage Support](platform-support.md). Installed-package and interactive validation remain incomplete; new changes must pass the matrix again.
 
 ### Unsupported file types
 

@@ -6,13 +6,15 @@ ColDog Locker is prerelease software. Package targets describe what the build pr
 
 | Platform | Package targets | Current evidence |
 | --- | --- | --- |
-| Windows | x64 and ARM64 MSI/setup EXE | Builds and platform-specific automated tests are defined. Native install, update, GUI, filesystem-policy and recovery runs are still required before public launch. Packages are unsigned. |
+| Windows | x64 and ARM64 MSI/setup EXE | At commit `453e93b`, native unit, filesystem-policy, CLI and 23-boundary crash suites passed. Installed MSI/setup and interactive GUI/accessibility validation remain required. Packages are unsigned. |
 | Linux | x64 and ARM64 DEB/RPM | Clean x64 installation, CLI round trips, GUI startup, reinstall and removal passed on Ubuntu 24.04 and Fedora 43. ARM64 installed validation is still required. |
-| macOS | x64 and ARM64 PKG | Builds and platform-specific automated tests are defined. Native install, update, GUI, filesystem-policy and recovery runs are still required before public launch. Packages are unsigned and unnotarized. |
+| macOS | x64 and ARM64 PKG | At commit `453e93b`, both architectures passed native unit, filesystem-policy, 44-scenario CLI and 23-boundary crash suites. Installed PKG and interactive GUI/accessibility validation remain required. Packages are unsigned and unnotarized. |
 
 Linux and macOS packages are self-contained. The Windows MSI requires the matching .NET 10 runtime; the setup EXE can download the pinned runtime when it is absent. Offline and no-runtime Windows installation still needs native validation.
 
 Headless GUI tests cover application bindings and workflows. Icon-only commands, custom menus and core form fields provide explicit accessibility names or label relationships, and dynamic status/error text is exposed as live output. A Linux Wayland/AT-SPI run verified the visible main-window accessibility tree and focusable New Locker fields. These checks do not certify sequential keyboard navigation, actual screen-reader speech, scaling, high contrast, password-manager interaction, or Windows/macOS accessibility. Those checks remain launch requirements.
+
+These hosted results describe the recorded commit. Dependency or GUI changes require a fresh CI run and installed-package checks before launch; they do not inherit certification from older artifacts.
 
 ## Filesystem requirements
 

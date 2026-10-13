@@ -81,7 +81,7 @@ jobs:
         .github/scripts/windows_installed_e2e.ps1 -MsiPath $msi[0].FullName -SetupPath $setup[0].FullName -BaselineMsiPath "$env:RUNNER_TEMP\ColDogLocker-baseline.msi" -BaselineSetupPath "$env:RUNNER_TEMP\ColDogLocker-baseline-setup.exe" -ReviewScripts ".github/scripts" -ExpectedArchitecture "${{ matrix.expected_arch }}"
 
     - name: Upload Windows packages
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: package-win-${{ matrix.arch }}
         path: |
@@ -136,7 +136,7 @@ jobs:
         ubuntu:24.04 bash /review-scripts/linux_installed_e2e.sh deb ${{ matrix.arch }}
 
     - name: Upload DEB
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: package-linux-${{ matrix.arch }}-deb
         path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.deb
@@ -189,7 +189,7 @@ jobs:
         fedora:43 bash /review-scripts/linux_installed_e2e.sh rpm ${{ matrix.arch }}
 
     - name: Upload RPM
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: package-linux-${{ matrix.arch }}-rpm
         path: artifacts/packages/dist/ColDogLocker-*-linux-${{ matrix.arch }}.rpm
@@ -231,7 +231,7 @@ jobs:
         bash .github/scripts/macos_installed_e2e.sh "${package[0]}" ".github/scripts" "${{ matrix.arch }}"
 
     - name: Upload PKG
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: package-macos-${{ matrix.arch }}-pkg
         path: artifacts/packages/dist/ColDogLocker-*-macos-${{ matrix.arch }}.pkg

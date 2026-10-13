@@ -1,0 +1,86 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.MaintenanceDialog"
+        Title="Backup and Recovery" Width="780" Height="700" MinWidth="620" MinHeight="560"
+        WindowStartupLocation="CenterOwner" Icon="/Assets/cdlIcon.ico">
+    <Grid RowDefinitions="*,Auto,Auto" Margin="20" RowSpacing="12">
+        <TabControl x:Name="ActionsTabs">
+            <TabItem Header="Recover files">
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="12">
+                        <TextBlock Text="Restore an encrypted archive into a new directory. The archive is preserved. This works even when the locker database is unavailable." TextWrapping="Wrap" />
+                        <TextBlock Text="Archive (.cdl)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="ArchiveBox" AutomationProperties.Name="Archive path" />
+                            <Button Grid.Column="1" Content="Browse…" Click="BrowseArchive_Click" />
+                        </Grid>
+                        <TextBlock Text="New destination (its parent must exist)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="DestinationBox" AutomationProperties.Name="New recovery destination" />
+                            <Button Grid.Column="1" Content="Choose parent…" Click="BrowseDestination_Click" />
+                        </Grid>
+                        <TextBlock Text="Original archive password" />
+                        <TextBox x:Name="ArchivePasswordBox" PasswordChar="●" AutomationProperties.Name="Archive password" />
+                        <Button Content="Recover archive" Click="Recover_Click" HorizontalAlignment="Left" />
+                        <Expander Header="Interrupted operations and recovery history" HorizontalAlignment="Stretch">
+                            <StackPanel Spacing="12" Margin="0,8,0,0">
+                                <ComboBox x:Name="OperationBox" HorizontalAlignment="Stretch" AutomationProperties.Name="Unfinished operation" />
+                                <WrapPanel>
+                                    <Button Content="Reload operations" Click="Reload_Click" Margin="0,0,8,8" />
+                                    <Button Content="Restore and repair registration" Click="RestoreOperation_Click" Margin="0,0,8,8" />
+                                    <Button Content="Cancel preparation" Click="CancelOperation_Click" Margin="0,0,8,8" />
+                                    <Button Content="Finish committed operation" Click="FinishOperation_Click" Margin="0,0,8,8" />
+                                    <Button Content="Show recovery history" Click="History_Click" Margin="0,0,8,8" />
+                                </WrapPanel>
+                                <TextBlock Text="Preserve all source, archive and staging paths until restored files have been checked. Operation recovery needs a new destination named after the original locker. Cancel and Finish never delete files; unsupported phases are refused." TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Database">
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="12">
+                        <TextBlock Text="A database backup contains registrations and recovery records, not your files. Copy locker archives separately. Close other application instances before restoring." TextWrapping="Wrap" />
+                        <TextBlock Text="New backup directory (its parent must exist)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="BackupBox" AutomationProperties.Name="New database backup directory" />
+                            <Button Grid.Column="1" Content="Choose parent…" Click="BrowseBackup_Click" />
+                        </Grid>
+                        <Button Content="Create verified database backup" Click="Backup_Click" HorizontalAlignment="Left" />
+                        <TextBlock Text="Backup database (lockers.db)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="DatabaseBox" AutomationProperties.Name="Backup database path" />
+                            <Button Grid.Column="1" Content="Browse…" Click="BrowseDatabase_Click" />
+                        </Grid>
+                        <Button Content="Restore missing database" Click="RestoreDatabase_Click" HorizontalAlignment="Left" />
+                        <TextBlock Text="Restore refuses to replace an existing database or SQLite sidecar files. Original file locations must still match. If they have moved, use Recover files instead." TextWrapping="Wrap" />
+                        <WrapPanel>
+                            <Button Content="Database information" Click="DatabaseInfo_Click" Margin="0,0,8,8" />
+                            <Button Content="Optimize database" Click="Vacuum_Click" Margin="0,0,8,8" />
+                        </WrapPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <TextBox Grid.Row="1" x:Name="ResultBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                 Height="150" AutomationProperties.Name="Backup and recovery result" AutomationProperties.LiveSetting="Polite" />
+        <Button Grid.Row="2" x:Name="CloseButton" Content="Close" Click="Close_Click" HorizontalAlignment="Right" IsCancel="True" />
+    </Grid>
+</Window>

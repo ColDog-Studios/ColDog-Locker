@@ -12,6 +12,10 @@ ColDog Locker currently has three user-facing interfaces:
 - **Terminal UI**: `cdlocker tui`
 - **CLI commands**: `cdlocker <command> ...`
 
+The GUI and CLI share the same locker, settings, update, backup and recovery services. Use **Locker > Change Password**, **Verify Integrity**, **Properties**, **Remove**, or **Delete Locker and Files** for a selected locker. **Tools > Backup and Recovery** provides archive recovery, unfinished operations, history, database information, backup, restore and optimization. Recovery remains available if startup cannot open the database.
+
+Use Ctrl+N to create a locker, F5 to refresh, and Ctrl+I for properties. Password dialogs focus the input, support Enter/Escape, and offer a Show password checkbox. The TUI covers the essential locker operations; advanced backup and recovery are available in the GUI and CLI.
+
 Running `cdlocker` with no arguments currently shows command help. Use `cdlocker gui` when you want the graphical interface.
 
 ## Build and Run from Source
@@ -22,7 +26,7 @@ Prerequisite:
 dotnet --version
 ```
 
-Install the exact .NET SDK version in the repository’s `global.json` (currently `10.0.112`); SDK roll-forward is disabled.
+Install the exact .NET SDK version in the repository’s `global.json` (currently `10.0.401`); SDK roll-forward is disabled.
 
 Build everything:
 
@@ -57,7 +61,7 @@ Create a locker in the default ColDog Locker documents directory:
 cdlocker new MyLocker
 ```
 
-By default, lockers are created under:
+GUI, CLI and TUI creation honor **Settings > Default locker location** (`cdlocker settings default-location <parent-directory>`). The initial default is:
 
 - Windows: `%USERPROFILE%\Documents\ColDog Locker`
 - Linux/macOS: the platform's documents folder as reported by .NET, under `ColDog Locker`; if unavailable, the user profile is used
@@ -122,6 +126,15 @@ Check whether the locker directory and metadata are consistent:
 ```bash
 cdlocker verify MyLocker
 ```
+
+## Edit Registration or Open a Folder
+
+```bash
+cdlocker edit MyLocker --name RenamedLocker --location "/existing/path/RenamedLocker"
+cdlocker open RenamedLocker
+```
+
+`edit` changes registration only; it does not move or rename files. The existing directory leaf must match the selected name. Unlock before editing. In the GUI, use **Locker > Properties**.
 
 ## Change a Password
 

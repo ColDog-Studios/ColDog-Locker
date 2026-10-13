@@ -1,4 +1,4 @@
-.TH CDLOCKER 1 "June 2026" "ColDog Locker" "User Commands"
+.TH CDLOCKER 1 "October 2026" "ColDog Locker" "User Commands"
 .SH NAME
 cdlocker \- manage encrypted ColDog Locker directories
 .SH SYNOPSIS
@@ -216,3 +216,26 @@ from becoming lockers.
 .SH SEE ALSO
 Project documentation:
 .I https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs
+
+.SH REGISTRATION AND ACKNOWLEDGEMENTS
+.TP
+.B edit <name> [--name <new-name>] [--location <existing-directory>]
+Edit an unlocked registration without moving files. The directory leaf must match the name.
+.TP
+.B open <name>
+Open the registered location in the desktop file manager.
+.TP
+.B about
+Show application and third-party licenses and acknowledgements.
+.TP
+.B settings default-location <parent-directory>
+Set the parent used by GUI and CLI creation.
+.TP
+.B settings theme <auto|light|dark|cds>
+Select the GUI theme.
+.TP
+.B settings view <grid|list>
+Select the default GUI view.
+.TP
+.B settings reset
+Restore default settings without deleting registrations or locker contents.

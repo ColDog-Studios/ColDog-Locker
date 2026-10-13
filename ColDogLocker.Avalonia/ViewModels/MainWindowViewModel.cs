@@ -78,6 +78,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             IsGridView = SettingsManager.Settings.DefaultGuiViewMode == GuiViewMode.Grid;
         }
 
+        public bool HasNoVisibleLockers => FilteredLockers.Count == 0;
+        public string EmptyStateMessage => Lockers.Count == 0 ? "Create your first locker to get started." : "No lockers match your search.";
         public int TotalLockers => Lockers.Count;
         public int LockedCount => Lockers.Count(locker => locker.IsLocked);
         public int UnlockedCount => Lockers.Count(locker => !locker.IsLocked);
@@ -85,6 +87,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
         public bool HasSelection => SelectedLocker != null;
         public bool CanLockSelected => !IsBusy && SelectedLocker is { IsLocked: false };
         public bool CanUnlockSelected => !IsBusy && SelectedLocker is { IsLocked: true };
+        public bool CanVerifySelected => !IsBusy && HasSelection;
         public bool CanRemoveSelected => !IsBusy && SelectedLocker is { IsLocked: false };
         public bool IsOperationProgressIndeterminate => LockerOperationPercent is null;
         public bool IsListView => !IsGridView;
@@ -203,7 +206,106 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             });
         }
 
-        [RelayCommand(CanExecute = nameof(HasSelection))]
+        [RelayCommand(CanExecute = nameof(CanRemoveSelected))]
+        private async Task DeleteSelectedAsync()
+        {
+            if (SelectedLocker is not { } item || !await _dialogs.ConfirmAsync("Delete Locker and Files",
+                    $"Permanently delete '{item.Name}', its directory and every file inside it? Keep an independent backup before continuing."))
+            {
+                return;
+            }
+
+            await RunLockerOperationAsync(item, "Delete Error", async (locker, _, _) =>
+            {
+                await Task.Run(() => LockerService.RemoveLocker(locker, deleteDirectory: true));
+                await RefreshAsync(false);
+            });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRemoveSelected))]
+        private async Task ChangePasswordAsync()
+        {
+            if (SelectedLocker is not { } item)
+            {
+                return;
+            }
+
+            await RunWithUiErrorAsync("Change Password", "Failed to change the password.", async () =>
+            {
+                var oldPassword = await _dialogs.PromptPasswordAsync($"Current password for {item.Name}");
+                if (string.IsNullOrEmpty(oldPassword))
+                {
+                    return;
+                }
+
+                var newPassword = await _dialogs.PromptPasswordAsync("New password");
+                if (string.IsNullOrEmpty(newPassword))
+                {
+                    return;
+                }
+
+                var confirmation = await _dialogs.PromptPasswordAsync("Confirm new password");
+                if (confirmation == null)
+                {
+                    return;
+                }
+
+                if (newPassword != confirmation)
+                {
+                    await _dialogs.ShowWarningAsync("Change Password", "The new passwords do not match.");
+                    return;
+                }
+
+                var locker = FindLocker(item) ?? throw new InvalidOperationException("The selected locker was not found.");
+                await Task.Run(() => LockerService.ChangePassword(locker, oldPassword, newPassword));
+                await RefreshAsync(false);
+                await _dialogs.ShowMessageAsync("Password Changed", "Use the new password for future locks. Existing archive backups still need their original password.");
+            });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanVerifySelected))]
+        private async Task VerifySelectedAsync()
+        {
+            if (SelectedLocker is not { } item)
+            {
+                return;
+            }
+
+            await RunWithUiErrorAsync("Verify Locker", "Failed to verify the locker.", async () =>
+            {
+                var locker = FindLocker(item) ?? throw new InvalidOperationException("The selected locker was not found.");
+                var result = await Task.Run(() => LockerService.Verify(locker));
+                var message = $"Directory exists: {result.DirectoryExists}\nAccess available: {result.HasAccess}\nContents inspected: {result.CountsComplete}\nFiles: {result.FileCount}\nDirectories: {result.DirectoryCount}";
+                if (result.IsLocked)
+                {
+                    message += $"\nArchive exists: {result.ArchiveExists}\nArchive hash matches: {result.ArchiveHashMatches}\nArchive metadata matches: {result.ArchiveMetadataMatches}\n\nThis check does not decrypt the archive. Test a backup using Recover archive.";
+                }
+
+                if (result.Errors.Count > 0)
+                {
+                    message += "\n\nErrors:\n" + string.Join("\n", result.Errors);
+                }
+
+                if (result.Warnings.Count > 0)
+                {
+                    message += "\n\nWarnings:\n" + string.Join("\n", result.Warnings);
+                }
+
+                await _dialogs.ShowMessageAsync("Locker Verification", message);
+            });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanStartMutation))]
+        private async Task ShowMaintenanceAsync()
+        {
+            await RunWithUiErrorAsync("Backup and Recovery", "Unable to open backup and recovery.", async () =>
+            {
+                await _dialogs.ShowMaintenanceAsync();
+                await RefreshAsync(false);
+            });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanVerifySelected))]
         private async Task ShowPropertiesAsync()
         {
             if (SelectedLocker == null)
@@ -245,15 +347,18 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             return RefreshAsync(true);
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanStartMutation))]
         private async Task ShowSettingsAsync()
         {
-            await _dialogs.ShowSettingsAsync();
-            IsDeveloperMode = SettingsManager.Settings.DevMode;
-            IsGridView = SettingsManager.Settings.DefaultGuiViewMode == GuiViewMode.Grid;
+            await RunWithUiErrorAsync("Settings", "Unable to open settings.", async () =>
+            {
+                await _dialogs.ShowSettingsAsync();
+                IsDeveloperMode = SettingsManager.Settings.DevMode;
+                IsGridView = SettingsManager.Settings.DefaultGuiViewMode == GuiViewMode.Grid;
+            });
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanStartMutation))]
         private async Task CheckForUpdatesAsync()
         {
             await _updateWorkflow.RunAsync();
@@ -480,6 +585,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             };
 
             FilteredLockers = new ObservableCollection<LockerItemViewModel>(query);
+            OnPropertyChanged(nameof(HasNoVisibleLockers));
+            OnPropertyChanged(nameof(EmptyStateMessage));
             if (SelectedLocker != null && FilteredLockers.All(locker => locker.Guid != SelectedLocker.Guid))
             {
                 SelectedLocker = null;
@@ -610,6 +717,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
             LockSelectedCommand.NotifyCanExecuteChanged();
             UnlockSelectedCommand.NotifyCanExecuteChanged();
             RemoveSelectedCommand.NotifyCanExecuteChanged();
+            DeleteSelectedCommand.NotifyCanExecuteChanged();
+            ChangePasswordCommand.NotifyCanExecuteChanged();
+            VerifySelectedCommand.NotifyCanExecuteChanged();
+            ShowMaintenanceCommand.NotifyCanExecuteChanged();
+            ShowSettingsCommand.NotifyCanExecuteChanged();
+            CheckForUpdatesCommand.NotifyCanExecuteChanged();
             ShowPropertiesCommand.NotifyCanExecuteChanged();
             OpenLocationCommand.NotifyCanExecuteChanged();
         }
