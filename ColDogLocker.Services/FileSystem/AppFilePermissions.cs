@@ -72,21 +72,9 @@ namespace ColDogStudios.ColDogLocker.Services.FileSystem
             {
                 action();
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException or NotSupportedException)
             {
-                return;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return;
-            }
-            catch (PlatformNotSupportedException)
-            {
-                return;
-            }
-            catch (NotSupportedException)
-            {
-                return;
+                // Permission hardening is best effort on filesystems that do not expose these attributes.
             }
         }
     }

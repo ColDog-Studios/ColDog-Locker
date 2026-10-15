@@ -106,6 +106,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             }
         }
 
+        public Task ShowMaintenanceAsync()
+        {
+            return ShowDialogAsync(new MaintenanceDialog());
+        }
+
         public Task ShowAboutAsync()
         {
             return ShowDialogAsync(new AboutDialog(_platformService));
@@ -130,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         {
             await Task.Delay(650);
 
-            const int total = 5;
+            var total = 5;
             for (var current = 1; current <= total; current++)
             {
                 dialog.UpdateProgress(current, total, $"Processing test item {current} of {total}...");

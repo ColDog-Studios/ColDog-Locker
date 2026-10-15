@@ -25,8 +25,22 @@ namespace ColDogStudios.ColDogLocker.Core.Models
         public string Password { get; set; } = password;
         public string LockerLocation { get; set; } = cdlLocation;
         public bool IsLocked { get; set; } = false;
+        public long Revision { get; set; }
         public int? StorageFormatVersion { get; set; }
         public string? LockedArchiveSha256 { get; set; }
         public DateTime? LockedAtUtc { get; set; }
+
+        public LockerModel Copy()
+        {
+            return new LockerModel(LockerName, Password, LockerLocation)
+            {
+                Guid = Guid,
+                Revision = Revision,
+                IsLocked = IsLocked,
+                StorageFormatVersion = StorageFormatVersion,
+                LockedArchiveSha256 = LockedArchiveSha256,
+                LockedAtUtc = LockedAtUtc
+            };
+        }
     }
 }

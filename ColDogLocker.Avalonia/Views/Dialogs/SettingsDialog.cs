@@ -30,9 +30,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
     public sealed partial class SettingsDialog : Window
     {
-        private static readonly string[] ThemeChoices = ["Auto", "Light", "Dark", "ColDog Studios"];
-        private static readonly string[] LogLevelChoices = ["Debug", "Info", "Warning", "Error", "Fatal"];
-        private static readonly string[] LogFormatChoices = ["json", "text"];
+        private static readonly string[] _themeChoices = ["Auto", "Light", "Dark", "ColDog Studios"];
+        private static readonly string[] _logLevelChoices = ["Debug", "Info", "Warning", "Error", "Fatal"];
+        private static readonly string[] _logFormatChoices = ["json", "text"];
         private readonly IPlatformService? _platformService;
 
         private readonly IAppThemeService? _themeService;
@@ -41,11 +41,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private bool _hasChanges;
         private bool _isLoading;
+        private bool _isVacuuming;
 
         public SettingsDialog()
         {
             InitializeComponent();
 
+            Closing += (_, e) => e.Cancel = _isVacuuming;
             ConfigureControls();
             LoadCurrentSettings(true);
         }
@@ -65,9 +67,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private void ConfigureControls()
         {
-            ThemeBox.ItemsSource = ThemeChoices;
-            LogLevelBox.ItemsSource = LogLevelChoices;
-            LogFormatBox.ItemsSource = LogFormatChoices;
+            ThemeBox.ItemsSource = _themeChoices;
+            LogLevelBox.ItemsSource = _logLevelChoices;
+            LogFormatBox.ItemsSource = _logFormatChoices;
             LogLevelBox.SelectionChanged += (_, _) => UpdateLogLevelDescription();
             ThemeBox.SelectionChanged += (_, _) => ApplyThemeImmediately();
 
@@ -115,8 +117,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
                 UnstableChannelRadio.IsChecked = settings.UpdateChannel == UpdateChannel.Unstable;
                 DevModeCheckBox.IsChecked = settings.DevMode;
                 EnableFileLoggingCheckBox.IsChecked = settings.EnableFileLogging;
-                LogLevelBox.SelectedItem = ChoiceOrDefault(LogLevelChoices, settings.LogLevel, "Info");
-                LogFormatBox.SelectedItem = ChoiceOrDefault(LogFormatChoices, settings.LogFormat, "json");
+                LogLevelBox.SelectedItem = ChoiceOrDefault(_logLevelChoices, settings.LogLevel, "Info");
+                LogFormatBox.SelectedItem = ChoiceOrDefault(_logFormatChoices, settings.LogFormat, "json");
                 MaxFileSizeTextBox.Text = settings.MaxFileSizeMb.ToString();
                 DbVacuumIntervalTextBox.Text = settings.DatabaseVacuumInterval.ToString();
                 UpdateLogLevelDescription();
@@ -138,7 +140,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Select default locker folder", AllowMultiple = false
+                Title = "Select default locker folder",
+                AllowMultiple = false
             });
 
             var folder = folders.FirstOrDefault();
@@ -211,7 +214,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
             try
             {
-                var reclaimed = LockerRepository.VacuumDatabase();
+                _isVacuuming = true;
+                VacuumDatabaseButton.IsEnabled = false;
+                SaveButton.IsEnabled = false;
+                CancelButton.IsEnabled = false;
+                var reclaimed = await Task.Run(LockerRepository.VacuumDatabase);
+                SettingsManager.Settings.LastDatabaseVacuum = DateTime.Now;
+                SettingsManager.SaveSettings();
                 var reclaimedKb = reclaimed / 1024.0;
                 var message = reclaimed > 0
                     ? $"Database optimized successfully.\n\nSpace reclaimed: {reclaimedKb:F2} KB"
@@ -224,6 +233,10 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 await new MessageDialog("Error", $"Failed to vacuum database: {ex.Message}", MessageDialogKind.Error)
                     .ShowDialog<object?>(this);
+            }
+            finally
+            {
+                VacuumDatabaseButton.IsEnabled = true;
             }
         }
 
@@ -303,7 +316,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             settings.LogLevel = LogLevelBox.SelectedItem?.ToString() ?? "Info";
             settings.LogFormat = LogFormatBox.SelectedItem?.ToString() ?? "json";
             settings.MaxFileSizeMb = ReadInt(MaxFileSizeTextBox, 10, 1, 1024);
-            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, 30, 7, 90);
+            settings.DatabaseVacuumInterval = ReadInt(DbVacuumIntervalTextBox, 30, 0, 365);
         }
 
         private static void RestoreDefaultSettings()
@@ -366,7 +379,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private void UpdateSaveButtonState()
         {
-            SaveButton.IsEnabled = _hasChanges;
+            SaveButton.IsEnabled = _hasChanges && !_isVacuuming;
         }
 
         private static int ReadInt(TextBox textBox, int defaultValue, int min, int max)

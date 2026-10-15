@@ -211,6 +211,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public string RepositoryName { get; set; } = "ColDog-Locker";
         public string CurrentVersion { get; set; } = AppInfo.SemanticVersion;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DownloadTimeout { get; set; } = TimeSpan.FromMinutes(15);
         public long MaxDownloadBytes { get; set; } = 1024L * 1024L * 1024L;
 
         public IReadOnlyCollection<string> AllowedDownloadHosts { get; set; } =
@@ -224,7 +225,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         public Func<UpdatePlatform> PlatformDetector { get; set; } = UpdatePlatform.Detect;
 
         public Func<string> DownloadDirectoryProvider { get; set; } =
-            () => Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            () => Path.Join(AppPaths.LocalConfig, "updates");
 
         public bool AllowLoopbackHttpDownloadsForTesting { get; set; }
     }
@@ -314,11 +315,15 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 "macos" or "osx" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.MacOS, Architecture = architecture },
                 "linux" when parts.Contains("deb") => new UpdatePlatform
                 {
-                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Deb, Architecture = architecture
+                    OperatingSystem = UpdateOperatingSystem.Linux,
+                    LinuxPackageFormat = LinuxPackageFormat.Deb,
+                    Architecture = architecture
                 },
                 "linux" when parts.Contains("rpm") => new UpdatePlatform
                 {
-                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Rpm, Architecture = architecture
+                    OperatingSystem = UpdateOperatingSystem.Linux,
+                    LinuxPackageFormat = LinuxPackageFormat.Rpm,
+                    Architecture = architecture
                 },
                 "linux" => new UpdatePlatform { OperatingSystem = UpdateOperatingSystem.Linux, Architecture = architecture },
                 _ => null
@@ -520,7 +525,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
 
             var installer = new UpdateInstaller();
-            return installer.InstallAsync(download.FilePath, _options.PlatformDetector(), cancellationToken);
+            return installer.InstallAsync(download.FilePath, download.Sha256, _options.PlatformDetector(), cancellationToken);
         }
 
         public static GitHubUpdateService CreateDefault()
@@ -539,7 +544,35 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             {
                 var uri = BuildApiUri("releases/latest");
                 Logger.Log(LogLevel.Debug, $"Requesting GitHub release endpoint: {uri}");
-                return await SendJsonRequestAsync<GitHubReleaseDto>(uri, cancellationToken);
+                var latest = await SendJsonRequestAsync<GitHubReleaseDto>(uri, cancellationToken);
+                if (latest is null || IsStableRelease(latest) ||
+                    (!latest.Draft && !latest.Prerelease &&
+                     !SemanticVersion.TryParse(NormalizeVersion(latest.TagName), out _)))
+                {
+                    return latest;
+                }
+
+                // Older publication policies could mark an RC as latest. Find the
+                // newest actual stable release instead of enrolling stable users in it.
+                for (var page = 1; page <= 10; page++)
+                {
+                    var candidates = await SendJsonRequestAsync<List<GitHubReleaseDto>>(
+                        BuildApiUri($"releases?per_page=100&page={page}"), cancellationToken);
+                    var stable = candidates?.Where(IsStableRelease)
+                        .OrderByDescending(release => new SemanticVersion(NormalizeVersion(release.TagName)))
+                        .FirstOrDefault();
+                    if (stable != null)
+                    {
+                        return stable;
+                    }
+
+                    if (candidates is null || candidates.Count < 100)
+                    {
+                        break;
+                    }
+                }
+
+                return null;
             }
 
             var releasesUri = BuildApiUri("releases");
@@ -556,6 +589,13 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 .OrderByDescending(candidate => candidate.Version)
                 .FirstOrDefault()
                 ?.Release;
+        }
+
+        private static bool IsStableRelease(GitHubReleaseDto release)
+        {
+            return !release.Draft && !release.Prerelease &&
+                   SemanticVersion.TryParse(NormalizeVersion(release.TagName), out var version) &&
+                   version.PreRelease is null;
         }
 
         private async Task<T?> SendJsonRequestAsync<T>(string uri, CancellationToken cancellationToken)
@@ -833,16 +873,19 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
         {
             var targetDirectory = Path.GetDirectoryName(targetPath) ?? Directory.GetCurrentDirectory();
             var tempPath = Path.Join(targetDirectory, $".{Path.GetFileName(targetPath)}.{Guid.NewGuid():N}.tmp");
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            deadline.CancelAfter(_options.DownloadTimeout);
+            var downloadToken = deadline.Token;
 
             try
             {
-                Directory.CreateDirectory(targetDirectory);
+                targetDirectory = PrivateDirectory.Ensure(targetDirectory);
 
                 using var request = new HttpRequestMessage(HttpMethod.Get, downloadUri);
                 using var response = await _httpClient.SendAsync(
                     request,
                     HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken);
+                    downloadToken);
                 response.EnsureSuccessStatusCode();
 
                 ValidateFinalDownloadUri(response.RequestMessage?.RequestUri ?? downloadUri);
@@ -855,7 +898,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 long bytesDownloaded = 0;
                 string actualHash;
 
-                await using (var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken))
+                await using (var responseStream = await response.Content.ReadAsStreamAsync(downloadToken))
                 await using (var targetStream = new FileStream(
                                  tempPath,
                                  FileMode.CreateNew,
@@ -871,7 +914,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
                     while (true)
                     {
-                        var bytesRead = await responseStream.ReadAsync(buffer, cancellationToken);
+                        var bytesRead = await responseStream.ReadAsync(buffer, downloadToken);
                         if (bytesRead == 0)
                         {
                             break;
@@ -880,10 +923,10 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                         bytesDownloaded += bytesRead;
                         EnsureDownloadSizeAllowed(bytesDownloaded, installerFileName);
                         hasher.AppendData(buffer, 0, bytesRead);
-                        await targetStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                        await targetStream.WriteAsync(buffer.AsMemory(0, bytesRead), downloadToken);
                     }
 
-                    await targetStream.FlushAsync(cancellationToken);
+                    await targetStream.FlushAsync(downloadToken);
                     actualHash = Convert.ToHexStringLower(hasher.GetHashAndReset());
                 }
 
@@ -912,11 +955,16 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 TryDeleteTempFile(tempPath);
                 throw;
             }
-            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
             {
                 TryDeleteTempFile(tempPath);
                 Logger.Log(LogLevel.Warning, $"Download timed out for update asset '{installerFileName}'.", ex);
                 throw new UpdateException(UpdateFailureKind.Timeout, "The update download timed out. Please try again later.", ex);
+            }
+            catch (OperationCanceledException)
+            {
+                TryDeleteTempFile(tempPath);
+                throw;
             }
             catch (HttpRequestException ex)
             {
@@ -924,7 +972,8 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 Logger.Log(LogLevel.Error, $"Failed to download update asset '{installerFileName}'.", ex);
                 throw new UpdateException(UpdateFailureKind.Network, "The update download failed. Please check your network connection and try again.", ex);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or OperationCanceledException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or
+                InvalidDataException or PlatformNotSupportedException or OperationCanceledException)
             {
                 TryDeleteTempFile(tempPath);
                 Logger.Log(LogLevel.Error, $"Failed to write update asset to '{targetPath}'.", ex);

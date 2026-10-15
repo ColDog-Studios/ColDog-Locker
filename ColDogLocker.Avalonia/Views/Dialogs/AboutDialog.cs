@@ -35,6 +35,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             InitializeComponent();
 
+            AcknowledgementsText.Text = ThirdPartyAcknowledgements.Text;
             VersionText.Text = $"Version {AppInfo.SemanticVersion ?? "unknown"}";
             SetInfoText(OperatingSystemText, SafeValue(() => Environment.OSVersion.ToString()));
             SetInfoText(RuntimeText, SafeValue(() => $".NET {Environment.Version}"));

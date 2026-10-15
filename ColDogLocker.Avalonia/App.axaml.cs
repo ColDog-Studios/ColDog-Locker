@@ -47,6 +47,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia
                 var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
                 mainWindow.Opened += async (_, _) => await mainWindow.InitializeAsync(Initialization.InitializeAsync);
                 desktop.MainWindow = mainWindow;
+                desktop.ShutdownRequested += (_, args) =>
+                {
+                    if (!_serviceProvider.GetRequiredService<MainWindowViewModel>().TryRequestClose())
+                    {
+                        args.Cancel = true;
+                    }
+                };
                 desktop.Exit += (_, _) => _serviceProvider.Dispose();
             }
 

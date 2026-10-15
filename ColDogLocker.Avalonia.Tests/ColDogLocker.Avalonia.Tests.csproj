@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Headless.XUnit"/>
+        <PackageReference Include="Avalonia.Headless"/>
         <PackageReference Include="Avalonia.Themes.Fluent"/>
         <PackageReference Include="coverlet.collector"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
@@ -22,12 +22,5 @@
         <ProjectReference Include="..\ColDogLocker.Avalonia\ColDogLocker.Avalonia.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <!-- Temporarily excluded: Avalonia.Headless.XUnit does not support xUnit 4.x.
-             Restore when https://github.com/AvaloniaUI/Avalonia/issues/22072 is resolved
-             or these tests use a compatible headless execution helper. -->
-        <Compile Remove="Views\DialogHeadlessTests.cs" />
-        <Compile Remove="Views\MainWindowHeadlessTests.cs" />
-    </ItemGroup>
 
 </Project>

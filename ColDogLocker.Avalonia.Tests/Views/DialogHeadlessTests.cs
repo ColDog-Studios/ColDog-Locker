@@ -16,7 +16,6 @@
  */
 
 using Avalonia.Controls;
-using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
 
@@ -24,90 +23,158 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
 {
     public class DialogHeadlessTests
     {
-        [AvaloniaFact]
-        public void NewLockerDialog_EnablesCreateOnlyForValidInput()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task PropertiesLoadsSizeAsynchronouslyAndStopsUpdatingAfterClose(bool closeImmediately)
         {
-            var dialog = new NewLockerDialog();
-
+            var directory = Directory.CreateTempSubdirectory("cdl-properties-").FullName;
             try
             {
-                dialog.Show();
-                var nameBox = RequiredControl<TextBox>(dialog, "NameBox");
-                var locationBox = RequiredControl<TextBox>(dialog, "LocationBox");
-                var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
-                var confirmBox = RequiredControl<TextBox>(dialog, "ConfirmBox");
-                var createButton = RequiredControl<Button>(dialog, "CreateButton");
+                File.WriteAllBytes(Path.Join(directory, "data"), new byte[1024]);
+                await HeadlessTestSession.RunAsync(async () =>
+                {
+                    var locker = new ColDogStudios.ColDogLocker.Core.Models.LockerModel("Properties", "hash", directory);
+                    var dialog = new LockerPropertiesDialog(locker);
+                    var size = RequiredControl<TextBlock>(dialog, "SizeText");
+                    Assert.Equal("Calculating...", size.Text);
+                    dialog.Show();
+                    try
+                    {
+                        if (closeImmediately)
+                        {
+                            dialog.Close();
+                        }
 
-                Assert.False(createButton.IsEnabled);
-
-                nameBox.Text = "HeadlessLocker";
-                locationBox.Text = CreateSafeLockerPath();
-                passwordBox.Text = "Violet!River9Moon";
-                confirmBox.Text = "different";
-                Dispatcher.UIThread.RunJobs();
-                Assert.False(createButton.IsEnabled);
-
-                confirmBox.Text = passwordBox.Text;
-                Dispatcher.UIThread.RunJobs();
-                Assert.True(createButton.IsEnabled);
-
-                passwordBox.Text = "weak";
-                confirmBox.Text = "weak";
-                Dispatcher.UIThread.RunJobs();
-                Assert.False(createButton.IsEnabled);
+                        await dialog.MetadataLoadTask;
+                        Assert.Equal(closeImmediately ? "Calculating..." : "1 KB", size.Text);
+                    }
+                    finally
+                    {
+                        dialog.Close();
+                    }
+                });
             }
             finally
             {
-                dialog.Close();
+                Directory.Delete(directory, true);
             }
         }
 
-        [AvaloniaFact]
-        public void NewLockerDialog_UpdatesPasswordRequirementIndicators()
+        [Fact]
+        public async Task LockedProperties_CannotEditArchiveIdentity()
         {
-            var dialog = new NewLockerDialog();
-
-            try
+            await HeadlessTestSession.RunAsync(() =>
             {
-                dialog.Show();
-                var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
-                var requirements = RequiredControl<StackPanel>(dialog, "PasswordRequirementsPanel");
-                Assert.Equal(6, requirements.Children.Count);
-
-                passwordBox.Text = "Violet!River9Moon";
-                Dispatcher.UIThread.RunJobs();
-
-                Assert.All(
-                    requirements.Children.OfType<StackPanel>(),
-                    row => Assert.Equal("✓", Assert.IsType<TextBlock>(row.Children[0]).Text));
-            }
-            finally
-            {
-                dialog.Close();
-            }
+                var locker = new ColDogStudios.ColDogLocker.Core.Models.LockerModel("Locked", "hash", CreateSafeLockerPath()) { IsLocked = true };
+                var dialog = new LockerPropertiesDialog(locker);
+                try
+                {
+                    dialog.Show();
+                    Assert.True(RequiredControl<TextBox>(dialog, "NameBox").IsReadOnly);
+                    Assert.False(RequiredControl<Button>(dialog, "BrowseButton").IsEnabled);
+                    Assert.False(RequiredControl<Button>(dialog, "SaveButton").IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
         }
 
-        [AvaloniaFact]
-        public void SettingsDialog_TracksChangesAndEnablesSave()
+        [Fact]
+        public async Task NewLockerDialog_EnablesCreateOnlyForValidInput()
         {
-            var dialog = new SettingsDialog();
-
-            try
+            await HeadlessTestSession.RunAsync(() =>
             {
-                dialog.Show();
-                var autoUpdate = RequiredControl<CheckBox>(dialog, "AutoUpdateCheckBox");
-                var saveButton = RequiredControl<Button>(dialog, "SaveButton");
-                Assert.False(saveButton.IsEnabled);
+                var dialog = new NewLockerDialog();
 
-                autoUpdate.IsChecked = autoUpdate.IsChecked != true;
-                Dispatcher.UIThread.RunJobs();
+                try
+                {
+                    dialog.Show();
+                    var nameBox = RequiredControl<TextBox>(dialog, "NameBox");
+                    var locationBox = RequiredControl<TextBox>(dialog, "LocationBox");
+                    var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var confirmBox = RequiredControl<TextBox>(dialog, "ConfirmBox");
+                    var createButton = RequiredControl<Button>(dialog, "CreateButton");
 
-                Assert.True(saveButton.IsEnabled);
-            }
-            finally
+                    Assert.False(createButton.IsEnabled);
+
+                    nameBox.Text = "HeadlessLocker";
+                    locationBox.Text = CreateSafeLockerPath();
+                    passwordBox.Text = "Violet!River9Moon";
+                    confirmBox.Text = "different";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(createButton.IsEnabled);
+
+                    confirmBox.Text = passwordBox.Text;
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.True(createButton.IsEnabled);
+
+                    passwordBox.Text = "weak";
+                    confirmBox.Text = "weak";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(createButton.IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
+        }
+
+        [Fact]
+        public async Task NewLockerDialog_UpdatesPasswordRequirementIndicators()
+        {
+            await HeadlessTestSession.RunAsync(() =>
             {
-                dialog.Close();
-            }
+                var dialog = new NewLockerDialog();
+
+                try
+                {
+                    dialog.Show();
+                    var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var requirements = RequiredControl<StackPanel>(dialog, "PasswordRequirementsPanel");
+                    Assert.Equal(6, requirements.Children.Count);
+
+                    passwordBox.Text = "Violet!River9Moon";
+                    Dispatcher.UIThread.RunJobs();
+
+                    Assert.All(
+                        requirements.Children.OfType<StackPanel>(),
+                        row => Assert.Equal("✓", Assert.IsType<TextBlock>(row.Children[0]).Text));
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
+        }
+
+        [Fact]
+        public async Task SettingsDialog_TracksChangesAndEnablesSave()
+        {
+            await HeadlessTestSession.RunAsync(() =>
+            {
+                var dialog = new SettingsDialog();
+
+                try
+                {
+                    dialog.Show();
+                    var autoUpdate = RequiredControl<CheckBox>(dialog, "AutoUpdateCheckBox");
+                    var saveButton = RequiredControl<Button>(dialog, "SaveButton");
+                    Assert.False(saveButton.IsEnabled);
+
+                    autoUpdate.IsChecked = autoUpdate.IsChecked != true;
+                    Dispatcher.UIThread.RunJobs();
+
+                    Assert.True(saveButton.IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
         }
 
         private static string CreateSafeLockerPath()

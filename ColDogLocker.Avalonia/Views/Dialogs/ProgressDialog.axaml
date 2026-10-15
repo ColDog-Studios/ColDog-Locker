@@ -30,8 +30,9 @@
         WindowStartupLocation="CenterOwner">
 
     <StackPanel Margin="18" Spacing="12">
-        <TextBlock x:Name="ProgressText" Text="Working..." />
+        <TextBlock x:Name="ProgressText" AutomationProperties.LiveSetting="Polite" Text="Working..." />
         <ProgressBar x:Name="ProgressBar"
+                     AutomationProperties.Name="Progress"
                      Minimum="0"
                      Maximum="100"
                      IsIndeterminate="True" />

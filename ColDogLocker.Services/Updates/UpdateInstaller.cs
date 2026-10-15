@@ -17,7 +17,10 @@
 
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Logging;
 
 namespace ColDogStudios.ColDogLocker.Services.Updates
@@ -64,6 +67,7 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
         public async Task<UpdateInstallResult> InstallAsync(
             string installerPath,
+            string expectedSha256,
             UpdatePlatform platform,
             CancellationToken cancellationToken = default)
         {
@@ -72,13 +76,35 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                 throw new UpdateException(UpdateFailureKind.InstallFailed, "The update installer path is empty.");
             }
 
+            if (expectedSha256 is null || expectedSha256.Length != 64 || !expectedSha256.All(char.IsAsciiHexDigit))
+            {
+                throw new UpdateException(UpdateFailureKind.MissingDigest,
+                    "The downloaded update has no valid SHA-256 digest. Download the update again before installing it.");
+            }
+
             var fullPath = Path.GetFullPath(installerPath);
+            var stagingDirectory = Path.GetDirectoryName(fullPath)
+                ?? throw new UpdateException(UpdateFailureKind.InstallFailed, "The update installer has no parent directory.");
+            try
+            {
+                PrivateDirectory.Ensure(stagingDirectory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or PlatformNotSupportedException)
+            {
+                throw new UpdateException(UpdateFailureKind.InstallFailed,
+                    "The update installer is not in a protected staging directory. Installation was refused.", ex);
+            }
+
             if (!File.Exists(fullPath))
             {
                 throw new UpdateException(UpdateFailureKind.InstallFailed, $"The update installer was not found: {fullPath}");
             }
 
-            var command = CreateInstallCommand(fullPath, platform);
+            // Detect changed downloads before requesting elevation. The privileged
+            // consumer must still bind its input to these bytes across the handoff.
+            await VerifyInstallerAsync(fullPath, expectedSha256, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            var command = CreateInstallCommand(fullPath, platform, expectedSha256.ToLowerInvariant());
             Logger.Log(LogLevel.Info, $"Starting update installer: {command.DisplayCommand}");
 
             try
@@ -113,19 +139,48 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
             }
         }
 
-        internal UpdateInstallerCommand CreateInstallCommand(string installerPath, UpdatePlatform platform)
+        private static async Task VerifyInstallerAsync(string path, string expectedSha256, CancellationToken cancellationToken)
         {
+            try
+            {
+                using var stream = FileSystemEntryPolicy.OpenRead(path);
+                var actualHash = await SHA256.HashDataAsync(stream, cancellationToken);
+                if (!CryptographicOperations.FixedTimeEquals(actualHash, Convert.FromHexString(expectedSha256)))
+                {
+                    throw new UpdateException(UpdateFailureKind.DigestMismatch,
+                        "The downloaded installer has changed since verification. Installation was refused; download the update again.");
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or PlatformNotSupportedException)
+            {
+                throw new UpdateException(UpdateFailureKind.InstallFailed,
+                    "The downloaded installer could not be safely read for verification. Installation was refused.", ex);
+            }
+        }
+
+        internal UpdateInstallerCommand CreateInstallCommand(
+            string installerPath,
+            UpdatePlatform platform,
+            string expectedSha256)
+        {
+            if (expectedSha256.Length != 64 || !expectedSha256.All(char.IsAsciiHexDigit))
+            {
+                throw new UpdateException(UpdateFailureKind.MissingDigest, "A valid SHA-256 digest is required for privileged installation.");
+            }
+
+            expectedSha256 = expectedSha256.ToLowerInvariant();
+
             return platform.OperatingSystem switch
             {
-                UpdateOperatingSystem.Windows => CreateWindowsInstallCommand(installerPath),
-                UpdateOperatingSystem.Linux => CreateLinuxInstallCommand(installerPath, platform),
-                UpdateOperatingSystem.MacOS => CreateMacOsInstallCommand(installerPath),
+                UpdateOperatingSystem.Windows => CreateWindowsInstallCommand(installerPath, expectedSha256),
+                UpdateOperatingSystem.Linux => CreateLinuxInstallCommand(installerPath, expectedSha256, platform),
+                UpdateOperatingSystem.MacOS => CreateMacOsInstallCommand(installerPath, expectedSha256),
                 _ => throw new UpdateException(UpdateFailureKind.UnsupportedPlatform,
                     "Automatic installation is not supported on this platform.")
             };
         }
 
-        private static UpdateInstallerCommand CreateMacOsInstallCommand(string installerPath)
+        private static UpdateInstallerCommand CreateMacOsInstallCommand(string installerPath, string expectedSha256)
         {
             if (!Path.GetExtension(installerPath).Equals(".pkg", StringComparison.OrdinalIgnoreCase))
             {
@@ -133,45 +188,43 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
                     "The downloaded macOS update is not a PKG installer.");
             }
 
+            var script = CreateVerifiedMacOsInstallScript();
+            var encodedScript = Convert.ToBase64String(Encoding.UTF8.GetBytes(script));
+            var encodedPath = Convert.ToBase64String(Encoding.UTF8.GetBytes(installerPath));
+            var appleScript = $"do shell script \"printf %s {encodedScript} | /usr/bin/base64 -D | /bin/sh -s -- {encodedPath} {expectedSha256}\" with administrator privileges";
             return new UpdateInstallerCommand(
-                "/usr/bin/open",
-                [installerPath],
+                "/usr/bin/osascript",
+                ["-e", appleScript],
                 useShellExecute: false,
                 verb: null,
-                waitForExit: false,
-                "Installer opened. Follow the Installer prompts, then restart ColDog Locker when it finishes.");
+                waitForExit: true,
+                "Update package installed. Restart ColDog Locker to use the new version.");
         }
 
-        private static UpdateInstallerCommand CreateWindowsInstallCommand(string installerPath)
+        private static UpdateInstallerCommand CreateWindowsInstallCommand(string installerPath, string expectedSha256)
         {
             var extension = Path.GetExtension(installerPath).ToLowerInvariant();
-            if (extension == ".msi")
+            if (extension is not (".msi" or ".exe"))
             {
-                return new UpdateInstallerCommand(
-                    "msiexec.exe",
-                    ["/i", installerPath],
-                    useShellExecute: true,
-                    verb: "runas",
-                    waitForExit: false,
-                    "Installer started. Follow the installer prompts, then restart ColDog Locker when it finishes.");
+                throw new UpdateException(UpdateFailureKind.InstallFailed,
+                    "The downloaded Windows update is not an MSI or EXE installer.");
             }
 
-            if (extension == ".exe")
-            {
-                return new UpdateInstallerCommand(
-                    installerPath,
-                    [],
-                    useShellExecute: true,
-                    verb: "runas",
-                    waitForExit: false,
-                    "Installer started. Follow the installer prompts, then restart ColDog Locker when it finishes.");
-            }
-
-            throw new UpdateException(UpdateFailureKind.InstallFailed,
-                "The downloaded Windows update is not an MSI or EXE installer.");
+            var script = CreateVerifiedWindowsInstallScript(installerPath, expectedSha256, extension);
+            var encodedCommand = Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
+            return new UpdateInstallerCommand(
+                "powershell.exe",
+                ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", encodedCommand],
+                useShellExecute: true,
+                verb: "runas",
+                waitForExit: true,
+                "Update package installed. Restart ColDog Locker to use the new version.");
         }
 
-        private UpdateInstallerCommand CreateLinuxInstallCommand(string installerPath, UpdatePlatform platform)
+        private UpdateInstallerCommand CreateLinuxInstallCommand(
+            string installerPath,
+            string expectedSha256,
+            UpdatePlatform platform)
         {
             var extension = Path.GetExtension(installerPath).ToLowerInvariant();
             var packageFormat = platform.LinuxPackageFormat;
@@ -187,14 +240,14 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             return packageFormat switch
             {
-                LinuxPackageFormat.Deb => CreateDebInstallCommand(installerPath),
-                LinuxPackageFormat.Rpm => CreateRpmInstallCommand(installerPath),
+                LinuxPackageFormat.Deb => CreateDebInstallCommand(installerPath, expectedSha256),
+                LinuxPackageFormat.Rpm => CreateRpmInstallCommand(installerPath, expectedSha256),
                 _ => throw new UpdateException(UpdateFailureKind.UnsupportedPlatform,
                     "Automatic Linux installation needs a .deb or .rpm package.")
             };
         }
 
-        private UpdateInstallerCommand CreateDebInstallCommand(string installerPath)
+        private UpdateInstallerCommand CreateDebInstallCommand(string installerPath, string expectedSha256)
         {
             var baseCommand = FirstExistingCommand("apt-get", "apt", "dpkg")
                               ?? throw new UpdateException(UpdateFailureKind.InstallFailed,
@@ -209,16 +262,16 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             return CreatePrivilegedLinuxCommand(
                 "sh",
-                ["-c", script, "cdlocker-updater", installerPath],
+                ["-c", CreateVerifiedLinuxStagingScript("deb", script), "cdlocker-updater", installerPath, expectedSha256],
                 "Update package installed. Restart ColDog Locker to use the new version.");
         }
 
         private static string CreateDebReplaceScript(string removeCommand, string installCommand)
         {
-            return $"if dpkg -s {LinuxPackageId} >/dev/null 2>&1; then {removeCommand} {LinuxPackageId}; fi && {installCommand} \"$1\"";
+            return $"if dpkg -s {LinuxPackageId} >/dev/null 2>&1; then {removeCommand} {LinuxPackageId}; fi && {installCommand} \"$package\"";
         }
 
-        private UpdateInstallerCommand CreateRpmInstallCommand(string installerPath)
+        private UpdateInstallerCommand CreateRpmInstallCommand(string installerPath, string expectedSha256)
         {
             var baseCommand = FirstExistingCommand("dnf", "yum", "zypper", "rpm")
                               ?? throw new UpdateException(UpdateFailureKind.InstallFailed,
@@ -234,13 +287,74 @@ namespace ColDogStudios.ColDogLocker.Services.Updates
 
             return CreatePrivilegedLinuxCommand(
                 "sh",
-                ["-c", script, "cdlocker-updater", installerPath],
+                ["-c", CreateVerifiedLinuxStagingScript("rpm", script), "cdlocker-updater", installerPath, expectedSha256],
                 "Update package installed. Restart ColDog Locker to use the new version.");
         }
 
         private static string CreateRpmReplaceScript(string removeCommand, string installCommand)
         {
-            return $"if rpm -q {LinuxPackageId} >/dev/null 2>&1; then {removeCommand} {LinuxPackageId}; fi && {installCommand} \"$1\"";
+            return $"if rpm -q {LinuxPackageId} >/dev/null 2>&1; then {removeCommand} {LinuxPackageId}; fi && {installCommand} \"$package\"";
+        }
+
+        internal static string CreateVerifiedLinuxStagingScript(string extension, string installScript)
+        {
+            return "set -eu; " +
+                   "stage=$(/usr/bin/mktemp -d /var/tmp/cdlocker-update.XXXXXX); " +
+                   "trap '/bin/rm -rf -- \"$stage\"' EXIT HUP INT TERM; " +
+                   $"package=\"$stage/package.{extension}\"; " +
+                   "/usr/bin/install -m 0600 -- \"$1\" \"$package\"; " +
+                   "actual=$(/usr/bin/sha256sum \"$package\" | /usr/bin/cut -d ' ' -f 1); " +
+                   "if [ \"$actual\" != \"$2\" ]; then echo 'Update digest changed during privileged staging.' >&2; exit 65; fi; " +
+                   installScript;
+        }
+
+        private static string CreateVerifiedMacOsInstallScript()
+        {
+            return "set -eu; " +
+                   "source=$(printf %s \"$1\" | /usr/bin/base64 -D); " +
+                   "stage=$(/usr/bin/mktemp -d /private/var/tmp/cdlocker-update.XXXXXX); " +
+                   "trap '/bin/rm -rf \"$stage\"' EXIT HUP INT TERM; " +
+                   "package=\"$stage/package.pkg\"; " +
+                   "/bin/cp \"$source\" \"$package\"; /bin/chmod 0600 \"$package\"; " +
+                   "actual=$(/usr/bin/shasum -a 256 \"$package\" | /usr/bin/cut -d ' ' -f 1); " +
+                   "if [ \"$actual\" != \"$2\" ]; then echo 'Update digest changed during privileged staging.' >&2; exit 65; fi; " +
+                   "/usr/sbin/installer -pkg \"$package\" -target /";
+        }
+
+        private static string CreateVerifiedWindowsInstallScript(
+            string installerPath,
+            string expectedSha256,
+            string extension)
+        {
+            var source = installerPath.Replace("'", "''", StringComparison.Ordinal);
+            var launch = extension == ".msi"
+                ? "$process = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/i', ('\"' + $package + '\"')) -PassThru -Wait;"
+                : "$process = Start-Process -FilePath $package -PassThru -Wait;";
+            return "$ErrorActionPreference = 'Stop'; " +
+                   $"$source = '{source}'; $expected = '{expectedSha256}'; " +
+                   "$stage = Join-Path $env:ProgramData ('ColDogLocker-Update-' + [Guid]::NewGuid().ToString('N')); " +
+                   "$admins = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-32-544'); " +
+                   "$system = [System.Security.Principal.SecurityIdentifier]::new('S-1-5-18'); " +
+                   "$acl = [System.Security.AccessControl.DirectorySecurity]::new(); " +
+                   "$acl.SetAccessRuleProtection($true, $false); $acl.SetOwner($admins); " +
+                   "$inherit = [System.Security.AccessControl.InheritanceFlags]'ContainerInherit, ObjectInherit'; " +
+                   "$propagation = [System.Security.AccessControl.PropagationFlags]::None; " +
+                   "$allow = [System.Security.AccessControl.AccessControlType]::Allow; " +
+                   "$rights = [System.Security.AccessControl.FileSystemRights]::FullControl; " +
+                   "$acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new($admins, $rights, $inherit, $propagation, $allow)); " +
+                   "$acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new($system, $rights, $inherit, $propagation, $allow)); " +
+                   "[System.IO.Directory]::CreateDirectory($stage) | Out-Null; try { Set-Acl -LiteralPath $stage -AclObject $acl; " +
+                   "$attributes = [System.IO.File]::GetAttributes($stage); " +
+                   "if (($attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Privileged update staging resolved through a reparse point.' }; " +
+                   "$appliedAcl = Get-Acl -LiteralPath $stage; " +
+                   "$appliedOwner = $appliedAcl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value; " +
+                   "if (-not $appliedAcl.AreAccessRulesProtected -or $appliedOwner -ne $admins.Value) { throw 'Privileged update staging ACL verification failed.' }; " +
+                   $"$package = Join-Path $stage 'package{extension}'; " +
+                   "[System.IO.File]::Copy($source, $package, $false); " +
+                   "$actual = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash; " +
+                   "if ($actual -ine $expected) { throw 'Update digest changed during privileged staging.' }; " +
+                   launch + " if ($process.ExitCode -ne 0) { exit $process.ExitCode } } " +
+                   "finally { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }";
         }
 
         private UpdateInstallerCommand CreatePrivilegedLinuxCommand(

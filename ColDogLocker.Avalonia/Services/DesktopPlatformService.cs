@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
@@ -33,8 +34,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 
         public Task OpenFolderAsync(string path)
         {
-            StartPathWithShell(ResolveExistingPath(path));
-            return Task.CompletedTask;
+            var folder = ResolveExistingPath(path);
+            return Task.Run(() => DesktopLauncher.OpenFolder(folder));
         }
 
         public Task OpenFolderAndSelectAsync(string path)
@@ -72,9 +73,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         private static Uri CreateSafeWebUri(string url)
         {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
-                (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
+                (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeMailto))
             {
-                throw new ArgumentException("Only HTTP and HTTPS URLs can be opened.", nameof(url));
+                throw new ArgumentException("Only HTTP, HTTPS and mailto URLs can be opened.", nameof(url));
             }
 
             return uri;
@@ -88,7 +89,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             }
 
             var fullPath = Path.GetFullPath(path);
-            if (Directory.Exists(fullPath) || File.Exists(fullPath))
+            if (Directory.Exists(fullPath))
             {
                 return fullPath;
             }
@@ -105,11 +106,6 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         private static void StartUrlWithShell(Uri uri)
         {
             StartWithShell(uri.AbsoluteUri);
-        }
-
-        private static void StartPathWithShell(string path)
-        {
-            StartWithShell(path);
         }
 
         private static void StartWithShell(string target)

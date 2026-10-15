@@ -5,7 +5,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="BCrypt.Net-Next"/>
         <PackageReference Include="Microsoft.Data.Sqlite.Core"/>
         <PackageReference Include="Newtonsoft.Json"/>
         <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3"/>

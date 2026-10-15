@@ -19,7 +19,9 @@ using System.Security;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.Platform.Storage;
+using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using Material.Icons;
@@ -28,11 +30,13 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 {
     public sealed partial class LockerPropertiesDialog : Window
     {
-        private static readonly IBrush LockedBrush = new SolidColorBrush(Color.Parse("#FF6923"));
-        private static readonly IBrush UnlockedBrush = new SolidColorBrush(Color.Parse("#0077B6"));
+        private static readonly IBrush _lockedBrush = new ImmutableSolidColorBrush(Color.Parse("#FF6923"));
+        private static readonly IBrush _unlockedBrush = new ImmutableSolidColorBrush(Color.Parse("#0077B6"));
 
         private readonly LockerModel? _locker;
         private bool _hasChanges;
+        private readonly CancellationTokenSource _scanCancellation = new();
+        internal Task MetadataLoadTask { get; private set; } = Task.CompletedTask;
 
         public LockerPropertiesDialog()
         {
@@ -41,14 +45,20 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             BrowseButton.IsEnabled = false;
             SaveButton.IsEnabled = false;
             StatusIcon.Kind = MaterialIconKind.LockOpen;
-            StatusIcon.Foreground = UnlockedBrush;
+            StatusIcon.Foreground = _unlockedBrush;
             StatusText.Text = "Unlocked";
-            StatusText.Foreground = UnlockedBrush;
+            StatusText.Foreground = _unlockedBrush;
 
             NameBox.TextChanged += (_, _) => UpdateChangeState();
             BrowseButton.Click += BrowseButton_Click;
             SaveButton.Click += SaveButton_Click;
             CloseButton.Click += CloseButton_Click;
+            Opened += (_, _) => MetadataLoadTask = LoadMetadataAsync();
+            Closed += (_, _) =>
+            {
+                _scanCancellation.Cancel();
+                _scanCancellation.Dispose();
+            };
         }
 
         public LockerPropertiesDialog(LockerModel locker)
@@ -57,14 +67,15 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             _locker = locker;
 
             NameBox.Text = locker.LockerName;
+            NameBox.IsReadOnly = locker.IsLocked;
             LocationBox.Text = locker.LockerLocation;
             BrowseButton.IsEnabled = !locker.IsLocked;
             LocationWarningText.IsVisible = locker.IsLocked;
-            SizeText.Text = GetSizeText(locker.LockerLocation);
-            CreatedText.Text = GetDirectoryDate(locker.LockerLocation, DateKind.Created);
-            ModifiedText.Text = GetDirectoryDate(locker.LockerLocation, DateKind.Modified);
+            SizeText.Text = "Calculating...";
+            CreatedText.Text = "Loading...";
+            ModifiedText.Text = "Loading...";
 
-            var statusBrush = locker.IsLocked ? LockedBrush : UnlockedBrush;
+            var statusBrush = locker.IsLocked ? _lockedBrush : _unlockedBrush;
             StatusIcon.Kind = locker.IsLocked ? MaterialIconKind.Lock : MaterialIconKind.LockOpen;
             StatusIcon.Foreground = statusBrush;
             StatusText.Text = locker.IsLocked ? "Locked" : "Unlocked";
@@ -77,7 +88,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Select new location for locker", AllowMultiple = false
+                Title = "Select new location for locker",
+                AllowMultiple = false
             });
 
             var folder = folders.FirstOrDefault();
@@ -215,60 +227,34 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             }
         }
 
-        private static string GetSizeText(string path)
+        private async Task LoadMetadataAsync()
         {
+            if (_locker == null)
+            {
+                return;
+            }
+
+            var token = _scanCancellation.Token;
+            var path = _locker.LockerLocation;
             try
             {
-                if (!Directory.Exists(path))
+                var metadata = await Task.Run(() =>
                 {
-                    return "Directory not found";
-                }
-
-                return FormatBytes(CalculateDirectorySize(new DirectoryInfo(path)));
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return "Unable to calculate";
-            }
-            catch (IOException)
-            {
-                return "Unable to calculate";
-            }
-            catch (SecurityException)
-            {
-                return "Unable to calculate";
-            }
-        }
-
-        private static long CalculateDirectorySize(DirectoryInfo directory)
-        {
-            long size = 0;
-            try
-            {
-                foreach (var file in directory.EnumerateFiles())
+                    var size = DirectorySizeScanner.Calculate(path, token);
+                    token.ThrowIfCancellationRequested();
+                    return (Size: size, Created: GetDirectoryDate(path, DateKind.Created), Modified: GetDirectoryDate(path, DateKind.Modified));
+                }, token);
+                if (!token.IsCancellationRequested)
                 {
-                    size += file.Length;
-                }
-
-                foreach (var child in directory.EnumerateDirectories())
-                {
-                    size += CalculateDirectorySize(child);
+                    SizeText.Text = metadata.Size is { } bytes ? FormatBytes(bytes) : "Unknown";
+                    CreatedText.Text = metadata.Created;
+                    ModifiedText.Text = metadata.Modified;
                 }
             }
-            catch (UnauthorizedAccessException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
-                return size;
+                // Closing the dialog cancels display-only work, not a locker operation.
             }
-            catch (IOException)
-            {
-                return size;
-            }
-            catch (SecurityException)
-            {
-                return size;
-            }
-
-            return size;
         }
 
         private static string FormatBytes(long bytes)

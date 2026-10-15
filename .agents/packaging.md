@@ -20,7 +20,8 @@ The active package contents are:
 
 - `ColDogLocker.Cli` as `cdlocker` / `cdlocker.exe`.
 - `ColDogLocker.Avalonia` as `ColDogLocker` / `ColDogLocker.exe`.
-- `README.md`, `LICENSE`, and the shared icon.
+- `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, a generated machine-readable third-party inventory with resolved package versions and SHA-512 hashes, and the shared icon.
+- `DOTNET-LICENSE.txt` and `DOTNET-THIRD-PARTY-NOTICES.txt` copied from the exact SDK root used for that package build.
 - The `cdlocker(1)` man page on Linux and macOS packages.
 
 On macOS, the CLI is installed as `/usr/local/bin/cdlocker`, the man page is installed as `/usr/local/share/man/man1/cdlocker.1.gz`, and the GUI is installed as `/Applications/ColDog Locker.app`.
@@ -29,8 +30,9 @@ Each installer/package is intentionally a combined app package. The CLI and GUI 
 
 ## Prerequisites
 
-- .NET SDK 10.
-- WiX 6 is restored through `WixToolset.Sdk` and NuGet when building Windows installers.
+- A .NET 10 SDK or newer SDK that supports targeting .NET 10; no exact SDK pin.
+- Python 3 for generating the resolved third-party inventory during packaging. Windows uses `python`; Linux/macOS use `python3`.
+- WiX 7.0.0 is restored through `WixToolset.Sdk` and NuGet when building Windows installers. The maintainer explicitly authorized its [OSMF EULA](https://wixtoolset.org/osmf/) acceptance for this repository; the installer project passes `AcceptEula=wix7` for local and CI builds.
 - A Windows host for `.msi` and `.exe` setup bundles; WiX restores on Linux but Windows installer build execution is Windows-only.
 - `ar`, `tar`, and `gzip` for `.deb`.
 - `rpmbuild` for `.rpm`.
@@ -54,7 +56,7 @@ For a real install/remove smoke test on Fedora, use a clean machine or VM and ru
 
 ## Build Commands
 
-Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated releases are published by the `Release` workflow on pushes to `main` and by manual dispatch.
+Manual CI packaging is available from the `Packages` workflow in GitHub Actions. Automated releases are published by the `Release` workflow on pushes to `main` and by manual dispatch. Both workflows use native x64 and ARM64 runners for installed-package validation; a cross-platform build alone is not accepted as ARM evidence.
 
 The manual `Packages` and automated `Release` workflows include macOS `.pkg` assets alongside Windows and Linux packages.
 
@@ -119,6 +121,10 @@ artifacts/packages/dist/ColDogLocker-<version>-macos-arm64.pkg
 
 Publish output, staging trees, generated Debian control files, and generated RPM specs are under `artifacts/packages/`.
 
+The checked-in `packaging/third-party-components.json` must exactly match the resolved production graphs in the Services and Avalonia NuGet lock files. `python3 .github/scripts/release_manifest.py --check-only` verifies all names and versions; test and release CI run that check. A real local DEB content inspection should show all five license/notice/inventory files under `/opt/coldog-locker`.
+
+DEB and RPM construction normalizes archive order, ownership and timestamps from `SOURCE_DATE_EPOCH`. Package and release CI build each x64 and ARM64 Linux package twice and require byte-for-byte equality before upload. Current Windows and macOS package tools are not treated as reproducible; checksums and GitHub artifact attestations identify their exact released bytes.
+
 ## Windows Installer Behavior
 
 The MSI installs per-machine under:
@@ -137,7 +143,9 @@ The desktop shortcut is an MSI feature selected by default and targets the insta
 
 The Start Menu shortcut is installed by default.
 
-The MSI has a feature-tree option named `Remove stored config and data on uninstall`, but user data preservation is the default. Silent uninstall can set `REMOVE_USER_DATA_ON_UNINSTALL=1` to opt in to removing ColDog Locker settings, logs, locker metadata, and the default locker folder.
+User data preservation is the default. The current `WixUI_InstallDir` flow has no user-data cleanup checkbox; the `RemoveUserDataFeature` is an installed supporting feature, not a UI consent mechanism. Explicit standalone uninstall can set `REMOVE_USER_DATA_ON_UNINSTALL=1` to opt in to permanent deletion of settings, logs, the database and all locked/unlocked files in `%USERPROFILE%\Documents\ColDog Locker`. This property must never be supplied by the updater.
+
+The cleanup condition requires `Installed`, full removal, the installed supporting feature and the explicit opt-in value, and excludes `UPGRADINGPRODUCTCODE`. Windows Installer sets that property when removing a product during a major upgrade ([Microsoft reference](https://learn.microsoft.com/en-us/windows/win32/msi/upgradingproductcode)). Source/XML checks do not replace Windows MSI execution: validate preservation during install, repair, upgrade and ordinary uninstall, and deletion only during an explicit standalone opt-in uninstall in an isolated Windows profile. Existing installed MSIs retain their old custom-action conditions; a new package cannot retroactively change those cached packages. Avoid passing the opt-in property when upgrading any older package.
 
 Code signing is not configured.
 
@@ -186,7 +194,7 @@ The app currently stores runtime data per user through .NET `LocalApplicationDat
 
 The default locker parent directory remains the user's documents folder as defined by `AppPaths.CdlDir`. The packages do not create `/etc/coldog-locker` or `/var/lib/coldog-locker` because the current app does not read system-wide config or shared state.
 
-Debian package purge removes reserved system config/data directories if they are added later. Normal package removal leaves per-user app data in place because Debian and RPM package managers do not provide an interactive uninstall checkbox for per-user home directories.
+Package removal and Debian purge preserve all per-user app data. There is no purge script deleting unused system directories. The package owns only its installed application resources.
 
 On Fedora, use `rpm -qpi` and `rpm -qpl` to validate RPM metadata and installed paths without installing it. Use a clean machine or VM for real `sudo dnf install` / `sudo dnf remove` smoke tests.
 
@@ -222,3 +230,19 @@ The `.pkg` format does not provide a native uninstall checkbox. Remove the macOS
 sudo rm -rf "/Applications/ColDog Locker.app"
 sudo rm -f /usr/local/bin/cdlocker
 ```
+
+## Native dependencies
+
+DEB and RPM packages declare the .NET native runtime dependencies (glibc, C++/GCC runtime, zlib, OpenSSL 3, ICU, certificates and time-zone data) and X11/font dependencies. RPM uses shared-library capabilities rather than distro-specific package names; ICU versions are alternatives because the runtime resolves compatible ICU dynamically. Single-file embedded native libraries cannot be discovered by normal RPM ELF scanning, so explicit declarations are required.
+
+The declarations follow [Avalonia Linux deployment](https://docs.avaloniaui.net/docs/deployment/linux) and [.NET Linux dependencies](https://learn.microsoft.com/en-us/dotnet/core/install/linux-scripted-manual). Clean-container/VM installation still needs to validate each advertised distro and architecture. X11/XWayland must be available for the desktop UI; a container without a display can only validate CLI behavior unless an X server is started.
+
+## Disposable installed-package checks
+
+The manual Packages and automated Release workflows define native Windows x64/ARM64, Linux x64/ARM64 and macOS x64/ARM64 checks. Defining a job is not execution evidence; inspect the installed-package job logs for the revision being released.
+
+`linux_installed_e2e.sh` runs as root only inside a disposable Ubuntu 24.04 or Fedora 43 container. Mount exactly one matching architecture/format package under `/packages` and scripts under `/review-scripts`, then pass `deb x64`, `rpm x64`, `deb arm64` or `rpm arm64`. It resolves dependencies, creates an unprivileged user, runs the current CLI E2E suite, checks GUI startup under Xvfb, reinstalls and removes while verifying a user marker survives. Run ARM64 on a native ARM64 host.
+
+`windows_installed_e2e.ps1` checks setup/runtime bootstrap, native process architecture, CLI, GUI startup, baseline major upgrade, downgrade refusal, repair, reinstall and removal preservation; explicit user-data cleanup is tested only in an isolated profile. `macos_installed_e2e.sh` checks PKG install, architecture, CLI, GUI startup, reinstall and removal preservation. These scripts do not prove actual screen-reader speech, Gatekeeper/SmartScreen UX or complete GUI interaction; those remain manual.
+
+Combined packages install CLI, TUI and GUI together. Musl RID support is a source-publish option, not a advertised DEB/RPM/musl graphical package guarantee. Avoid duplicating this layout in another distribution-plan file.

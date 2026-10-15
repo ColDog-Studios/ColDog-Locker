@@ -29,7 +29,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             out RecordingDialogService dialogs,
             out RecordingPlatformService platform,
             out StubUpdateService updates,
-            out RecordingUpdateDialogHost updateDialogs)
+            out RecordingUpdateDialogHost updateDialogs,
+            Func<CancellationToken, IProgress<string>, bool, Task<List<global::ColDogStudios.ColDogLocker.Avalonia.Models.LockerItemViewModel>>>? loadLockerItems = null)
         {
             SettingsManager.Settings.DevMode = false;
             SettingsManager.Settings.DefaultGuiViewMode = GuiViewMode.Grid;
@@ -39,7 +40,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             updates = new StubUpdateService();
             updateDialogs = new RecordingUpdateDialogHost();
             var workflow = new UpdateWorkflow(updates, updateDialogs);
-            return new MainWindowViewModel(dialogs, platform, workflow);
+            return loadLockerItems == null ? new MainWindowViewModel(dialogs, platform, workflow) : new MainWindowViewModel(dialogs, platform, workflow, loadLockerItems);
         }
     }
 
@@ -47,6 +48,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
     {
         public NewLockerRequest? NewLockerRequest { get; set; }
         public string? PasswordResponse { get; set; }
+        public Queue<string?> PasswordResponses { get; } = new();
         public bool ConfirmationResponse { get; set; }
         public List<(string Title, string Message)> Messages { get; } = [];
         public List<(string Title, string Message)> Warnings { get; } = [];
@@ -78,7 +80,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
 
         public Task<string?> PromptPasswordAsync(string title)
         {
-            return Task.FromResult(PasswordResponse);
+            return Task.FromResult(PasswordResponses.Count > 0 ? PasswordResponses.Dequeue() : PasswordResponse);
         }
 
         public Task<NewLockerRequest?> ShowNewLockerAsync()
@@ -96,6 +98,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
         {
             return Task.CompletedTask;
         }
+
+        public Task ShowMaintenanceAsync() => Task.CompletedTask;
 
         public Task ShowAboutAsync()
         {
@@ -120,6 +124,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
         public string? LastSelectedPath { get; private set; }
         public string? LastCopiedText { get; private set; }
         public Exception? OpenFolderAndSelectException { get; set; }
+        public Task OpenFolderAndSelectCompletion { get; set; } = Task.CompletedTask;
 
         public Task OpenUrlAsync(string url)
         {
@@ -141,7 +146,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests
             }
 
             LastSelectedPath = path;
-            return Task.CompletedTask;
+            return OpenFolderAndSelectCompletion;
         }
 
         public Task CopyTextAsync(string text)

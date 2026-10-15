@@ -62,10 +62,12 @@ It was created by Collin 'ColDog' Laney on 11/17/21 for a security project in Cy
 
 > [!NOTE]
 > ColDog Locker is still in development.
-> Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet.
+> Automated prerelease assets are available from GitHub Releases for validation, but they are not treated as fully supported stable releases yet. Keep independent, tested backups: concurrent file changes and interrupted operations still carry data-loss risks. See [Backup and Recovery](docs/backup-and-recovery.md). Breaking prerelease changes are permitted; this build accepts archive format version 2 only. Export files and back up before upgrading from older formats.
 
 > [!WARNING]
 > Windows and macOS packages are unsigned. Windows SmartScreen or macOS Gatekeeper may display a warning because the project does not currently have code-signing certificates.
+
+Native Windows, macOS, and ARM64 launch validation is still incomplete. Review [Platform and Storage Support](docs/platform-support.md) before installing or choosing a locker location.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -83,7 +85,7 @@ You can also build from source following the instructions below.
 
 ### Prerequisites
 
-- [![.Net][.Net-shield]][.Net-url] .Net 10 SDK
+- [![.Net][.Net-shield]][.Net-url] .NET 10 SDK or a newer SDK that supports targeting .NET 10
 
 ```bash
 dotnet --version
@@ -128,7 +130,7 @@ dotnet run --project ColDogLocker.Cli
 ColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.
 
 > [!NOTE]
-> `dotnet run --project ColDogLocker.Cli` and `cdlocker` can be used interchangeably.
+> To run a CLI command from source, use `dotnet run --project ColDogLocker.Cli -- <command>`. Installed packages provide `cdlocker <command>`.
 > On Windows, the compiled executable is `cdlocker.exe`; on Linux and macOS it is `cdlocker`.
 
 ### Interactive Modes
@@ -168,7 +170,7 @@ cdlocker remove <name> [--force] [--delete]
 # Change locker password
 cdlocker change-password <name>
 
-# Verify locker integrity
+# Check locker/archive consistency (no password-based authentication)
 cdlocker verify <name>
 ```
 
@@ -176,7 +178,7 @@ cdlocker verify <name>
 
 ```bash
 # View or modify settings
-cdlocker settings [set <key> <value>]
+cdlocker settings [<key> [<value>]]
 
 # Optimize database
 cdlocker db-vacuum
@@ -194,6 +196,8 @@ cdlocker help [command]
 # Show version
 cdlocker --version
 ```
+
+For backup, standalone archive extraction and interrupted-operation recovery, follow [Backup and Recovery](docs/backup-and-recovery.md).
 
 ### Quick Examples
 
@@ -213,7 +217,7 @@ cdlocker list --locked
 # Remove locker and delete its contents
 cdlocker remove OldLocker --force --delete
 
-# Check locker integrity
+# Check locker/archive consistency
 cdlocker verify MySecrets
 ```
 
@@ -268,15 +272,7 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 ## Third-Party Libraries
 
-- [Avalonia UI](https://avaloniaui.net/)
-- [BCrypt.Net-Next](https://github.com/BcryptNet/bcrypt.net)
-- [CommunityToolkit.Mvvm](https://www.nuget.org/packages/CommunityToolkit.Mvvm)
-- [Material.Icons.Avalonia](https://github.com/SKProCH/Material.Icons)
-- [Microsoft.Data.Sqlite](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/)
-- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection)
-- [Newtonsoft.Json](https://www.newtonsoft.com/json)
-- [SQLitePCLRaw](https://github.com/ericsink/SQLitePCL.raw)
-- [SourceGear.sqlite3](https://www.nuget.org/packages/SourceGear.sqlite3)
+Acknowledgements are shown in **Help > About** and `cdlocker about`, in alphabetical order. The [third-party notices](THIRD-PARTY-NOTICES.md) and [component/license catalog](packaging/third-party-components.json) cover native graphics, fonts, icons and SQLite. Each installer includes a generated `THIRD-PARTY-COMPONENTS.json` with resolved package versions and hashes. Bundled .NET runtime notices also ship with every installer.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

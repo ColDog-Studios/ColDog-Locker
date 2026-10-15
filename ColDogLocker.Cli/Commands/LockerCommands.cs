@@ -18,6 +18,8 @@
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Configuration;
+using ColDogStudios.ColDogLocker.Services.FileSystem;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Security;
 using ColDogStudios.ColDogLocker.Tui.Input;
@@ -25,10 +27,60 @@ using ColDogStudios.ColDogLocker.Tui.Input;
 namespace ColDogStudios.ColDogLocker.Cli.Commands
 {
     /// <summary>
-    ///     Handlers for locker-related CLI commands (new, remove, lock, unlock, list, status, change-password, verify).
+    ///     Handlers for locker-related CLI commands.
     /// </summary>
     public static class LockerCommands
     {
+        public static int Edit(string[] args)
+        {
+            if (args.Length < 4 || args.Length % 2 != 0)
+            {
+                Console.Error.WriteLine("Usage: cdlocker edit <name> [--name <new-name>] [--location <existing-directory>]");
+                return 1;
+            }
+
+            var locker = LockerService.FindLockerByName(args[1]) ?? throw new InvalidOperationException("Locker not found.");
+            var name = locker.LockerName;
+            var location = locker.LockerLocation;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            for (var i = 2; i < args.Length; i += 2)
+            {
+                if (!seen.Add(args[i]))
+                {
+                    throw new ArgumentException("Duplicate edit option.");
+                }
+
+                switch (args[i])
+                {
+                    case "--name":
+                        name = args[i + 1];
+                        break;
+                    case "--location":
+                        location = args[i + 1];
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown edit option: {args[i]}");
+                }
+            }
+
+            LockerService.UpdateLockerMetadata(locker, name, location);
+            Console.WriteLine($"Updated registration: {locker.LockerName} at {locker.LockerLocation}. Files were not moved.");
+            return 0;
+        }
+
+        public static int Open(string[] args)
+        {
+            if (args.Length != 2)
+            {
+                Console.Error.WriteLine("Usage: cdlocker open <name>");
+                return 1;
+            }
+
+            var locker = LockerService.FindLockerByName(args[1]) ?? throw new InvalidOperationException("Locker not found.");
+            DesktopLauncher.OpenFolder(locker.LockerLocation);
+            return 0;
+        }
+
         #region New Locker
 
         public static int New(string[] args)
@@ -77,7 +129,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Determine locker location
             var lockerLocation = customPath is not null
                 ? Path.Join(customPath, lockerName)
-                : Path.Join(AppPaths.CdlDir, lockerName);
+                : Path.Join(string.IsNullOrWhiteSpace(SettingsManager.Settings.DefaultLockerLocation) ? AppPaths.CdlDir : SettingsManager.Settings.DefaultLockerLocation, lockerName);
 
             // Validate path is not protected
             var pathValidationError = LockerPathFilter.ValidatePath(lockerLocation);
@@ -247,12 +299,10 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             // Remove the locker
             try
             {
-                LockerService.RemoveLocker(locker);
+                LockerService.RemoveLocker(locker, deleteDirectory);
 
-                // Delete directory if requested
-                if (deleteDirectory && Directory.Exists(locker.LockerLocation))
+                if (deleteDirectory)
                 {
-                    LockerService.DeleteLockerDirectory(locker);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"Locker '{lockerName}' removed and directory deleted.");
                     Console.ResetColor();
@@ -532,10 +582,17 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 Console.WriteLine($"Created: {dirInfo.CreationTime:yyyy-MM-dd HH:mm:ss}");
                 Console.WriteLine($"Last Modified: {dirInfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}");
 
-                // Count files
-                var fileCount = dirInfo.GetFiles("*", SearchOption.AllDirectories).Length;
-                var folderCount = dirInfo.GetDirectories("*", SearchOption.AllDirectories).Length;
-                Console.WriteLine($"Contents: {fileCount} file(s), {folderCount} folder(s)");
+                try
+                {
+                    var counts = DirectoryContentScanner.Count(locker.LockerLocation);
+                    Console.WriteLine($"Contents: {counts.Files} file(s), {counts.Directories} folder(s)");
+                }
+                catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or PlatformNotSupportedException)
+                {
+                    Console.WriteLine("Contents: Unavailable (inspection incomplete)");
+                    Console.Error.WriteLine($"Content inspection failed: {ex.Message}");
+                    return 1;
+                }
             }
             else
             {
@@ -737,7 +794,9 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
             Console.WriteLine($"[{(result.HasAccess ? "OK" : "FAIL")}] Directory accessible");
             if (result.DirectoryExists)
             {
-                Console.WriteLine($"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)");
+                Console.WriteLine(result.CountsComplete
+                    ? $"      Contents: {result.FileCount} file(s), {result.DirectoryCount} folder(s)"
+                    : "      Contents: Unavailable (inspection incomplete)");
             }
 
             if (result.IsLocked)

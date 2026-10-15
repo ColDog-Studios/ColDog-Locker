@@ -25,6 +25,9 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
     /// </summary>
     public static class LockerPathFilter
     {
+        public static StringComparison PathComparison => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        private static StringComparer PathComparer => OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
         // Paths that block the exact folder AND all subdirectories (system paths)
         private static readonly string[] _systemProtectedPaths;
 
@@ -144,6 +147,16 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 }
             }
 
+            if (!OperatingSystem.IsWindows())
+            {
+                systemPaths.AddRange(["/bin", "/boot", "/dev", "/etc", "/lib", "/lib64", "/opt", "/proc", "/root", "/run", "/sbin", "/sys", "/usr", "/var"]);
+                userFolderPaths.AddRange(["/home", "/Users", "/Volumes", "/media", "/mnt"]);
+                if (OperatingSystem.IsMacOS())
+                {
+                    systemPaths.AddRange(["/Applications", "/System", "/Library", "/private", Path.Join(userProfile, "Library")]);
+                }
+            }
+
             // === USER FOLDER PATHS: Block ONLY the exact folder, allow subdirectories ===
 
             // User Profile root - can't lock C:\Users\ColDog\ but can lock C:\Users\ColDog\MyLocker
@@ -201,14 +214,14 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
 
             _systemProtectedPaths = systemPaths
                 .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Select(p => Path.GetFullPath(p).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant())
-                .Distinct()
+                .Select(NormalizePath)
+                .Distinct(PathComparer)
                 .ToArray();
 
             _userFolderProtectedPaths = userFolderPaths
                 .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Select(p => Path.GetFullPath(p).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant())
-                .Distinct()
+                .Select(NormalizePath)
+                .Distinct(PathComparer)
                 .ToArray();
         }
 
@@ -226,7 +239,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
             try
             {
                 // Normalize the path
-                var normalizedPath = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+                var normalizedPath = NormalizePath(path);
 
                 // Check if path is exactly a root drive (C:\, D:\, etc.)
                 if (IsDriveRoot(normalizedPath))
@@ -237,7 +250,7 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 // Check against user folder paths (exact match only, subdirectories allowed)
                 foreach (var protectedPath in _userFolderProtectedPaths)
                 {
-                    if (normalizedPath == protectedPath)
+                    if (normalizedPath.Equals(protectedPath, PathComparison))
                     {
                         return $"This directory is protected and cannot be locked: {GetFriendlyName(protectedPath)}";
                     }
@@ -247,19 +260,20 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
                 foreach (var protectedPath in _systemProtectedPaths)
                 {
                     // Block if exact match
-                    if (normalizedPath == protectedPath)
+                    if (normalizedPath.Equals(protectedPath, PathComparison))
                     {
                         return $"This directory is protected and cannot be locked: {GetFriendlyName(protectedPath)}";
                     }
 
                     // Block if subdirectory of system path
-                    if (normalizedPath.StartsWith(protectedPath + Path.DirectorySeparatorChar))
+                    if (normalizedPath.StartsWith(protectedPath + Path.DirectorySeparatorChar, PathComparison))
                     {
                         return $"Cannot lock directories under: {GetFriendlyName(protectedPath)}";
                     }
                 }
 
-                return null; // Path is allowed
+                var link = FindLinkedAncestor(normalizedPath);
+                return link is null ? null : $"Locker paths cannot contain a symbolic link or reparse point: {link}";
             }
             catch (Exception ex)
             {
@@ -270,23 +284,30 @@ namespace ColDogStudios.ColDogLocker.Core.Validation
         /// <summary>
         ///     Checks if a path is a drive root (e.g., C:\, D:\)
         /// </summary>
+        public static string NormalizePath(string path)
+        {
+            return Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        }
+
+        public static string? FindLinkedAncestor(string path)
+        {
+            for (var current = new DirectoryInfo(Path.GetFullPath(path)); current != null; current = current.Parent)
+            {
+                current.Refresh();
+                if (current.LinkTarget != null ||
+                    (current.Exists && (current.Attributes & FileAttributes.ReparsePoint) != 0))
+                {
+                    return current.FullName;
+                }
+            }
+
+            return null;
+        }
+
         private static bool IsDriveRoot(string normalizedPath)
         {
-            // Matches "c:" or "c:\" style roots
-            if (normalizedPath.Length == 2 && normalizedPath[1] == ':')
-            {
-                return true;
-            }
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return DriveInfo.GetDrives().Any(d =>
-                    d.RootDirectory.FullName.TrimEnd(Path.DirectorySeparatorChar)
-                        .ToLowerInvariant() == normalizedPath);
-            }
-
-            // Unix: block filesystem root "/"
-            return normalizedPath == "/";
+            var root = Path.GetPathRoot(normalizedPath);
+            return root != null && normalizedPath.Equals(Path.TrimEndingDirectorySeparator(root), PathComparison);
         }
 
         /// <summary>
