@@ -163,12 +163,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
                 var dialog = new AboutDialog();
                 var credits = dialog.FindControl<TextBlock>("AcknowledgementsText")!.Text!;
                 Assert.DoesNotContain("BCrypt", credits);
-                Assert.Contains("Avalonia 12.1.4", credits);
+                Assert.Contains("Avalonia — MIT", credits);
                 Assert.DoesNotContain("NativeAssets", credits);
                 Assert.DoesNotContain("Avalonia.Desktop", credits);
-                Assert.Contains("Material.Icons 3.0.2 — Apache-2.0 AND MIT", credits);
+                Assert.Contains("Material.Icons — Apache-2.0 AND MIT", credits);
                 Assert.Contains("Avalonia.Angle.Windows.Natives", credits);
-                Assert.Contains("Avalonia.Fonts.Inter 12.1.4 — MIT AND OFL-1.1", credits);
+                Assert.Contains("Avalonia.Fonts.Inter — MIT AND OFL-1.1", credits);
                 var entries = credits.Split("\n\n").SkipLast(1).ToArray();
                 Assert.Equal(entries.OrderBy(s => s, StringComparer.OrdinalIgnoreCase), entries);
                 dialog.Close();

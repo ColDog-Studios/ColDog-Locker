@@ -6,7 +6,6 @@
     <RootNamespace>ColDogLocker.CrashProbe</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RestoreLockedMode>false</RestoreLockedMode>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../ColDogLocker.Services/ColDogLocker.Services.csproj" />

@@ -19,7 +19,7 @@ using System.Text.Json;
 
 namespace ColDogStudios.ColDogLocker.Core.Environment
 {
-    /// <summary>Uses the same validated inventory that ships with the installers.</summary>
+    /// <summary>Uses the curated component/license catalog; packages also ship their resolved versions.</summary>
     public static class ThirdPartyAcknowledgements
     {
         public static string Text { get; } = Load();
@@ -31,19 +31,15 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
             using var document = JsonDocument.Parse(stream);
             var entries = document.RootElement.GetProperty("components").EnumerateArray()
                 .Where(component => component.GetProperty("scope").GetString() != "build")
-                .GroupBy(component => new
-                {
-                    Name = GetFamilyName(component.GetProperty("name").GetString()!),
-                    Version = component.GetProperty("version").GetString()
-                })
+                .GroupBy(component => GetFamilyName(component.GetProperty("name").GetString()!))
                 .Select(group =>
                 {
                     // The inventory uses individual licenses and AND expressions. Keep every
-                    // distinct license term when combining packages from the same family/version.
+                    // distinct license term when combining packages from the same family.
                     var licenses = group.SelectMany(component => component.GetProperty("license").GetString()!.Split(" AND "))
                         .Distinct(StringComparer.Ordinal)
                         .OrderBy(license => license, StringComparer.OrdinalIgnoreCase);
-                    return $"{group.Key.Name} {group.Key.Version} — {string.Join(" AND ", licenses)}";
+                    return $"{group.Key} — {string.Join(" AND ", licenses)}";
                 })
                 .Append(".NET — MIT; bundled runtime notices are included with the package")
                 .Append("Inter font — OFL-1.1; The Inter Project Authors")
@@ -54,7 +50,7 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
 
         private static string GetFamilyName(string name)
         {
-            // Fonts and ANGLE have their own licensing/version identity; keep those visible.
+            // Fonts and ANGLE have their own licensing identity; keep those visible.
             if (name is "Avalonia.Fonts.Inter" or "Avalonia.Angle.Windows.Natives")
             {
                 return name;

@@ -26,12 +26,12 @@ Prerequisite:
 dotnet --version
 ```
 
-Install the exact .NET SDK version in the repository’s `global.json` (currently `10.0.401`); SDK roll-forward is disabled.
+Install the .NET 10 SDK or a newer SDK that supports targeting .NET 10. There is no exact SDK pin; the .NET CLI uses your installed SDK normally.
 
 Build everything:
 
 ```bash
-dotnet restore --locked-mode
+dotnet restore
 dotnet build
 ```
 

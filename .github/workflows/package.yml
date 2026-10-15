@@ -29,9 +29,6 @@ on:
           - Debug
         default: Release
 
-env:
-  RestoreLockedMode: 'true'
-
 jobs:
   windows-msi:
     name: Windows Installer (${{ matrix.arch }})
@@ -55,7 +52,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore installer project
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
@@ -109,7 +106,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Install package tools
       run: |
@@ -162,7 +159,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Install package tools
       run: |
@@ -215,7 +212,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Run native service tests
       run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ inputs.configuration || 'Release' }}" --verbosity normal

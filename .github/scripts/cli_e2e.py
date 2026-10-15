@@ -484,7 +484,7 @@ class CliE2E:
             self.run_cli("remove", new_name, "--force", "--delete")
             credits = self.output(self.run_cli("about"))
             assert "BCrypt" not in credits
-            self.expect_contains(credits, "Avalonia 12.1.4", "Acknowledgements are stale.")
+            self.expect_contains(credits, "Avalonia — MIT", "Acknowledgements are stale.")
         finally:
             self.run_cli("settings", "default-location", original_default)
             self.run_cli("settings", "auto-update", "false")

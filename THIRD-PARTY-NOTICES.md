@@ -1,12 +1,12 @@
 # Third-party notices
 
-ColDog Locker includes or depends on third-party software. This inventory is based on the locked production dependency graph. Platform-specific packaging selects only the assets needed for that operating system and architecture.
+ColDog Locker includes or depends on third-party software. The packaged `THIRD-PARTY-COMPONENTS.json` records the resolved production dependency versions and package hashes for that build. Platform-specific packaging selects only the assets needed for that operating system and architecture.
 
 The installers also include `DOTNET-LICENSE.txt` and `DOTNET-THIRD-PARTY-NOTICES.txt` from the exact .NET SDK used to produce the package. Those files cover the self-contained .NET runtime and its bundled components.
 
 ## ANGLE
 
-Avalonia.Angle.Windows.Natives 2.1.27548.20260419 contains ANGLE. Copyright 2018 The ANGLE Project Authors. All rights reserved.
+Avalonia.Angle.Windows.Natives contains ANGLE. Copyright 2018 The ANGLE Project Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -18,7 +18,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 ## Build-only dependencies
 
-Avalonia.BuildServices 11.3.2 and Microsoft.NET.ILLink.Tasks 10.0.12 participate in the build but are not application runtime components. Release tooling dependencies are locked separately in `.github/package-lock.json` and are not shipped in the application packages.
+Avalonia.BuildServices and Microsoft.NET.ILLink.Tasks participate in the build but are not application runtime components. Release tooling dependencies are locked separately in `.github/package-lock.json` and are not shipped in the application packages.
 
 ## Inter font
 
@@ -30,17 +30,17 @@ Material icon data is derived from Material Design Icons and is licensed under A
 
 ## MIT-licensed components
 
-The following packages declare the MIT license. Package source and exact transitive relationships are recorded in the checked-in NuGet lock files and release manifest.
+The following packages declare the MIT license. Resolved package versions and hashes are recorded in the generated component inventory and release manifest.
 
-- Avalonia, Avalonia.Desktop, Avalonia.Fonts.Inter, Avalonia.FreeDesktop, Avalonia.FreeDesktop.AtSpi, Avalonia.HarfBuzz, Avalonia.Native, Avalonia.Remote.Protocol, Avalonia.Skia, Avalonia.Themes.Fluent, Avalonia.Win32 and Avalonia.X11 12.1.4 — Copyright 2013–2026 The AvaloniaUI Project
-- CommunityToolkit.Mvvm 8.4.2 — .NET Foundation and contributors
-- HarfBuzzSharp and HarfBuzzSharp.NativeAssets 8.3.1.3 — Microsoft Corporation and HarfBuzz contributors
-- Material.Icons and Material.Icons.Avalonia 3.0.2 — SKProCH and contributors
-- MicroCom.Runtime 0.11.6 — Copyright 2021 Nikita Tsukanov
-- Microsoft.Data.Sqlite.Core, Microsoft.Extensions.DependencyInjection and Microsoft.Extensions.DependencyInjection.Abstractions 10.0.12 — Microsoft Corporation
-- Newtonsoft.Json 13.0.4 — Copyright 2008 James Newton-King
-- SkiaSharp and SkiaSharp.NativeAssets 3.119.4 — Microsoft Corporation, Google and Skia contributors
-- Tmds.DBus.Protocol 0.95.1 — Tom Deseyn and contributors
+- Avalonia, Avalonia.Desktop, Avalonia.Fonts.Inter, Avalonia.FreeDesktop, Avalonia.FreeDesktop.AtSpi, Avalonia.HarfBuzz, Avalonia.Native, Avalonia.Remote.Protocol, Avalonia.Skia, Avalonia.Themes.Fluent, Avalonia.Win32 and Avalonia.X11 — Copyright 2013–2026 The AvaloniaUI Project
+- CommunityToolkit.Mvvm — .NET Foundation and contributors
+- HarfBuzzSharp and HarfBuzzSharp.NativeAssets — Microsoft Corporation and HarfBuzz contributors
+- Material.Icons and Material.Icons.Avalonia — SKProCH and contributors
+- MicroCom.Runtime — Copyright 2021 Nikita Tsukanov
+- Microsoft.Data.Sqlite.Core, Microsoft.Extensions.DependencyInjection and Microsoft.Extensions.DependencyInjection.Abstractions — Microsoft Corporation
+- Newtonsoft.Json — Copyright 2008 James Newton-King
+- SkiaSharp and SkiaSharp.NativeAssets — Microsoft Corporation, Google and Skia contributors
+- Tmds.DBus.Protocol — Tom Deseyn and contributors
 
 The MIT License:
 
@@ -52,6 +52,6 @@ The MIT License:
 
 ## SQLitePCLRaw
 
-SQLitePCLRaw.bundle_e_sqlite3, SQLitePCLRaw.config.e_sqlite3, SQLitePCLRaw.core and SQLitePCLRaw.provider.e_sqlite3 3.0.5 are Copyright 2014–2026 SourceGear, LLC and are licensed under Apache License 2.0. The license text is available at <https://www.apache.org/licenses/LICENSE-2.0> and the source repository is <https://github.com/ericsink/SQLitePCL.raw>.
+SQLitePCLRaw.bundle_e_sqlite3, SQLitePCLRaw.config.e_sqlite3, SQLitePCLRaw.core and SQLitePCLRaw.provider.e_sqlite3 are Copyright 2014–2026 SourceGear, LLC and are licensed under Apache License 2.0. The license text is available at <https://www.apache.org/licenses/LICENSE-2.0> and the source repository is <https://github.com/ericsink/SQLitePCL.raw>.
 
-The SQLite 3.54.0 native library is dedicated to the public domain. Its copyright and public-domain statement is at <https://sqlite.org/copyright.html>.
+The SQLite native library is dedicated to the public domain. Its copyright and public-domain statement is at <https://sqlite.org/copyright.html>.

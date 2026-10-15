@@ -8,8 +8,6 @@ This directory contains maintainer and agent-facing context for ColDog Locker. I
 - [Interface Guidance](gui-plans.md) - GUI/CLI capability map, interaction, background work and native UX validation.
 - [Packaging and Distribution](packaging.md) - local installer/package build commands and validation notes.
 - [Release Automation](release-automation.md) - release workflow, version/tag policy, package build entrypoints, and validation checklist.
-- [Public Launch Review](launch-review.md) - original finding baseline and retained launch acceptance criteria; current status lives in Launch Remediation.
-- [Launch Remediation](launch-fixes.md) - implementation status and verification for every launch-review finding.
 - [Performance Baselines](performance.md) - repeatable published-CLI workloads, measured timings, and profiling limitations.
 - [Archive Protocol Review](archive-protocol-review.md) - version 2 format invariants, adversarial coverage, KDF measurements, and review limits.
 

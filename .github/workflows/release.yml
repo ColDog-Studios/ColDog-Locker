@@ -13,7 +13,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RestoreLockedMode: 'true'
   CONFIGURATION: Release
   TEST_PROJECTS: |
     ColDogLocker.Cli.Tests/ColDogLocker.Cli.Tests.csproj
@@ -97,7 +96,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Fail on vulnerable NuGet packages
       shell: bash
@@ -168,7 +167,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore installer project
       run: dotnet restore ColDogLocker.Installer.Windows/ColDogLocker.Installer.Windows.wixproj
@@ -227,7 +226,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Install package tools
       run: |
@@ -281,7 +280,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Install package tools
       run: |
@@ -335,7 +334,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Run native service tests
       run: dotnet test ColDogLocker.Services.Tests/ColDogLocker.Services.Tests.csproj --configuration "${{ env.CONFIGURATION }}" --verbosity normal
@@ -380,6 +379,14 @@ jobs:
         pattern: release-*
         path: release-assets
         merge-multiple: true
+
+    - name: Setup .NET for dependency inventory
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore production dependency inventory
+      run: dotnet restore ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj
 
     - name: Generate checksums and release manifest
       run: python3 .github/scripts/release_manifest.py release-assets

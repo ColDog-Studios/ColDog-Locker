@@ -1,6 +1,6 @@
 # Architecture
 
-ColDog Locker targets .NET 10. `Directory.Build.props` owns the application version and build settings; `Directory.Packages.props` owns NuGet versions. `global.json` pins the SDK, and checked-in locks are restored in locked mode by CI.
+ColDog Locker targets .NET 10. `Directory.Build.props` owns the application version and build settings; `Directory.Packages.props` owns NuGet versions. There is no exact SDK pin or NuGet lock-file policy; local builds use the installed SDK and CI requests the current `10.0.x` SDK. NuGet versions are centrally managed, while npm release tooling retains its lock file.
 
 ## Projects and ownership
 

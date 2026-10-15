@@ -33,10 +33,10 @@ Lock/unlock report bounded phase/item progress. Cancel is available only before 
 
 Empty/search states explain what to do next. Ctrl+N creates, F5 refreshes, Ctrl+I opens properties; double-click opens properties. Tooltips reveal truncated names/paths. Password prompts focus input, support Enter/Escape and optional reveal, and clear the input after closing.
 
-New menu and maintenance actions use the existing Material icons with visible text and explicit accessible names. Attributions come from the validated embedded package inventory, grouped by related library family and version, with all license terms retained and entries sorted alphabetically. Fonts and ANGLE remain separate because they have their own licensing/version identity; the shipped inventory/notices retain full component detail. Don't hard-code another list.
+New menu and maintenance actions use the existing Material icons with visible text and explicit accessible names. Attributions come from the embedded component/license catalog, grouped by library family with all license terms retained and entries sorted alphabetically. Fonts and ANGLE remain separate because they have their own licensing identity. The packaged inventory records resolved versions and hashes from restored assets, so routine Dependabot version updates do not require hand-editing About or the catalog. Don't hard-code another list.
 
 ## Validation
 
 Headless tests use separate `HeadlessUnitTestSession` dispatch and nonparallel xUnit execution. Cover real XAML bindings, service refusal/failure preservation, close guards, safe cancellation and background-work lifetime. Do not claim headless layout or automated control names prove actual screen-reader speech, sequential keyboard traversal, high contrast, scaling or password-manager interaction.
 
-Historical Linux Wayland/AT-SPI inspection found named controls and focusable New Locker fields. Windows Narrator, macOS VoiceOver and manual desktop usability remain required; record OS/package/commit and results in [launch remediation](launch-fixes.md).
+Historical Linux Wayland/AT-SPI inspection found named controls and focusable New Locker fields. Windows Narrator, macOS VoiceOver and manual desktop usability remain required; retain the OS/package/commit and native workflow results when validating a release.

@@ -12,7 +12,7 @@ with tempfile.TemporaryDirectory(prefix='cdl-lease-probe-') as directory:
     properties = ET.SubElement(project, 'PropertyGroup')
     for key, value in {'OutputType': 'Exe', 'TargetFramework': 'net10.0',
                        'Nullable': 'enable', 'ImplicitUsings': 'enable',
-                       'EnableDefaultCompileItems': 'false', 'RestoreLockedMode': 'false'}.items():
+                       'EnableDefaultCompileItems': 'false'}.items():
         ET.SubElement(properties, key).text = value
     items = ET.SubElement(project, 'ItemGroup')
     ET.SubElement(items, 'Compile', Include=str(root / 'ColDogLocker.Services/Lockers/LockerOperationLease.cs'))

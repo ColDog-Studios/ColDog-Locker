@@ -47,7 +47,7 @@
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(PublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)THIRD-PARTY-NOTICES.md" DestinationFolder="$(PublishRoot)" />
-    <Copy SourceFiles="$(RepoRoot)packaging/third-party-components.json" DestinationFiles="$(PublishRoot)THIRD-PARTY-COMPONENTS.json" />
+    <Exec Command='python3 "$(RepoRoot).github/scripts/release_manifest.py" --inventory-output "$(PublishRoot)THIRD-PARTY-COMPONENTS.json"' />
     <Copy SourceFiles="$(DotNetRoot)LICENSE.txt" DestinationFiles="$(PublishRoot)DOTNET-LICENSE.txt" />
     <Copy SourceFiles="$(DotNetRoot)ThirdPartyNotices.txt" DestinationFiles="$(PublishRoot)DOTNET-THIRD-PARTY-NOTICES.txt" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(PublishRoot)" />

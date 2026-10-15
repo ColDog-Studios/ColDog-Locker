@@ -20,7 +20,7 @@ The active package contents are:
 
 - `ColDogLocker.Cli` as `cdlocker` / `cdlocker.exe`.
 - `ColDogLocker.Avalonia` as `ColDogLocker` / `ColDogLocker.exe`.
-- `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, the machine-readable third-party component inventory, and the shared icon.
+- `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.md`, a generated machine-readable third-party inventory with resolved package versions and SHA-512 hashes, and the shared icon.
 - `DOTNET-LICENSE.txt` and `DOTNET-THIRD-PARTY-NOTICES.txt` copied from the exact SDK root used for that package build.
 - The `cdlocker(1)` man page on Linux and macOS packages.
 
@@ -30,7 +30,8 @@ Each installer/package is intentionally a combined app package. The CLI and GUI 
 
 ## Prerequisites
 
-- The exact SDK in `global.json`.
+- A .NET 10 SDK or newer SDK that supports targeting .NET 10; no exact SDK pin.
+- Python 3 for generating the resolved third-party inventory during packaging. Windows uses `python`; Linux/macOS use `python3`.
 - WiX 7.0.0 is restored through `WixToolset.Sdk` and NuGet when building Windows installers. The maintainer explicitly authorized its [OSMF EULA](https://wixtoolset.org/osmf/) acceptance for this repository; the installer project passes `AcceptEula=wix7` for local and CI builds.
 - A Windows host for `.msi` and `.exe` setup bundles; WiX restores on Linux but Windows installer build execution is Windows-only.
 - `ar`, `tar`, and `gzip` for `.deb`.
@@ -238,7 +239,7 @@ The declarations follow [Avalonia Linux deployment](https://docs.avaloniaui.net/
 
 ## Disposable installed-package checks
 
-The manual Packages and automated Release workflows define native Windows x64/ARM64, Linux x64/ARM64 and macOS x64/ARM64 checks. Defining a job is not execution evidence; record inspected run results in [launch remediation](launch-fixes.md).
+The manual Packages and automated Release workflows define native Windows x64/ARM64, Linux x64/ARM64 and macOS x64/ARM64 checks. Defining a job is not execution evidence; inspect the installed-package job logs for the revision being released.
 
 `linux_installed_e2e.sh` runs as root only inside a disposable Ubuntu 24.04 or Fedora 43 container. Mount exactly one matching architecture/format package under `/packages` and scripts under `/review-scripts`, then pass `deb x64`, `rpm x64`, `deb arm64` or `rpm arm64`. It resolves dependencies, creates an unprivileged user, runs the current CLI E2E suite, checks GUI startup under Xvfb, reinstalls and removes while verifying a user marker survives. Run ARM64 on a native ARM64 host.
 

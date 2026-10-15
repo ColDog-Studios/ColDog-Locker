@@ -85,7 +85,7 @@ You can also build from source following the instructions below.
 
 ### Prerequisites
 
-- [![.Net][.Net-shield]][.Net-url] .NET SDK version pinned in [global.json](global.json) (currently `10.0.401`; roll-forward disabled)
+- [![.Net][.Net-shield]][.Net-url] .NET 10 SDK or a newer SDK that supports targeting .NET 10
 
 ```bash
 dotnet --version
@@ -108,7 +108,7 @@ cd ColDog-Locker
 3. Restore dependencies
 
 ```bash
-dotnet restore --locked-mode
+dotnet restore
 ```
 
 4. Build the project
@@ -272,7 +272,7 @@ Collin Laney (ColDog5044) - [@ColDog5044](https://twitter.com/ColDog5044) - coll
 
 ## Third-Party Libraries
 
-Acknowledgements are shown in **Help > About** and `cdlocker about`, in alphabetical order. The packaged [third-party notices](THIRD-PARTY-NOTICES.md) and [component inventory](packaging/third-party-components.json) record exact versions and licenses, including native graphics, fonts, icons and SQLite. Bundled .NET runtime notices also ship with every installer.
+Acknowledgements are shown in **Help > About** and `cdlocker about`, in alphabetical order. The [third-party notices](THIRD-PARTY-NOTICES.md) and [component/license catalog](packaging/third-party-components.json) cover native graphics, fonts, icons and SQLite. Each installer includes a generated `THIRD-PARTY-COMPONENTS.json` with resolved package versions and hashes. Bundled .NET runtime notices also ship with every installer.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

@@ -7,9 +7,6 @@ on:
     branches: [ main, test, dev ]
   workflow_dispatch:
 
-env:
-  RestoreLockedMode: 'true'
-
 jobs:
   dependency-audit:
     name: Dependency Audit
@@ -22,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Fail on vulnerable NuGet packages
       shell: bash
@@ -30,6 +27,9 @@ jobs:
 
     - name: Verify formatting
       run: dotnet format ColDogLocker.slnx --verify-no-changes --no-restore --verbosity minimal
+
+    - name: Test dependency inventory generation
+      run: python3 -m unittest discover -s .github/scripts/tests -v
 
     - name: Verify third-party inventory
       run: python3 .github/scripts/release_manifest.py --check-only
@@ -48,7 +48,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -97,7 +97,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -154,7 +154,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -203,7 +203,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -248,7 +248,7 @@ jobs:
     - name: Set up pinned .NET SDK
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -281,7 +281,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -409,7 +409,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
       with:
-        global-json-file: global.json
+        dotnet-version: '10.0.x'
 
     - name: Download CLI Artifact
       uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2

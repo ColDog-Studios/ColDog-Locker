@@ -63,7 +63,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Tests
         public void AboutDoesNotInitializeAnUnavailableDatabase()
         {
             var output = CaptureOutput(() => Assert.Equal(0, Program.Run(["about"], () => throw new IOException("Database unavailable"))));
-            Assert.Contains("Avalonia 12.1.4", output);
+            Assert.Contains("Avalonia — MIT", output);
             Assert.DoesNotContain("BCrypt", output);
         }
 
