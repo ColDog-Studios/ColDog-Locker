@@ -104,10 +104,10 @@ class CrashBoundaryCheck:
 
     def run_cli(self, env: dict[str, str], *args: str, retry_abandoned: bool = True) -> subprocess.CompletedProcess[str]:
         command = [str(self.cli), *args]
-        result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=120, check=False)
+        result = subprocess.run(command, env=env, capture_output=True, text=True, encoding="utf-8", timeout=120, check=False)
         combined = result.stdout + result.stderr
         if retry_abandoned and result.returncode != 0 and "terminated unexpectedly" in combined:
-            result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=120, check=False)
+            result = subprocess.run(command, env=env, capture_output=True, text=True, encoding="utf-8", timeout=120, check=False)
             combined = result.stdout + result.stderr
         if result.returncode != 0:
             raise AssertionError(f"Command failed: {' '.join(command)}\n{combined}")

@@ -16,6 +16,7 @@
  */
 
 using System.Runtime.InteropServices;
+using System.Text;
 using ColDogStudios.ColDogLocker.Cli.Commands;
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Services.Logging;
@@ -28,6 +29,8 @@ namespace ColDogStudios.ColDogLocker.Cli
     {
         private static int Main(string[] args)
         {
+            // Keep redirected output and diagnostics independent of the Windows code page.
+            Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
             return Run(args, () => Initialization.InitializeAsync(checkForUpdates: false).GetAwaiter().GetResult());
         }
 

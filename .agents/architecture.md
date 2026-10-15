@@ -21,6 +21,8 @@ Help, version, About, GUI launch, standalone archive recovery, database backup a
 
 Ordinary initialization creates private per-user data/log directories, loads settings and logging, initializes SQLite, loads registrations/pending journals and starts watchers. CLI commands disable automatic startup update checks; `update` performs an explicit check. GUI startup supports automatic checks according to settings.
 
+CLI stdout/stderr use UTF-8 without a BOM. Python CLI test readers decode UTF-8 explicitly and the E2E runner emits UTF-8 logs; Windows ANSI defaults otherwise corrupt punctuation and Unicode paths between processes. Regression tests simulate a CP1252 parent locale, and parity E2E exercises accented, Greek and CJK locker names.
+
 `AppPaths.LocalConfig` contains `settings.json`, `lockers.db`, logs and update staging. See [public data locations](../docs/platform-support.md#application-data-locations). `COLDOG_LOCKER_DATA_HOME` is an absolute base-directory override used by isolated validation; relative values fail. Both GUI and CLI new-locker creation honor `SettingsManager.Settings.DefaultLockerLocation`, initially `AppPaths.CdlDir`.
 
 Settings writes use a temporary file/replacement. Malformed settings are backed up before defaults are recreated. Keep all setting keys/validation synchronized between CLI and SettingsDialog.

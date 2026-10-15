@@ -6,6 +6,8 @@ The CLI executable is `cdlocker.exe` on Windows and `cdlocker` on Linux/macOS. W
 dotnet run --project ColDogLocker.Cli -- <command>
 ```
 
+Text output and error messages use UTF-8 without a byte-order mark, including when redirected to files or captured by scripts.
+
 ## Exit Codes
 
 - `0`: command completed successfully, or there was no work to do.

@@ -197,7 +197,7 @@ class CliE2E:
         if extra_env is not None:
             env.update(extra_env)
 
-        completed = subprocess.run(command, capture_output=True, text=True, check=False, env=env, timeout=120)
+        completed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False, env=env, timeout=120)
         if check and completed.returncode != 0:
             raise AssertionError(
                 f"Command failed with exit code {completed.returncode}: {' '.join(command)}\n"
@@ -240,7 +240,7 @@ class CliE2E:
         if len(databases) != 1:
             raise AssertionError(f"Expected one isolated database, got {databases}")
         process = subprocess.Popen([str(self.cli), "lock", name, "--password", self.password],
-                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
         observed = False
         try:
             deadline = time.monotonic() + 30
@@ -293,7 +293,7 @@ class CliE2E:
         if len(databases) != 1:
             raise AssertionError("Expected one isolated database")
         process = subprocess.Popen([str(self.cli), "lock", name, "--password", self.password],
-                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
         observed_destructive_state = False
         process_output = ""
         try:
@@ -342,6 +342,7 @@ class CliE2E:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
         )
         partial_staging = None
         try:
@@ -458,7 +459,7 @@ class CliE2E:
     def interface_parity(self) -> None:
         parent = self.test_dir / "SavedDefault"
         parent.mkdir(parents=True)
-        name = "ParityLocker"
+        name = "ParityLocker_café_Δοκιμή_測試"
         original_default = self.run_cli("settings", "default-location").stdout.strip()
         try:
             self.run_cli("settings", "default-location", str(parent))
@@ -466,7 +467,7 @@ class CliE2E:
             source = parent / name
             marker = source / "proof.txt"
             marker.write_text("registration edits preserve bytes", encoding="utf-8")
-            new_name = "RenamedParityLocker"
+            new_name = "RenamedParityLocker_café_Δοκιμή_測試"
             renamed = parent / new_name
             source.rename(renamed)
             self.run_cli("edit", name, "--name", new_name, "--location", str(renamed))
@@ -1176,6 +1177,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    # GitHub/PowerShell consume UTF-8 logs, including when Python inherits an ANSI locale.
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     args = parse_args()
     cli = args.cli
     if not cli.exists():
