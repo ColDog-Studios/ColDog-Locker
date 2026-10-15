@@ -18,7 +18,6 @@
 using System.Security.Cryptography;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.VisualTree;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Services.Lockers;
@@ -82,7 +81,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
                 dialog.Show();
                 await dialog.CurrentOperation;
                 // Exercise the actual XAML event binding rather than calling the service directly.
-                var button = dialog.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == "Recover archive");
+                var button = dialog.FindControl<Button>("RecoverArchiveButton")!;
                 button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await dialog.CurrentOperation;
                 Assert.Contains("Unable to complete", dialog.FindControl<TextBox>("ResultBox")!.Text);
@@ -117,7 +116,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
                         dialog.FindControl<TextBox>("DestinationBox")!.Text = destination;
                         var passwordBox = dialog.FindControl<TextBox>("ArchivePasswordBox")!;
                         var result = dialog.FindControl<TextBox>("ResultBox")!;
-                        var button = dialog.GetVisualDescendants().OfType<Button>().Single(b => b.Content?.ToString() == "Recover archive");
+                        var button = dialog.FindControl<Button>("RecoverArchiveButton")!;
                         passwordBox.Text = "wrong password";
                         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                         await dialog.CurrentOperation;
@@ -165,6 +164,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
                 var credits = dialog.FindControl<TextBlock>("AcknowledgementsText")!.Text!;
                 Assert.DoesNotContain("BCrypt", credits);
                 Assert.Contains("Avalonia 12.1.4", credits);
+                Assert.DoesNotContain("NativeAssets", credits);
+                Assert.DoesNotContain("Avalonia.Desktop", credits);
+                Assert.Contains("Material.Icons 3.0.2 — Apache-2.0 AND MIT", credits);
+                Assert.Contains("Avalonia.Angle.Windows.Natives", credits);
+                Assert.Contains("Avalonia.Fonts.Inter 12.1.4 — MIT AND OFL-1.1", credits);
                 var entries = credits.Split("\n\n").SkipLast(1).ToArray();
                 Assert.Equal(entries.OrderBy(s => s, StringComparer.OrdinalIgnoreCase), entries);
                 dialog.Close();

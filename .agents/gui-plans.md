@@ -31,7 +31,9 @@ Password hashing, locker loading and bounded display scans run off the dispatche
 
 Lock/unlock report bounded phase/item progress. Cancel is available only before source claim/plaintext publication; safe-cancellation refusal is explained in the status bar. Operations report capacity; exact authenticated restore size is known only during extraction. Never improve timing by removing flushes or weakening validation; [measured baselines](performance.md) inform optimization.
 
-Empty/search states explain what to do next. Ctrl+N creates, F5 refreshes, Ctrl+I opens properties; double-click opens properties. Tooltips reveal truncated names/paths. Password prompts focus input, support Enter/Escape and optional reveal, and clear the input after closing. Attributions come from the validated embedded package inventory sorted alphabetically; don't hard-code another list.
+Empty/search states explain what to do next. Ctrl+N creates, F5 refreshes, Ctrl+I opens properties; double-click opens properties. Tooltips reveal truncated names/paths. Password prompts focus input, support Enter/Escape and optional reveal, and clear the input after closing.
+
+New menu and maintenance actions use the existing Material icons with visible text and explicit accessible names. Attributions come from the validated embedded package inventory, grouped by related library family and version, with all license terms retained and entries sorted alphabetically. Fonts and ANGLE remain separate because they have their own licensing/version identity; the shipped inventory/notices retain full component detail. Don't hard-code another list.
 
 ## Validation
 

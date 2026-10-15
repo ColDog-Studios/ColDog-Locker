@@ -106,8 +106,22 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="_Change Password" Command="{Binding ChangePasswordCommand}" AutomationProperties.Name="Change password" />
-                <MenuItem Header="_Verify Integrity" Command="{Binding VerifySelectedCommand}" AutomationProperties.Name="Verify integrity" />
+                <MenuItem Command="{Binding ChangePasswordCommand}" AutomationProperties.Name="Change password">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="KeyChange" />
+                            <primitives:AccessText Text="_Change Password" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
+                <MenuItem Command="{Binding VerifySelectedCommand}" AutomationProperties.Name="Verify integrity">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="ShieldCheckOutline" />
+                            <primitives:AccessText Text="_Verify Integrity" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <MenuItem Command="{Binding RemoveSelectedCommand}" AutomationProperties.Name="Remove">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
@@ -117,7 +131,14 @@
                     </MenuItem.Header>
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="Delete Locker and _Files…" Command="{Binding DeleteSelectedCommand}" AutomationProperties.Name="Delete locker and files" />
+                <MenuItem Command="{Binding DeleteSelectedCommand}" AutomationProperties.Name="Delete locker and files">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="DeleteForeverOutline" />
+                            <primitives:AccessText Text="Delete Locker and _Files…" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <MenuItem Command="{Binding ShowPropertiesCommand}" AutomationProperties.Name="Properties">
                     <MenuItem.Header>
                         <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
@@ -160,7 +181,14 @@
                 <MenuItem.Header>
                     <primitives:AccessText Text="_Tools" Foreground="{DynamicResource AppMenuForegroundBrush}" />
                 </MenuItem.Header>
-                <MenuItem Header="_Backup and Recovery…" Command="{Binding ShowMaintenanceCommand}" AutomationProperties.Name="Backup and recovery" />
+                <MenuItem Command="{Binding ShowMaintenanceCommand}" AutomationProperties.Name="Backup and recovery">
+                    <MenuItem.Header>
+                        <StackPanel Classes="menu-item-header" Orientation="Horizontal" Spacing="12">
+                            <materialIcons:MaterialIcon Kind="BackupRestore" />
+                            <primitives:AccessText Text="_Backup and Recovery…" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </MenuItem.Header>
+                </MenuItem>
                 <Separator />
                 <MenuItem Command="{Binding ShowSettingsCommand}" AutomationProperties.Name="Settings">
                     <MenuItem.Header>
@@ -387,16 +415,48 @@
                                         PointerPressed="LockerItem_PointerPressed">
                                     <Border.ContextMenu>
                                         <ContextMenu>
-                                            <MenuItem Header="Lock" Click="ContextLock_Click" />
-                                            <MenuItem Header="Unlock" Click="ContextUnlock_Click" />
+                                            <MenuItem Header="Lock" Click="ContextLock_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="Lock" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Unlock" Click="ContextUnlock_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="LockOpenVariant" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                             <Separator />
-                                            <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
-                                            <MenuItem Header="Properties" Click="ContextProperties_Click" />
-                                            <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click" />
-                                            <MenuItem Header="Verify Integrity" Click="ContextVerify_Click" />
+                                            <MenuItem Header="Open Location" Click="ContextOpenLocation_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="FolderOpen" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Properties" Click="ContextProperties_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="InformationOutline" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="KeyChange" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Verify Integrity" Click="ContextVerify_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                             <Separator />
-                                            <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
-                                            <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click" />
+                                            <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="Delete" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click">
+                                                <MenuItem.Icon>
+                                                    <materialIcons:MaterialIcon Kind="DeleteForeverOutline" Width="18" Height="18" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                         </ContextMenu>
                                     </Border.ContextMenu>
                                     <Grid ColumnDefinitions="2*,*,*,*,3*" ColumnSpacing="12">
@@ -443,16 +503,48 @@
                                     PointerPressed="LockerItem_PointerPressed">
                                 <Border.ContextMenu>
                                     <ContextMenu>
-                                        <MenuItem Header="Lock" Click="ContextLock_Click" />
-                                        <MenuItem Header="Unlock" Click="ContextUnlock_Click" />
+                                        <MenuItem Header="Lock" Click="ContextLock_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="Lock" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Unlock" Click="ContextUnlock_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="LockOpenVariant" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                         <Separator />
-                                        <MenuItem Header="Open Location" Click="ContextOpenLocation_Click" />
-                                        <MenuItem Header="Properties" Click="ContextProperties_Click" />
-                                        <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click" />
-                                        <MenuItem Header="Verify Integrity" Click="ContextVerify_Click" />
+                                        <MenuItem Header="Open Location" Click="ContextOpenLocation_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="FolderOpen" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Properties" Click="ContextProperties_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="InformationOutline" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Change Password" IsEnabled="{Binding CanRemove}" Click="ContextChangePassword_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="KeyChange" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Verify Integrity" Click="ContextVerify_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="ShieldCheckOutline" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                         <Separator />
-                                        <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click" />
-                                        <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click" />
+                                        <MenuItem Header="Remove" IsEnabled="{Binding CanRemove}" Click="ContextRemove_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="Delete" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Delete Locker and Files…" IsEnabled="{Binding CanRemove}" Click="ContextDelete_Click">
+                                            <MenuItem.Icon>
+                                                <materialIcons:MaterialIcon Kind="DeleteForeverOutline" Width="18" Height="18" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <StackPanel Spacing="8">
@@ -487,7 +579,12 @@
                 <StackPanel IsVisible="{Binding HasNoVisibleLockers}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
                     <materialIcons:MaterialIcon Kind="FolderLockOutline" Width="48" Height="48" HorizontalAlignment="Center" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
                     <TextBlock Text="{Binding EmptyStateMessage}" FontSize="18" TextWrapping="Wrap" Foreground="{DynamicResource AppSecondaryForegroundBrush}" />
-                    <Button Content="New Locker" Command="{Binding CreateLockerCommand}" HorizontalAlignment="Center" />
+                    <Button Command="{Binding CreateLockerCommand}" HorizontalAlignment="Center" AutomationProperties.Name="New locker">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialIcons:MaterialIcon Kind="FolderPlusOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                            <TextBlock Text="New Locker" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Grid>

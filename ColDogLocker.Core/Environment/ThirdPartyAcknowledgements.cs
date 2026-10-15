@@ -31,12 +31,61 @@ namespace ColDogStudios.ColDogLocker.Core.Environment
             using var document = JsonDocument.Parse(stream);
             var entries = document.RootElement.GetProperty("components").EnumerateArray()
                 .Where(component => component.GetProperty("scope").GetString() != "build")
-                .Select(component => $"{component.GetProperty("name").GetString()} {component.GetProperty("version").GetString()} — {component.GetProperty("license").GetString()}")
+                .GroupBy(component => new
+                {
+                    Name = GetFamilyName(component.GetProperty("name").GetString()!),
+                    Version = component.GetProperty("version").GetString()
+                })
+                .Select(group =>
+                {
+                    // The inventory uses individual licenses and AND expressions. Keep every
+                    // distinct license term when combining packages from the same family/version.
+                    var licenses = group.SelectMany(component => component.GetProperty("license").GetString()!.Split(" AND "))
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(license => license, StringComparer.OrdinalIgnoreCase);
+                    return $"{group.Key.Name} {group.Key.Version} — {string.Join(" AND ", licenses)}";
+                })
                 .Append(".NET — MIT; bundled runtime notices are included with the package")
                 .Append("Inter font — OFL-1.1; The Inter Project Authors")
                 .Append("Material Design icon data — Apache-2.0; Material Design Icons contributors")
                 .OrderBy(entry => entry, StringComparer.OrdinalIgnoreCase);
             return string.Join("\n\n", entries) + "\n\nSee THIRD-PARTY-NOTICES.md and DOTNET-THIRD-PARTY-NOTICES.txt in the installation directory for copyright and license notices.";
+        }
+
+        private static string GetFamilyName(string name)
+        {
+            // Fonts and ANGLE have their own licensing/version identity; keep those visible.
+            if (name is "Avalonia.Fonts.Inter" or "Avalonia.Angle.Windows.Natives")
+            {
+                return name;
+            }
+
+            if (name.StartsWith("Avalonia.", StringComparison.Ordinal))
+            {
+                return "Avalonia";
+            }
+
+            if (name.StartsWith("HarfBuzzSharp.NativeAssets.", StringComparison.Ordinal))
+            {
+                return "HarfBuzzSharp";
+            }
+
+            if (name.StartsWith("SkiaSharp.NativeAssets.", StringComparison.Ordinal))
+            {
+                return "SkiaSharp";
+            }
+
+            if (name.StartsWith("SQLitePCLRaw.", StringComparison.Ordinal))
+            {
+                return "SQLitePCLRaw";
+            }
+
+            return name switch
+            {
+                "Material.Icons.Avalonia" => "Material.Icons",
+                "Microsoft.Extensions.DependencyInjection.Abstractions" => "Microsoft.Extensions.DependencyInjection",
+                _ => name
+            };
         }
     }
 }
