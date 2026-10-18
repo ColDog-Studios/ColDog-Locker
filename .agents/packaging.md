@@ -121,7 +121,7 @@ artifacts/packages/dist/ColDogLocker-<version>-macos-arm64.pkg
 
 Publish output, staging trees, generated Debian control files, and generated RPM specs are under `artifacts/packages/`.
 
-The checked-in `packaging/third-party-components.json` must exactly match the resolved production graphs in the Services and Avalonia NuGet lock files. `python3 .github/scripts/release_manifest.py --check-only` verifies all names and versions; test and release CI run that check. A real local DEB content inspection should show all five license/notice/inventory files under `/opt/coldog-locker`.
+The checked-in `packaging/third-party-components.json` is a component/license catalog whose names must exactly match the restored Services and Avalonia `obj/project.assets.json` graphs. `python3 .github/scripts/release_manifest.py --check-only` verifies coverage and rejects conflicting resolved versions or hashes; test and release CI run that check. Packaging generates the inventory with resolved versions and hashes, so version-only updates need no catalog edit. A real local DEB content inspection should show all five license/notice/inventory files under `/opt/coldog-locker`.
 
 DEB and RPM construction normalizes archive order, ownership and timestamps from `SOURCE_DATE_EPOCH`. Package and release CI build each x64 and ARM64 Linux package twice and require byte-for-byte equality before upload. Current Windows and macOS package tools are not treated as reproducible; checksums and GitHub artifact attestations identify their exact released bytes.
 
