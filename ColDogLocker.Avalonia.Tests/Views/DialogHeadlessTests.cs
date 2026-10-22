@@ -27,7 +27,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
         [Theory]
         [InlineData(false)]
         [InlineData(true)]
-        public async Task PropertiesLoadsSizeAsynchronouslyAndStopsUpdatingAfterClose(bool closeImmediately)
+        public async Task PropertiesLoadsSizeAsynchronouslyAndStopsUpdatingAfterClose(bool closeBeforeScanCompletes)
         {
             var directory = Directory.CreateTempSubdirectory("cdl-properties-").FullName;
             try
@@ -36,23 +36,56 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
                 await HeadlessTestSession.RunAsync(async () =>
                 {
                     var locker = new ColDogStudios.ColDogLocker.Core.Models.LockerModel("Properties", "hash", directory);
-                    var dialog = new LockerPropertiesDialog(locker);
-                    var size = RequiredControl<TextBlock>(dialog, "SizeText");
-                    Assert.Equal("Calculating...", size.Text);
-                    dialog.Show();
-                    try
+                    var scanStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    using var completeScan = new ManualResetEventSlim();
+                    var dialog = new LockerPropertiesDialog(locker, (path, token) =>
                     {
-                        if (closeImmediately)
+                        scanStarted.SetResult(token);
+                        if (!completeScan.Wait(TimeSpan.FromSeconds(10)))
                         {
-                            dialog.Close();
+                            throw new TimeoutException("The test did not release the properties scan.");
                         }
 
-                        await dialog.MetadataLoadTask;
-                        Assert.Equal(closeImmediately ? "Calculating..." : "1 KB", size.Text);
+                        return new FileInfo(Path.Join(path, "data")).Length;
+                    });
+                    var size = RequiredControl<TextBlock>(dialog, "SizeText");
+                    var created = RequiredControl<TextBlock>(dialog, "CreatedText");
+                    var modified = RequiredControl<TextBlock>(dialog, "ModifiedText");
+                    Assert.Equal("Calculating...", size.Text);
+                    try
+                    {
+                        dialog.Show();
+                        var token = await scanStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                        Assert.False(token.IsCancellationRequested);
+                        Assert.False(dialog.MetadataLoadTask.IsCompleted);
+                        Assert.Equal("Calculating...", size.Text);
+                        if (closeBeforeScanCompletes)
+                        {
+                            dialog.Close();
+                            Assert.True(token.IsCancellationRequested);
+                        }
+
+                        completeScan.Set();
+                        await dialog.MetadataLoadTask.WaitAsync(TimeSpan.FromSeconds(10));
+                        Assert.Equal(closeBeforeScanCompletes ? "Calculating..." : "1 KB", size.Text);
+                        if (closeBeforeScanCompletes)
+                        {
+                            Assert.Equal("Loading...", created.Text);
+                            Assert.Equal("Loading...", modified.Text);
+                        }
+                        else
+                        {
+                            Assert.NotEqual("Loading...", created.Text);
+                            Assert.NotEqual("Loading...", modified.Text);
+                            dialog.Close();
+                            Assert.Equal("1 KB", size.Text);
+                        }
                     }
                     finally
                     {
+                        completeScan.Set();
                         dialog.Close();
+                        await dialog.MetadataLoadTask.WaitAsync(TimeSpan.FromSeconds(10));
                     }
                 });
             }

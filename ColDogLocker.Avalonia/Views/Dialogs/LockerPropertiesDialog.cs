@@ -34,6 +34,8 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
         private static readonly IBrush _unlockedBrush = new ImmutableSolidColorBrush(Color.Parse("#0077B6"));
 
         private readonly LockerModel? _locker;
+        private readonly Func<string, CancellationToken, long?> _calculateSize =
+            (path, token) => DirectorySizeScanner.Calculate(path, token);
         private bool _hasChanges;
         private readonly CancellationTokenSource _scanCancellation = new();
         internal Task MetadataLoadTask { get; private set; } = Task.CompletedTask;
@@ -82,6 +84,12 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             StatusText.Foreground = statusBrush;
             _hasChanges = false;
             SaveButton.IsEnabled = false;
+        }
+
+        internal LockerPropertiesDialog(LockerModel locker, Func<string, CancellationToken, long?> calculateSize)
+            : this(locker)
+        {
+            _calculateSize = calculateSize ?? throw new ArgumentNullException(nameof(calculateSize));
         }
 
         private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
@@ -240,7 +248,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
             {
                 var metadata = await Task.Run(() =>
                 {
-                    var size = DirectorySizeScanner.Calculate(path, token);
+                    var size = _calculateSize(path, token);
                     token.ThrowIfCancellationRequested();
                     return (Size: size, Created: GetDirectoryDate(path, DateKind.Created), Modified: GetDirectoryDate(path, DateKind.Modified));
                 }, token);

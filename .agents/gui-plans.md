@@ -41,6 +41,8 @@ New menu and maintenance actions use the existing Material icons with visible te
 
 Headless tests use separate `HeadlessUnitTestSession` dispatch and nonparallel xUnit execution. Cover real XAML bindings, service refusal/failure preservation, close guards, safe cancellation and background-work lifetime. Do not claim headless layout or automated control names prove actual screen-reader speech, sequential keyboard traversal, high contrast, scaling or password-manager interaction.
 
+Properties scan tests gate the background size calculator to exercise completion before close and cancellation before completion deterministically. `Show()` may pump UI work long enough for a real scan to finish, so closing immediately afterward does not prove that a scan was still pending. Verify unchanged size/date fields after closing with a pending scan; do not rely on disk speed or add sleeps.
+
 GUI creation tests and native CLI E2E cover locker names containing spaces, cross-platform punctuation, accented/Greek/CJK text, emoji and combining Unicode characters. E2E verifies persisted lookup/listing, lock/unlock byte preservation and registration removal without deleting files. Password regressions cover early authentication failure, live requirement indicators, cancellation/mismatch and replacement-password rejection.
 
 Historical Linux Wayland/AT-SPI inspection found named controls and focusable New Locker fields. Windows Narrator, macOS VoiceOver and manual desktop usability remain required; retain the OS/package/commit and native workflow results when validating a release.
