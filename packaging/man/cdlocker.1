@@ -3,59 +3,7 @@
 cdlocker \- manage encrypted ColDog Locker directories
 .SH SYNOPSIS
 .B cdlocker
-.br
-.B cdlocker gui
-.br
-.B cdlocker tui
-.br
-.B cdlocker new
-.I name
-.RB [ --path
-.IR parent ]
-.RB [ --password
-.IR password ]
-.br
-.B cdlocker lock
-.I name
-.RB [ --password
-.IR password ]
-.br
-.B cdlocker unlock
-.I name
-.RB [ --password
-.IR password ]
-.br
-.B cdlocker list
-.RB [ --locked | --unlocked ]
-.br
-.B cdlocker status
-.I name
-.br
-.B cdlocker verify
-.I name
-.br
-.B cdlocker change-password
-.I name
-.RB [ --old-password
-.I password
-.B --new-password
-.IR password ]
-.br
-.B cdlocker remove
-.I name
-.RB [ --force ]
-.RB [ --delete ]
-.br
-.B cdlocker settings
-.RI [ key
-.RI [ value ]]
-.br
-.B cdlocker db-info
-.br
-.B cdlocker db-vacuum
-.br
-.B cdlocker update
-.RB [ --download ]
+.RI [ command " [" arguments ]]
 .br
 .B cdlocker help
 .RI [ command ]
@@ -63,179 +11,275 @@ cdlocker \- manage encrypted ColDog Locker directories
 .B cdlocker --version
 .SH DESCRIPTION
 .B cdlocker
-creates and manages password-protected locker directories. A locker is stored as
-a normal directory while it is unlocked. Locking verifies the locker password,
-encrypts files recursively, renames the directory with a leading dot, marks it
-hidden or system where supported, and updates the local locker database.
-Unlocking reverses that operation.
+manages password-protected locker directories through CLI commands, a graphical
+interface and a terminal interface. With no arguments, it prints help.
 .PP
-Locker metadata is stored in a per-user SQLite database. Settings and logs are
-stored under the per-user local app data directory.
+An unlocked locker is an ordinary directory. Locking creates an authenticated,
+encrypted archive, removes the plaintext source and publishes the archive as
+.B locker.cdl
+in a directory with a leading dot. Hidden/system attributes are applied where
+supported. Unlocking authenticates the archive and restores the ordinary folder.
+.PP
+Locker registration and recovery records are stored in a per-user SQLite
+database. Settings and logs use the same per-user data directory.
 .SH COMMANDS
 .TP
 .B gui
-Launch the graphical interface.
+Launch the Avalonia graphical interface. Installed macOS packages open
+.IR "/Applications/ColDog Locker.app" .
 .TP
-.BR tui
-Launch the terminal user interface.
+.BR tui ", " terminal
+Launch the terminal user interface for essential locker operations.
 .TP
-.BI "new " name
-Create a locker. Use
-.B --path
-to choose the parent directory. Use
-.B --password
-for automation.
+.BI "new " "name " "[--path parent] [--password password]"
+Create a locker. The path option selects its parent, not the final directory.
+Without it, GUI, CLI and TUI creation use the saved
+.B default-location
+setting. Initially this is ColDog Locker under the platform documents folder,
+falling back to the user profile when no documents folder is available.
 .TP
-.BI "lock " name
-Encrypt and hide a locker. Prompts for a password unless
-.B --password
-is supplied.
+.BI "lock " "name " "[--password password]"
+Encrypt a locker. Prompts for its password unless supplied as an option.
+An already locked locker is left unchanged and returns success.
 .TP
-.BI "unlock " name
-Decrypt and unhide a locker. Prompts for a password unless
-.B --password
-is supplied.
+.BI "unlock " "name " "[--password password]"
+Authenticate and decrypt a locker. Prompts for its password unless supplied as
+an option. An already unlocked locker is left unchanged and returns success.
 .TP
-.B list
-Print all lockers. Use
-.B --locked
-or
-.B --unlocked
-to filter.
+.BR list " [--locked | --unlocked]"
+Print known lockers, states and locations, optionally filtered by state.
 .TP
 .BI "status " name
-Print state, path, GUID, timestamps, and content counts.
+Print state, path, GUID, timestamps and content counts. Incomplete content
+inspection reports unavailable counts and returns failure.
 .TP
 .BI "verify " name
-Check that the locker directory and metadata are consistent.
+Check registration, directory access and content counts. For a locked locker,
+also check archive header/registration agreement, recorded SHA-256 and unexpected
+neighboring entries. This does not authenticate encrypted contents with a
+password. Test a backup with
+.B recover
+into a new directory.
 .TP
-.BI "change-password " name
-Change a locker password. The locker must be unlocked.
+.BI "change-password " "name " "[--old-password password --new-password password]"
+Change the password of an unlocked locker. An incorrect current password stops
+the command before requesting or validating a replacement. Interactive changes
+show all password requirements, then request a new password and confirmation.
+If either password option is supplied, both are required. Older archive backups
+still need their original password.
 .TP
-.BI "remove " name
-Remove a locker from metadata. Use
-.B --force
-to skip confirmation. Use
+.BI "edit " "name " "[--name new-name] [--location existing-directory]"
+Edit an unlocked registration without moving or renaming files. At least one
+option is required. The existing directory leaf must match the selected name;
+protected or overlapping paths are refused.
+.TP
+.BI "open " name
+Open the registered location in the desktop file manager. Requires a graphical
+desktop and an available file manager.
+.TP
+.BI "remove " "name " "[--force] [--delete]"
+Remove an unlocked registration. Files remain unless
 .B --delete
-to delete the directory contents too.
+is supplied. Removal asks for confirmation unless
+.B --force
+is supplied. Locked lockers cannot be removed.
 .TP
-.B settings
-Show all settings, show one setting, or update one setting.
+.BI "recover " "archive.cdl new-destination " "[--password password]"
+Authenticate and extract a version 2 archive without loading the database.
+The destination's parent must exist and the destination must be new. Preserves
+the archive and never overwrites existing output. Does not register the restored
+folder or resolve operation records. Enter the original archive password when
+prompted. Version 1 archives are unsupported.
+.TP
+.B recovery-list
+List unfinished operations and their source, target and staging paths. A record
+can belong to an active process. After an interruption, preserve all listed
+artifacts before choosing a recovery action.
+.TP
+.BI "recovery-cancel " operation-id
+Cancel eligible interrupted preparation before source removal or publication
+readiness. Requires the source to exist, the target to be absent and registration
+to match. Preserves all files and moves the record to recovery history.
+.TP
+.BI "recovery-finish " operation-id
+Verify output for an operation at MetadataCommitted and move the record to
+history without changing files. Refuses missing or changed output. For an
+unlock, the original archive need not still exist.
+.TP
+.BI "recovery-restore " "operation-id archive.cdl new-destination " "[--password password]"
+Authenticate a retained archive, restore into a new directory and repair the
+recorded operation's registration. The destination's parent must exist; its
+leaf must match the original locker name. Choose an archive at the recorded
+source path for unlock, or staging/target path for lock. Preserve original and
+staging files, which may contain plaintext. Wrong passwords leave the operation
+pending.
+.TP
+.B recovery-history
+Show resolved operations, retained paths and recovery attempts. Does not delete
+retained artifacts.
+.TP
+.BR settings " [key [value]]"
+Show all settings, show one setting, or update one setting. See SETTINGS.
+.TP
+.B settings reset
+Restore default settings without deleting registrations or locker contents.
 .TP
 .B db-info
-Print SQLite database information.
+Print database path, existence, size, timestamps, locker count, SQLite version
+and integrity status.
 .TP
 .B db-vacuum
-Optimize the SQLite database.
+Optimize the SQLite database and update its last-vacuum timestamp.
 .TP
-.B update
-Check for releases. Release notes are printed automatically when available. Use
-.B --download
-to download, verify, and start a matching installer.
+.BI "db-backup " new-directory
+Create a verified metadata snapshot at new-directory/lockers.db. The parent
+must exist and the destination must be new. The backup contains names, paths,
+password verifiers and recovery records; it is not encrypted and contains no
+locker files. Back up archives/files separately and retain original passwords.
 .TP
-.B help
-Show help.
+.BI "db-restore " backup-lockers.db
+Restore a compatible snapshot only when the current registry and SQLite
+sidecars are absent. Close other app instances first. Never replaces an existing
+registry; do not delete a live registry to bypass this check. Ordinary
+registrations need their original paths; pending operations retain their
+recovery records. Preserves the input backup and changes no locker files.
+.TP
+.BR update " [--download]"
+Check releases for the configured channel and platform and show release notes.
+With the option, download and verify the matching installer. Windows starts
+installation; macOS opens Installer. Linux removes the installed coldog-locker
+package before installing the verified DEB/RPM through the package manager;
+administrator approval may be required.
+.TP
+.B about
+Show version, license and alphabetically sorted third-party acknowledgements.
+Works without database initialization.
+.TP
+.B dev
+Print diagnostic environment information, including the authoritative local
+configuration path, runtime, architecture, free space and process memory.
+.TP
+.BR help " [command]"
+Show general or command-specific help. Works without database initialization.
 .TP
 .BR --version ", " -v
-Show version and build information.
-.SH OPTIONS
-.TP
-.BI "--path " parent
-Parent directory for a new locker. The locker directory is created as
-.IR parent/name .
-.TP
-.BI "--password " password
-Supply a password on the command line. This is useful for automation but can
-expose secrets through shell history, scripts, logs, or process listings.
-.TP
-.BI "--old-password " password
-Supply the current password for
+Show semantic version, build identity with source revision and numeric assembly
+version. Build date/time are not recorded. Works without database initialization.
+.SH PASSWORDS
+New passwords require at least 12 characters, an uppercase letter, a lowercase
+letter, a digit and a special character. Blocked common words and sequential or
+keyboard patterns are rejected. Passwords cannot be recovered if forgotten.
+.PP
+Prefer interactive prompts. Options
+.BR --password ,
+.B --old-password
+and
+.B --new-password
+can expose passwords through shell history, scripts, logs or process listings.
+The latter two options apply only to
 .BR change-password .
-Must be used with
-.BR --new-password .
+.PP
+The GUI checks the current password first, then shows new password,
+confirmation and live requirements together. Change Password remains disabled
+until the rules pass and both fields match. Show password reveals both fields;
+both fields are cleared on close.
+.SH LOCKER NAMES
+A name must be a valid single filename on the current platform, not an absolute
+path, a relative path, dot or dot-dot. Unicode, interior spaces and supported
+punctuation are accepted. Quote names containing spaces or shell metacharacters
+when typing commands in a shell; platform filename restrictions still apply.
+.SH SETTINGS
 .TP
-.BI "--new-password " password
-Supply the replacement password for
-.BR change-password .
-Must be used with
-.BR --old-password .
+.B default-location
+Safe parent directory for future lockers. Does not move existing lockers.
 .TP
-.B --locked
-Show only locked lockers in
-.BR list .
+.B theme
+GUI theme: auto, light, dark or cds.
 .TP
-.B --unlocked
-Show only unlocked lockers in
-.BR list .
+.B view
+Default GUI view: grid or list.
 .TP
-.B --force
-Skip removal confirmation.
+.BR debug ", " file-logging ", " auto-update
+Boolean values: true or false.
 .TP
-.B --delete
-Delete the locker directory when removing the locker.
+.B log-level
+One of debug, info, warning, error or fatal.
 .TP
-.B --download
-Download, verify, and start a matching update installer when available.
+.B log-format
+One of json or text.
+.TP
+.B max-file-size
+Log rotation size in MB, from 1 to 1024.
+.TP
+.B update-channel
+One of stable (s), unstable (u) or prerelease (pre, p).
+.TP
+.B db-vacuum-interval
+Stored interval preference in days, from 0 to 365. This build does not schedule
+automatic vacuum operations; run db-vacuum explicitly.
 .SH FILES
+The per-user data directory contains settings.json, lockers.db and logs/.
 .TP
-.I ~/.local/share/ColDog Studios/ColDog Locker/settings.json
-Application settings on many Unix-like systems.
+.B Linux
+${XDG_DATA_HOME:-$HOME/.local/share}/ColDog Studios/ColDog Locker
 .TP
-.I ~/.local/share/ColDog Studios/ColDog Locker/lockers.db
-Locker metadata database on many Unix-like systems.
+.B macOS
+$HOME/Library/Application Support/ColDog Studios/ColDog Locker
 .TP
-.I ~/.local/share/ColDog Studios/ColDog Locker/logs/
-Application logs on many Unix-like systems.
+.B Windows
+%LOCALAPPDATA%\eColDog Studios\eColDog Locker
+.PP
+Run
+.B cdlocker dev
+for the authoritative path on the current account.
+.SH ENVIRONMENT
+.TP
+.B COLDOG_LOCKER_DATA_HOME
+Absolute base-directory override for application data. The application appends
+ColDog Studios/ColDog Locker beneath this base. Relative values are refused.
+.SH OUTPUT
+Standard output and error messages use UTF-8 without a byte-order mark,
+including redirected output.
 .SH EXIT STATUS
 .TP
 .B 0
-Success.
+Success, including an already locked/unlocked locker that needed no change.
 .TP
 .B 1
 Error.
 .TP
 .B 2
-Update available but no downloadable installer is available for the current
-platform.
+Update available but no downloadable installer is available for this platform.
 .SH EXAMPLES
 .EX
-cdlocker new MyLocker
-cdlocker new Taxes --path "$HOME/Private"
-cdlocker lock MyLocker
-cdlocker unlock MyLocker
+cdlocker new "Private café" --path "$HOME/Private"
+cdlocker lock "Private café"
+cdlocker unlock "Private café"
+cdlocker change-password "Private café"
 cdlocker list --locked
-cdlocker verify MyLocker
+cdlocker verify "Private café"
 cdlocker settings update-channel stable
+cdlocker settings theme dark
+cdlocker about
+cdlocker recovery-list
+cdlocker recover "/backup/locker.cdl" "$HOME/RecoveredLocker"
 cdlocker update
 .EE
 .SH SECURITY NOTES
-Use strong, unique passwords and keep backups. ColDog Locker cannot recover
-forgotten passwords. Avoid command-line password options for interactive use.
-System paths, drive roots, profile roots, and top-level user folders are blocked
-from becoming lockers.
+This is prerelease software. Keep independent, tested backups and close writers
+or folder synchronization before locking. Ordinary local filesystems are the
+supported storage target; network/cloud/removable storage has no portable
+atomicity or power-loss recovery guarantee.
+.PP
+Detected concurrent changes abort locking, but retained native writable handles
+and interrupted operations can still cause data loss. Locking removes ordinary
+plaintext files; it does not securely erase deleted blocks, snapshots or backups.
+System paths, drive roots, profile roots and top-level user folders are blocked.
+.PP
+After an interruption, preserve all reported paths and use the recovery
+commands. Do not delete operation records or artifacts to force a retry.
+.PP
+Windows and macOS installers are unsigned; platform security warnings may occur.
 .SH SEE ALSO
-Project documentation:
+Project documentation and backup/recovery instructions:
 .I https://github.com/ColDog-Studios/ColDog-Locker/tree/main/docs
-
-.SH REGISTRATION AND ACKNOWLEDGEMENTS
-.TP
-.B edit <name> [--name <new-name>] [--location <existing-directory>]
-Edit an unlocked registration without moving files. The directory leaf must match the name.
-.TP
-.B open <name>
-Open the registered location in the desktop file manager.
-.TP
-.B about
-Show application and third-party licenses and acknowledgements.
-.TP
-.B settings default-location <parent-directory>
-Set the parent used by GUI and CLI creation.
-.TP
-.B settings theme <auto|light|dark|cds>
-Select the GUI theme.
-.TP
-.B settings view <grid|list>
-Select the default GUI view.
-.TP
-.B settings reset
-Restore default settings without deleting registrations or locker contents.

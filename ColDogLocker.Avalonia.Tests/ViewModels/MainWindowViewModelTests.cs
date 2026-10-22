@@ -18,6 +18,9 @@
 using System.Collections.ObjectModel;
 using ColDogStudios.ColDogLocker.Avalonia.Models;
 using ColDogStudios.ColDogLocker.Avalonia.ViewModels;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Security;
 using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
@@ -276,24 +279,63 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
             Assert.Equal("No Updates Available", message.Title);
         }
 
-        [Theory]
-        [InlineData(null, null, null)]
-        [InlineData("current", null, null)]
-        [InlineData("current", "new", null)]
-        [InlineData("current", "new", "different")]
-        public async Task PasswordCancellationAndMismatchDoNotStartAMutation(string? current, string? password, string? confirmation)
+        [Fact]
+        public async Task IncorrectCurrentPasswordStopsBeforeRequestingReplacement()
         {
-            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
-            viewModel.Lockers = CreateLockers();
-            viewModel.SelectedLocker = viewModel.Lockers[0];
-            dialogs.PasswordResponses.Enqueue(current);
-            dialogs.PasswordResponses.Enqueue(password);
-            dialogs.PasswordResponses.Enqueue(confirmation);
-            await viewModel.ChangePasswordCommand.ExecuteAsync(null);
-            Assert.Empty(dialogs.Errors);
-            Assert.Empty(dialogs.Messages);
-            Assert.False(viewModel.IsBusy);
-            Assert.Equal(confirmation == "different" ? 1 : 0, dialogs.Warnings.Count);
+            var locker = new LockerModel("Alpha", EncryptionHelper.HashPassword("Violet!River9Moon"), "unused");
+            LockerService.ReplaceLockersForTesting([locker]);
+            try
+            {
+                var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+                viewModel.SelectedLocker = new LockerItemViewModel { Guid = locker.Guid, Name = locker.LockerName };
+                dialogs.PasswordResponses.Enqueue("wrong");
+                dialogs.PasswordResponses.Enqueue("Copper!River8Moon");
+                await viewModel.ChangePasswordCommand.ExecuteAsync(null);
+                var prompt = Assert.Single(dialogs.PasswordPrompts);
+                Assert.False(prompt.RequireNewPassword);
+                Assert.Single(dialogs.PasswordResponses);
+                Assert.Equal("Incorrect current password.", Assert.Single(dialogs.Warnings).Message);
+                Assert.Empty(dialogs.Errors);
+                Assert.Empty(dialogs.Messages);
+                Assert.False(viewModel.IsBusy);
+                Assert.Equal(locker.Password, LockerService.FindLockerByGuid(locker.Guid)!.Password);
+            }
+            finally
+            {
+                LockerService.ClearLockersForTesting();
+            }
+        }
+
+        [Theory]
+        [InlineData(null, 1)]
+        [InlineData("Violet!River9Moon", 2)]
+        public async Task PasswordCancellationDoesNotStartAMutation(string? current, int prompts)
+        {
+            var locker = new LockerModel("Alpha", EncryptionHelper.HashPassword("Violet!River9Moon"), "unused");
+            LockerService.ReplaceLockersForTesting([locker]);
+            try
+            {
+                var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+                viewModel.SelectedLocker = new LockerItemViewModel { Guid = locker.Guid, Name = locker.LockerName };
+                dialogs.PasswordResponses.Enqueue(current);
+                dialogs.PasswordResponses.Enqueue(null);
+                await viewModel.ChangePasswordCommand.ExecuteAsync(null);
+                Assert.Equal(prompts, dialogs.PasswordPrompts.Count);
+                if (prompts > 1)
+                {
+                    Assert.True(dialogs.PasswordPrompts[1].RequireNewPassword);
+                }
+
+                Assert.Empty(dialogs.Errors);
+                Assert.Empty(dialogs.Messages);
+                Assert.False(viewModel.IsBusy);
+                Assert.Empty(dialogs.Warnings);
+                Assert.Equal(locker.Password, LockerService.FindLockerByGuid(locker.Guid)!.Password);
+            }
+            finally
+            {
+                LockerService.ClearLockersForTesting();
+            }
         }
 
         [Fact]

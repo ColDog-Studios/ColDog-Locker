@@ -51,7 +51,7 @@
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#third-party-libraries">Third-Party Libraries</a></li>
   </ol>
 </details>
 
@@ -172,6 +172,10 @@ cdlocker change-password <name>
 
 # Check locker/archive consistency (no password-based authentication)
 cdlocker verify <name>
+
+# Edit registration without moving files, or open its folder
+cdlocker edit <name> [--name <new-name>] [--location <existing-directory>]
+cdlocker open <name>
 ```
 
 #### Settings & Database
@@ -195,9 +199,12 @@ cdlocker help [command]
 
 # Show version
 cdlocker --version
+
+# Show licenses and third-party acknowledgements
+cdlocker about
 ```
 
-For backup, standalone archive extraction and interrupted-operation recovery, follow [Backup and Recovery](docs/backup-and-recovery.md).
+See the [CLI Reference](docs/cli-reference.md) for the complete command and settings list. For backup, standalone archive extraction and interrupted-operation recovery, follow [Backup and Recovery](docs/backup-and-recovery.md).
 
 ### Quick Examples
 

@@ -608,7 +608,9 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
         #region Change Locker Password
 
-        public static int ChangePassword(string[] args)
+        public static int ChangePassword(string[] args) => ChangePassword(args, ConsoleHelper.ReadPassword);
+
+        internal static int ChangePassword(string[] args, Func<string> readPassword)
         {
             // Usage: cdlocker change-password <Locker Name> [--old-password <password> --new-password <password>]
 
@@ -666,26 +668,18 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 return 1;
             }
 
-            string oldPassword;
-            string newPassword;
-
-            if (useProvidedPasswords)
+            try
             {
-                oldPassword = providedOldPassword!;
-                newPassword = providedNewPassword!;
-
-                var validationError = PasswordFilter.ValidatePassword(newPassword);
-                if (validationError != null)
+                string oldPassword;
+                if (useProvidedPasswords)
                 {
-                    Console.Error.WriteLine($"Error: New password validation failed: {validationError}");
-                    return 1;
+                    oldPassword = providedOldPassword!;
                 }
-            }
-            else
-            {
-                // Get old password
-                Console.Write("Enter current password: ");
-                oldPassword = ConsoleHelper.ReadPassword();
+                else
+                {
+                    Console.Write("Enter current password: ");
+                    oldPassword = readPassword();
+                }
 
                 if (string.IsNullOrEmpty(oldPassword))
                 {
@@ -693,47 +687,55 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     return 1;
                 }
 
-                Console.WriteLine("\nPassword Requirements:");
-                Console.WriteLine("  - At least 12 characters");
-                Console.WriteLine("  - At least one uppercase letter");
-                Console.WriteLine("  - At least one lowercase letter");
-                Console.WriteLine("  - At least one digit");
-                Console.WriteLine("  - At least one special character");
-                Console.WriteLine();
-
-                while (true)
+                if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))
                 {
-                    Console.Write("Enter new password: ");
-                    newPassword = ConsoleHelper.ReadPassword();
-
-                    if (string.IsNullOrEmpty(newPassword))
-                    {
-                        Console.WriteLine("Password cannot be empty.");
-                        continue;
-                    }
-
-                    var validationError = PasswordFilter.ValidatePassword(newPassword);
-                    if (validationError == null)
-                    {
-                        break;
-                    }
-
-                    Console.WriteLine($"Password validation failed: {validationError}");
-                }
-
-                Console.Write("Confirm new password: ");
-                var confirmPassword = ConsoleHelper.ReadPassword();
-
-                if (newPassword != confirmPassword)
-                {
-                    Console.Error.WriteLine("Error: Passwords do not match.");
+                    Console.Error.WriteLine("Error: Incorrect current password.");
                     return 1;
                 }
-            }
 
-            // Change password
-            try
-            {
+                string newPassword;
+                if (useProvidedPasswords)
+                {
+                    newPassword = providedNewPassword!;
+                    var validationError = PasswordFilter.ValidatePassword(newPassword);
+                    if (validationError != null)
+                    {
+                        Console.Error.WriteLine($"Error: New password validation failed: {validationError}");
+                        return 1;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Password Requirements:");
+                    foreach (var requirement in PasswordFilter.Validate(string.Empty))
+                    {
+                        Console.WriteLine($"  - {requirement.Description}");
+                    }
+
+                    Console.WriteLine();
+                    while (true)
+                    {
+                        Console.Write("Enter new password: ");
+                        newPassword = readPassword();
+                        var validationError = PasswordFilter.ValidatePassword(newPassword);
+                        if (validationError == null)
+                        {
+                            break;
+                        }
+
+                        Console.WriteLine($"Password validation failed: {validationError}");
+                    }
+
+                    Console.Write("Confirm new password: ");
+                    var confirmPassword = readPassword();
+                    if (newPassword != confirmPassword)
+                    {
+                        Console.Error.WriteLine("Error: Passwords do not match.");
+                        return 1;
+                    }
+                }
+
                 Console.WriteLine("\nChanging password...");
                 LockerService.ChangePassword(locker, oldPassword, newPassword);
 

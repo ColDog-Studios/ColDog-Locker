@@ -238,25 +238,19 @@ namespace ColDogStudios.ColDogLocker.Avalonia.ViewModels
                     return;
                 }
 
-                var newPassword = await _dialogs.PromptPasswordAsync("New password");
+                var locker = FindLocker(item) ?? throw new InvalidOperationException("The selected locker was not found.");
+                if (!await Task.Run(() => EncryptionHelper.VerifyPassword(oldPassword, locker.Password)))
+                {
+                    await _dialogs.ShowWarningAsync("Change Password", "Incorrect current password.");
+                    return;
+                }
+
+                var newPassword = await _dialogs.PromptPasswordAsync("New password", requireNewPassword: true);
                 if (string.IsNullOrEmpty(newPassword))
                 {
                     return;
                 }
 
-                var confirmation = await _dialogs.PromptPasswordAsync("Confirm new password");
-                if (confirmation == null)
-                {
-                    return;
-                }
-
-                if (newPassword != confirmation)
-                {
-                    await _dialogs.ShowWarningAsync("Change Password", "The new passwords do not match.");
-                    return;
-                }
-
-                var locker = FindLocker(item) ?? throw new InvalidOperationException("The selected locker was not found.");
                 await Task.Run(() => LockerService.ChangePassword(locker, oldPassword, newPassword));
                 await RefreshAsync(false);
                 await _dialogs.ShowMessageAsync("Password Changed", "Use the new password for future locks. Existing archive backups still need their original password.");

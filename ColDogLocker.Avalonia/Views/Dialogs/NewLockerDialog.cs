@@ -17,8 +17,6 @@
 
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using ColDogStudios.ColDogLocker.Avalonia.Services;
 using ColDogStudios.ColDogLocker.Core.Validation;
@@ -142,31 +140,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs
 
         private void UpdatePasswordRequirements()
         {
-            PasswordRequirementsPanel.Children.Clear();
-
-            foreach (var requirement in PasswordFilter.Validate(PasswordBox.Text ?? string.Empty))
-            {
-                var brush = requirement.IsMet ? Brushes.ForestGreen : Brushes.Gray;
-                var row = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Spacing = 8,
-                    Children =
-                    {
-                        new TextBlock
-                        {
-                            Text = requirement.IsMet ? "✓" : "○",
-                            Width = 18,
-                            FontSize = 14,
-                            Foreground = brush,
-                            VerticalAlignment = VerticalAlignment.Center
-                        },
-                        new TextBlock { Text = requirement.Description, FontSize = 12, Foreground = brush, VerticalAlignment = VerticalAlignment.Center }
-                    }
-                };
-
-                PasswordRequirementsPanel.Children.Add(row);
-            }
+            PasswordRequirementsPresenter.Update(PasswordRequirementsPanel, PasswordBox.Text ?? string.Empty);
         }
 
         private static string? Validate(string? name, string? location, string? password, string? confirmPassword)

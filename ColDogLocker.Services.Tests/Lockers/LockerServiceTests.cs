@@ -558,6 +558,21 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Lockers
             }
         }
 
+        [Theory]
+        [InlineData("")]
+        [InlineData("weak")]
+        [InlineData("Copper!River8Moon")]
+        public void ChangePassword_IncorrectCurrentPasswordWinsOverReplacementValidation(string replacement)
+        {
+            var locker = new LockerModel("Vault", EncryptionHelper.HashPassword("Violet!River9Moon"), "unused");
+            var original = locker.Password;
+            var persisted = false;
+            Assert.Throws<UnauthorizedAccessException>(() => LockerService.ChangePassword(locker,
+                "wrong", replacement, _ => persisted = true));
+            Assert.False(persisted);
+            Assert.Equal(original, locker.Password);
+        }
+
         [Fact]
         public void ChangePassword_PersistenceFailureDoesNotChangeCurrentVerifier()
         {

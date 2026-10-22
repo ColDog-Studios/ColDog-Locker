@@ -25,6 +25,8 @@ CLI stdout/stderr use UTF-8 without a BOM. Python CLI test readers decode UTF-8 
 
 `AppPaths.LocalConfig` contains `settings.json`, `lockers.db`, logs and update staging. See [public data locations](../docs/platform-support.md#application-data-locations). `COLDOG_LOCKER_DATA_HOME` is an absolute base-directory override used by isolated validation; relative values fail. Both GUI and CLI new-locker creation honor `SettingsManager.Settings.DefaultLockerLocation`, initially `AppPaths.CdlDir`.
 
+The database vacuum interval is a stored preference only; no automatic scheduler consumes it. Database optimization is currently explicit through CLI db-vacuum, GUI Settings or Backup and Recovery.
+
 Settings writes use a temporary file/replacement. Malformed settings are backed up before defaults are recreated. Keep all setting keys/validation synchronized between CLI and SettingsDialog.
 
 ## Persistence and operation ownership

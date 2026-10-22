@@ -348,7 +348,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
         // Database Maintenance Settings
 
         /// <summary>
-        ///     Gets or sets the number of days between database vacuum operations (0 = disabled).
+        ///     Gets or sets the preferred database vacuum interval in days (0 = disabled). No automatic scheduler currently consumes it.
         /// </summary>
         public int DatabaseVacuumInterval { get; set; } = 30;
 

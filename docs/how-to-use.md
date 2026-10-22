@@ -14,6 +14,8 @@ ColDog Locker currently has three user-facing interfaces:
 
 The GUI and CLI share the same locker, settings, update, backup and recovery services. Use **Locker > Change Password**, **Verify Integrity**, **Properties**, **Remove**, or **Delete Locker and Files** for a selected locker. **Tools > Backup and Recovery** provides archive recovery, unfinished operations, history, database information, backup, restore and optimization. Recovery remains available if startup cannot open the database.
 
+When changing a password, the current password is checked first. The GUI then shows the new password, confirmation and live password requirements together in one dialog. Both fields must match and all requirements must pass before you can select **Change Password**. Older archive backups still need the password used when they were created.
+
 Use Ctrl+N to create a locker, F5 to refresh, and Ctrl+I for properties. Password dialogs focus the input, support Enter/Escape, and offer a Show password checkbox. The TUI covers the essential locker operations; advanced backup and recovery are available in the GUI and CLI.
 
 Running `cdlocker` with no arguments currently shows command help. Use `cdlocker gui` when you want the graphical interface.

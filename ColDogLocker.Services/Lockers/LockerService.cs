@@ -771,6 +771,13 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 throw new ArgumentException("Old password cannot be null or empty.", nameof(oldPassword));
             }
 
+            // Verify the old password
+            if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))
+            {
+                Logger.Log(LogLevel.Error, $"Failed to change password for {locker.LockerName}. Incorrect old password");
+                throw new UnauthorizedAccessException("Incorrect old password.");
+            }
+
             if (string.IsNullOrEmpty(newPassword))
             {
                 throw new ArgumentException("New password cannot be null or empty.", nameof(newPassword));
@@ -780,13 +787,6 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
             if (passwordError != null)
             {
                 throw new ArgumentException(passwordError, nameof(newPassword));
-            }
-
-            // Verify the old password
-            if (!EncryptionHelper.VerifyPassword(oldPassword, locker.Password))
-            {
-                Logger.Log(LogLevel.Error, $"Failed to change password for {locker.LockerName}. Incorrect old password");
-                throw new UnauthorizedAccessException("Incorrect old password.");
             }
 
             // Locker must be unlocked to change password

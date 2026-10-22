@@ -246,9 +246,11 @@
                                 <TextBlock Classes="section-description"
                                            Text="Optimize the database to improve performance and reclaim disk space." />
                                 <StackPanel Spacing="4">
-                                    <TextBlock Classes="field-label" Text="Auto-vacuum interval (days)" />
-                                    <TextBox x:Name="DbVacuumIntervalTextBox" Classes="narrow" AutomationProperties.Name="Automatic database vacuum interval in days" />
+                                    <TextBlock Classes="field-label" Text="Vacuum interval preference (days)" />
+                                    <TextBox x:Name="DbVacuumIntervalTextBox" Classes="narrow" AutomationProperties.Name="Stored database vacuum interval in days" />
                                 </StackPanel>
+                                <TextBlock Text="Vacuum is manual in this version. Use Vacuum Database Now to optimize the database."
+                                           TextWrapping="Wrap" Opacity="0.7" />
                                 <Button x:Name="VacuumDatabaseButton"
                                         Classes="accent-button"
                                         Content="Vacuum Database Now"

@@ -491,6 +491,29 @@ class CliE2E:
             self.run_cli("settings", "auto-update", "false")
             self.run_cli("settings", "update-channel", "unstable")
 
+    def locker_name_round_trips(self) -> None:
+        names = (
+            "Locker with spaces",
+            "café_Δοκιμή_測試",
+            "Symbols !#$%&'()+,-;=@[]^_`{}~",
+            "Emoji 🔒📁",
+            "Combining Cafe\u0301",
+        )
+        for name in names:
+            source = self.create_locker_with_name(name)
+            payload = source / "proof café 測試 🔒.txt"
+            contents = bytes(range(256)) + name.encode("utf-8")
+            payload.write_bytes(contents)
+            self.expect_contains(self.output(self.run_cli("status", name)), name, "Status lost the locker name.")
+            self.expect_contains(self.output(self.run_cli("list")), name, "Listing lost the locker name.")
+            self.run_cli("lock", name, "--password", self.password)
+            self.run_cli("unlock", name, "--password", self.password)
+            if payload.read_bytes() != contents:
+                raise AssertionError(f"Round trip changed bytes for locker {name!r}")
+            self.run_cli("remove", name, "--force")
+            if payload.read_bytes() != contents:
+                raise AssertionError(f"Removing registration changed files for locker {name!r}")
+
     def version_command(self) -> None:
         completed = self.run_cli("--version")
         text = self.output(completed)
@@ -1009,6 +1032,20 @@ class CliE2E:
         self.expect_contains(text, "3 file(s), 1 folder(s)", "verify did not report expected file and folder counts.")
 
     def change_password(self) -> None:
+        for replacement in ("weak", NEW_PASSWORD):
+            refused = self.run_cli("change-password", LOCKER_NAME,
+                                   "--old-password", "incorrect", "--new-password", replacement, check=False)
+            text = self.expect_failed(refused, "Incorrect current password was accepted.")
+            self.expect_contains(text, "Incorrect current password", "Current password was not checked first.")
+            self.expect_not_contains(text, "validation failed", "Replacement was validated before authentication.")
+        refused = self.run_cli("change-password", LOCKER_NAME,
+                               "--old-password", self.password, "--new-password", "weak", check=False)
+        self.expect_contains(self.expect_failed(refused, "Weak replacement password was accepted."),
+                             "New password validation failed", "Weak replacement was not explained.")
+        self.run_cli("lock", LOCKER_NAME, "--password", self.password)
+        self.run_cli("unlock", LOCKER_NAME, "--password", self.password)
+        self.verify_files_intact()
+
         completed = self.run_cli(
             "change-password",
             LOCKER_NAME,
@@ -1108,6 +1145,7 @@ class CliE2E:
             ("Settings Command", self.settings_command),
             ("Database Commands", self.database_commands),
             ("GUI and CLI Parity", self.interface_parity),
+            ("Locker Names Round Trip", self.locker_name_round_trips),
             ("New Command Validation Errors", self.new_command_validation_errors),
             ("Create Locker", self.create_locker),
             ("Created Locker Validation Errors", self.created_locker_validation_errors),

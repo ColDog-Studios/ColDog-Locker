@@ -238,7 +238,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             SettingsManager.Settings.DatabaseVacuumInterval = interval;
                             SettingsManager.SaveSettings();
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Database vacuum interval set to: {interval} days (0 = disabled)");
+                            Console.WriteLine($"Database vacuum interval set to: {interval} days (stored preference; run db-vacuum manually)");
                             Console.ResetColor();
                             return 0;
                         }

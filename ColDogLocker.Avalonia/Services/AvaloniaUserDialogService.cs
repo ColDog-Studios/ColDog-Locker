@@ -81,9 +81,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             return ShowDialogAsync<bool>(new MessageDialog(title, message, MessageDialogKind.Confirmation));
         }
 
-        public Task<string?> PromptPasswordAsync(string title)
+        public Task<string?> PromptPasswordAsync(string title, bool requireNewPassword = false)
         {
-            return ShowDialogAsync<string>(new PasswordDialog(title));
+            return ShowDialogAsync<string>(new PasswordDialog(title, requireNewPassword));
         }
 
         public Task<NewLockerRequest?> ShowNewLockerAsync()

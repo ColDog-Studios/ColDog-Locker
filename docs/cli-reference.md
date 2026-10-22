@@ -34,6 +34,8 @@ Current behavior:
 
 Launches the terminal user interface.
 
+`cdlocker terminal` is an alias.
+
 ## Locker Commands
 
 ### `cdlocker new <name> [--path <parent>] [--password <password>]`
@@ -51,6 +53,7 @@ Options:
 Notes:
 
 - `<name>` must be a relative locker name, not an absolute path.
+- Unicode, interior spaces and supported punctuation are accepted; the name must be a valid single filename on the current platform. Quote names containing spaces or shell metacharacters when typing commands in a shell.
 - With `--path "D:\Private"` and name `Taxes`, the created locker path is `D:\Private\Taxes`.
 - If `--path` is omitted, the locker is created under the saved `default-location` setting, initially the ColDog Locker documents directory.
 - Passwords must meet the active password rules.
@@ -158,6 +161,8 @@ Options:
 
 If either password option is supplied, both are required. Prefer the interactive prompt for normal use because command-line passwords can be exposed through shell history, scripts, logs, or process listings.
 
+The current password is checked before asking for or validating a replacement. An incorrect current password ends the command immediately. Interactive changes display the same complete password requirements as locker creation before asking for the new password and its confirmation.
+
 Example:
 
 ```bash
@@ -225,7 +230,7 @@ Supported keys:
 | `file-logging` | `true`, `false` |
 | `auto-update` | `true`, `false` |
 | `update-channel` | `stable`, `s`, `unstable`, `u`, `prerelease`, `pre`, `p` |
-| `db-vacuum-interval` | integer from `0` to `365`; `0` disables automatic interval tracking |
+| `db-vacuum-interval` | stored interval preference from `0` to `365` days; no automatic scheduler in this build |
 
 Examples:
 
@@ -247,7 +252,7 @@ cdlocker settings view list
 cdlocker settings reset
 ```
 
-`default-location` is a parent directory for future lockers; existing lockers are not moved. `theme` accepts `auto`, `light`, `dark` or `cds`. `view` accepts `grid` or `list`. `reset` restores defaults and preserves registrations and files. Logging rotation size is 1–1024 MB, and the vacuum interval is 0–365 days (0 disables automatic vacuum).
+`default-location` is a parent directory for future lockers; existing lockers are not moved. `theme` accepts `auto`, `light`, `dark` or `cds`. `view` accepts `grid` or `list`. `reset` restores defaults and preserves registrations and files. Logging rotation size is 1–1024 MB, and the stored vacuum interval is 0–365 days. This build does not schedule automatic vacuum operations; use `db-vacuum` or **Vacuum Database Now** explicitly.
 
 ## Database Commands
 

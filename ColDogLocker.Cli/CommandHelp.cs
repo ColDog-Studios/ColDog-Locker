@@ -15,6 +15,8 @@
  **  long with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+using ColDogStudios.ColDogLocker.Core.Validation;
+
 namespace ColDogStudios.ColDogLocker.Cli
 {
     /// <summary>
@@ -120,13 +122,14 @@ namespace ColDogStudios.ColDogLocker.Cli
                     break;
                 case "new":
                     Console.WriteLine("CREATE NEW LOCKER:");
-                    Console.WriteLine("  cdlocker new <Locker Name> [--path <path>]");
+                    Console.WriteLine("  cdlocker new <Locker Name> [--path <path>] [--password <password>]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
                     Console.WriteLine("  Creates a new locker with the specified name.");
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
-                    Console.WriteLine("  --path <path>    Specify a custom path for the locker");
+                    Console.WriteLine("  --path <path>             Parent directory (otherwise uses saved default location)");
+                    Console.WriteLine("  --password <password>     Password for automation; prefer the interactive prompt");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker new MyLocker");
@@ -135,13 +138,15 @@ namespace ColDogStudios.ColDogLocker.Cli
 
                 case "remove":
                     Console.WriteLine("REMOVE LOCKER:");
-                    Console.WriteLine("  cdlocker remove <Locker Name> [--force]");
+                    Console.WriteLine("  cdlocker remove <Locker Name> [--force] [--delete]");
                     Console.WriteLine();
                     Console.WriteLine("DESCRIPTION:");
-                    Console.WriteLine("  Removes the specified locker. Prompts for confirmation unless --force is used.");
+                    Console.WriteLine("  Removes an unlocked registration. Files remain unless --delete is supplied.");
+                    Console.WriteLine("  Prompts for confirmation unless --force is used.");
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
                     Console.WriteLine("  --force    Skip confirmation prompt");
+                    Console.WriteLine("  --delete   Permanently delete the locker directory and its contents");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker remove MyLocker");
@@ -160,7 +165,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker lock MyLocker");
-                    Console.WriteLine("  cdlocker lock MyLocker --password MySecurePass123");
+                    Console.WriteLine("  cdlocker lock MyLocker --password River!Cobalt8Fern");
                     break;
 
                 case "unlock":
@@ -175,7 +180,7 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker unlock MyLocker");
-                    Console.WriteLine("  cdlocker unlock MyLocker --password MySecurePass123");
+                    Console.WriteLine("  cdlocker unlock MyLocker --password River!Cobalt8Fern");
                     break;
 
                 case "list":
@@ -204,6 +209,9 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  to change its password. You will be prompted to enter the current password");
                     Console.WriteLine("  for verification, then provide a new password that meets security requirements");
                     Console.WriteLine("  unless both password options are supplied for automation.");
+                    Console.WriteLine("  An incorrect current password stops the command before a replacement is requested or validated.");
+                    Console.WriteLine("  Interactive changes show all requirements and ask you to confirm the new password.");
+                    Console.WriteLine("  Older archive backups still need their original password.");
                     Console.WriteLine();
                     Console.WriteLine("OPTIONS:");
                     Console.WriteLine("  --old-password <password>    Current password (for automation, use cautiously)");
@@ -212,11 +220,16 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("REQUIREMENTS:");
                     Console.WriteLine("  - Locker must be unlocked");
                     Console.WriteLine("  - Must provide correct current password");
-                    Console.WriteLine("  - New password must meet requirements (12+ characters, uppercase, lowercase, digit, special char)");
+                    Console.WriteLine("  - New password must meet all requirements:");
+                    foreach (var requirement in PasswordFilter.Validate(string.Empty))
+                    {
+                        Console.WriteLine($"    - {requirement.Description}");
+                    }
+
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker change-password MyLocker");
-                    Console.WriteLine("  cdlocker change-password MyLocker --old-password OldPass123! --new-password NewPass123!");
+                    Console.WriteLine("  cdlocker change-password MyLocker --old-password River!Cobalt8Fern --new-password Meadow7!CopperBirch");
                     break;
 
                 case "verify":
@@ -262,8 +275,8 @@ namespace ColDogStudios.ColDogLocker.Cli
                     Console.WriteLine("  max-file-size         Log rotation size in MB (1-1024)");
                     Console.WriteLine("  file-logging          true/false");
                     Console.WriteLine("  auto-update           Enable/disable auto-updates (true/false)");
-                    Console.WriteLine("  update-channel        Update channel (stable/unstable)");
-                    Console.WriteLine("  db-vacuum-interval    Days between database optimizations (0=disabled, 1-365)");
+                    Console.WriteLine("  update-channel        Update channel (stable/unstable/prerelease)");
+                    Console.WriteLine("  db-vacuum-interval    Stored interval in days (0-365); vacuum is manual in this build");
                     Console.WriteLine();
                     Console.WriteLine("EXAMPLES:");
                     Console.WriteLine("  cdlocker settings");

@@ -25,7 +25,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         Task ShowErrorAsync(string title, string message, Exception? exception = null);
         Task ShowWarningAsync(string title, string message);
         Task<bool> ConfirmAsync(string title, string message);
-        Task<string?> PromptPasswordAsync(string title);
+        Task<string?> PromptPasswordAsync(string title, bool requireNewPassword = false);
         Task<NewLockerRequest?> ShowNewLockerAsync();
         Task ShowLockerPropertiesAsync(LockerModel locker);
         Task ShowSettingsAsync();

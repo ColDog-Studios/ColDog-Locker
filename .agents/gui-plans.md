@@ -33,10 +33,14 @@ Lock/unlock report bounded phase/item progress. Cancel is available only before 
 
 Empty/search states explain what to do next. Ctrl+N creates, F5 refreshes, Ctrl+I opens properties; double-click opens properties. Tooltips reveal truncated names/paths. Password prompts focus input, support Enter/Escape and optional reveal, and clear the input after closing.
 
+Password changes verify the current password off the dispatcher before requesting a replacement. A single new-password dialog contains both the new password and its confirmation, shares the creation dialog's live requirements presenter, and enables submission only when all password rules pass and both fields match. Its reveal checkbox applies to both fields, and both are cleared on close. Ordinary password prompts do not apply new-password rules or show confirmation. The service verifies the current password again under the operation lease before validating and saving the replacement. CLI interaction follows the same ordering and lists every shared requirement, including common words/patterns.
+
 New menu and maintenance actions use the existing Material icons with visible text and explicit accessible names. Attributions come from the embedded component/license catalog, grouped by library family with all license terms retained and entries sorted alphabetically. Fonts and ANGLE remain separate because they have their own licensing identity. The packaged inventory records resolved versions and hashes from restored assets, so routine Dependabot version updates do not require hand-editing About or the catalog. Don't hard-code another list.
 
 ## Validation
 
 Headless tests use separate `HeadlessUnitTestSession` dispatch and nonparallel xUnit execution. Cover real XAML bindings, service refusal/failure preservation, close guards, safe cancellation and background-work lifetime. Do not claim headless layout or automated control names prove actual screen-reader speech, sequential keyboard traversal, high contrast, scaling or password-manager interaction.
+
+GUI creation tests and native CLI E2E cover locker names containing spaces, cross-platform punctuation, accented/Greek/CJK text, emoji and combining Unicode characters. E2E verifies persisted lookup/listing, lock/unlock byte preservation and registration removal without deleting files. Password regressions cover early authentication failure, live requirement indicators, cancellation/mismatch and replacement-password rejection.
 
 Historical Linux Wayland/AT-SPI inspection found named controls and focusable New Locker fields. Windows Narrator, macOS VoiceOver and manual desktop usability remain required; retain the OS/package/commit and native workflow results when validating a release.
