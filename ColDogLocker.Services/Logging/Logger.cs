@@ -289,7 +289,9 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
             {
                 logEntry.Exception = new ExceptionInfo
                 {
-                    Type = exception.GetType().FullName ?? exception.GetType().Name, Message = exception.Message, StackTrace = exception.StackTrace
+                    Type = exception.GetType().FullName ?? exception.GetType().Name,
+                    Message = exception.Message,
+                    StackTrace = exception.StackTrace
                 };
             }
 
@@ -453,19 +455,7 @@ namespace ColDogStudios.ColDogLocker.Services.Logging
                     AppFilePermissions.ApplyPrivateFile(_logFilePath);
                 }
             }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
-            }
-            catch (IOException ex)
-            {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                Console.WriteLine($"An exception occurred while processing log entries: {ex}");
-            }
-            catch (NotSupportedException ex)
+            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or NotSupportedException)
             {
                 Console.WriteLine($"An exception occurred while processing log entries: {ex}");
             }

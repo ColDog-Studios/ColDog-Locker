@@ -31,13 +31,13 @@ Please provide the following information in your report:
 
 ## Security Features
 
-For detailed information about ColDog Locker's security architecture, encryption methods, and anti-ransomware protections, see [Security Features](docs/security-features.md).
+For detailed information about ColDog Locker's security architecture, encryption methods, recovery limits, and threat boundaries, see [Security Features](docs/security-features.md).
 
 ## Supported Versions
 
 | Version | Supported |
 | ------- | --------- |
-| 0.11.x-beta | Yes |
-| Older prereleases | Best effort |
+| Latest published prerelease | Yes |
+| Older prereleases | No |
 
-We recommend always using the latest version for the best security protections.
+ColDog Locker has no stable release. Prerelease archive, database, and installer behavior may change incompatibly. Security fixes are released in the newest prerelease; maintainers do not promise backports. Back up and unlock important data before upgrading, and do not downgrade across format changes.

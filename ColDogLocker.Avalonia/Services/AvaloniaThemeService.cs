@@ -17,6 +17,7 @@
 
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using ColDogStudios.ColDogLocker.Services.Configuration;
@@ -25,33 +26,33 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
 {
     public sealed class AvaloniaThemeService : IAppThemeService
     {
-        private static readonly SolidColorBrush BrandPrimaryBrush = new(Color.Parse("#0096DC"));
-        private static readonly SolidColorBrush BrandAccentBrush = new(Color.Parse("#0077B6"));
-        private static readonly SolidColorBrush BrandDarkBrush = new(Color.Parse("#002E44"));
-        private static readonly SolidColorBrush BrandHoverBrush = new(Color.Parse("#1AA8E8"));
-        private static readonly SolidColorBrush LightForegroundBrush = new(Color.Parse("#1F2933"));
-        private static readonly SolidColorBrush LightSecondaryForegroundBrush = new(Color.Parse("#4A5568"));
-        private static readonly SolidColorBrush LightMenuBrush = new(Color.Parse("#F0F0F0"));
-        private static readonly SolidColorBrush LightSurfaceBrush = new(Color.Parse("#FAFAFA"));
-        private static readonly SolidColorBrush LightTableHeaderBrush = new(Color.Parse("#F1F5F9"));
-        private static readonly SolidColorBrush LightCardBrush = new(Color.Parse("#FFFFFF"));
-        private static readonly SolidColorBrush LightBorderBrush = new(Color.Parse("#D7DEE5"));
-        private static readonly SolidColorBrush DarkMenuBrush = new(Color.Parse("#1F1F1F"));
-        private static readonly SolidColorBrush DarkForegroundBrush = new(Color.Parse("#F7FAFC"));
-        private static readonly SolidColorBrush DarkSecondaryForegroundBrush = new(Color.Parse("#CBD5E1"));
-        private static readonly SolidColorBrush DarkSurfaceBrush = new(Color.Parse("#333333"));
-        private static readonly SolidColorBrush DarkTableHeaderBrush = new(Color.Parse("#2A2A2A"));
-        private static readonly SolidColorBrush DarkCardBrush = new(Color.Parse("#2A2A2A"));
-        private static readonly SolidColorBrush DarkBorderBrush = new(Color.Parse("#4A4A4A"));
-        private static readonly SolidColorBrush DarkButtonPressedBrush = new(Color.Parse("#005F91"));
-        private static readonly SolidColorBrush WhiteBrush = new(Color.Parse("#FFFFFF"));
-        private static readonly SolidColorBrush CdsForegroundBrush = new(Color.Parse("#1A2332"));
-        private static readonly SolidColorBrush CdsSecondaryForegroundBrush = new(Color.Parse("#334E63"));
-        private static readonly SolidColorBrush CdsToolbarBrush = new(Color.Parse("#E8F2F8"));
-        private static readonly SolidColorBrush CdsTableHeaderBrush = new(Color.Parse("#D6ECFA"));
-        private static readonly SolidColorBrush CdsCardBrush = new(Color.Parse("#FAFCFD"));
-        private static readonly SolidColorBrush CdsStatusBrush = new(Color.Parse("#EEF3F8"));
-        private static readonly SolidColorBrush CdsBorderBrush = new(Color.Parse("#B9D5E8"));
+        private static readonly ImmutableSolidColorBrush _brandPrimaryBrush = new(Color.Parse("#0096DC"));
+        private static readonly ImmutableSolidColorBrush _brandAccentBrush = new(Color.Parse("#0077B6"));
+        private static readonly ImmutableSolidColorBrush _brandDarkBrush = new(Color.Parse("#002E44"));
+        private static readonly ImmutableSolidColorBrush _brandHoverBrush = new(Color.Parse("#1AA8E8"));
+        private static readonly ImmutableSolidColorBrush _lightForegroundBrush = new(Color.Parse("#1F2933"));
+        private static readonly ImmutableSolidColorBrush _lightSecondaryForegroundBrush = new(Color.Parse("#4A5568"));
+        private static readonly ImmutableSolidColorBrush _lightMenuBrush = new(Color.Parse("#F0F0F0"));
+        private static readonly ImmutableSolidColorBrush _lightSurfaceBrush = new(Color.Parse("#FAFAFA"));
+        private static readonly ImmutableSolidColorBrush _lightTableHeaderBrush = new(Color.Parse("#F1F5F9"));
+        private static readonly ImmutableSolidColorBrush _lightCardBrush = new(Color.Parse("#FFFFFF"));
+        private static readonly ImmutableSolidColorBrush _lightBorderBrush = new(Color.Parse("#D7DEE5"));
+        private static readonly ImmutableSolidColorBrush _darkMenuBrush = new(Color.Parse("#1F1F1F"));
+        private static readonly ImmutableSolidColorBrush _darkForegroundBrush = new(Color.Parse("#F7FAFC"));
+        private static readonly ImmutableSolidColorBrush _darkSecondaryForegroundBrush = new(Color.Parse("#CBD5E1"));
+        private static readonly ImmutableSolidColorBrush _darkSurfaceBrush = new(Color.Parse("#333333"));
+        private static readonly ImmutableSolidColorBrush _darkTableHeaderBrush = new(Color.Parse("#2A2A2A"));
+        private static readonly ImmutableSolidColorBrush _darkCardBrush = new(Color.Parse("#2A2A2A"));
+        private static readonly ImmutableSolidColorBrush _darkBorderBrush = new(Color.Parse("#4A4A4A"));
+        private static readonly ImmutableSolidColorBrush _darkButtonPressedBrush = new(Color.Parse("#005F91"));
+        private static readonly ImmutableSolidColorBrush _whiteBrush = new(Color.Parse("#FFFFFF"));
+        private static readonly ImmutableSolidColorBrush _cdsForegroundBrush = new(Color.Parse("#1A2332"));
+        private static readonly ImmutableSolidColorBrush _cdsSecondaryForegroundBrush = new(Color.Parse("#334E63"));
+        private static readonly ImmutableSolidColorBrush _cdsToolbarBrush = new(Color.Parse("#E8F2F8"));
+        private static readonly ImmutableSolidColorBrush _cdsTableHeaderBrush = new(Color.Parse("#D6ECFA"));
+        private static readonly ImmutableSolidColorBrush _cdsCardBrush = new(Color.Parse("#FAFCFD"));
+        private static readonly ImmutableSolidColorBrush _cdsStatusBrush = new(Color.Parse("#EEF3F8"));
+        private static readonly ImmutableSolidColorBrush _cdsBorderBrush = new(Color.Parse("#B9D5E8"));
         private Application? _subscribedApplication;
 
         public string CurrentTheme => SettingsManager.Settings.AppTheme;
@@ -111,42 +112,42 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             }
 
             var useDarkSurfaces = ShouldUseDarkSurfaces(application, normalizedTheme);
-            application.Resources["AppPrimaryBrush"] = BrandPrimaryBrush;
-            application.Resources["AppAccentBrush"] = BrandAccentBrush;
-            application.Resources["AppMenuBackgroundBrush"] = useDarkSurfaces ? DarkMenuBrush : LightMenuBrush;
+            application.Resources["AppPrimaryBrush"] = _brandPrimaryBrush;
+            application.Resources["AppAccentBrush"] = _brandAccentBrush;
+            application.Resources["AppMenuBackgroundBrush"] = useDarkSurfaces ? _darkMenuBrush : _lightMenuBrush;
             application.Resources["AppMenuForegroundBrush"] = useDarkSurfaces
-                ? WhiteBrush
-                : LightForegroundBrush;
-            application.Resources["AppForegroundBrush"] = useDarkSurfaces ? DarkForegroundBrush : LightForegroundBrush;
-            application.Resources["AppSecondaryForegroundBrush"] = useDarkSurfaces ? DarkSecondaryForegroundBrush : LightSecondaryForegroundBrush;
-            application.Resources["AppToolbarBackgroundBrush"] = useDarkSurfaces ? DarkSurfaceBrush : LightSurfaceBrush;
-            application.Resources["AppTableHeaderBackgroundBrush"] = useDarkSurfaces ? DarkTableHeaderBrush : LightTableHeaderBrush;
-            application.Resources["AppCardBackgroundBrush"] = useDarkSurfaces ? DarkCardBrush : LightCardBrush;
-            application.Resources["AppStatusBackgroundBrush"] = useDarkSurfaces ? DarkSurfaceBrush : LightSurfaceBrush;
-            application.Resources["AppBorderBrush"] = useDarkSurfaces ? DarkBorderBrush : LightBorderBrush;
-            application.Resources["AppButtonBackgroundBrush"] = BrandAccentBrush;
-            application.Resources["AppButtonHoverBackgroundBrush"] = BrandPrimaryBrush;
-            application.Resources["AppButtonPressedBackgroundBrush"] = useDarkSurfaces ? DarkButtonPressedBrush : BrandDarkBrush;
-            application.Resources["AppButtonForegroundBrush"] = WhiteBrush;
+                ? _whiteBrush
+                : _lightForegroundBrush;
+            application.Resources["AppForegroundBrush"] = useDarkSurfaces ? _darkForegroundBrush : _lightForegroundBrush;
+            application.Resources["AppSecondaryForegroundBrush"] = useDarkSurfaces ? _darkSecondaryForegroundBrush : _lightSecondaryForegroundBrush;
+            application.Resources["AppToolbarBackgroundBrush"] = useDarkSurfaces ? _darkSurfaceBrush : _lightSurfaceBrush;
+            application.Resources["AppTableHeaderBackgroundBrush"] = useDarkSurfaces ? _darkTableHeaderBrush : _lightTableHeaderBrush;
+            application.Resources["AppCardBackgroundBrush"] = useDarkSurfaces ? _darkCardBrush : _lightCardBrush;
+            application.Resources["AppStatusBackgroundBrush"] = useDarkSurfaces ? _darkSurfaceBrush : _lightSurfaceBrush;
+            application.Resources["AppBorderBrush"] = useDarkSurfaces ? _darkBorderBrush : _lightBorderBrush;
+            application.Resources["AppButtonBackgroundBrush"] = _brandAccentBrush;
+            application.Resources["AppButtonHoverBackgroundBrush"] = _brandPrimaryBrush;
+            application.Resources["AppButtonPressedBackgroundBrush"] = useDarkSurfaces ? _darkButtonPressedBrush : _brandDarkBrush;
+            application.Resources["AppButtonForegroundBrush"] = _whiteBrush;
         }
 
         private static void ApplyCdsResources(Application application)
         {
-            application.Resources["AppPrimaryBrush"] = BrandPrimaryBrush;
-            application.Resources["AppAccentBrush"] = BrandAccentBrush;
-            application.Resources["AppMenuBackgroundBrush"] = BrandDarkBrush;
-            application.Resources["AppMenuForegroundBrush"] = WhiteBrush;
-            application.Resources["AppForegroundBrush"] = CdsForegroundBrush;
-            application.Resources["AppSecondaryForegroundBrush"] = CdsSecondaryForegroundBrush;
-            application.Resources["AppToolbarBackgroundBrush"] = CdsToolbarBrush;
-            application.Resources["AppTableHeaderBackgroundBrush"] = CdsTableHeaderBrush;
-            application.Resources["AppCardBackgroundBrush"] = CdsCardBrush;
-            application.Resources["AppStatusBackgroundBrush"] = CdsStatusBrush;
-            application.Resources["AppBorderBrush"] = CdsBorderBrush;
-            application.Resources["AppButtonBackgroundBrush"] = BrandPrimaryBrush;
-            application.Resources["AppButtonHoverBackgroundBrush"] = BrandHoverBrush;
-            application.Resources["AppButtonPressedBackgroundBrush"] = BrandAccentBrush;
-            application.Resources["AppButtonForegroundBrush"] = WhiteBrush;
+            application.Resources["AppPrimaryBrush"] = _brandPrimaryBrush;
+            application.Resources["AppAccentBrush"] = _brandAccentBrush;
+            application.Resources["AppMenuBackgroundBrush"] = _brandDarkBrush;
+            application.Resources["AppMenuForegroundBrush"] = _whiteBrush;
+            application.Resources["AppForegroundBrush"] = _cdsForegroundBrush;
+            application.Resources["AppSecondaryForegroundBrush"] = _cdsSecondaryForegroundBrush;
+            application.Resources["AppToolbarBackgroundBrush"] = _cdsToolbarBrush;
+            application.Resources["AppTableHeaderBackgroundBrush"] = _cdsTableHeaderBrush;
+            application.Resources["AppCardBackgroundBrush"] = _cdsCardBrush;
+            application.Resources["AppStatusBackgroundBrush"] = _cdsStatusBrush;
+            application.Resources["AppBorderBrush"] = _cdsBorderBrush;
+            application.Resources["AppButtonBackgroundBrush"] = _brandPrimaryBrush;
+            application.Resources["AppButtonHoverBackgroundBrush"] = _brandHoverBrush;
+            application.Resources["AppButtonPressedBackgroundBrush"] = _brandAccentBrush;
+            application.Resources["AppButtonForegroundBrush"] = _whiteBrush;
         }
 
         private void Application_ActualThemeVariantChanged(object? sender, EventArgs e)

@@ -28,6 +28,7 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
 
             Console.Write("\nColDog Locker is a desktop app for securely locking, unlocking, and managing encrypted file lockers.");
             Console.WriteLine("\n\nColDog Locker is a free and open-source project licensed under the GNU General Public License v3.0.");
+            Console.WriteLine(global::ColDogStudios.ColDogLocker.Core.Environment.ThirdPartyAcknowledgements.Text);
             Console.ReadLine();
         }
     }

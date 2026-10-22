@@ -29,11 +29,23 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
         {
             // Usage: cdlocker settings [<key> [<value>]]
 
+            if (args.Length == 2 && args[1] == "reset")
+            {
+                SettingsManager.Settings = new ApplicationSettings();
+                SettingsManager.SaveSettings();
+                Logger.ReloadConfig();
+                Console.WriteLine("Settings reset. Locker registrations and files were preserved.");
+                return 0;
+            }
+
             // No arguments - show all settings
             if (args.Length == 1)
             {
                 // Show current settings
                 Console.WriteLine("Current Settings:");
+                Console.WriteLine($"  Default Location: {SettingsManager.Settings.DefaultLockerLocation}");
+                Console.WriteLine($"  Theme: {SettingsManager.Settings.AppTheme}");
+                Console.WriteLine($"  Default View: {SettingsManager.Settings.DefaultGuiViewMode}");
                 Console.WriteLine($"  Dev Mode: {SettingsManager.Settings.DevMode}");
                 Console.WriteLine($"  Log Level: {SettingsManager.Settings.LogLevel}");
                 Console.WriteLine($"  Log Format: {SettingsManager.Settings.LogFormat}");
@@ -57,6 +69,15 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                 var key = args[1].ToLowerInvariant();
                 switch (key)
                 {
+                    case "default-location":
+                        Console.WriteLine(SettingsManager.Settings.DefaultLockerLocation);
+                        return 0;
+                    case "theme":
+                        Console.WriteLine(SettingsManager.Settings.AppTheme);
+                        return 0;
+                    case "view":
+                        Console.WriteLine(SettingsManager.Settings.DefaultGuiViewMode);
+                        return 0;
                     case "debug":
                         Console.WriteLine($"Dev Mode: {SettingsManager.Settings.DevMode}");
                         return 0;
@@ -84,7 +105,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     default:
                         Console.Error.WriteLine($"Error: Unknown setting '{key}'.");
                         Console.WriteLine(
-                            "Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
+                            "Available settings: default-location, theme, view, reset, debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
                         return 1;
                 }
             }
@@ -96,6 +117,35 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
 
                 switch (key)
                 {
+                    case "default-location":
+                        var location = Path.GetFullPath(args[2]);
+                        // This is a parent setting, not a locker path. Validate the complete
+                        // child path at creation, as GUI Settings and new --path already do.
+                        SettingsManager.Settings.DefaultLockerLocation = location;
+                        SettingsManager.SaveSettings();
+                        Console.WriteLine($"Default location: {location}");
+                        return 0;
+                    case "theme":
+                        var theme = value switch { "auto" => "Auto", "light" => "Light", "dark" => "Dark", "cds" => "CDS", _ => null };
+                        if (theme == null)
+                        {
+                            Console.Error.WriteLine("Use auto, light, dark or cds.");
+                            return 1;
+                        }
+
+                        SettingsManager.Settings.AppTheme = theme;
+                        SettingsManager.SaveSettings();
+                        return 0;
+                    case "view":
+                        if (value is not ("grid" or "list"))
+                        {
+                            Console.Error.WriteLine("Use grid or list.");
+                            return 1;
+                        }
+
+                        SettingsManager.Settings.DefaultGuiViewMode = value == "grid" ? GuiViewMode.Grid : GuiViewMode.List;
+                        SettingsManager.SaveSettings();
+                        return 0;
                     case "debug":
                         if (bool.TryParse(value, out var devMode))
                         {
@@ -112,6 +162,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         return 1;
 
                     case "log-level":
+                        if (!Enum.TryParse<LogLevel>(value, true, out var parsedLevel) || !Enum.IsDefined(parsedLevel))
+                        {
+                            Console.Error.WriteLine("Use debug, info, warning, error or fatal.");
+                            return 1;
+                        }
+
                         SettingsManager.Settings.LogLevel = value;
                         Logger.SetLogLevel(Enum.TryParse(value, true, out LogLevel lvl) ? lvl : LogLevel.Info);
                         SettingsManager.SaveSettings();
@@ -120,6 +176,12 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.ResetColor();
                         return 0;
                     case "log-format":
+                        if (value is not ("json" or "text"))
+                        {
+                            Console.Error.WriteLine("Use json or text.");
+                            return 1;
+                        }
+
                         SettingsManager.Settings.LogFormat = value;
                         Logger.SetLogFormat(value);
                         SettingsManager.SaveSettings();
@@ -128,7 +190,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                         Console.ResetColor();
                         return 0;
                     case "max-file-size":
-                        if (int.TryParse(value, out var maxSize) && maxSize > 0)
+                        if (int.TryParse(value, out var maxSize) && maxSize is >= 1 and <= 1024)
                         {
                             SettingsManager.Settings.MaxFileSizeMb = maxSize;
                             Logger.SetMaxFileSizeMb(maxSize);
@@ -139,7 +201,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             return 0;
                         }
 
-                        Console.Error.WriteLine("Error: Invalid value. Must be a positive integer.");
+                        Console.Error.WriteLine("Error: Invalid value. Must be between 1 and 1024 MB.");
                         return 1;
                     case "file-logging":
                         if (bool.TryParse(value, out var fileLogging))
@@ -176,7 +238,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                             SettingsManager.Settings.DatabaseVacuumInterval = interval;
                             SettingsManager.SaveSettings();
                             Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Database vacuum interval set to: {interval} days (0 = disabled)");
+                            Console.WriteLine($"Database vacuum interval set to: {interval} days (stored preference; run db-vacuum manually)");
                             Console.ResetColor();
                             return 0;
                         }
@@ -211,7 +273,7 @@ namespace ColDogStudios.ColDogLocker.Cli.Commands
                     default:
                         Console.Error.WriteLine($"Error: Unknown setting '{key}'.");
                         Console.WriteLine(
-                            "Available settings: debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
+                            "Available settings: default-location, theme, view, reset, debug, auto-update, update-channel, db-vacuum-interval, log-level, log-format, max-file-size, file-logging");
                         return 1;
                 }
             }

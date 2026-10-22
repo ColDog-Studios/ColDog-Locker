@@ -206,10 +206,6 @@ namespace ColDogStudios.ColDogLocker.Core.Versioning
                 result = new SemanticVersion(major, minor, patch, preRelease, preReleaseParts);
                 return true;
             }
-            catch (Exception ex) when (ex is FormatException or OverflowException or ArgumentException)
-            {
-                return false;
-            }
             catch (Exception)
             {
                 return false;

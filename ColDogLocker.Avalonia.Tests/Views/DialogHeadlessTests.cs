@@ -16,98 +16,313 @@
  */
 
 using Avalonia.Controls;
-using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs;
+using ColDogStudios.ColDogLocker.Core.Validation;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests.Views
 {
     public class DialogHeadlessTests
     {
-        [AvaloniaFact]
-        public void NewLockerDialog_EnablesCreateOnlyForValidInput()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task PropertiesLoadsSizeAsynchronouslyAndStopsUpdatingAfterClose(bool closeBeforeScanCompletes)
         {
-            var dialog = new NewLockerDialog();
-
+            var directory = Directory.CreateTempSubdirectory("cdl-properties-").FullName;
             try
             {
-                dialog.Show();
-                var nameBox = RequiredControl<TextBox>(dialog, "NameBox");
-                var locationBox = RequiredControl<TextBox>(dialog, "LocationBox");
-                var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
-                var confirmBox = RequiredControl<TextBox>(dialog, "ConfirmBox");
-                var createButton = RequiredControl<Button>(dialog, "CreateButton");
+                File.WriteAllBytes(Path.Join(directory, "data"), new byte[1024]);
+                await HeadlessTestSession.RunAsync(async () =>
+                {
+                    var locker = new ColDogStudios.ColDogLocker.Core.Models.LockerModel("Properties", "hash", directory);
+                    var scanStarted = new TaskCompletionSource<CancellationToken>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    using var completeScan = new ManualResetEventSlim();
+                    var dialog = new LockerPropertiesDialog(locker, (path, token) =>
+                    {
+                        scanStarted.SetResult(token);
+                        if (!completeScan.Wait(TimeSpan.FromSeconds(10)))
+                        {
+                            throw new TimeoutException("The test did not release the properties scan.");
+                        }
 
-                Assert.False(createButton.IsEnabled);
+                        return new FileInfo(Path.Join(path, "data")).Length;
+                    });
+                    var size = RequiredControl<TextBlock>(dialog, "SizeText");
+                    var created = RequiredControl<TextBlock>(dialog, "CreatedText");
+                    var modified = RequiredControl<TextBlock>(dialog, "ModifiedText");
+                    Assert.Equal("Calculating...", size.Text);
+                    try
+                    {
+                        dialog.Show();
+                        var token = await scanStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+                        Assert.False(token.IsCancellationRequested);
+                        Assert.False(dialog.MetadataLoadTask.IsCompleted);
+                        Assert.Equal("Calculating...", size.Text);
+                        if (closeBeforeScanCompletes)
+                        {
+                            dialog.Close();
+                            Assert.True(token.IsCancellationRequested);
+                        }
 
-                nameBox.Text = "HeadlessLocker";
-                locationBox.Text = CreateSafeLockerPath();
-                passwordBox.Text = "Violet!River9Moon";
-                confirmBox.Text = "different";
-                Dispatcher.UIThread.RunJobs();
-                Assert.False(createButton.IsEnabled);
-
-                confirmBox.Text = passwordBox.Text;
-                Dispatcher.UIThread.RunJobs();
-                Assert.True(createButton.IsEnabled);
-
-                passwordBox.Text = "weak";
-                confirmBox.Text = "weak";
-                Dispatcher.UIThread.RunJobs();
-                Assert.False(createButton.IsEnabled);
+                        completeScan.Set();
+                        await dialog.MetadataLoadTask.WaitAsync(TimeSpan.FromSeconds(10));
+                        Assert.Equal(closeBeforeScanCompletes ? "Calculating..." : "1 KB", size.Text);
+                        if (closeBeforeScanCompletes)
+                        {
+                            Assert.Equal("Loading...", created.Text);
+                            Assert.Equal("Loading...", modified.Text);
+                        }
+                        else
+                        {
+                            Assert.NotEqual("Loading...", created.Text);
+                            Assert.NotEqual("Loading...", modified.Text);
+                            dialog.Close();
+                            Assert.Equal("1 KB", size.Text);
+                        }
+                    }
+                    finally
+                    {
+                        completeScan.Set();
+                        dialog.Close();
+                        await dialog.MetadataLoadTask.WaitAsync(TimeSpan.FromSeconds(10));
+                    }
+                });
             }
             finally
             {
-                dialog.Close();
+                Directory.Delete(directory, true);
             }
         }
 
-        [AvaloniaFact]
-        public void NewLockerDialog_UpdatesPasswordRequirementIndicators()
+        [Fact]
+        public async Task LockedProperties_CannotEditArchiveIdentity()
         {
-            var dialog = new NewLockerDialog();
-
-            try
+            await HeadlessTestSession.RunAsync(() =>
             {
-                dialog.Show();
-                var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
-                var requirements = RequiredControl<StackPanel>(dialog, "PasswordRequirementsPanel");
-                Assert.Equal(6, requirements.Children.Count);
-
-                passwordBox.Text = "Violet!River9Moon";
-                Dispatcher.UIThread.RunJobs();
-
-                Assert.All(
-                    requirements.Children.OfType<StackPanel>(),
-                    row => Assert.Equal("✓", Assert.IsType<TextBlock>(row.Children[0]).Text));
-            }
-            finally
-            {
-                dialog.Close();
-            }
+                var locker = new ColDogStudios.ColDogLocker.Core.Models.LockerModel("Locked", "hash", CreateSafeLockerPath()) { IsLocked = true };
+                var dialog = new LockerPropertiesDialog(locker);
+                try
+                {
+                    dialog.Show();
+                    Assert.True(RequiredControl<TextBox>(dialog, "NameBox").IsReadOnly);
+                    Assert.False(RequiredControl<Button>(dialog, "BrowseButton").IsEnabled);
+                    Assert.False(RequiredControl<Button>(dialog, "SaveButton").IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
         }
 
-        [AvaloniaFact]
-        public void SettingsDialog_TracksChangesAndEnablesSave()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task PasswordDialog_NewPasswordsShowLiveRequirementsAndRequireValidInput(bool requireNewPassword)
         {
-            var dialog = new SettingsDialog();
-
-            try
+            await HeadlessTestSession.RunAsync(() =>
             {
-                dialog.Show();
-                var autoUpdate = RequiredControl<CheckBox>(dialog, "AutoUpdateCheckBox");
-                var saveButton = RequiredControl<Button>(dialog, "SaveButton");
-                Assert.False(saveButton.IsEnabled);
+                var dialog = new PasswordDialog("Password", requireNewPassword);
+                try
+                {
+                    dialog.Show();
+                    var password = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var button = RequiredControl<Button>(dialog, "OkButton");
+                    var confirmation = RequiredControl<TextBox>(dialog, "ConfirmPasswordBox");
+                    Assert.Equal(requireNewPassword, RequiredControl<StackPanel>(dialog, "ConfirmationPanel").IsVisible);
+                    var container = RequiredControl<StackPanel>(dialog, "PasswordRequirementsContainer");
+                    var requirements = RequiredControl<StackPanel>(dialog, "PasswordRequirementsPanel");
+                    Assert.Equal(requireNewPassword, container.IsVisible);
+                    Assert.False(button.IsEnabled);
+                    foreach (var text in new[] { "weak", "Password!Red9Moon", "Qwer!River9Moon", "Violet!River9Moon", "" })
+                    {
+                        password.Text = text;
+                        confirmation.Text = text;
+                        Dispatcher.UIThread.RunJobs();
+                        Assert.Equal(requireNewPassword ? PasswordFilter.ValidatePassword(text) == null : text.Length > 0,
+                            button.IsEnabled);
+                        if (requireNewPassword)
+                        {
+                            var expected = PasswordFilter.Validate(text);
+                            Assert.Equal(expected.Count, requirements.Children.Count);
+                            for (var i = 0; i < expected.Count; i++)
+                            {
+                                var row = Assert.IsType<StackPanel>(requirements.Children[i]);
+                                Assert.Equal(expected[i].IsMet ? "✓" : "○", Assert.IsType<TextBlock>(row.Children[0]).Text);
+                                Assert.Equal(expected[i].Description, Assert.IsType<TextBlock>(row.Children[1]).Text);
+                            }
+                        }
+                    }
 
-                autoUpdate.IsChecked = autoUpdate.IsChecked != true;
-                Dispatcher.UIThread.RunJobs();
+                    password.Text = "Violet!River9Moon";
+                    dialog.Close();
+                    Assert.Equal(string.Empty, password.Text);
+                    Assert.Equal(string.Empty, confirmation.Text);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
+        }
 
-                Assert.True(saveButton.IsEnabled);
-            }
-            finally
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task NewPasswordDialog_RequiresMatchingFieldsAndReturnsOnlyConfirmedPassword(bool cancel)
+        {
+            await HeadlessTestSession.RunAsync(async () =>
             {
-                dialog.Close();
-            }
+                var owner = new Window();
+                var dialog = new PasswordDialog("New password", requireNewPassword: true);
+                owner.Show();
+                try
+                {
+                    var result = dialog.ShowDialog<string?>(owner);
+                    var password = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var confirmation = RequiredControl<TextBox>(dialog, "ConfirmPasswordBox");
+                    var submit = RequiredControl<Button>(dialog, "OkButton");
+                    var mismatch = RequiredControl<TextBlock>(dialog, "MismatchText");
+                    password.Text = "Violet!River9Moon";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(submit.IsEnabled);
+                    Assert.False(mismatch.IsVisible);
+                    confirmation.Text = "different";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(submit.IsEnabled);
+                    Assert.True(mismatch.IsVisible);
+                    confirmation.Text = password.Text;
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.True(submit.IsEnabled);
+                    Assert.False(mismatch.IsVisible);
+                    password.Text = "Copper!River8Moon";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(submit.IsEnabled);
+                    Assert.True(mismatch.IsVisible);
+                    confirmation.Text = password.Text;
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.True(submit.IsEnabled);
+                    var reveal = RequiredControl<CheckBox>(dialog, "ShowPasswordCheckBox");
+                    reveal.IsChecked = true;
+                    Assert.Equal('\0', password.PasswordChar);
+                    Assert.Equal('\0', confirmation.PasswordChar);
+                    reveal.IsChecked = false;
+                    Assert.Equal('*', password.PasswordChar);
+                    Assert.Equal('*', confirmation.PasswordChar);
+                    var button = cancel ? RequiredControl<Button>(dialog, "CancelButton") : submit;
+                    button.RaiseEvent(new global::Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                    Assert.Equal(cancel ? null : "Copper!River8Moon", await result);
+                    Assert.Equal(string.Empty, password.Text);
+                    Assert.Equal(string.Empty, confirmation.Text);
+                }
+                finally
+                {
+                    dialog.Close();
+                    owner.Close();
+                }
+            });
+        }
+
+        [Theory]
+        [InlineData("HeadlessLocker")]
+        [InlineData("Locker with spaces")]
+        [InlineData("café_Δοκιμή_測試")]
+        [InlineData("Symbols !#$%&'()+,-;=@[]^_`{}~")]
+        [InlineData("Emoji 🔒📁")]
+        [InlineData("Combining Cafe\u0301")]
+        public async Task NewLockerDialog_EnablesCreateOnlyForValidInput(string name)
+        {
+            await HeadlessTestSession.RunAsync(() =>
+            {
+                var dialog = new NewLockerDialog();
+
+                try
+                {
+                    dialog.Show();
+                    var nameBox = RequiredControl<TextBox>(dialog, "NameBox");
+                    var locationBox = RequiredControl<TextBox>(dialog, "LocationBox");
+                    var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var confirmBox = RequiredControl<TextBox>(dialog, "ConfirmBox");
+                    var createButton = RequiredControl<Button>(dialog, "CreateButton");
+
+                    Assert.False(createButton.IsEnabled);
+
+                    nameBox.Text = name;
+                    locationBox.Text = Path.Join(Path.GetDirectoryName(CreateSafeLockerPath()), name);
+                    passwordBox.Text = "Violet!River9Moon";
+                    confirmBox.Text = "different";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(createButton.IsEnabled);
+
+                    confirmBox.Text = passwordBox.Text;
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.True(createButton.IsEnabled);
+
+                    passwordBox.Text = "weak";
+                    confirmBox.Text = "weak";
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.False(createButton.IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
+        }
+
+        [Fact]
+        public async Task NewLockerDialog_UpdatesPasswordRequirementIndicators()
+        {
+            await HeadlessTestSession.RunAsync(() =>
+            {
+                var dialog = new NewLockerDialog();
+
+                try
+                {
+                    dialog.Show();
+                    var passwordBox = RequiredControl<TextBox>(dialog, "PasswordBox");
+                    var requirements = RequiredControl<StackPanel>(dialog, "PasswordRequirementsPanel");
+                    Assert.Equal(6, requirements.Children.Count);
+
+                    passwordBox.Text = "Violet!River9Moon";
+                    Dispatcher.UIThread.RunJobs();
+
+                    Assert.All(
+                        requirements.Children.OfType<StackPanel>(),
+                        row => Assert.Equal("✓", Assert.IsType<TextBlock>(row.Children[0]).Text));
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
+        }
+
+        [Fact]
+        public async Task SettingsDialog_TracksChangesAndEnablesSave()
+        {
+            await HeadlessTestSession.RunAsync(() =>
+            {
+                var dialog = new SettingsDialog();
+
+                try
+                {
+                    dialog.Show();
+                    var autoUpdate = RequiredControl<CheckBox>(dialog, "AutoUpdateCheckBox");
+                    var saveButton = RequiredControl<Button>(dialog, "SaveButton");
+                    Assert.False(saveButton.IsEnabled);
+
+                    autoUpdate.IsChecked = autoUpdate.IsChecked != true;
+                    Dispatcher.UIThread.RunJobs();
+
+                    Assert.True(saveButton.IsEnabled);
+                }
+                finally
+                {
+                    dialog.Close();
+                }
+            });
         }
 
         private static string CreateSafeLockerPath()

@@ -24,3 +24,13 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # Release-note tooling lives below .github rather than the repository root.
+  - package-ecosystem: "npm"
+    directory: "/.github"
+    schedule:
+      interval: "weekly"
+    groups:
+      release-note-tooling:
+        patterns:
+          - "*"

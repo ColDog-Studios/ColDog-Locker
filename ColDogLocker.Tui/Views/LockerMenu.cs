@@ -18,6 +18,7 @@
 using ColDogStudios.ColDogLocker.Core.Environment;
 using ColDogStudios.ColDogLocker.Core.Models;
 using ColDogStudios.ColDogLocker.Core.Validation;
+using ColDogStudios.ColDogLocker.Services.Configuration;
 using ColDogStudios.ColDogLocker.Services.Lockers;
 using ColDogStudios.ColDogLocker.Services.Logging;
 using ColDogStudios.ColDogLocker.Services.Security;
@@ -98,7 +99,10 @@ namespace ColDogStudios.ColDogLocker.Tui.Views
             }
 
             // Get locker location
-            var lockerLocation = Path.Join(AppPaths.CdlDir, lockerName);
+            var parent = string.IsNullOrWhiteSpace(SettingsManager.Settings.DefaultLockerLocation)
+                ? AppPaths.CdlDir
+                : SettingsManager.Settings.DefaultLockerLocation;
+            var lockerLocation = Path.Join(parent, lockerName);
 
             // Validate locker path is not protected
             Logger.Log(LogLevel.Debug, $"Validating locker path: {lockerLocation}");

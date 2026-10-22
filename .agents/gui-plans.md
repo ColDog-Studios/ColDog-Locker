@@ -1,39 +1,48 @@
-# GUI Status and Plans
+# Interface guidance
 
-ColDog Locker currently has multiple user interfaces with different maturity levels.
+Avalonia is the active desktop GUI. CLI and GUI expose the same user operations through shared services; TUI scope is essential locker workflows. See [user workflows](../docs/how-to-use.md) and [CLI reference](../docs/cli-reference.md).
 
-## Status Matrix
+## Capability map
 
-| Interface | Status | Notes |
+| Workflow | CLI | GUI |
 | --- | --- | --- |
-| Avalonia GUI | Active graphical interface | Default GUI launched by `cdlocker gui`; remaining work is refinement and cross-platform validation. |
-| TUI | Functional terminal menu | Useful where GUI support is unavailable. |
-| CLI | Most complete command surface | Best reference for automation and exact behavior. |
+| Create, lock, unlock, list/status | new, lock, unlock, list/status | File > New Locker; Locker actions; search/grid/list/Properties |
+| Edit registration; open location | edit; open | Locker > Properties; Open Location |
+| Password change; integrity check | change-password; verify | Locker > Change Password; Verify Integrity |
+| Remove registration or delete files | remove; remove --delete | Locker > Remove; Delete Locker and Files (explicit confirmation) |
+| Independent archive extraction | recover | Tools > Backup and Recovery > Recover files |
+| Pending operations, resolve preparation/committed output, restore registration, history | recovery-list/cancel/finish/restore/history | Backup and Recovery > Recover files > Interrupted operations and recovery history |
+| Database information, vacuum, backup, restore | db-info/vacuum/backup/restore | Backup and Recovery > Database; Settings also has vacuum |
+| All persisted user settings and reset | settings | Tools > Settings |
+| Updates, notes, verified install | update [--download] | Tools > Check for Updates |
+| Build/platform info; attributions | --version/dev; about | Help > About; developer information |
 
-## Avalonia GUI
+Presentation controls (search, sorting, selected-item context menus, dialogs) correspond to CLI queries/options, not terminal rendering. Developer dialog demonstrations are UI development aids rather than user data operations.
 
-The Avalonia project is the active graphical interface and cross-platform GUI direction.
+## Implementation boundaries
 
-Current migration focus:
+`MainWindowViewModel` injects dialogs/platform/update workflow. Main-window mutation commands respect IsBusy and per-locker service leases. Dialogs take owned snapshots or invoke validated service APIs. A modal maintenance window tracks background work, refuses close/duplicate actions while active, clears passwords afterward and remains usable after startup failure. Recovery never runs a shell/CLI process. Main-window close and desktop shutdown requests refuse tracked active work; forced termination relies on durable journals.
 
-- Refine migrated dialogs and interaction polish.
-- Continue replacing platform-specific assumptions with cross-platform behavior.
-- Validate the supported graphical workflows on Windows, Linux, and macOS.
+Source-build GUI launcher candidates precede installed fallback paths. `cdlocker gui` returns after starting the child; it bypasses CLI database initialization. Installed binaries are `ColDogLocker.exe` on Windows and `ColDogLocker` on Unix.
 
-The Avalonia project builds the GUI executable as `ColDogLocker.exe` on Windows and `ColDogLocker` on Unix-like platforms.
+## Responsiveness and interaction
 
-## GUI Launcher
+Password hashing, locker loading and bounded display scans run off the dispatcher. The size scanner caps entries (200,000), depth (256), and time (five seconds between OS calls); incomplete sizes are unknown. A 256-entry/30-second display cache is bypassed by explicit Refresh. Display estimates never authorize archive/deletion behavior. Properties cancels scans on close; cancelled/superseded refresh retains the old collection.
 
-The CLI owns the GUI launcher:
+Lock/unlock report bounded phase/item progress. Cancel is available only before source claim/plaintext publication; safe-cancellation refusal is explained in the status bar. Operations report capacity; exact authenticated restore size is known only during extraction. Never improve timing by removing flushes or weakening validation; [measured baselines](performance.md) inform optimization.
 
-- Windows: launches the Avalonia GUI executable.
-- Linux: launches the Avalonia GUI executable beside the CLI, from source-build paths, or from `/opt/coldog-locker/ColDogLocker` when installed.
-- macOS: launches the Avalonia GUI executable beside the CLI, from source-build paths, or from `/Applications/ColDog Locker.app/Contents/MacOS/ColDogLocker` when installed.
+Empty/search states explain what to do next. Ctrl+N creates, F5 refreshes, Ctrl+I opens properties; double-click opens properties. Tooltips reveal truncated names/paths. Password prompts focus input, support Enter/Escape and optional reveal, and clear the input after closing.
 
-The launcher is intentionally a lightweight starter: after the GUI process starts successfully, `cdlocker gui` releases the process handle and returns success instead of staying alive until the GUI exits. Source-build candidates are checked before installed package fallbacks so local development builds do not accidentally launch an already-installed GUI.
+Password changes verify the current password off the dispatcher before requesting a replacement. A single new-password dialog contains both the new password and its confirmation, shares the creation dialog's live requirements presenter, and enables submission only when all password rules pass and both fields match. Its reveal checkbox applies to both fields, and both are cleared on close. Ordinary password prompts do not apply new-password rules or show confirmation. The service verifies the current password again under the operation lease before validating and saving the replacement. CLI interaction follows the same ordering and lists every shared requirement, including common words/patterns.
 
-## Next GUI Work
+New menu and maintenance actions use the existing Material icons with visible text and explicit accessible names. Attributions come from the embedded component/license catalog, grouped by library family with all license terms retained and entries sorted alphabetically. Fonts and ANGLE remain separate because they have their own licensing identity. The packaged inventory records resolved versions and hashes from restored assets, so routine Dependabot version updates do not require hand-editing About or the catalog. Don't hard-code another list.
 
-1. Validate Avalonia workflows for new, lock, unlock, remove, properties, open location, settings, updates, and dialogs.
-2. Polish Avalonia-only behavior and layout details.
-3. Validate the installed macOS app-bundle launcher and update handoff on both supported architectures.
+## Validation
+
+Headless tests use separate `HeadlessUnitTestSession` dispatch and nonparallel xUnit execution. Cover real XAML bindings, service refusal/failure preservation, close guards, safe cancellation and background-work lifetime. Do not claim headless layout or automated control names prove actual screen-reader speech, sequential keyboard traversal, high contrast, scaling or password-manager interaction.
+
+Properties scan tests gate the background size calculator to exercise completion before close and cancellation before completion deterministically. `Show()` may pump UI work long enough for a real scan to finish, so closing immediately afterward does not prove that a scan was still pending. Verify unchanged size/date fields after closing with a pending scan; do not rely on disk speed or add sleeps.
+
+GUI creation tests and native CLI E2E cover locker names containing spaces, cross-platform punctuation, accented/Greek/CJK text, emoji and combining Unicode characters. E2E verifies persisted lookup/listing, lock/unlock byte preservation and registration removal without deleting files. Password regressions cover early authentication failure, live requirement indicators, cancellation/mismatch and replacement-password rejection.
+
+Historical Linux Wayland/AT-SPI inspection found named controls and focusable New Locker fields. Windows Narrator, macOS VoiceOver and manual desktop usability remain required; retain the OS/package/commit and native workflow results when validating a release.

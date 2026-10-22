@@ -200,7 +200,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 "1.2.0",
                 new UpdatePlatform
                 {
-                    OperatingSystem = UpdateOperatingSystem.Linux, LinuxPackageFormat = LinuxPackageFormat.Deb, Architecture = Architecture.X64
+                    OperatingSystem = UpdateOperatingSystem.Linux,
+                    LinuxPackageFormat = LinuxPackageFormat.Deb,
+                    Architecture = Architecture.X64
                 });
 
             // Act
@@ -321,6 +323,15 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
                 Assert.Equal(Path.Join(tempDirectory, "cdl.msi"), result.FilePath);
                 Assert.Equal(bytes.Length, result.BytesDownloaded);
                 Assert.Equal(Sha256Hex(bytes), result.Sha256);
+                if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                {
+                    Assert.Equal(
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute,
+                        File.GetUnixFileMode(tempDirectory));
+                    Assert.Equal(
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite,
+                        File.GetUnixFileMode(result.FilePath));
+                }
             }
             finally
             {
@@ -652,7 +663,9 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
 
         private static string CreateTempDirectory()
         {
-            var path = Path.Join(Path.GetTempPath(), $"cdl-update-tests-{Guid.NewGuid():N}");
+            var path = Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                $"cdl-update-tests-{Guid.NewGuid():N}");
             Directory.CreateDirectory(path);
             return path;
         }

@@ -18,12 +18,109 @@
 using System.Collections.ObjectModel;
 using ColDogStudios.ColDogLocker.Avalonia.Models;
 using ColDogStudios.ColDogLocker.Avalonia.ViewModels;
+using ColDogStudios.ColDogLocker.Core.Models;
+using ColDogStudios.ColDogLocker.Services.Lockers;
+using ColDogStudios.ColDogLocker.Services.Security;
 using Material.Icons;
 
 namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
 {
     public class MainWindowViewModelTests
     {
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task OnlyExplicitRefreshForcesFreshSizeMeasurements(bool explicitRefresh)
+        {
+            bool? forceSizeScan = null;
+            var viewModel = TestViewModelFactory.Create(out _, out _, out _, out _, (_, _, force) =>
+            {
+                forceSizeScan = force;
+                return Task.FromResult(new List<LockerItemViewModel>());
+            });
+            if (explicitRefresh)
+            {
+                await viewModel.RefreshCommand.ExecuteAsync(null);
+            }
+            else
+            {
+                await viewModel.InitializeAsync(() => Task.CompletedTask);
+            }
+
+            Assert.Equal(explicitRefresh, forceSizeScan);
+        }
+
+        [Fact]
+        public async Task CancelRefresh_PreservesPreviousListWithoutError()
+        {
+            var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _, async (token, _, _) =>
+            {
+                started.SetResult();
+                await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                return [];
+            });
+            var original = CreateLockers();
+            viewModel.Lockers = original;
+            var refresh = viewModel.RefreshCommand.ExecuteAsync(null);
+            await started.Task;
+            Assert.True(viewModel.IsRefreshing);
+            Assert.True(viewModel.CancelRefreshCommand.CanExecute(null));
+            viewModel.CancelRefreshCommand.Execute(null);
+            await refresh;
+            Assert.Same(original, viewModel.Lockers);
+            Assert.False(viewModel.IsRefreshing);
+            Assert.False(viewModel.IsBusy);
+            Assert.False(viewModel.CancelRefreshCommand.CanExecute(null));
+            Assert.Empty(dialogs.Errors);
+            Assert.Empty(dialogs.Messages);
+            Assert.Contains("cancelled", viewModel.StatusMessage);
+        }
+
+        [Fact]
+        public async Task SupersededRefresh_CannotOverwriteNewerResults()
+        {
+            var first = new TaskCompletionSource<List<LockerItemViewModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var second = new TaskCompletionSource<List<LockerItemViewModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var calls = 0;
+            CancellationToken firstToken = default;
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _, (token, _, _) =>
+            {
+                if (++calls == 1)
+                {
+                    firstToken = token;
+                    return first.Task;
+                }
+
+                return second.Task;
+            });
+            var olderRefresh = viewModel.RefreshCommand.ExecuteAsync(null);
+            var newerRefresh = viewModel.RefreshCommand.ExecuteAsync(null);
+            Assert.True(firstToken.IsCancellationRequested);
+            second.SetResult([new LockerItemViewModel { Name = "New" }]);
+            await newerRefresh;
+            first.SetResult([new LockerItemViewModel { Name = "Old" }]);
+            await olderRefresh;
+            Assert.Equal("New", Assert.Single(viewModel.Lockers).Name);
+            Assert.Empty(dialogs.Errors);
+            Assert.Single(dialogs.Messages);
+            Assert.False(viewModel.IsBusy);
+        }
+
+        [Fact]
+        public async Task FailedRefresh_PreservesListAndReleasesCancellationState()
+        {
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _, (_, _, _) =>
+                Task.FromException<List<LockerItemViewModel>>(new IOException("Cannot load registry")));
+            var original = CreateLockers();
+            viewModel.Lockers = original;
+            await viewModel.RefreshCommand.ExecuteAsync(null);
+            Assert.Same(original, viewModel.Lockers);
+            Assert.Single(dialogs.Errors);
+            Assert.False(viewModel.IsRefreshing);
+            Assert.False(viewModel.IsBusy);
+        }
+
         [Theory]
         [InlineData("alpha", "Alpha")]
         [InlineData("archive", "Beta")]
@@ -180,6 +277,78 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Tests.ViewModels
             Assert.Equal(1, updates.CheckCount);
             var message = Assert.Single(updateDialogs.Messages);
             Assert.Equal("No Updates Available", message.Title);
+        }
+
+        [Fact]
+        public async Task IncorrectCurrentPasswordStopsBeforeRequestingReplacement()
+        {
+            var locker = new LockerModel("Alpha", EncryptionHelper.HashPassword("Violet!River9Moon"), "unused");
+            LockerService.ReplaceLockersForTesting([locker]);
+            try
+            {
+                var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+                viewModel.SelectedLocker = new LockerItemViewModel { Guid = locker.Guid, Name = locker.LockerName };
+                dialogs.PasswordResponses.Enqueue("wrong");
+                dialogs.PasswordResponses.Enqueue("Copper!River8Moon");
+                await viewModel.ChangePasswordCommand.ExecuteAsync(null);
+                var prompt = Assert.Single(dialogs.PasswordPrompts);
+                Assert.False(prompt.RequireNewPassword);
+                Assert.Single(dialogs.PasswordResponses);
+                Assert.Equal("Incorrect current password.", Assert.Single(dialogs.Warnings).Message);
+                Assert.Empty(dialogs.Errors);
+                Assert.Empty(dialogs.Messages);
+                Assert.False(viewModel.IsBusy);
+                Assert.Equal(locker.Password, LockerService.FindLockerByGuid(locker.Guid)!.Password);
+            }
+            finally
+            {
+                LockerService.ClearLockersForTesting();
+            }
+        }
+
+        [Theory]
+        [InlineData(null, 1)]
+        [InlineData("Violet!River9Moon", 2)]
+        public async Task PasswordCancellationDoesNotStartAMutation(string? current, int prompts)
+        {
+            var locker = new LockerModel("Alpha", EncryptionHelper.HashPassword("Violet!River9Moon"), "unused");
+            LockerService.ReplaceLockersForTesting([locker]);
+            try
+            {
+                var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+                viewModel.SelectedLocker = new LockerItemViewModel { Guid = locker.Guid, Name = locker.LockerName };
+                dialogs.PasswordResponses.Enqueue(current);
+                dialogs.PasswordResponses.Enqueue(null);
+                await viewModel.ChangePasswordCommand.ExecuteAsync(null);
+                Assert.Equal(prompts, dialogs.PasswordPrompts.Count);
+                if (prompts > 1)
+                {
+                    Assert.True(dialogs.PasswordPrompts[1].RequireNewPassword);
+                }
+
+                Assert.Empty(dialogs.Errors);
+                Assert.Empty(dialogs.Messages);
+                Assert.False(viewModel.IsBusy);
+                Assert.Empty(dialogs.Warnings);
+                Assert.Equal(locker.Password, LockerService.FindLockerByGuid(locker.Guid)!.Password);
+            }
+            finally
+            {
+                LockerService.ClearLockersForTesting();
+            }
+        }
+
+        [Fact]
+        public async Task DecliningFileDeletionLeavesTheLockerSelected()
+        {
+            var viewModel = TestViewModelFactory.Create(out var dialogs, out _, out _, out _);
+            viewModel.Lockers = CreateLockers();
+            var selected = viewModel.SelectedLocker = viewModel.Lockers[0];
+            dialogs.ConfirmationResponse = false;
+            await viewModel.DeleteSelectedCommand.ExecuteAsync(null);
+            Assert.Same(selected, viewModel.SelectedLocker);
+            Assert.Contains(selected, viewModel.Lockers);
+            Assert.Empty(dialogs.Errors);
         }
 
         private static MainWindowViewModel CreateViewModel()

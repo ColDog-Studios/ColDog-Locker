@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 2,
+  "components": [
+    {
+      "name": "Avalonia",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Angle.Windows.Natives",
+      "license": "BSD-3-Clause",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Avalonia.BuildServices",
+      "license": "MIT",
+      "scope": "build"
+    },
+    {
+      "name": "Avalonia.Desktop",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Fonts.Inter",
+      "license": "MIT AND OFL-1.1",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.FreeDesktop",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Avalonia.FreeDesktop.AtSpi",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Avalonia.HarfBuzz",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Native",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Avalonia.Remote.Protocol",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Skia",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Themes.Fluent",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Avalonia.Win32",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Avalonia.X11",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "CommunityToolkit.Mvvm",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "HarfBuzzSharp",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "HarfBuzzSharp.NativeAssets.Linux",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "HarfBuzzSharp.NativeAssets.macOS",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "HarfBuzzSharp.NativeAssets.WebAssembly",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "HarfBuzzSharp.NativeAssets.Win32",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "Material.Icons",
+      "license": "MIT AND Apache-2.0",
+      "scope": "runtime"
+    },
+    {
+      "name": "Material.Icons.Avalonia",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "MicroCom.Runtime",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Microsoft.Data.Sqlite.Core",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Microsoft.Extensions.DependencyInjection",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "Microsoft.NET.ILLink.Tasks",
+      "license": "MIT",
+      "scope": "build"
+    },
+    {
+      "name": "Newtonsoft.Json",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "SkiaSharp",
+      "license": "MIT",
+      "scope": "runtime"
+    },
+    {
+      "name": "SkiaSharp.NativeAssets.Linux",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "SkiaSharp.NativeAssets.macOS",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "SkiaSharp.NativeAssets.WebAssembly",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "SkiaSharp.NativeAssets.Win32",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    },
+    {
+      "name": "SQLite",
+      "license": "Public-Domain",
+      "scope": "runtime"
+    },
+    {
+      "name": "SQLitePCLRaw.bundle_e_sqlite3",
+      "license": "Apache-2.0",
+      "scope": "runtime"
+    },
+    {
+      "name": "SQLitePCLRaw.config.e_sqlite3",
+      "license": "Apache-2.0",
+      "scope": "runtime"
+    },
+    {
+      "name": "SQLitePCLRaw.core",
+      "license": "Apache-2.0",
+      "scope": "runtime"
+    },
+    {
+      "name": "SQLitePCLRaw.provider.e_sqlite3",
+      "license": "Apache-2.0",
+      "scope": "runtime"
+    },
+    {
+      "name": "Tmds.DBus.Protocol",
+      "license": "MIT",
+      "scope": "platform-runtime"
+    }
+  ],
+  "projects": [
+    "ColDogLocker.Services/ColDogLocker.Services.csproj",
+    "ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj"
+  ]
+}

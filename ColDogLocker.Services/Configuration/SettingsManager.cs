@@ -279,11 +279,6 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     Logger.Log(LogLevel.Debug, "Temporary settings file cleaned up.");
                 }
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or ArgumentException)
-            {
-                // If we can't clean up the temp file, it's not critical
-                Logger.Log(LogLevel.Debug, "Failed to clean up temporary settings file.", ex);
-            }
             catch (Exception ex)
             {
                 // If we can't clean up the temp file, it's not critical
@@ -306,10 +301,6 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
                     AppFilePermissions.ApplyPrivateFile(backupFile);
                     Logger.Log(LogLevel.Info, $"Corrupted settings file backed up to: {backupFile}");
                 }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException or NotSupportedException or ArgumentException)
-            {
-                Logger.Log(LogLevel.Warning, $"Failed to backup corrupted settings file: {ex.Message}", ex);
             }
             catch (Exception ex)
             {
@@ -357,7 +348,7 @@ namespace ColDogStudios.ColDogLocker.Services.Configuration
         // Database Maintenance Settings
 
         /// <summary>
-        ///     Gets or sets the number of days between database vacuum operations (0 = disabled).
+        ///     Gets or sets the preferred database vacuum interval in days (0 = disabled). No automatic scheduler currently consumes it.
         /// </summary>
         public int DatabaseVacuumInterval { get; set; } = 30;
 

@@ -46,7 +46,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         [Fact]
         public void Deserialize_ShouldMapGitHubJsonPropertyNames()
         {
-            const string json = """
+            var json = """
                                 {
                                   "tag_name": "v1.2.3",
                                   "name": "Release 1.2.3",
@@ -87,7 +87,7 @@ namespace ColDogStudios.ColDogLocker.Services.Tests.Updates
         [Fact]
         public void Deserialize_ShouldAllowMissingNullableDigest()
         {
-            const string json = """
+            var json = """
                                 {
                                   "assets": [
                                     {

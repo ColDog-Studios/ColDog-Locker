@@ -1,5 +1,7 @@
-<Project Sdk="WixToolset.Sdk/6.0.2">
+<Project Sdk="WixToolset.Sdk/7.0.0">
   <PropertyGroup>
+    <!-- WiX 7 OSMF EULA acceptance explicitly authorized by the maintainer. -->
+    <AcceptEula>wix7</AcceptEula>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <PackageArchitecture Condition="'$(PackageArchitecture)' == ''">x64</PackageArchitecture>
@@ -10,17 +12,18 @@
     <DotNetPlatform Condition="'$(PackageArchitecture)' == 'x64'">x64</DotNetPlatform>
     <DotNetPlatform Condition="'$(PackageArchitecture)' == 'arm64'">arm64</DotNetPlatform>
     <!-- WiX remote EXE payloads are pinned so Burn can verify the downloaded runtime. -->
-    <DotNetRuntimeVersion>10.0.9</DotNetRuntimeVersion>
+    <DotNetRuntimeVersion>10.0.13</DotNetRuntimeVersion>
     <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'x64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-x64.exe</DotNetRuntimeFileName>
     <DotNetRuntimeFileName Condition="'$(PackageArchitecture)' == 'arm64'">dotnet-runtime-$(DotNetRuntimeVersion)-win-arm64.exe</DotNetRuntimeFileName>
     <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'x64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
     <DotNetRuntimeDownloadUrl Condition="'$(PackageArchitecture)' == 'arm64'">https://builds.dotnet.microsoft.com/dotnet/Runtime/$(DotNetRuntimeVersion)/$(DotNetRuntimeFileName)</DotNetRuntimeDownloadUrl>
-    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'x64'">b1fc25347750b6dbfa91fdf2f6d3615cc370582b299328bea6e09218f19386088d5170e739a16caab04ffa0a0a1aa5ae301ea542f3604b62c40da88e82d06093</DotNetRuntimeSha512>
-    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'arm64'">99aa9aebd5224cb908971bf3426df2e33c6134e5b954b7c69e43fb7e7d3cf81d7e1b2a4adcaf5538376aadff4471eae44f22844430608ceec7f8e7ab871c4323</DotNetRuntimeSha512>
-    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'x64'">30548720</DotNetRuntimeSize>
-    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28385256</DotNetRuntimeSize>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'x64'">44da78e619ae23e352e81fbc3a5803d78b1375dff89c176dd17a884d4e42e17850bb7adb78c799ca15b2127b67529395df1143976e33f6c8157f53bfc5a42e62</DotNetRuntimeSha512>
+    <DotNetRuntimeSha512 Condition="'$(PackageArchitecture)' == 'arm64'">c139bc5fa3e0e15ac0cd6c9200692cc7e3b161dfdb0b27f0e6910906ff8782952255559da26640f36ad74471fae91ddada1e4698b6cb6415681303bd72ed3979</DotNetRuntimeSha512>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'x64'">30651800</DotNetRuntimeSize>
+    <DotNetRuntimeSize Condition="'$(PackageArchitecture)' == 'arm64'">28443448</DotNetRuntimeSize>
 
     <RepoRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</RepoRoot>
+    <DotNetRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildSDKsPath)', '..', '..', '..'))</DotNetRoot>
     <ArtifactsRoot>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts', 'packages'))</ArtifactsRoot>
     <DistRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'dist'))</DistRoot>
     <InstallerPublishRoot>$([MSBuild]::NormalizeDirectory('$(ArtifactsRoot)', 'publish', '$(RuntimeIdentifier)', 'app'))</InstallerPublishRoot>
@@ -73,6 +76,10 @@
     <Exec Command='dotnet publish "$(RepoRoot)ColDogLocker.Avalonia/ColDogLocker.Avalonia.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained false -m:1 -p:UseSharedCompilation=false -p:Version="$(Version)" -p:InformationalVersion="$(InformationalVersion)" -p:PublishSingleFile=false -p:PublishDir="$(InstallerPublishPath)"' />
 
     <Copy SourceFiles="$(RepoRoot)LICENSE" DestinationFolder="$(InstallerPublishRoot)" />
+    <Copy SourceFiles="$(RepoRoot)THIRD-PARTY-NOTICES.md" DestinationFolder="$(InstallerPublishRoot)" />
+    <Exec Command='python "$(RepoRoot).github/scripts/release_manifest.py" --inventory-output "$(InstallerPublishRoot)THIRD-PARTY-COMPONENTS.json"' />
+    <Copy SourceFiles="$(DotNetRoot)LICENSE.txt" DestinationFiles="$(InstallerPublishRoot)DOTNET-LICENSE.txt" />
+    <Copy SourceFiles="$(DotNetRoot)ThirdPartyNotices.txt" DestinationFiles="$(InstallerPublishRoot)DOTNET-THIRD-PARTY-NOTICES.txt" />
     <Copy SourceFiles="$(RepoRoot)README.md" DestinationFolder="$(InstallerPublishRoot)" />
     <Copy SourceFiles="$(RepoRoot)resources/cdlIcon.ico" DestinationFolder="$(InstallerPublishRoot)" />
   </Target>

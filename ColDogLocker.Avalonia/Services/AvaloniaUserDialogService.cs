@@ -81,9 +81,9 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             return ShowDialogAsync<bool>(new MessageDialog(title, message, MessageDialogKind.Confirmation));
         }
 
-        public Task<string?> PromptPasswordAsync(string title)
+        public Task<string?> PromptPasswordAsync(string title, bool requireNewPassword = false)
         {
-            return ShowDialogAsync<string>(new PasswordDialog(title));
+            return ShowDialogAsync<string>(new PasswordDialog(title, requireNewPassword));
         }
 
         public Task<NewLockerRequest?> ShowNewLockerAsync()
@@ -104,6 +104,11 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
             {
                 _themeService.SetTheme(theme);
             }
+        }
+
+        public Task ShowMaintenanceAsync()
+        {
+            return ShowDialogAsync(new MaintenanceDialog());
         }
 
         public Task ShowAboutAsync()
@@ -130,7 +135,7 @@ namespace ColDogStudios.ColDogLocker.Avalonia.Services
         {
             await Task.Delay(650);
 
-            const int total = 5;
+            var total = 5;
             for (var current = 1; current <= total; current++)
             {
                 dialog.UpdateProgress(current, total, $"Processing test item {current} of {total}...");

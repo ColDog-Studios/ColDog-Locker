@@ -1,0 +1,174 @@
+<!--
+**  Copyright (C) 2026 ColDog Studios
+**
+**  This program is free software: you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation, either version 3 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  long with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+        x:Class="ColDogStudios.ColDogLocker.Avalonia.Views.Dialogs.MaintenanceDialog"
+        Title="Backup and Recovery" Width="780" Height="700" MinWidth="620" MinHeight="560"
+        WindowStartupLocation="CenterOwner" Icon="/Assets/cdlIcon.ico">
+    <Grid RowDefinitions="*,Auto,Auto" Margin="20" RowSpacing="12">
+        <TabControl x:Name="ActionsTabs">
+            <TabItem AutomationProperties.Name="Recover files">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <materialIcons:MaterialIcon Kind="ArchiveArrowUpOutline" Width="20" Height="20" VerticalAlignment="Center" />
+                        <TextBlock Text="Recover files" />
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="12">
+                        <TextBlock Text="Restore an encrypted archive into a new directory. The archive is preserved. This works even when the locker database is unavailable." TextWrapping="Wrap" />
+                        <TextBlock Text="Archive (.cdl)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="ArchiveBox" AutomationProperties.Name="Archive path" />
+                            <Button Grid.Column="1" Click="BrowseArchive_Click" AutomationProperties.Name="Browse for archive">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="FileSearchOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Browse…" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <TextBlock Text="New destination (its parent must exist)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="DestinationBox" AutomationProperties.Name="New recovery destination" />
+                            <Button Grid.Column="1" Click="BrowseDestination_Click" AutomationProperties.Name="Choose recovery destination parent">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Choose parent…" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <TextBlock Text="Original archive password" />
+                        <TextBox x:Name="ArchivePasswordBox" PasswordChar="●" AutomationProperties.Name="Archive password" />
+                        <Button x:Name="RecoverArchiveButton" Click="Recover_Click" HorizontalAlignment="Left" AutomationProperties.Name="Recover archive">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <materialIcons:MaterialIcon Kind="ArchiveArrowUpOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                <TextBlock Text="Recover archive" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Expander Header="Interrupted operations and recovery history" HorizontalAlignment="Stretch">
+                            <StackPanel Spacing="12" Margin="0,8,0,0">
+                                <ComboBox x:Name="OperationBox" HorizontalAlignment="Stretch" AutomationProperties.Name="Unfinished operation" />
+                                <WrapPanel>
+                                    <Button Click="Reload_Click" Margin="0,0,8,8" AutomationProperties.Name="Reload operations">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="Refresh" Width="18" Height="18" VerticalAlignment="Center" />
+                                            <TextBlock Text="Reload operations" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="RestoreOperation_Click" Margin="0,0,8,8" AutomationProperties.Name="Restore and repair registration">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="BackupRestore" Width="18" Height="18" VerticalAlignment="Center" />
+                                            <TextBlock Text="Restore and repair registration" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="CancelOperation_Click" Margin="0,0,8,8" AutomationProperties.Name="Cancel preparation">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="Cancel" Width="18" Height="18" VerticalAlignment="Center" />
+                                            <TextBlock Text="Cancel preparation" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="FinishOperation_Click" Margin="0,0,8,8" AutomationProperties.Name="Finish committed operation">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="CheckCircleOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                            <TextBlock Text="Finish committed operation" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Click="History_Click" Margin="0,0,8,8" AutomationProperties.Name="Show recovery history">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon Kind="History" Width="18" Height="18" VerticalAlignment="Center" />
+                                            <TextBlock Text="Show recovery history" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+                                <TextBlock Text="Preserve all source, archive and staging paths until restored files have been checked. Operation recovery needs a new destination named after the original locker. Cancel and Finish never delete files; unsupported phases are refused." TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem AutomationProperties.Name="Database">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <materialIcons:MaterialIcon Kind="DatabaseOutline" Width="20" Height="20" VerticalAlignment="Center" />
+                        <TextBlock Text="Database" />
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer>
+                    <StackPanel Margin="12" Spacing="12">
+                        <TextBlock Text="A database backup contains registrations and recovery records, not your files. Copy locker archives separately. Close other application instances before restoring." TextWrapping="Wrap" />
+                        <TextBlock Text="New backup directory (its parent must exist)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="BackupBox" AutomationProperties.Name="New database backup directory" />
+                            <Button Grid.Column="1" Click="BrowseBackup_Click" AutomationProperties.Name="Choose database backup parent">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="FolderOpenOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Choose parent…" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <Button Click="Backup_Click" HorizontalAlignment="Left" AutomationProperties.Name="Create verified database backup">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <materialIcons:MaterialIcon Kind="DatabaseExportOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                <TextBlock Text="Create verified database backup" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="Backup database (lockers.db)" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox x:Name="DatabaseBox" AutomationProperties.Name="Backup database path" />
+                            <Button Grid.Column="1" Click="BrowseDatabase_Click" AutomationProperties.Name="Browse for database backup">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="FileSearchOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Browse…" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <Button Click="RestoreDatabase_Click" HorizontalAlignment="Left" AutomationProperties.Name="Restore missing database">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <materialIcons:MaterialIcon Kind="DatabaseImportOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                <TextBlock Text="Restore missing database" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="Restore refuses to replace an existing database or SQLite sidecar files. Original file locations must still match. If they have moved, use Recover files instead." TextWrapping="Wrap" />
+                        <WrapPanel>
+                            <Button Click="DatabaseInfo_Click" Margin="0,0,8,8" AutomationProperties.Name="Database information">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="InformationOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Database information" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="Vacuum_Click" Margin="0,0,8,8" AutomationProperties.Name="Optimize database">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <materialIcons:MaterialIcon Kind="DatabaseRefreshOutline" Width="18" Height="18" VerticalAlignment="Center" />
+                                    <TextBlock Text="Optimize database" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <TextBox Grid.Row="1" x:Name="ResultBox" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                 Height="150" AutomationProperties.Name="Backup and recovery result" AutomationProperties.LiveSetting="Polite" />
+        <Button Grid.Row="2" x:Name="CloseButton" Click="Close_Click" HorizontalAlignment="Right" IsCancel="True" AutomationProperties.Name="Close">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <materialIcons:MaterialIcon Kind="Close" Width="18" Height="18" VerticalAlignment="Center" />
+                <TextBlock Text="Close" VerticalAlignment="Center" />
+            </StackPanel>
+        </Button>
+    </Grid>
+</Window>
