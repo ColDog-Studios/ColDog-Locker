@@ -4,6 +4,10 @@ using System.Runtime.InteropServices;
 namespace ColDogStudios.ColDogLocker.Services.FileSystem
 {
     /// <summary>Orders filesystem namespace changes before the operation journal advances.</summary>
+    /// <remarks>
+    /// Native calls supply directory fsync and Windows write-through namespace moves,
+    /// which the managed directory/file move APIs do not expose. Preserve these durability barriers.
+    /// </remarks>
     internal static class DurableFileSystem
     {
         private const uint MoveFileWriteThrough = 0x00000008;

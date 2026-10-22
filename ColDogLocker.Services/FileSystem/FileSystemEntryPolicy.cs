@@ -4,6 +4,10 @@ using Microsoft.Win32.SafeHandles;
 namespace ColDogStudios.ColDogLocker.Services.FileSystem
 {
     /// <summary>Rejects non-regular entries before data reads. Path checks do not establish stable filesystem identity.</summary>
+    /// <remarks>
+    /// Native calls provide no-follow/nonblocking opens and handle-based type/link-count checks.
+    /// Managed pathname checks alone cannot preserve these guarantees when an entry is replaced concurrently.
+    /// </remarks>
     internal static class FileSystemEntryPolicy
     {
         internal static FileStream OpenRead(string path, Action? beforeOpen = null, bool rejectHardLinks = false,

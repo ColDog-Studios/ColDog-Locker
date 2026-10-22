@@ -154,6 +154,7 @@ namespace ColDogStudios.ColDogLocker.Services.Lockers
                 // Reading to EOF feeds every byte into the manifest digest through exactInput.
                 while (exactInput.Read(buffer) != 0)
                 {
+                    // Read updates the digest and enforces the inspected length; no other processing is needed.
                 }
 
                 exactInput.EnsureComplete();

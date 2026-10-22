@@ -53,6 +53,8 @@ Unix: owner-only plaintext staging exists from first write; ordinary modes and m
 
 Native writable handles surviving cutover and unsupported network/cloud/removable storage are outside the portable guarantee. See [platform limits](../docs/platform-support.md) and [security policy](../docs/security-features.md).
 
+Native interop in `DurableFileSystem` and `FileSystemEntryPolicy` is intentional: managed moves do not expose directory fsync/Windows write-through flags, and pathname checks cannot replace no-follow/nonblocking opens plus handle-based type and link-count validation. Generic unmanaged-code advisories do not justify removing those safeguards. Broad exception handling is appropriate at the maintenance dialog's final UI boundary, where errors are displayed and busy/password state is restored; filesystem rollback catches remain limited to expected failures. `CheckBox.IsChecked` is nullable, so `== true` deliberately treats indeterminate as unchecked.
+
 ## Archive and recovery
 
 Only archive version 2 and the current full-UTF-8 PBKDF2-SHA256 password verifier are accepted. No stable release exists; breaking changes are authorized, and legacy archive/BCrypt compatibility is not required. Current round-trip and failure-preservation guarantees remain required. See [protocol invariants and adversarial evidence](archive-protocol-review.md).
